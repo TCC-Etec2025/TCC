@@ -1,13 +1,14 @@
 import { createClient } from '@supabase/supabase-js'
 
-// 1. As chaves agora são lidas do ambiente de execução (ficheiro .env)
-const supabaseUrl = process.env.REACT_APP_SUPABASE_URL
-const supabaseAnonKey = process.env.REACT_APP_SUPABASE_ANON_KEY
+// 1. Verifique se os nomes das variáveis de ambiente estão corretos.
+//    Para projetos Vite (usado no React), elas DEVEM começar com "VITE_".
+const supabaseUrl = import.meta.env.VITE_SUPABASE_URL
+const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY
 
-// 2. Verificação para garantir que as chaves foram carregadas corretamente
+// 2. Verifique se as variáveis de ambiente existem e estão sendo carregadas.
 if (!supabaseUrl || !supabaseAnonKey) {
-  throw new Error("As credenciais do Supabase (URL e Anon Key) precisam ser definidas no ficheiro .env");
+  throw new Error("Supabase URL e Anon Key são obrigatórias.");
 }
 
-// 3. Cria e exporta o cliente Supabase, pronto para ser usado em todo o projeto
+// 3. Exporte o cliente Supabase.
 export const supabase = createClient(supabaseUrl, supabaseAnonKey)

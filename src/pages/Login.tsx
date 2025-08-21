@@ -1,98 +1,179 @@
-import { useState } from "react";
+import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Building2, Eye, EyeOff, AlertTriangle } from 'lucide-react';
+import { useForm } from "react-hook-form";
+import { yupResolver } from "@hookform/resolvers/yup";
+import * as Yup from "yup";
 import { supabase } from "../supabaseClient";
 
-export function Login() {
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
+// --- Esquema de Validação ---
+const schema = Yup.object().shape({
+  email: Yup.string()
+    .email("Digite um e-mail válido")
+    .required("O campo e-mail é obrigatório"),
+  password: Yup.string().required("O campo senha é obrigatório"),
+});
+
+type FormData = Yup.InferType<typeof schema>;
+
+// --- Componentes de Ícones Simplificados ---
+type IconProps = { className?: string };
+
+const Eye = ({ className }: IconProps) => (
+  <svg
+    xmlns="http://www.w3.org/2000/svg"
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="2"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+    className={className}
+  >
+    <path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z" />
+    <circle cx="12" cy="12" r="3" />
+  </svg>
+);
+const EyeOff = ({ className }: IconProps) => (
+  <svg
+    xmlns="http://www.w3.org/2000/svg"
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="2"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+    className={className}
+  >
+    <path d="M9.88 9.88a3 3 0 1 0 4.24 4.24" />
+    <path d="M10.73 5.08A10.43 10.43 0 0 1 12 5c7 0 10 7 10 7a13.16 13.16 0 0 1-1.67 2.68" />
+    <path d="M6.61 6.61A13.526 13.526 0 0 0 2 12s3 7 10 7a9.74 9.74 0 0 0 5.39-1.61" />
+    <line x1="2" x2="22" y1="2" y2="22" />
+  </svg>
+);
+const AlertTriangle = ({ className }: IconProps) => (
+  <svg
+    xmlns="http://www.w3.org/2000/svg"
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="2"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+    className={className}
+  >
+    <path d="m21.73 18-8-14a2 2 0 0 0-3.46 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z" />
+    <line x1="12" x2="12" y1="9" y2="13" />
+    <line x1="12" x2="12.01" y1="17" y2="17" />
+  </svg>
+);
+
+export default function Login() {
+  const navigate = useNavigate();
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState("");
-  const navigate = useNavigate();
+  const [serverError, setServerError] = useState("");
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  // --- Configuração do React Hook Form ---
+  // ALTERE ESTA LINHA
+  const {
+    register,
+    handleSubmit,
+    formState: { errors },
+  } = useForm<FormData>({
+    resolver: yupResolver(schema),
+  });
+
+  // A sua função de lógica de negócio agora recebe os dados do formulário
+  const handleLogin = async (data: FormData) => {
     setIsLoading(true);
-    setError("");
+    setServerError("");
 
-    // 2. A lógica de simulação foi substituída pela autenticação real
-    const { data, error: signInError } = await supabase.auth.signInWithPassword({
-      email,
-      password,
-    });
+    const { email, password } = data;
+
+    // A lógica de autenticação com o Supabase permanece a mesma
+    const { data: authData, error: signInError } =
+      await supabase.auth.signInWithPassword({
+        email,
+        password,
+      });
 
     if (signInError) {
-      setError("Email ou senha inválidos. Por favor, tente novamente.");
+      setServerError("Email ou senha inválidos. Por favor, tente novamente.");
       setIsLoading(false);
       return;
     }
 
-    // 3. Após o login, buscamos o perfil do utilizador na nossa tabela 'Usuarios'
-    //    para descobrir o seu nível de acesso.
-    //    IMPORTANTE: A sua tabela 'Usuarios' deve ter uma coluna (ex: 'auth_user_id')
-    //    que armazena o ID do utilizador do sistema de autenticação do Supabase.
-    if (data.user) {
-      const { data: profileData } = await supabase
-        .from('Usuarios')
-        .select('nivel_acesso')
-        .eq('auth_user_id', data.user.id) // Usando a coluna que liga as tabelas
-        .single();
-      
-      const role = profileData?.nivel_acesso;
+    if (authData.user) {
+      const { data: role, error: rpcError } = await supabase.rpc("get_my_role");
 
-      // 4. Redirecionamos com base no nível de acesso encontrado
-      if (role === 'Admin') {
-        navigate('/dashboard/admin');
-      } else if (role === 'Responsavel') {
-        navigate('/dashboard/responsavel');
-      } else if (role === 'Cuidador' || role === 'Enfermagem') {
-        navigate('/dashboard/funcionario');
-      } else {
-        // Se não encontrar um perfil, faz logout por segurança
-        setError("Perfil de utilizador não encontrado.");
-        supabase.auth.signOut();
+      if (rpcError || !role) {
+        setServerError("Perfil de utilizador não encontrado no sistema.");
+        await supabase.auth.signOut();
+        setIsLoading(false);
+        return;
       }
+
+      // SUCESSO! Agora, redirecione com base no perfil.
+      if (role === "Admin") {
+        navigate("/app/admin");
+      } else if (role === "Responsavel") {
+        navigate("/app/responsavel");
+      } else if (role === "Cuidador" || role === "Enfermagem") {
+        navigate("/app/funcionario");
+      } else {
+        // Caso de segurança: perfil desconhecido
+        setServerError("Perfil de usuário desconhecido.");
+        await supabase.auth.signOut();
+      }
+
     }
-    
+
     setIsLoading(false);
   };
 
-  // O JSX do formulário continua exatamente o mesmo
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50 p-4">
+    <div className="min-h-screen flex items-center justify-center bg-gray-50 p-4 font-sans">
       <div className="w-full max-w-md bg-white rounded-2xl shadow-lg border border-gray-200">
         <div className="p-8 space-y-6 text-center">
-          <div className="flex justify-center">
-            <div className="flex items-center justify-center w-14 h-14 bg-indigo-600 rounded-xl">
-              <Building2 className="h-7 w-7 text-white" />
-            </div>
-          </div>
-          <div className="space-y-1">
-            <h1 className="text-2xl font-bold text-gray-900">Acesso ao Sistema ILPI</h1>
-            <p className="text-sm text-gray-600">Digite as suas credenciais para continuar</p>
+          <div className="space-y-1 pt-8">
+            <h1 className="text-2xl font-bold text-gray-900">
+              Acesso ao Sistema ILPI
+            </h1>
+            <p className="text-sm text-gray-600">
+              Digite as suas credenciais para continuar
+            </p>
           </div>
         </div>
-
         <div className="px-8 pb-8 space-y-6">
-          <form onSubmit={handleSubmit} className="space-y-4">
+          {/* O onSubmit agora usa o handleSubmit do React Hook Form para "embrulhar" a sua função */}
+          <form onSubmit={handleSubmit(handleLogin)} className="space-y-4">
             <div className="space-y-2">
-              <label htmlFor="email" className="text-sm font-medium text-gray-700">
+              <label
+                htmlFor="email"
+                className="text-sm font-medium text-gray-700 text-left block"
+              >
                 Email
               </label>
+              {/* O input agora é registrado com o react-hook-form */}
               <input
                 id="email"
                 type="email"
                 placeholder="nome@empresa.com"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
                 className="w-full h-10 px-3 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
-                required
+                {...register("email")}
               />
+              {/* Exibição do erro de validação */}
+              {errors.email && (
+                <p className="text-xs text-red-600 mt-1">
+                  {errors.email.message}
+                </p>
+              )}
             </div>
-
             <div className="space-y-2">
-              <label htmlFor="password" className="text-sm font-medium text-gray-700">
+              <label
+                htmlFor="password"
+                className="text-sm font-medium text-gray-700 text-left block"
+              >
                 Senha
               </label>
               <div className="relative">
@@ -100,26 +181,34 @@ export function Login() {
                   id="password"
                   type={showPassword ? "text" : "password"}
                   placeholder="Digite a sua senha"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
                   className="w-full h-10 px-3 pr-10 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
-                  required
+                  {...register("password")}
                 />
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                  className="absolute inset-y-0 right-0 flex items-center pr-3 text-gray-400 hover:text-gray-600"
                   aria-label={showPassword ? "Esconder senha" : "Mostrar senha"}
                 >
-                  {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                  {showPassword ? (
+                    <EyeOff className="w-5 h-5" />
+                  ) : (
+                    <Eye className="w-5 h-5" />
+                  )}
                 </button>
               </div>
+              {errors.password && (
+                <p className="text-xs text-red-600 mt-1">
+                  {errors.password.message}
+                </p>
+              )}
             </div>
 
-            {error && (
+            {/* Exibição do erro vindo do servidor (Supabase) */}
+            {serverError && (
               <div className="flex items-center p-3 space-x-2 bg-red-50 border border-red-200 rounded-md">
-                <AlertTriangle size={20} className="text-red-500" />
-                <p className="text-sm text-red-700">{error}</p>
+                <AlertTriangle className="w-5 h-5 text-red-500" />
+                <p className="text-sm text-red-700">{serverError}</p>
               </div>
             )}
 
@@ -130,9 +219,25 @@ export function Login() {
             >
               {isLoading ? (
                 <>
-                  <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                  <svg
+                    className="animate-spin -ml-1 mr-3 h-5 w-5 text-white"
+                    xmlns="http://www.w3.org/2000/svg"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                  >
+                    <circle
+                      className="opacity-25"
+                      cx="12"
+                      cy="12"
+                      r="10"
+                      stroke="currentColor"
+                      strokeWidth="4"
+                    ></circle>
+                    <path
+                      className="opacity-75"
+                      fill="currentColor"
+                      d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                    ></path>
                   </svg>
                   <span>A entrar...</span>
                 </>
@@ -141,9 +246,11 @@ export function Login() {
               )}
             </button>
           </form>
-
           <div className="text-center">
-            <a href="#" className="text-sm text-indigo-600 hover:text-indigo-800 underline-offset-4 hover:underline">
+            <a
+              href="#"
+              className="text-sm text-indigo-600 hover:text-indigo-800 underline-offset-4 hover:underline"
+            >
               Esqueceu a sua senha?
             </a>
           </div>
@@ -152,5 +259,3 @@ export function Login() {
     </div>
   );
 }
-
-export default Login;

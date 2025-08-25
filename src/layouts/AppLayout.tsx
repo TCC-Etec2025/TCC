@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 import { Outlet } from "react-router-dom"
 import Sidebar from "../components/Sidebar"
 
@@ -14,18 +13,3 @@ export default function AppLayout() {
     </div>
   )
 }
-=======
-import { Outlet } from 'react-router-dom';
-
-// Este componente irá renderizar as rotas filhas (os dashboards)
-export default function AppLayout() {
-  return (
-    <div>
-      <h1>Área Autenticada</h1>
-      <main>
-        <Outlet />
-      </main>
-    </div>
-  );
-}
->>>>>>> 682d0eb60ca0ae658f329691dc12e2745ca0990e

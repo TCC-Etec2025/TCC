@@ -127,17 +127,16 @@ export default function AdminDashboard() {
         <div className="mt-4 grid sm:grid-cols-2 grid-cols-1 gap-2">
           {botoes.map((botao) => (
             <button
+              key={botao.nome}
               onClick={botao.acao}
-              className={`flex cursor-pointer items-center p-4 transition-colors bg-yellow-100 hover:bg-red-50`}
+              className="flex cursor-pointer items-center p-4 transition-colors bg-yellow-600 hover:bg-red-50"
             >
-              <div
-                className={`rounded-lg p-3 bg-blue-200 text-white`}
-              >
+              <div className="rounded-lg p-3 bg-blue-400 text-white">
                 {botao.icone}
               </div>
-              <div className="ml-4">
-                <h3 className={`font-semibold text-white`}>{botao.nome}</h3>
-                <p className={`text-sm text-black`}>{botao.descricao}</p>
+              <div className="ml-4 flex flex-col justify-center w-full items-center text-center">
+                <h3 className="font-semibold text-white">{botao.nome}</h3>
+                <p className="text-sm text-black">{botao.descricao}</p>
               </div>
             </button>
           ))}
@@ -193,114 +192,114 @@ export default function AdminDashboard() {
       </div>
     );
   };
-/**
-  const SystemStatus = () => {
-    type StatusType = 'online' | 'offline' | 'pending';
-    interface StatusItemProps {
-      title: string;
-      status: StatusType;
-      value?: string;
-    }
-    const StatusItem: React.FC<StatusItemProps> = ({ title, status, value }) => {
-      const statusColors: Record<StatusType, string> = {
-        online: 'text-green-500',
-        offline: 'text-red-500',
-        pending: 'text-yellow-500',
+  /**
+    const SystemStatus = () => {
+      type StatusType = 'online' | 'offline' | 'pending';
+      interface StatusItemProps {
+        title: string;
+        status: StatusType;
+        value?: string;
+      }
+      const StatusItem: React.FC<StatusItemProps> = ({ title, status, value }) => {
+        const statusColors: Record<StatusType, string> = {
+          online: 'text-green-500',
+          offline: 'text-red-500',
+          pending: 'text-yellow-500',
+        };
+        return (
+          <div className="flex items-center justify-between py-2">
+            <div className="flex items-center">
+              <LuCircle className={`mr-2 h-3 w-3 ${statusColors[status]} fill-current`} />
+              <span className="text-sm text-gray-700">{title}</span>
+            </div>
+            {value && (
+              <span className="rounded bg-gray-100 px-2 py-1 text-xs font-semibold text-gray-600">
+                {value}
+              </span>
+            )}
+          </div>
+        );
       };
+  
       return (
-        <div className="flex items-center justify-between py-2">
-          <div className="flex items-center">
-            <LuCircle className={`mr-2 h-3 w-3 ${statusColors[status]} fill-current`} />
-            <span className="text-sm text-gray-700">{title}</span>
-          </div>
-          {value && (
-            <span className="rounded bg-gray-100 px-2 py-1 text-xs font-semibold text-gray-600">
-              {value}
-            </span>
-          )}
-        </div>
-      );
-    };
-
-    return (
-      <div className="rounded-lg bg-white p-6 shadow">
-        <h2 className="text-xl font-semibold text-gray-900">Status do Sistema</h2>
-        <div className="mt-4">
-          <StatusItem title="Servidor Principal" status="online" value="99.9%" />
-          <StatusItem title="Base de Dados" status="online" value="99.8%" />
-          <StatusItem title="Sistema de Backup" status="online" value="100%" />
-          <StatusItem title="Notificações" status="online" value="91.2%" />
-        </div>
-      </div>
-    );
-  };
-
-  const MonthlyStatistics = () => {
-    interface StatBarProps {
-      title: string;
-      value: number;
-      total: number;
-      unit?: string;
-    }
-    const StatBar: React.FC<StatBarProps> = ({ title, value, total, unit = '' }) => {
-      const percentage = (value / total) * 100;
-      return (
-        <div className="mb-4">
-          <div className="flex items-center justify-between text-sm text-gray-700">
-            <span>{title}</span>
-            <span>
-              {value} {unit}
-            </span>
-          </div>
-          <div className="mt-1 h-2 w-full rounded-full bg-gray-200">
-            <div
-              className="h-full rounded-full bg-lime-500 transition-all duration-500"
-              style={{ width: `${percentage}%` }}
-            ></div>
+        <div className="rounded-lg bg-white p-6 shadow">
+          <h2 className="text-xl font-semibold text-gray-900">Status do Sistema</h2>
+          <div className="mt-4">
+            <StatusItem title="Servidor Principal" status="online" value="99.9%" />
+            <StatusItem title="Base de Dados" status="online" value="99.8%" />
+            <StatusItem title="Sistema de Backup" status="online" value="100%" />
+            <StatusItem title="Notificações" status="online" value="91.2%" />
           </div>
         </div>
       );
     };
-
-    return (
-      <div className="rounded-lg bg-white p-6 shadow">
-        <h2 className="text-xl font-semibold text-gray-900">Estatísticas Mensais</h2>
-        <div className="mt-4">
-          <StatBar title="Tarefas Concluídas" value={1247} total={1500} />
-          <StatBar title="Relatórios Gerados" value={42} total={50} />
-          <StatBar title="Satisfação Geral" value={94} total={100} unit="%" />
+  
+    const MonthlyStatistics = () => {
+      interface StatBarProps {
+        title: string;
+        value: number;
+        total: number;
+        unit?: string;
+      }
+      const StatBar: React.FC<StatBarProps> = ({ title, value, total, unit = '' }) => {
+        const percentage = (value / total) * 100;
+        return (
+          <div className="mb-4">
+            <div className="flex items-center justify-between text-sm text-gray-700">
+              <span>{title}</span>
+              <span>
+                {value} {unit}
+              </span>
+            </div>
+            <div className="mt-1 h-2 w-full rounded-full bg-gray-200">
+              <div
+                className="h-full rounded-full bg-lime-500 transition-all duration-500"
+                style={{ width: `${percentage}%` }}
+              ></div>
+            </div>
+          </div>
+        );
+      };
+  
+      return (
+        <div className="rounded-lg bg-white p-6 shadow">
+          <h2 className="text-xl font-semibold text-gray-900">Estatísticas Mensais</h2>
+          <div className="mt-4">
+            <StatBar title="Tarefas Concluídas" value={1247} total={1500} />
+            <StatBar title="Relatórios Gerados" value={42} total={50} />
+            <StatBar title="Satisfação Geral" value={94} total={100} unit="%" />
+          </div>
         </div>
-      </div>
-    );
-  };
-
-  const ImportantNotifications = () => {
-    interface NotificationItemProps {
-      title: string;
-      description: string;
-    }
-    const NotificationItem: React.FC<NotificationItemProps> = ({ title, description }) => (
-      <div className="mb-3 flex items-start">
-        <LuInfo className="mt-1 h-5 w-5 flex-shrink-0 text-lime-500" />
-        <div className="ml-3">
-          <h4 className="font-medium text-gray-800">{title}</h4>
-          <p className="text-sm text-gray-500">{description}</p>
+      );
+    };
+  
+    const ImportantNotifications = () => {
+      interface NotificationItemProps {
+        title: string;
+        description: string;
+      }
+      const NotificationItem: React.FC<NotificationItemProps> = ({ title, description }) => (
+        <div className="mb-3 flex items-start">
+          <LuInfo className="mt-1 h-5 w-5 flex-shrink-0 text-lime-500" />
+          <div className="ml-3">
+            <h4 className="font-medium text-gray-800">{title}</h4>
+            <p className="text-sm text-gray-500">{description}</p>
+          </div>
         </div>
-      </div>
-    );
-
-    return (
-      <div className="rounded-lg bg-white p-6 shadow">
-        <h2 className="text-xl font-semibold text-gray-900">Notificações Importantes</h2>
-        <div className="mt-4">
-          <NotificationItem title="Sistema de Backup" description="Backup automático falhou em 2 dias." />
-          <NotificationItem title="Novo Funcionário" description="Agendar a operação de cadastro." />
-          <NotificationItem title="Relatório Mensal" description="Pronto para ser lido e salvo." />
+      );
+  
+      return (
+        <div className="rounded-lg bg-white p-6 shadow">
+          <h2 className="text-xl font-semibold text-gray-900">Notificações Importantes</h2>
+          <div className="mt-4">
+            <NotificationItem title="Sistema de Backup" description="Backup automático falhou em 2 dias." />
+            <NotificationItem title="Novo Funcionário" description="Agendar a operação de cadastro." />
+            <NotificationItem title="Relatório Mensal" description="Pronto para ser lido e salvo." />
+          </div>
         </div>
-      </div>
-    );
-  };
-*/
+      );
+    };
+  */
   return (
     <div className="min-h-screen bg-gray-100 p-8 font-sans text-gray-800">
       <Header />

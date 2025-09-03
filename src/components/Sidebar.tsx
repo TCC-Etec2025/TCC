@@ -19,8 +19,19 @@ type SidebarProps = {
   estado: boolean;
 };
 
+type UsuarioDetalhes = {
+  nome_completo?: string;
+  // adicione outras propriedades conforme necessário
+};
+
+type Usuario = {
+  role: string;
+  detalhes: UsuarioDetalhes;
+  // adicione outras propriedades conforme necessário
+};
+
 export default function Sidebar({ estado }: SidebarProps) {
-  const { usuario, logout } = useUser()
+  const { usuario, logout } = useUser() as { usuario: Usuario, logout: () => void }
   const navigate = useNavigate()
   const [isHovered, setIsHovered] = useState(false)
 

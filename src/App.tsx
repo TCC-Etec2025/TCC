@@ -6,7 +6,7 @@ import FuncionarioDashboard from './pages/FuncionarioDashboard';
 import RotaProtegida from './components/RotaProtegida';
 import DashboardRedirect from './components/DashboardRedirect';
 import ProtectedLayout from './layouts/ProtectedLayout';
-import CadastroIdoso from './pages/CadastroIdoso';
+import CadastroIdoso from './pages/CadastroPaciente';
 
 export default function App() {
   return (

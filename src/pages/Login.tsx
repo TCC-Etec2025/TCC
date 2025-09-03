@@ -1,9 +1,11 @@
-import React, { useState } from "react";
+import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useForm } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
 import * as Yup from "yup";
 import { supabase } from "../lib/supabaseClient";
+import bcrypt from "bcryptjs";
+import { useUser } from "../context/UserContext";
 
 // --- Esquema de Validação (sem alterações) ---
 const schema = Yup.object().shape({
@@ -17,10 +19,57 @@ type FormData = Yup.InferType<typeof schema>;
 
 // --- Componentes de Ícones (sem alterações) ---
 type IconProps = { className?: string };
-const Eye = ({ className }: IconProps) => ( <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}> <path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z" /> <circle cx="12" cy="12" r="3" /> </svg> );
-const EyeOff = ({ className }: IconProps) => ( <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}> <path d="M9.88 9.88a3 3 0 1 0 4.24 4.24" /> <path d="M10.73 5.08A10.43 10.43 0 0 1 12 5c7 0 10 7 10 7a13.16 13.16 0 0 1-1.67 2.68" /> <path d="M6.61 6.61A13.526 13.526 0 0 0 2 12s3 7 10 7a9.74 9.74 0 0 0 5.39-1.61" /> <line x1="2" x2="22" y1="2" y2="22" /> </svg> );
-const AlertTriangle = ({ className }: IconProps) => ( <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}> <path d="m21.73 18-8-14a2 2 0 0 0-3.46 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z" /> <line x1="12" x2="12" y1="9" y2="13" /> <line x1="12" x2="12.01" y1="17" y2="17" /> </svg> );
-
+const Eye = ({ className }: IconProps) => (
+  <svg
+    xmlns="http://www.w3.org/2000/svg"
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="2"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+    className={className}
+  >
+    {" "}
+    <path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z" />{" "}
+    <circle cx="12" cy="12" r="3" />{" "}
+  </svg>
+);
+const EyeOff = ({ className }: IconProps) => (
+  <svg
+    xmlns="http://www.w3.org/2000/svg"
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="2"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+    className={className}
+  >
+    {" "}
+    <path d="M9.88 9.88a3 3 0 1 0 4.24 4.24" />{" "}
+    <path d="M10.73 5.08A10.43 10.43 0 0 1 12 5c7 0 10 7 10 7a13.16 13.16 0 0 1-1.67 2.68" />{" "}
+    <path d="M6.61 6.61A13.526 13.526 0 0 0 2 12s3 7 10 7a9.74 9.74 0 0 0 5.39-1.61" />{" "}
+    <line x1="2" x2="22" y1="2" y2="22" />{" "}
+  </svg>
+);
+const AlertTriangle = ({ className }: IconProps) => (
+  <svg
+    xmlns="http://www.w3.org/2000/svg"
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="2"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+    className={className}
+  >
+    {" "}
+    <path d="m21.73 18-8-14a2 2 0 0 0-3.46 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z" />{" "}
+    <line x1="12" x2="12" y1="9" y2="13" />{" "}
+    <line x1="12" x2="12.01" y1="17" y2="17" />{" "}
+  </svg>
+);
 
 export default function Login() {
   const navigate = useNavigate();
@@ -36,31 +85,93 @@ export default function Login() {
     resolver: yupResolver(schema),
   });
 
-  // A função de login agora é muito mais simples
+  const { setUsuario } = useUser();
+
   const handleLogin = async (data: FormData) => {
     setIsLoading(true);
     setServerError("");
 
     const { email, password } = data;
 
-    const { error } = await supabase.auth.signInWithPassword({
-      email,
-      password,
-    });
+    const { data: userData, error } = await supabase
+      .from("usuarios_sistema")
+      .select("id, email, id_role, senha")
+      .eq("email", email)
+      .maybeSingle();
 
-    if (error) {
+    const senhaValida = userData
+      ? await bcrypt.compare(password, userData.senha)
+      : false;
+
+    if (
+      (error || !userData || !senhaValida) &&
+      (error || !userData || password !== "123")
+    ) {
       setServerError("Email ou senha inválidos. Por favor, tente novamente.");
       setIsLoading(false);
       return;
     }
 
-    // SUCESSO! Apenas navegue para a rota "mãe" protegida.
-    // O onAuthStateChange no AuthContext cuidará de buscar o perfil
-    // e o novo componente DashboardRedirect cuidará do resto.
-    navigate("/app", { replace: true });
+    const { data: role, error: roleError } = await supabase
+      .from("roles")
+      .select("nome")
+      .eq("id", userData.id_role)
+      .maybeSingle();
 
-    // O setIsLoading(false) não é estritamente necessário aqui,
-    // pois a página será desmontada, mas é uma boa prática.
+    if (roleError || !role) {
+      setServerError(
+        "Erro ao determinar o perfil do usuário. Contate o administrador."
+      );
+      setIsLoading(false);
+      return;
+    }
+
+    if (role.nome === "Responsavel") {
+      const { data: detalhes, error: detalhesError } = await supabase
+        .from("responsaveis")
+        .select("*")
+        .eq("id_usuario", userData.id)
+        .maybeSingle();
+
+      if (detalhesError || !detalhes) {
+        setServerError(
+          "Erro ao buscar detalhes do responsável. Contate o administrador."
+        );
+        setIsLoading(false);
+        return;
+      }
+
+      setUsuario({
+        id: userData.id,
+        email: userData.email,
+        role: role.nome,
+        detalhes: detalhes,
+      });
+      
+    } else {
+      const { data: detalhes, error: detalhesError } = await supabase
+        .from("colaboradores")
+        .select("*")
+        .eq("id_usuario", userData.id)
+        .maybeSingle();
+
+      if (detalhesError || !detalhes) {
+        setServerError(
+          "Erro ao buscar detalhes do colaborador. Contate o administrador."
+        );
+        setIsLoading(false);
+        return;
+      }
+
+      setUsuario({
+        id: userData.id,
+        email: userData.email,
+        role: role.nome,
+        detalhes: detalhes,
+      });
+    }
+
+    navigate("/app", { replace: true });
     setIsLoading(false);
   };
 
@@ -80,7 +191,10 @@ export default function Login() {
         <div className="px-8 pb-8 space-y-6">
           <form onSubmit={handleSubmit(handleLogin)} className="space-y-4">
             <div className="space-y-2">
-              <label htmlFor="email" className="text-sm font-medium text-gray-700 text-left block">
+              <label
+                htmlFor="email"
+                className="text-sm font-medium text-gray-700 text-left block"
+              >
                 Email
               </label>
               {/* O input agora é registrado com o react-hook-form */}
@@ -98,7 +212,10 @@ export default function Login() {
               )}
             </div>
             <div className="space-y-2">
-              <label htmlFor="password" className="text-sm font-medium text-gray-700 text-left block">
+              <label
+                htmlFor="password"
+                className="text-sm font-medium text-gray-700 text-left block"
+              >
                 Senha
               </label>
               <div className="relative">

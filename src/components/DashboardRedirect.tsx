@@ -1,29 +1,20 @@
 import { Navigate } from 'react-router-dom';
-import { useAuth } from '../context/AuthContext';
+import { useUser } from '../context/UserContext';
 
 // Este componente decide para qual dashboard redirecionar o usuário
 // com base no perfil que já está carregado no AuthContext.
 export default function DashboardRedirect() {
-  const { perfil, loading } = useAuth();
-
-  // Enquanto o perfil estiver carregando, podemos mostrar uma tela de loading
-  if (loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        Carregando informações do usuário...
-      </div>
-    );
-  }
+  const { usuario} = useUser();
 
   // Se por algum motivo não houver perfil, volta para o login
-  if (!perfil) {
+  if (!usuario) {
     return <Navigate to="/login" replace />;
   }
 
   // Agora, fazemos o redirecionamento com base no perfil
-  const { role } = perfil;
+  const role = usuario.role;
 
-  if (role === 'Admin') {
+  if (role === 'Administrador') {
     return <Navigate to="/app/admin" replace />;
   }
   
@@ -31,7 +22,7 @@ export default function DashboardRedirect() {
     return <Navigate to="/app/responsavel" replace />;
   }
 
-  if (role === 'Cuidador' || role === 'Enfermagem') {
+  if (role === 'Funcionario') {
     return <Navigate to="/app/funcionario" replace />;
   }
 

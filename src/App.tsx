@@ -7,6 +7,10 @@ import RotaProtegida from './components/RotaProtegida';
 import DashboardRedirect from './components/DashboardRedirect';
 import ProtectedLayout from './layouts/ProtectedLayout';
 import CadastroIdoso from './pages/CadastroPaciente';
+import Residentes from './pages/Residentes';
+import Familiares from './pages/Familiares';
+import Funcionario from './pages/Funcionarios';
+import CadastroPertences from './pages/CadastroPertences';
 
 export default function App() {
   return (
@@ -29,10 +33,11 @@ export default function App() {
         <Route path="admin" element={<AdminDashboard />} />
         
         {/* Rota para a página de cadastro de pacientes */}
-        <Route 
-          path="admin/pacientes/cadastrar" 
-          element={<CadastroIdoso />} 
-        />
+        <Route path="admin/pacientes/cadastrar" element={<CadastroIdoso />} />
+        <Route path="admin/pertence/cadastrar" element={<CadastroPertences />} />
+        <Route path="admin/pacientes" element={<Residentes />} />
+        <Route path="admin/familiares" element={<Familiares />} />
+        <Route path="admin/funcionarios" element={<Funcionario />} />
 
         {/* Outras rotas */}
         <Route path="responsavel" element={<ResponsavelDashboard />} />

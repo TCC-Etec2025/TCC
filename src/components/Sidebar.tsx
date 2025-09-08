@@ -3,13 +3,13 @@
 import { useState } from "react"
 import { useUser } from "../context/UserContext"
 import { useNavigate } from "react-router-dom"
-import { Home, Users, BarChart3, Settings, LogOut, Building2 } from "lucide-react"
+import { Home, Users, BarChart3, Settings, LogOut } from "lucide-react"
 
 const menuItems = {
   Administrador: [
     { id: "dashboard", label: "Dashboard", icon: Home, path: "/app/admin" },
     { id: "pacientes", label: "Pacientes", icon: Users, path: "/app/admin/pacientes" },
-    { id: "responsaveis", label: "Responsáveis", icon: Users, path: "/app/admin/responsaveis" },
+    { id: "responsaveis", label: "Responsáveis", icon: Users, path: "/app/admin/familiares" },
     { id: "funcionarios", label: "Funcionários", icon: Users, path: "/app/admin/funcionarios" },
     { id: "relatorios", label: "Relatórios", icon: BarChart3, path: "/app/admin/relatorios" },
   ],
@@ -21,13 +21,11 @@ type SidebarProps = {
 
 type UsuarioDetalhes = {
   nome_completo?: string;
-  // adicione outras propriedades conforme necessário
 };
 
 type Usuario = {
   role: string;
   detalhes: UsuarioDetalhes;
-  // adicione outras propriedades conforme necessário
 };
 
 export default function Sidebar({ estado }: SidebarProps) {
@@ -35,37 +33,42 @@ export default function Sidebar({ estado }: SidebarProps) {
   const navigate = useNavigate()
   const [isHovered, setIsHovered] = useState(false)
 
-
   if (!usuario) return null
   const items = menuItems[usuario.role as keyof typeof menuItems] || []
   const expanded = isHovered || !estado;
 
   return (
     <div
-      className={`flex flex-col h-screen bg-white border-r shadow-lg transition-all duration-300 ${expanded ? "w-48" : "w-16"} group`}
+      className={`flex flex-col h-screen bg-odara-primary border-r border-odara-contorno/20 shadow-lg transition-all duration-300 ${expanded ? "w-64" : "w-16"} group`}
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
     >
       {/* Header */}
-      <div className="flex items-center justify-between p-4 border-b">
-        {expanded && (
-          <div className="flex items-center gap-2 text-blue-600 font-bold">
-            <Building2 className="w-6 h-6" />
-            <span>ILPI System</span>
+      <div className="flex items-center justify-between p-4 border-b border-odara-contorno/20">
+        <div className="flex items-center gap-2 text-odara-contorno font-bold">
+          <div className="w-8 h-8 bg-white rounded-full flex items-center justify-center overflow-hidden border-2 border-odara-contorno shadow-lg">
+            <img
+              src="/logo.png"
+              alt="Logo Odara Gestão"
+              className="w-full h-full object-cover"
+            />
           </div>
-        )}
+          {expanded && (
+            <span className="text-lg">Odara Gestão</span>
+          )}
+        </div>
       </div>
 
       {/* User */}
-      <div className="p-4 border-b">
+      <div className="p-4 border-b border-odara-contorno/20">
         <div className="flex items-center gap-3">
-          <div className="h-10 w-10 rounded-full bg-blue-500 flex items-center justify-center text-white ring-2 ring-blue-400">
+          <div className="h-10 w-10 rounded-full bg-odara-secondary flex items-center justify-center text-odara-contorno ring-2 ring-odara-contorno/30">
             {usuario.detalhes.nome_completo?.slice(0, 2).toUpperCase() || "??"}
           </div>
           {expanded && (
             <div>
-              <p className="font-semibold">{usuario.detalhes.nome_completo}</p>
-              <p className="text-sm text-gray-500">{usuario.role}</p>
+              <p className="font-semibold text-odara-contorno">{usuario.detalhes.nome_completo}</p>
+              <p className="text-sm text-odara-contorno/70">{usuario.role}</p>
             </div>
           )}
         </div>
@@ -77,22 +80,29 @@ export default function Sidebar({ estado }: SidebarProps) {
           <button
             key={item.id}
             onClick={() => navigate(item.path)}
-            className={`flex items-center gap-3 w-full p-2 rounded-lg hover:bg-blue-100 hover:text-blue-600 transition ${expanded ? "" : "justify-center"}`}
+            className={`flex items-center gap-3 w-full p-3 rounded-lg transition-all duration-200 transform hover:scale-105 ${expanded ? "" : "justify-center"
+              } ${window.location.pathname === item.path
+                ? "bg-odara-secondary text-odara-contorno shadow-lg border-2 border-odara-contorno"
+                : "text-odara-contorno/90 hover:bg-odara-contorno/10 hover:text-odara-contorno"
+              }`}
           >
-            <item.icon className="w-5 h-5" />
-            {expanded && <span>{item.label}</span>}
+            <item.icon className="w-5 h-5 flex-shrink-0" />
+            {expanded && <span className="font-medium">{item.label}</span>}
           </button>
         ))}
       </nav>
 
       {/* Footer */}
-      <div className="p-2 border-t">
-        <button className={`flex items-center gap-3 w-full p-2 rounded-lg hover:bg-gray-100 ${expanded ? "" : "justify-center"}`}>
-          <Settings className="w-5 h-5" />
+      <div className="p-2 border-t border-odara-contorno/20">
+        <button className={`flex items-center gap-3 w-full p-3 rounded-lg text-odara-contorno/90 hover:bg-odara-contorno/10 hover:text-odara-contorno transition-all ${expanded ? "" : "justify-center"}`}>
+          <Settings className="w-5 h-5 flex-shrink-0" />
           {expanded && <span>Configurações</span>}
         </button>
-        <button onClick={logout} className={`flex items-center gap-3 w-full p-2 rounded-lg text-red-600 hover:bg-red-100 ${expanded ? "" : "justify-center"}`}>
-          <LogOut className="w-5 h-5" />
+        <button
+          onClick={logout}
+          className={`flex items-center gap-3 w-full p-3 rounded-lg text-red-400 hover:bg-red-400/10 hover:text-red-300 transition-all ${expanded ? "" : "justify-center"}`}
+        >
+          <LogOut className="w-5 h-5 flex-shrink-0" />
           {expanded && <span>Sair</span>}
         </button>
       </div>

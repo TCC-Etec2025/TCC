@@ -1,19 +1,23 @@
 import { X, User, Box, Plus } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 
 interface ModalPosCadastroProps {
   isOpen: boolean;
-  onClose: () => void;
-  onSelecionarOpcao: (opcao: 'prontuario' | 'pertences' | 'nada') => void;
-  nomeIdoso?: string;
+  idoso: Idoso;
+}
+
+interface Idoso {
+  id: number;
+  nome_completo: string;
+  foto?: string | null;
 }
 
 export default function ModalCadastroPaciente({
   isOpen,
-  onClose,
-  onSelecionarOpcao,
-  nomeIdoso
+  idoso
 }: ModalPosCadastroProps) {
   if (!isOpen) return null;
+  const navigate = useNavigate();
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
@@ -21,7 +25,7 @@ export default function ModalCadastroPaciente({
         <div className="flex justify-between items-center mb-4">
           <h3 className="text-xl font-semibold text-gray-800">Cadastro Realizado com Sucesso!</h3>
           <button
-            onClick={onClose}
+            onClick={() => navigate('/app')}
             className="text-gray-400 hover:text-gray-600 transition-colors"
             aria-label="Fechar modal"
           >
@@ -33,9 +37,9 @@ export default function ModalCadastroPaciente({
           <p className="text-green-600 font-medium mb-2">
             ✓ Paciente cadastrado com sucesso
           </p>
-          {nomeIdoso && (
+          {idoso && (
             <p className="text-gray-700 mb-1">
-              <strong>Nome:</strong> {nomeIdoso}
+              <strong>Nome:</strong> {idoso.nome_completo}
             </p>
           )}
           <p className="text-gray-600 mt-2">
@@ -45,7 +49,7 @@ export default function ModalCadastroPaciente({
 
         <div className="space-y-3">
           <button
-            onClick={() => onSelecionarOpcao('prontuario')}
+            onClick={() => navigate('')}
             className="w-full flex items-center justify-between p-4 border border-gray-200 rounded-lg hover:border-blue-300 hover:bg-blue-50 transition-colors group"
           >
             <div className="flex items-center">
@@ -61,7 +65,7 @@ export default function ModalCadastroPaciente({
           </button>
 
           <button
-            onClick={() => onSelecionarOpcao('pertences')}
+            onClick={() => navigate('/app/admin/pertence/cadastrar', { state: { idoso } })}
             className="w-full flex items-center justify-between p-4 border border-gray-200 rounded-lg hover:border-green-300 hover:bg-green-50 transition-colors group"
           >
             <div className="flex items-center">
@@ -77,7 +81,7 @@ export default function ModalCadastroPaciente({
           </button>
 
           <button
-            onClick={() => onSelecionarOpcao('nada')}
+            onClick={() => navigate('/app')}
             className="w-full p-4 border border-gray-200 rounded-lg hover:border-gray-300 hover:bg-gray-50 transition-colors text-gray-700 font-medium"
           >
             Agora não

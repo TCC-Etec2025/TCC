@@ -17,6 +17,12 @@ const steps = [
   { id: 3, label: 'Dados Adicionais', icon: FileText },
 ];
 
+interface Idoso {
+  id: number;
+  nome_completo: string;
+  foto?: string | null;
+}
+
 export const schema = yup.object({
   tipoResponsavel: yup.string().oneOf(['novo', 'existente']).required(),
   resp_existente_id: yup
@@ -111,8 +117,7 @@ export default function CadastroPaciente() {
   const [isLoading, setIsLoading] = useState(false);
   const [formMessage, setFormMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
   const [showModalPosCadastro, setShowModalPosCadastro] = useState(false);
-  const [idIdosoCadastrado, setIdIdosoCadastrado] = useState<number | null>(null);
-  const [nomeIdosoCadastrado, setNomeIdosoCadastrado] = useState<string>('');
+  const [idoso, setIdoso] = useState<Idoso>({ id: 0, nome_completo: '', foto: null });
 
   const methods = useForm<FormValues>({
     resolver: typedYupResolver(schema),
@@ -148,23 +153,6 @@ export default function CadastroPaciente() {
       idoso_responsavel_parentesco: '',
     },
   });
-
-  const handleOpcaoPosCadastro = (opcao: 'prontuario' | 'pertences' | 'nada') => {
-    setShowModalPosCadastro(false);
-
-    switch (opcao) {
-      case 'prontuario':
-        window.location.href = `/prontuarios/novo?id_idoso=${idIdosoCadastrado}`;
-        break;
-      case 'pertences':
-        window.location.href = `/pertences/novo?id_idoso=${idIdosoCadastrado}`;
-        break;
-      case 'nada':
-        methods.reset();
-        setStep(1);
-        break;
-    }
-  };
 
   const tipoResponsavelWatch = methods.watch('tipoResponsavel');
 
@@ -256,12 +244,13 @@ export default function CadastroPaciente() {
       }
 
       if (result && result.length > 0) {
-        const { id_idoso } = result[0];
 
-        setIdIdosoCadastrado(id_idoso);
-        setNomeIdosoCadastrado(data.idoso_nome_completo);
+        setIdoso({
+          id: result[0],
+          nome_completo: data.idoso_nome_completo,
+          foto: data.idoso_foto_perfil_url || null
+        });
         setShowModalPosCadastro(true);
-
         setFormMessage({
           type: 'success',
           text: `Cadastro realizado com sucesso!`
@@ -331,9 +320,7 @@ export default function CadastroPaciente() {
       </form>
       <ModalCadastroPaciente
         isOpen={showModalPosCadastro}
-        onClose={() => setShowModalPosCadastro(false)}
-        onSelecionarOpcao={handleOpcaoPosCadastro}
-        nomeIdoso={nomeIdosoCadastrado}
+        idoso={idoso}
       />
     </div>
   );

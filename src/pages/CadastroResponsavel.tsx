@@ -7,15 +7,11 @@ import { Loader2, UserPlus, CheckCircle2, XCircle } from 'lucide-react';
 import { supabase } from '../lib/supabaseClient';
 
 const schema = yup.object({
-  tipo_vinculo: yup.string().required('O tipo de vínculo é obrigatório'),
   nome_completo: yup.string().required('O nome completo é obrigatório'),
   cpf: yup.string().required('O CPF é obrigatório'),
-  data_nascimento: yup.string().nullable(),
-  cargo: yup.string().required('O cargo é obrigatório'),
-  registro_profissional: yup.string().nullable(),
-  data_admissao: yup.string().required('A data de admissão é obrigatória'),
-  data_demissao: yup.string().nullable(),
-  telefone: yup.string().required('O telefone é obrigatório'),
+  email: yup.string().email('Email inválido').required('O email é obrigatório'),
+  telefone_principal: yup.string().required('O telefone principal é obrigatório'),
+  telefone_secundario: yup.string().nullable(),
   cep: yup.string().required('O CEP é obrigatório'),
   logradouro: yup.string().required('O logradouro é obrigatório'),
   numero: yup.string().required('O número é obrigatório'),
@@ -23,29 +19,23 @@ const schema = yup.object({
   bairro: yup.string().required('O bairro é obrigatório'),
   cidade: yup.string().required('A cidade é obrigatória'),
   estado: yup.string().required('O estado é obrigatório'),
-  contato_emergencia_nome: yup.string().nullable(),
-  contato_emergencia_telefone: yup.string().nullable(),
-  status: yup.string().required('O status é obrigatório'),
+  observacoes: yup.string().nullable(),
 }).required();
 
 type FormValues = yup.InferType<typeof schema>;
 
-export default function CadastroFuncionario() {
+export default function CadastroResponsavel() {
   const [isLoading, setIsLoading] = useState(false);
   const [formMessage, setFormMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
 
-  const { register, handleSubmit, formState: { errors }, reset, watch } = useForm({
+  const { register, handleSubmit, formState: { errors }, reset } = useForm({
     resolver: yupResolver(schema),
     defaultValues: {
-      tipo_vinculo: '',
       nome_completo: '',
       cpf: '',
-      data_nascimento: null,
-      cargo: '',
-      registro_profissional: null,
-      data_admissao: '',
-      data_demissao: null,
-      telefone: '',
+      telefone_principal: '',
+      telefone_secundario: null,
+      email: '',
       cep: '',
       logradouro: '',
       numero: '',
@@ -53,13 +43,9 @@ export default function CadastroFuncionario() {
       bairro: '',
       cidade: '',
       estado: '',
-      contato_emergencia_nome: null,
-      contato_emergencia_telefone: null,
-      status: 'Ativo',
+      observacoes: null,
     },
   });
-
-  const status = watch('status');
 
   const onSubmit: SubmitHandler<FormValues> = async (data) => {
     setIsLoading(true);
@@ -85,34 +71,28 @@ export default function CadastroFuncionario() {
         throw new Error('Erro ao cadastrar o endereço: ' + enderecoError?.message);
       }
 
-      // 2. Inserir o funcionário
-      const { error: funcionarioError } = await supabase
-        .from('colaboradores')
+      // 2. Inserir o responsável, usando o id do endereço
+      const { error: responsavelError } = await supabase
+        .from('responsaveis')
         .insert({
-          tipo_vinculo: data.tipo_vinculo,
           nome_completo: data.nome_completo,
           cpf: data.cpf,
-          data_nascimento: data.data_nascimento || undefined,
-          cargo: data.cargo,
-          registro_profissional: data.registro_profissional || undefined,
-          data_admissao: data.data_admissao,
-          data_demissao: data.data_demissao || undefined,
-          telefone: data.telefone,
+          email: data.email,
+          telefone_principal: data.telefone_principal,
+          telefone_secundario: data.telefone_secundario || undefined,
           id_endereco: enderecoData.id,
-          contato_emergencia_nome: data.contato_emergencia_nome || undefined,
-          contato_emergencia_telefone: data.contato_emergencia_telefone || undefined,
-          status: data.status,
+          observacoes: data.observacoes || undefined,
         });
 
-      if (funcionarioError) {
-        throw new Error('Erro ao cadastrar o funcionário: ' + funcionarioError?.message);
+      if (responsavelError) {
+        throw new Error('Erro ao cadastrar o responsável: ' + responsavelError?.message);
       }
 
       setFormMessage({
         type: 'success',
-        text: `Funcionário ${data.nome_completo} cadastrado com sucesso!`
+        text: `Responsável ${data.nome_completo} cadastrado com sucesso!`
       });
-      reset();
+      reset(); // Limpa o formulário
 
     } catch (err: any) {
       setFormMessage({
@@ -125,63 +105,17 @@ export default function CadastroFuncionario() {
   };
 
   return (
-    <div className="p-8 bg-slate-50 rounded-2xl shadow-xl max-w-4xl mx-auto my-12">
+    <div className="p-8 bg-slate-50 rounded-2xl shadow-xl max-w-3xl mx-auto my-12">
       <div className="flex items-center justify-center space-x-4 mb-8">
         <UserPlus size={48} className="text-blue-500" />
-        <h1 className="text-3xl font-bold text-gray-800">Cadastro de Funcionário</h1>
+        <h1 className="text-3xl font-bold text-gray-800">Cadastro de Responsável</h1>
       </div>
       <p className="text-center mb-8 text-gray-600">
-        Preencha os dados do funcionário/colaborador.
+        Preencha os dados do responsável.
       </p>
 
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          {/* Dados Pessoais */}
-          <div className="md:col-span-2">
-            <h3 className="text-xl font-semibold text-gray-800 mb-4">Dados Pessoais</h3>
-          </div>
-          
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Tipo de Vínculo *
-            </label>
-            <select
-              {...register('tipo_vinculo')}
-              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors bg-white"
-            >
-              <option value="">Selecione o tipo de vínculo</option>
-              <option value="CLT">CLT</option>
-              <option value="PJ">PJ</option>
-              <option value="Estagiário">Estagiário</option>
-              <option value="Voluntário">Voluntário</option>
-              <option value="Outro">Outro</option>
-            </select>
-            {errors.tipo_vinculo && (
-              <p className="text-red-500 text-sm mt-2 font-medium">
-                {errors.tipo_vinculo.message}
-              </p>
-            )}
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Status *
-            </label>
-            <select
-              {...register('status')}
-              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors bg-white"
-            >
-              <option value="Ativo">Ativo</option>
-              <option value="Inativo">Inativo</option>
-              <option value="Afastado">Afastado</option>
-            </select>
-            {errors.status && (
-              <p className="text-red-500 text-sm mt-2 font-medium">
-                {errors.status.message}
-              </p>
-            )}
-          </div>
-
           <div className="md:col-span-2">
             <label className="block text-sm font-medium text-gray-700 mb-2">
               Nome Completo *
@@ -197,7 +131,6 @@ export default function CadastroFuncionario() {
               </p>
             )}
           </div>
-
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
               CPF *
@@ -213,132 +146,79 @@ export default function CadastroFuncionario() {
               </p>
             )}
           </div>
-
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
-              Data de Nascimento
+              E-mail *
             </label>
             <input
-              type="date"
-              {...register('data_nascimento')}
+              type="email"
+              {...register('email')}
               className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+              placeholder="email@exemplo.com"
             />
+            {errors.email && (
+              <p className="text-red-500 text-sm mt-2 font-medium">
+                {errors.email.message}
+              </p>
+            )}
           </div>
-
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
-              Telefone *
+              Telefone Principal *
             </label>
             <input
-              {...register('telefone')}
+              {...register('telefone_principal')}
               className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
               placeholder="(11) 99999-9999"
             />
-            {errors.telefone && (
+            {errors.telefone_principal && (
               <p className="text-red-500 text-sm mt-2 font-medium">
-                {errors.telefone.message}
+                {errors.telefone_principal.message}
               </p>
             )}
           </div>
-
-          {/* Dados Profissionais */}
-          <div className="md:col-span-2">
-            <h3 className="text-xl font-semibold text-gray-800 mb-4 mt-6">Dados Profissionais</h3>
-          </div>
-
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
-              Cargo *
+              Telefone Secundário
             </label>
             <input
-              {...register('cargo')}
+              {...register('telefone_secundario')}
               className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
-              placeholder="Cargo/função"
-            />
-            {errors.cargo && (
-              <p className="text-red-500 text-sm mt-2 font-medium">
-                {errors.cargo.message}
-              </p>
-            )}
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Registro Profissional
-            </label>
-            <input
-              {...register('registro_profissional')}
-              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
-              placeholder="CRM, COREN, etc."
+              placeholder="(11) 88888-8888"
             />
           </div>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Data de Admissão *
-            </label>
-            <input
-              type="date"
-              {...register('data_admissao')}
-              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
-            />
-            {errors.data_admissao && (
-              <p className="text-red-500 text-sm mt-2 font-medium">
-                {errors.data_admissao.message}
-              </p>
-            )}
-          </div>
-
-          {status === 'Inativo' && (
+          <div className="md:col-span-2 grid grid-cols-1 md:grid-cols-3 gap-6">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
-                Data de Demissão
+                CEP *
               </label>
               <input
-                type="date"
-                {...register('data_demissao')}
+                {...register('cep')}
                 className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+                placeholder="00000-000"
               />
+              {errors.cep && (
+                <p className="text-red-500 text-sm mt-2 font-medium">
+                  {errors.cep.message}
+                </p>
+              )}
             </div>
-          )}
-
-          {/* Endereço */}
-          <div className="md:col-span-2">
-            <h3 className="text-xl font-semibold text-gray-800 mb-4 mt-6">Endereço</h3>
+            <div className="md:col-span-2">
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Logradouro *
+              </label>
+              <input
+                {...register('logradouro')}
+                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+                placeholder="Rua, Avenida, etc."
+              />
+              {errors.logradouro && (
+                <p className="text-red-500 text-sm mt-2 font-medium">
+                  {errors.logradouro.message}
+                </p>
+              )}
+            </div>
           </div>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              CEP *
-            </label>
-            <input
-              {...register('cep')}
-              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
-              placeholder="00000-000"
-            />
-            {errors.cep && (
-              <p className="text-red-500 text-sm mt-2 font-medium">
-                {errors.cep.message}
-              </p>
-            )}
-          </div>
-
-          <div className="md:col-span-2">
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Logradouro *
-            </label>
-            <input
-              {...register('logradouro')}
-              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
-              placeholder="Rua, Avenida, etc."
-            />
-            {errors.logradouro && (
-              <p className="text-red-500 text-sm mt-2 font-medium">
-                {errors.logradouro.message}
-              </p>
-            )}
-          </div>
-
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
               Número *
@@ -354,8 +234,7 @@ export default function CadastroFuncionario() {
               </p>
             )}
           </div>
-
-          <div>
+          <div className="md:col-span-2">
             <label className="block text-sm font-medium text-gray-700 mb-2">
               Complemento
             </label>
@@ -365,7 +244,6 @@ export default function CadastroFuncionario() {
               placeholder="Apartamento, bloco, etc."
             />
           </div>
-
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
               Bairro *
@@ -381,7 +259,6 @@ export default function CadastroFuncionario() {
               </p>
             )}
           </div>
-
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
               Cidade *
@@ -397,7 +274,6 @@ export default function CadastroFuncionario() {
               </p>
             )}
           </div>
-
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
               Estado *
@@ -406,7 +282,6 @@ export default function CadastroFuncionario() {
               {...register('estado')}
               className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
               placeholder="SP"
-              maxLength={2}
             />
             {errors.estado && (
               <p className="text-red-500 text-sm mt-2 font-medium">
@@ -414,31 +289,15 @@ export default function CadastroFuncionario() {
               </p>
             )}
           </div>
-
-          {/* Contato de Emergência */}
           <div className="md:col-span-2">
-            <h3 className="text-xl font-semibold text-gray-800 mb-4 mt-6">Contato de Emergência</h3>
-          </div>
-
-          <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
-              Nome do Contato
+              Observações
             </label>
-            <input
-              {...register('contato_emergencia_nome')}
+            <textarea
+              {...register('observacoes')}
+              rows={3}
               className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
-              placeholder="Nome do contato de emergência"
-            />
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Telefone do Contato
-            </label>
-            <input
-              {...register('contato_emergencia_telefone')}
-              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
-              placeholder="(11) 99999-9999"
+              placeholder="Observações adicionais sobre o responsável..."
             />
           </div>
         </div>
@@ -470,7 +329,7 @@ export default function CadastroFuncionario() {
                 Cadastrando...
               </>
             ) : (
-              'Cadastrar Funcionário'
+              'Cadastrar Responsável'
             )}
           </button>
         </div>

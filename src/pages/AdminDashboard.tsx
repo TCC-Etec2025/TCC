@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   LuSearch,
   LuCalendar,
@@ -13,13 +13,34 @@ import {
   LuClipboardCheck,
   LuCircleCheck,
   LuCircleAlert,
-  //LuCircle,
-  //LuInfo,
 } from 'react-icons/lu';
 import { useNavigate } from 'react-router-dom';
+import { supabase } from '../lib/supabaseClient';
+import DataFormatada from '../components/DataFormatada';
 
 export default function AdminDashboard() {
   const navigate = useNavigate();
+  const [numeroIdosos, setNumeroIdosos] = useState(0);
+  const [numeroColaboradores, setNumeroColaboradores] = useState(0);
+
+  useEffect(() => {
+    const numeroPessoas = async () => {
+      const [
+        { data: idososData, error: idososError },
+        { data: colaboradoresData, error: colaboradoresError }
+      ] = await Promise.all([
+        supabase.from('idosos').select('*', { count: 'exact' }),
+        supabase.from('colaboradores').select('*', { count: 'exact' }),
+      ]);
+      if (!idososError) {
+        setNumeroIdosos(idososData?.length || 0);
+      }
+      if (!colaboradoresError) {
+        setNumeroColaboradores(colaboradoresData?.length || 0);
+      }
+    };
+    numeroPessoas();
+  }, []);
   const Header = () => (
     <div className="flex items-center justify-between">
       <div>
@@ -33,7 +54,7 @@ export default function AdminDashboard() {
         </div>
         <div className="flex items-center space-x-2">
           <LuCalendar className="text-gray-400" />
-          <span>Segunda-feira, 1 de setembro de 2025</span>
+          <span><DataFormatada /></span>
         </div>
         <LuCircleUser className="h-8 w-8 text-gray-400" />
       </div>
@@ -45,8 +66,8 @@ export default function AdminDashboard() {
       <div className="flex items-center justify-between rounded-lg bg-white p-6 shadow">
         <div>
           <div className="text-sm text-gray-500">Total de Residentes</div>
-          <div className="mt-1 text-3xl font-semibold text-gray-900">45</div>
-          <div className="mt-2 text-xs font-medium text-green-500">80% ocupação</div>
+          <div className="mt-1 text-3xl font-semibold text-gray-900">{numeroIdosos}</div>
+          {/* <div className="mt-2 text-xs font-medium text-green-500">80% ocupação</div> */}
         </div>
         <div className="rounded-full bg-gray-100 p-3 text-gray-400">
           <LuUser className="h-6 w-6" />
@@ -55,8 +76,8 @@ export default function AdminDashboard() {
       <div className="flex items-center justify-between rounded-lg bg-white p-6 shadow">
         <div>
           <div className="text-sm text-gray-500">Funcionários Ativos</div>
-          <div className="mt-1 text-3xl font-semibold text-gray-900">12</div>
-          <div className="mt-2 text-xs font-medium text-gray-500">10 respondendo</div>
+          <div className="mt-1 text-3xl font-semibold text-gray-900">{numeroColaboradores}</div>
+          {/* <div className="mt-2 text-xs font-medium text-gray-500">10 respondendo</div> */}
         </div>
         <div className="rounded-full bg-gray-100 p-3 text-gray-400">
           <LuUsers className="h-6 w-6" />
@@ -84,10 +105,16 @@ export default function AdminDashboard() {
         acao: () => navigate('/app/admin/pacientes/cadastrar')
       },
       {
+        nome: 'Cadastrar Responsável',
+        descricao: 'Adicionar novo responsável ao sistema',
+        icone: <LuUserPlus className="h-6 w-6" />,
+        acao: () => navigate('/app/admin/responsavel/cadastrar')
+      },
+      {
         nome: 'Cadastrar Funcionário',
         descricao: 'Adicionar novo funcionário ao sistema',
         icone: <LuUserPlus className="h-6 w-6" />,
-        acao: () => navigate('/app/admin/funcionarios/cadastrar')
+        acao: () => navigate('/app/admin/funcionario/cadastrar')
       },
       {
         nome: 'Gerenciar Usuários',

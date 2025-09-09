@@ -59,21 +59,6 @@ export default function Sidebar({ estado }: SidebarProps) {
         </div>
       </div>
 
-      {/* User */}
-      <div className="p-4 border-b border-odara-contorno/20">
-        <div className="flex items-center gap-3">
-          <div className="h-10 w-10 rounded-full bg-odara-secondary flex items-center justify-center text-odara-contorno ring-2 ring-odara-contorno/30">
-            {usuario.detalhes.nome_completo?.slice(0, 2).toUpperCase() || "??"}
-          </div>
-          {expanded && (
-            <div>
-              <p className="font-semibold text-odara-contorno">{usuario.detalhes.nome_completo}</p>
-              <p className="text-sm text-odara-contorno/70">{usuario.role}</p>
-            </div>
-          )}
-        </div>
-      </div>
-
       {/* Nav */}
       <nav className="flex-1 p-2">
         {items.map((item) => (

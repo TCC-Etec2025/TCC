@@ -6,11 +6,13 @@ import FuncionarioDashboard from './pages/FuncionarioDashboard';
 import RotaProtegida from './components/RotaProtegida';
 import DashboardRedirect from './components/DashboardRedirect';
 import ProtectedLayout from './layouts/ProtectedLayout';
-import CadastroIdoso from './pages/CadastroPaciente';
+import CadastroIdoso from './pages/CadastroIdoso';
 import Residentes from './pages/Residentes';
 import Familiares from './pages/Familiares';
 import Funcionario from './pages/Funcionarios';
 import CadastroPertences from './pages/CadastroPertences';
+import CadastroResponsavel from './pages/CadastroResponsavel';
+import CadastroFuncionario from './pages/CadastroFuncionario';
 
 export default function App() {
   return (
@@ -34,6 +36,8 @@ export default function App() {
         
         {/* Rota para a página de cadastro de pacientes */}
         <Route path="admin/pacientes/cadastrar" element={<CadastroIdoso />} />
+        <Route path="admin/responsavel/cadastrar" element={<CadastroResponsavel />} />
+        <Route path="admin/funcionario/cadastrar" element={<CadastroFuncionario />} />
         <Route path="admin/pertence/cadastrar" element={<CadastroPertences />} />
         <Route path="admin/pacientes" element={<Residentes />} />
         <Route path="admin/familiares" element={<Familiares />} />

@@ -195,6 +195,7 @@ const Residentes: React.FC = () => {
                         <button
                           className="p-1 text-blue-500 hover:text-blue-700 transition hover:bg-blue-50 rounded"
                           title="Editar residente"
+                          onClick={() => navigate('/app/admin/paciente', { state: { idoso } })}
                         >
                           <Edit className="h-4 w-4" />
                         </button>

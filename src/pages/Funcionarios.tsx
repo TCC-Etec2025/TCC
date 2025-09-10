@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Search, Plus, Edit, Trash2, User, Mail, Phone, Badge } from 'lucide-react';
 import { supabase } from '../lib/supabaseClient';
 
@@ -18,6 +19,7 @@ interface Funcionario {
 }
 
 const Funcionarios: React.FC = () => {
+  const navigate = useNavigate();
   const [searchTerm, setSearchTerm] = useState<string>('');
   const [funcionarios, setFuncionarios] = useState<Funcionario[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
@@ -187,6 +189,7 @@ const Funcionarios: React.FC = () => {
                         <button
                           className="p-1 text-blue-500 hover:text-blue-700 transition hover:bg-blue-50 rounded"
                           title="Editar funcionário"
+                          onClick={() => navigate('/app/admin/funcionario', {state: { funcionario }})}
                         >
                           <Edit className="h-4 w-4" />
                         </button>

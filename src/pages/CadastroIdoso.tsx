@@ -1,9 +1,13 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { yupResolver } from '@hookform/resolvers/yup';
 import * as yup from 'yup';
 import { Loader2, User, CheckCircle2, XCircle, X, Upload } from 'lucide-react';
 import { supabase } from '../lib/supabaseClient';
+import Modal from '../components/Modal';
+
+// ============================== Validação do Formulário ==============================
 
 const schema = yup.object({
   nome_completo: yup.string().required('O nome completo do paciente é obrigatório'),
@@ -23,11 +27,20 @@ const schema = yup.object({
 
 // ============================== Componente Principal ==============================
 export default function CadastroIdoso() {
+  const navigate = useNavigate();
+  const location = useLocation();
   const [isLoading, setIsLoading] = useState(false);
   const [formMessage, setFormMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
   const [isUploading, setIsUploading] = useState(false);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const idoso = location.state?.idoso;
+  const [modalOpen, setModalOpen] = useState(false);
+  const [modalConfig, setModalConfig] = useState<{
+    title: string;
+    description?: string;
+    actions: { label: string; onClick: () => void; className?: string }[];
+  }>({ title: "", actions: [] });
 
   const { register, handleSubmit, formState: { errors }, reset, setValue } = useForm({
     resolver: yupResolver(schema),
@@ -47,6 +60,26 @@ export default function CadastroIdoso() {
       foto_perfil_url: null,
     }
   });
+
+  useEffect(() => {
+    if (idoso) {
+      reset({
+        nome_completo: idoso.nome_completo || '',
+        data_nascimento: idoso.data_nascimento || '',
+        cpf: idoso.cpf || '',
+        sexo: idoso.sexo || '',
+        data_admissao: idoso.data_admissao || '',
+        estado_civil: idoso.estado_civil || null,
+        naturalidade: idoso.naturalidade || null,
+        localizacao_quarto: idoso.localizacao_quarto || null,
+        nivel_dependencia: idoso.nivel_dependencia || null,
+        plano_saude: idoso.plano_saude || null,
+        numero_carteirinha: idoso.numero_carteirinha || null,
+        observacoes: idoso.observacoes || null,
+        foto_perfil_url: idoso.foto_perfil_url || null,
+      });
+    }
+  }, [idoso, reset]);
 
   const handleFileSelect = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -144,36 +177,68 @@ export default function CadastroIdoso() {
         foto_perfil_url: fotoUrl,
       };
 
-      const { data: idosoData, error: idosoError } = await supabase
-        .from('idosos')
-        .insert(insertData)
-        .select()
-        .single();
+      if (idoso) {
+        const { error: updateError } = await supabase
+          .from('idosos')
+          .update(insertData)
+          .eq('id', idoso.id);
+        if (updateError) {
+          throw new Error('Erro ao atualizar o paciente: ' + updateError.message);
+        }
+        setFormMessage({
+          type: 'success',
+          text: `Paciente ${data.nome_completo} atualizado com sucesso!`
+        });
+      } else {
 
-      if (idosoError || !idosoData) {
-        throw new Error('Erro ao cadastrar o paciente: ' + idosoError?.message);
+        const { data: idosoData, error: idosoError } = await supabase
+          .from('idosos')
+          .insert(insertData)
+          .select()
+          .single();
+
+        if (idosoError || !idosoData) {
+          throw new Error('Erro ao cadastrar o paciente: ' + idosoError?.message);
+        }
+
+        const { error: prontuarioError } = await supabase
+          .from('prontuarios')
+          .insert({ id_idoso: idosoData.id });
+
+        if (prontuarioError) {
+          throw new Error('Erro ao criar o prontuário do paciente: ' + prontuarioError?.message);
+        }
       }
 
-      const { error: prontuarioError } = await supabase
-        .from('prontuarios')
-        .insert({ id_idoso: idosoData.id });
-
-      if (prontuarioError) {
-        throw new Error('Erro ao criar o prontuário do paciente: ' + prontuarioError?.message);
-      }
-
-      setFormMessage({
-        type: 'success',
-        text: `Paciente ${data.nome_completo} cadastrado com sucesso!`
+      setModalConfig({
+        title: "Sucesso!",
+        description: `Colaborador ${data.nome_completo} ${idoso ? "atualizado" : "cadastrado"} com sucesso!`,
+        actions: [
+          {
+            label: "Voltar à lista",
+            className: "bg-blue-500 text-white hover:bg-blue-600",
+            onClick: () => navigate("/app/admin/funcionarios"),
+          },
+          {
+            label: "Cadastrar outro",
+            className: "bg-gray-200 text-gray-700 hover:bg-gray-300",
+            onClick: () => {
+              reset();
+              setModalOpen(false);
+            },
+          },
+        ],
       });
+      setModalOpen(true);
       reset();
       setPreviewUrl(null);
       setSelectedFile(null);
+      navigate('/app/admin/pacientes');
 
     } catch (err: any) {
       setFormMessage({
         type: 'error',
-        text: `Erro no cadastro: ${err.message}`
+        text: `Erro no processo: ${err.message}`
       });
     } finally {
       setIsLoading(false);
@@ -182,9 +247,16 @@ export default function CadastroIdoso() {
 
   return (
     <div className="p-8 bg-slate-50 rounded-2xl shadow-xl max-w-4xl mx-auto my-12">
+      <Modal
+        open={modalOpen}
+        onClose={() => setModalOpen(false)}
+        title={modalConfig.title}
+        description={modalConfig.description}
+        actions={modalConfig.actions}
+      />
       <div className="flex items-center justify-center space-x-4 mb-8">
         <User size={48} className="text-blue-500" />
-        <h1 className="text-3xl font-bold text-gray-800">Cadastro de Paciente</h1>
+        <h1 className="text-3xl font-bold text-gray-800">{idoso ? `Edição de ${idoso.nome_completo}` : 'Cadastro de Paciente'}</h1>
       </div>
       <p className="text-center mb-8 text-gray-600">
         Preencha as informações do paciente
@@ -408,7 +480,8 @@ export default function CadastroIdoso() {
                 {isUploading ? 'Enviando imagem...' : 'Carregando...'}
               </>
             ) : (
-              'Cadastrar Paciente'
+              idoso ? 'Atualizar Paciente' :
+                'Cadastrar Paciente'
             )}
           </button>
         </div>

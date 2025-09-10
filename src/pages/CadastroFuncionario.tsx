@@ -1,20 +1,22 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import type { SubmitHandler } from 'react-hook-form';
 import { yupResolver } from '@hookform/resolvers/yup';
 import * as yup from 'yup';
 import { Loader2, UserPlus, CheckCircle2, XCircle } from 'lucide-react';
 import { supabase } from '../lib/supabaseClient';
+import Modal from '../components/Modal';
 
 const schema = yup.object({
   tipo_vinculo: yup.string().required('O tipo de vínculo é obrigatório'),
   nome_completo: yup.string().required('O nome completo é obrigatório'),
   cpf: yup.string().required('O CPF é obrigatório'),
+  email: yup.string().email('Email inválido').required('O email é obrigatório'),
   data_nascimento: yup.string().nullable(),
   cargo: yup.string().required('O cargo é obrigatório'),
   registro_profissional: yup.string().nullable(),
   data_admissao: yup.string().required('A data de admissão é obrigatória'),
-  data_demissao: yup.string().nullable(),
   telefone: yup.string().required('O telefone é obrigatório'),
   cep: yup.string().required('O CEP é obrigatório'),
   logradouro: yup.string().required('O logradouro é obrigatório'),
@@ -25,26 +27,34 @@ const schema = yup.object({
   estado: yup.string().required('O estado é obrigatório'),
   contato_emergencia_nome: yup.string().nullable(),
   contato_emergencia_telefone: yup.string().nullable(),
-  status: yup.string().required('O status é obrigatório'),
 }).required();
 
 type FormValues = yup.InferType<typeof schema>;
 
 export default function CadastroFuncionario() {
+  const navigate = useNavigate();
+  const location = useLocation();
+  const funcionario = location.state?.funcionario || null;
   const [isLoading, setIsLoading] = useState(false);
   const [formMessage, setFormMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
+  const [modalOpen, setModalOpen] = useState(false);
+  const [modalConfig, setModalConfig] = useState<{
+    title: string;
+    description?: string;
+    actions: { label: string; onClick: () => void; className?: string }[];
+  }>({ title: "", actions: [] });
 
-  const { register, handleSubmit, formState: { errors }, reset, watch } = useForm({
+  const { register, handleSubmit, formState: { errors }, reset } = useForm({
     resolver: yupResolver(schema),
     defaultValues: {
       tipo_vinculo: '',
       nome_completo: '',
       cpf: '',
+      email: '',
       data_nascimento: null,
       cargo: '',
       registro_profissional: null,
       data_admissao: '',
-      data_demissao: null,
       telefone: '',
       cep: '',
       logradouro: '',
@@ -54,81 +64,138 @@ export default function CadastroFuncionario() {
       cidade: '',
       estado: '',
       contato_emergencia_nome: null,
-      contato_emergencia_telefone: null,
-      status: 'Ativo',
+      contato_emergencia_telefone: null
     },
   });
 
-  const status = watch('status');
+  useEffect(() => {
+    if (funcionario) {
+      reset({
+        tipo_vinculo: funcionario.tipo_vinculo,
+        nome_completo: funcionario.nome_completo,
+        cpf: funcionario.cpf,
+        email: funcionario.email,
+        data_nascimento: funcionario.data_nascimento,
+        cargo: funcionario.cargo,
+        registro_profissional: funcionario.registro_profissional,
+        data_admissao: funcionario.data_admissao ? funcionario.data_admissao.split('T')[0] : '',
+        telefone: funcionario.telefone,
+        cep: funcionario.endereco?.cep || '',
+        logradouro: funcionario.endereco?.logradouro || '',
+        numero: funcionario.endereco?.numero || '',
+        complemento: funcionario.endereco?.complemento || null,
+        bairro: funcionario.endereco?.bairro || '',
+        cidade: funcionario.endereco?.cidade || '',
+        estado: funcionario.endereco?.estado || '',
+        contato_emergencia_nome: funcionario.contato_emergencia_nome || null,
+        contato_emergencia_telefone: funcionario.contato_emergencia_telefone || null,
+      });
+    }
+  }, [funcionario, reset]);
 
   const onSubmit: SubmitHandler<FormValues> = async (data) => {
     setIsLoading(true);
     setFormMessage(null);
 
     try {
-      // 1. Inserir o endereço
-      const { data: enderecoData, error: enderecoError } = await supabase
-        .from('enderecos')
-        .insert({
-          cep: data.cep,
-          logradouro: data.logradouro,
-          numero: data.numero,
-          complemento: data.complemento || undefined,
-          bairro: data.bairro,
-          cidade: data.cidade,
-          estado: data.estado,
-        })
-        .select()
-        .single();
+      const params = {
+        // Dados do usuário
+        p_email_usuario: data.email, // ou outro email gerado
+        p_nome_role: 'Funcionario', // ou outro nome da role
 
-      if (enderecoError || !enderecoData) {
-        throw new Error('Erro ao cadastrar o endereço: ' + enderecoError?.message);
-      }
+        // Endereço
+        p_cep: data.cep,
+        p_logradouro: data.logradouro,
+        p_numero: data.numero,
+        p_complemento: data.complemento || null,
+        p_bairro: data.bairro,
+        p_cidade: data.cidade,
+        p_estado: data.estado,
 
-      // 2. Inserir o funcionário
-      const { error: funcionarioError } = await supabase
-        .from('colaboradores')
-        .insert({
-          tipo_vinculo: data.tipo_vinculo,
-          nome_completo: data.nome_completo,
-          cpf: data.cpf,
-          data_nascimento: data.data_nascimento || undefined,
-          cargo: data.cargo,
-          registro_profissional: data.registro_profissional || undefined,
-          data_admissao: data.data_admissao,
-          data_demissao: data.data_demissao || undefined,
-          telefone: data.telefone,
-          id_endereco: enderecoData.id,
-          contato_emergencia_nome: data.contato_emergencia_nome || undefined,
-          contato_emergencia_telefone: data.contato_emergencia_telefone || undefined,
-          status: data.status,
+        // Dados do colaborador
+        p_tipo_vinculo: data.tipo_vinculo,
+        p_nome_completo: data.nome_completo,
+        p_cpf: data.cpf,
+        p_data_nascimento: data.data_nascimento || null,
+        p_cargo: data.cargo,
+        p_registro_profissional: data.registro_profissional || null,
+        p_data_admissao: data.data_admissao,
+        p_telefone: data.telefone,
+        p_contato_emergencia_nome: data.contato_emergencia_nome || null,
+        p_contato_emergencia_telefone: data.contato_emergencia_telefone || null,
+      };
+
+      let rpcResult;
+
+      if (funcionario) {
+        rpcResult = await supabase.rpc('editar_colaborador_com_usuario', {
+          p_id_colaborador: funcionario.id,
+          ...params
         });
-
-      if (funcionarioError) {
-        throw new Error('Erro ao cadastrar o funcionário: ' + funcionarioError?.message);
+      } else {
+        rpcResult = await supabase.rpc('cadastrar_colaborador_com_usuario', params);
       }
 
-      setFormMessage({
-        type: 'success',
-        text: `Funcionário ${data.nome_completo} cadastrado com sucesso!`
+      if (rpcResult.error) {
+        throw rpcResult.error;
+      }
+
+      setModalConfig({
+        title: "Sucesso!",
+        description: `Colaborador ${data.nome_completo} ${funcionario ? "atualizado" : "cadastrado"} com sucesso!`,
+        actions: [
+          {
+            label: "Voltar à lista",
+            className: "bg-blue-500 text-white hover:bg-blue-600",
+            onClick: () => navigate("/app/admin/funcionarios"),
+          },
+          {
+            label: "Cadastrar outro",
+            className: "bg-gray-200 text-gray-700 hover:bg-gray-300",
+            onClick: () => {
+              reset();
+              setModalOpen(false);
+            },
+          },
+        ],
       });
-      reset();
+      setModalOpen(true);
+
+      if (!funcionario) reset();
 
     } catch (err: any) {
-      setFormMessage({
-        type: 'error',
-        text: `Erro no cadastro: ${err.message}`
+      setModalConfig({
+        title: "Erro!",
+        description: `Erro ao ${funcionario ? "editar" : "cadastrar"} colaborador.${err.message}`,
+        actions: [
+          {
+            label: "Fechar",
+            className: "bg-red-500 text-white hover:bg-red-600",
+            onClick: () => setModalOpen(false),
+          },
+        ],
       });
+      setModalOpen(true);
+
     } finally {
       setIsLoading(false);
     }
   };
 
+
   return (
     <div className="p-8 bg-slate-50 rounded-2xl shadow-xl max-w-4xl mx-auto my-12">
+      <Modal
+        open={modalOpen}
+        onClose={() => setModalOpen(false)}
+        title={modalConfig.title}
+        description={modalConfig.description}
+        actions={modalConfig.actions}
+      />
+
       <div className="flex items-center justify-center space-x-4 mb-8">
         <UserPlus size={48} className="text-blue-500" />
-        <h1 className="text-3xl font-bold text-gray-800">Cadastro de Funcionário</h1>
+        <h1 className="text-3xl font-bold text-gray-800">{funcionario ? `Edição de ${funcionario.nome_completo}` : 'Cadastro de Responsável'}</h1>
       </div>
       <p className="text-center mb-8 text-gray-600">
         Preencha os dados do funcionário/colaborador.
@@ -140,7 +207,7 @@ export default function CadastroFuncionario() {
           <div className="md:col-span-2">
             <h3 className="text-xl font-semibold text-gray-800 mb-4">Dados Pessoais</h3>
           </div>
-          
+
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
               Tipo de Vínculo *
@@ -163,25 +230,6 @@ export default function CadastroFuncionario() {
             )}
           </div>
 
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Status *
-            </label>
-            <select
-              {...register('status')}
-              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors bg-white"
-            >
-              <option value="Ativo">Ativo</option>
-              <option value="Inativo">Inativo</option>
-              <option value="Afastado">Afastado</option>
-            </select>
-            {errors.status && (
-              <p className="text-red-500 text-sm mt-2 font-medium">
-                {errors.status.message}
-              </p>
-            )}
-          </div>
-
           <div className="md:col-span-2">
             <label className="block text-sm font-medium text-gray-700 mb-2">
               Nome Completo *
@@ -194,6 +242,22 @@ export default function CadastroFuncionario() {
             {errors.nome_completo && (
               <p className="text-red-500 text-sm mt-2 font-medium">
                 {errors.nome_completo.message}
+              </p>
+            )}
+          </div>
+
+          <div className="md:col-span-2">
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Email *
+            </label>
+            <input
+              {...register('email')}
+              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+              placeholder="Digite o nome completo"
+            />
+            {errors.email && (
+              <p className="text-red-500 text-sm mt-2 font-medium">
+                {errors.email.message}
               </p>
             )}
           </div>
@@ -288,19 +352,6 @@ export default function CadastroFuncionario() {
               </p>
             )}
           </div>
-
-          {status === 'Inativo' && (
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Data de Demissão
-              </label>
-              <input
-                type="date"
-                {...register('data_demissao')}
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
-              />
-            </div>
-          )}
 
           {/* Endereço */}
           <div className="md:col-span-2">
@@ -444,11 +495,10 @@ export default function CadastroFuncionario() {
         </div>
 
         {formMessage && (
-          <div className={`p-4 rounded-xl flex items-center gap-3 border ${
-            formMessage.type === 'success'
-              ? 'bg-green-50 border-green-200 text-green-800'
-              : 'bg-red-50 border-red-200 text-red-800'
-          }`}>
+          <div className={`p-4 rounded-xl flex items-center gap-3 border ${formMessage.type === 'success'
+            ? 'bg-green-50 border-green-200 text-green-800'
+            : 'bg-red-50 border-red-200 text-red-800'
+            }`}>
             {formMessage.type === 'success' ? (
               <CheckCircle2 size={20} className="text-green-600" />
             ) : (
@@ -467,7 +517,7 @@ export default function CadastroFuncionario() {
             {isLoading ? (
               <>
                 <Loader2 size={18} className="animate-spin mr-2" />
-                Cadastrando...
+                {funcionario ? 'Salvando' : 'Cadastrando'}...
               </>
             ) : (
               'Cadastrar Funcionário'

@@ -102,19 +102,19 @@ export default function AdminDashboard() {
         nome: 'Cadastrar Residente',
         descricao: 'Adicionar novo residente e seu responsável',
         icone: <LuUserPlus className="h-6 w-6" />,
-        acao: () => navigate('/app/admin/pacientes/cadastrar')
+        acao: () => navigate('/app/admin/paciente')
       },
       {
         nome: 'Cadastrar Responsável',
         descricao: 'Adicionar novo responsável ao sistema',
         icone: <LuUserPlus className="h-6 w-6" />,
-        acao: () => navigate('/app/admin/responsavel/cadastrar')
+        acao: () => navigate('/app/admin/responsavel')
       },
       {
         nome: 'Cadastrar Funcionário',
         descricao: 'Adicionar novo funcionário ao sistema',
         icone: <LuUserPlus className="h-6 w-6" />,
-        acao: () => navigate('/app/admin/funcionario/cadastrar')
+        acao: () => navigate('/app/admin/funcionario')
       },
       {
         nome: 'Gerenciar Usuários',

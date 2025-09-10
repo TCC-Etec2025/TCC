@@ -35,12 +35,12 @@ export default function App() {
         <Route path="admin" element={<AdminDashboard />} />
         
         {/* Rota para a página de cadastro de pacientes */}
-        <Route path="admin/pacientes/cadastrar" element={<CadastroIdoso />} />
-        <Route path="admin/responsavel/cadastrar" element={<CadastroResponsavel />} />
-        <Route path="admin/funcionario/cadastrar" element={<CadastroFuncionario />} />
-        <Route path="admin/pertence/cadastrar" element={<CadastroPertences />} />
+        <Route path="admin/paciente" element={<CadastroIdoso />} />
+        <Route path="admin/responsavel" element={<CadastroResponsavel />} />
+        <Route path="admin/funcionario" element={<CadastroFuncionario />} />
+        <Route path="admin/pertence" element={<CadastroPertences />} />
         <Route path="admin/pacientes" element={<Residentes />} />
-        <Route path="admin/familiares" element={<Familiares />} />
+        <Route path="admin/responsavel" element={<Familiares />} />
         <Route path="admin/funcionarios" element={<Funcionario />} />
 
         {/* Outras rotas */}

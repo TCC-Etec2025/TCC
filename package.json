@@ -10,7 +10,10 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@emotion/react": "^11.14.0",
+    "@emotion/styled": "^11.14.1",
     "@hookform/resolvers": "^5.2.1",
+    "@mui/material": "^7.3.2",
     "@supabase/supabase-js": "^2.56.1",
     "@tailwindcss/vite": "^4.1.12",
     "bcryptjs": "^3.0.2",

@@ -1,10 +1,12 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import type { SubmitHandler } from 'react-hook-form';
 import { yupResolver } from '@hookform/resolvers/yup';
 import * as yup from 'yup';
 import { Loader2, UserPlus, CheckCircle2, XCircle } from 'lucide-react';
 import { supabase } from '../lib/supabaseClient';
+import Modal from '../components/Modal';
 
 const schema = yup.object({
   nome_completo: yup.string().required('O nome completo é obrigatório'),
@@ -25,8 +27,17 @@ const schema = yup.object({
 type FormValues = yup.InferType<typeof schema>;
 
 export default function CadastroResponsavel() {
+  const navigate = useNavigate();
+  const location = useLocation();
+  const responsavel = location.state?.responsavel;
   const [isLoading, setIsLoading] = useState(false);
   const [formMessage, setFormMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
+  const [modalOpen, setModalOpen] = useState(false);
+  const [modalConfig, setModalConfig] = useState<{
+    title: string;
+    description?: string;
+    actions: { label: string; onClick: () => void; className?: string }[];
+  }>({ title: "", actions: [] });
 
   const { register, handleSubmit, formState: { errors }, reset } = useForm({
     resolver: yupResolver(schema),
@@ -47,68 +58,117 @@ export default function CadastroResponsavel() {
     },
   });
 
+  useEffect(() => {
+    if (responsavel) {
+      reset({
+        nome_completo: responsavel.nome_completo,
+        cpf: responsavel.cpf,
+        telefone_principal: responsavel.telefone_principal,
+        telefone_secundario: responsavel.telefone_secundario,
+        email: responsavel.email,
+        cep: responsavel.endereco.cep,
+        logradouro: responsavel.endereco.logradouro,
+        numero: responsavel.endereco.numero,
+        complemento: responsavel.endereco.complemento,
+        bairro: responsavel.endereco.bairro,
+        cidade: responsavel.endereco.cidade,
+        estado: responsavel.endereco.estado,
+        observacoes: responsavel.observacoes,
+      });
+    }
+  }, [responsavel, reset]);
+
   const onSubmit: SubmitHandler<FormValues> = async (data) => {
     setIsLoading(true);
     setFormMessage(null);
 
     try {
-      // 1. Inserir o endereço
-      const { data: enderecoData, error: enderecoError } = await supabase
-        .from('enderecos')
-        .insert({
-          cep: data.cep,
-          logradouro: data.logradouro,
-          numero: data.numero,
-          complemento: data.complemento || undefined,
-          bairro: data.bairro,
-          cidade: data.cidade,
-          estado: data.estado,
-        })
-        .select()
-        .single();
+      const params = {
+        // Usuário do sistema
+        p_email_usuario: data.email,
+        p_nome_role: "Responsável",
 
-      if (enderecoError || !enderecoData) {
-        throw new Error('Erro ao cadastrar o endereço: ' + enderecoError?.message);
-      }
+        // Endereço
+        p_cep: data.cep,
+        p_logradouro: data.logradouro,
+        p_numero: data.numero,
+        p_complemento: data.complemento || null,
+        p_bairro: data.bairro,
+        p_cidade: data.cidade,
+        p_estado: data.estado,
 
-      // 2. Inserir o responsável, usando o id do endereço
-      const { error: responsavelError } = await supabase
-        .from('responsaveis')
-        .insert({
-          nome_completo: data.nome_completo,
-          cpf: data.cpf,
-          email: data.email,
-          telefone_principal: data.telefone_principal,
-          telefone_secundario: data.telefone_secundario || undefined,
-          id_endereco: enderecoData.id,
-          observacoes: data.observacoes || undefined,
+        // Responsável
+        p_nome_completo: data.nome_completo,
+        p_cpf: data.cpf,
+        p_email_responsavel: data.email,
+        p_telefone_principal: data.telefone_principal,
+        p_telefone_secundario: data.telefone_secundario || null,
+        p_observacoes: data.observacoes || null,
+      };
+
+      if (responsavel) {
+        // Função de EDIÇÃO
+        const { error } = await supabase.rpc('editar_responsavel_com_usuario', {
+          p_id_responsavel: responsavel.id,
+          ...params
         });
 
-      if (responsavelError) {
-        throw new Error('Erro ao cadastrar o responsável: ' + responsavelError?.message);
+        if (error) {
+          throw new Error('Erro ao editar o responsável: ' + error.message);
+        }
+      } else {
+        // Função de CADASTRO
+        const { error } = await supabase.rpc('cadastrar_responsavel_com_usuario', params);
+
+        if (error) {
+          throw new Error('Erro ao cadastrar o responsável: ' + error.message);
+        }
       }
 
-      setFormMessage({
-        type: 'success',
-        text: `Responsável ${data.nome_completo} cadastrado com sucesso!`
+      setModalConfig({
+        title: "Sucesso!",
+        description: `Colaborador ${data.nome_completo} ${responsavel ? "atualizado" : "cadastrado"} com sucesso!`,
+        actions: [
+          {
+            label: "Voltar à lista",
+            className: "bg-blue-500 text-white hover:bg-blue-600",
+            onClick: () => navigate("/app/admin/responsavel"),
+          },
+          {
+            label: "Cadastrar outro",
+            className: "bg-gray-200 text-gray-700 hover:bg-gray-300",
+            onClick: () => {
+              reset();
+              setModalOpen(false);
+            },
+          },
+        ],
       });
-      reset(); // Limpa o formulário
+      setModalOpen(true);
 
     } catch (err: any) {
       setFormMessage({
         type: 'error',
-        text: `Erro no cadastro: ${err.message}`
+        text: `Erro no cadastro: ${err.message}`,
       });
     } finally {
       setIsLoading(false);
     }
   };
 
+
   return (
     <div className="p-8 bg-slate-50 rounded-2xl shadow-xl max-w-3xl mx-auto my-12">
+      <Modal
+        open={modalOpen}
+        onClose={() => setModalOpen(false)}
+        title={modalConfig.title}
+        description={modalConfig.description}
+        actions={modalConfig.actions}
+      />
       <div className="flex items-center justify-center space-x-4 mb-8">
         <UserPlus size={48} className="text-blue-500" />
-        <h1 className="text-3xl font-bold text-gray-800">Cadastro de Responsável</h1>
+        <h1 className="text-3xl font-bold text-gray-800">{responsavel ? `Edição de ${responsavel.nome_completo}` : 'Cadastro de Responsável'}</h1>
       </div>
       <p className="text-center mb-8 text-gray-600">
         Preencha os dados do responsável.
@@ -303,11 +363,10 @@ export default function CadastroResponsavel() {
         </div>
 
         {formMessage && (
-          <div className={`p-4 rounded-xl flex items-center gap-3 border ${
-            formMessage.type === 'success'
-              ? 'bg-green-50 border-green-200 text-green-800'
-              : 'bg-red-50 border-red-200 text-red-800'
-          }`}>
+          <div className={`p-4 rounded-xl flex items-center gap-3 border ${formMessage.type === 'success'
+            ? 'bg-green-50 border-green-200 text-green-800'
+            : 'bg-red-50 border-red-200 text-red-800'
+            }`}>
             {formMessage.type === 'success' ? (
               <CheckCircle2 size={20} className="text-green-600" />
             ) : (
@@ -326,10 +385,11 @@ export default function CadastroResponsavel() {
             {isLoading ? (
               <>
                 <Loader2 size={18} className="animate-spin mr-2" />
-                Cadastrando...
+                {responsavel ? 'Salvando' : 'Cadastrando'}...
               </>
             ) : (
-              'Cadastrar Responsável'
+              responsavel ? 'Salvar Alterações' :
+                'Cadastrar Responsável'
             )}
           </button>
         </div>

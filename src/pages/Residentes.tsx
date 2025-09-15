@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { Search, Plus, Edit, Trash2, User, Loader2 } from 'lucide-react';
 import { supabase } from '../lib/supabaseClient';
 
-interface Idoso {
+interface Residente {
   id: number;
   nome_completo: string;
   sexo: string;
@@ -17,12 +17,12 @@ interface Idoso {
 const Residentes: React.FC = () => {
   const navigate = useNavigate();
   const [searchTerm, setSearchTerm] = useState<string>('');
-  const [idosos, setIdosos] = useState<Idoso[]>([]);
+  const [residentes, setResidentes] = useState<Residente[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [deletingId, setDeletingId] = useState<number | null>(null);
 
   useEffect(() => {
-    const fetchIdosos = async () => {
+    const fetchResidentes = async () => {
       try {
         setLoading(true);
         const { data, error } = await supabase
@@ -31,7 +31,7 @@ const Residentes: React.FC = () => {
           .order('nome_completo', { ascending: true });
 
         if (error) throw error;
-        if (data) setIdosos(data);
+        if (data) setResidentes(data);
       } catch (error) {
         console.error('Erro ao buscar residentes:', error);
         alert('Erro ao carregar residentes');
@@ -40,7 +40,7 @@ const Residentes: React.FC = () => {
       }
     };
 
-    fetchIdosos();
+    fetchResidentes();
   }, []);
 
   const calcularIdade = (dataNascimento: string) => {
@@ -67,7 +67,7 @@ const Residentes: React.FC = () => {
 
         if (error) throw error;
 
-        setIdosos(idosos.filter(idoso => idoso.id !== id));
+        setResidentes(residentes.filter(residente => residente.id !== id));
       } catch (error) {
         console.error('Erro ao excluir residente:', error);
         alert('Erro ao excluir residente');
@@ -77,13 +77,13 @@ const Residentes: React.FC = () => {
     }
   };
 
-  const filteredIdosos = idosos.filter(idoso => {
-    if (!idoso) return false;
+  const filteredResidentes = residentes.filter(residente => {
+    if (!residente) return false;
 
     const searchLower = searchTerm.toLowerCase();
 
-    const nomeMatch = idoso.nome_completo?.toLowerCase().includes(searchLower) || false;
-    const quartoMatch = idoso.localizacao_quarto?.toLowerCase().includes(searchLower) || false;
+    const nomeMatch = residente.nome_completo?.toLowerCase().includes(searchLower) || false;
+    const quartoMatch = residente.localizacao_quarto?.toLowerCase().includes(searchLower) || false;
 
     return nomeMatch || quartoMatch;
   });
@@ -148,64 +148,64 @@ const Residentes: React.FC = () => {
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-100">
-                {filteredIdosos.map((idoso) => (
-                  <tr key={idoso.id} className="hover:bg-odara-offwhite/40 transition-colors">
+                {filteredResidentes.map((residente) => (
+                  <tr key={residente.id} className="hover:bg-odara-offwhite/40 transition-colors">
                     <td className="p-4">
                       <div className="flex items-center gap-3 min-w-[200px]">
                         <div className="bg-odara-primary/20 rounded-full p-2 flex-shrink-0">
                           <User className="h-4 w-4 text-odara-primary" />
                         </div>
                         <span className="font-medium text-odara-dark truncate">
-                          {idoso.nome_completo}
+                          {residente.nome_completo}
                         </span>
                       </div>
                     </td>
                     <td className="p-4">
                       <span className="px-2 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-700 capitalize">
-                        {idoso.sexo.toLowerCase()}
+                        {residente.sexo.toLowerCase()}
                       </span>
                     </td>
-                    <td className="p-4 font-medium">{idoso.localizacao_quarto}</td>
-                    <td className="p-4">{calcularIdade(idoso.data_nascimento)} anos</td>
+                    <td className="p-4 font-medium">{residente.localizacao_quarto}</td>
+                    <td className="p-4">{calcularIdade(residente.data_nascimento)} anos</td>
                     <td className="p-4">
                       <span className={`px-2 py-1 rounded-full text-xs font-medium
-                        ${idoso.nivel_dependencia === 'Alta'
+                        ${residente.nivel_dependencia === 'Alta'
                           ? 'bg-red-100 text-red-700'
-                          : idoso.nivel_dependencia === 'Média'
+                          : residente.nivel_dependencia === 'Média'
                             ? 'bg-yellow-100 text-yellow-700'
                             : 'bg-green-100 text-green-700'}
                       `}>
-                        {idoso.nivel_dependencia}
+                        {residente.nivel_dependencia}
                       </span>
                     </td>
                     <td className="p-4">
                       <span className={`px-3 py-1 rounded-full text-xs font-medium
-                        ${idoso.status === 'Ativo'
+                        ${residente.status === 'Ativo'
                           ? 'bg-green-100 text-green-700'
                           : 'bg-gray-200 text-gray-700'}
                       `}>
-                        {idoso.status}
+                        {residente.status}
                       </span>
                     </td>
                     <td className="p-4 whitespace-nowrap">
-                      {new Date(idoso.data_admissao).toLocaleDateString('pt-BR')}
+                      {new Date(residente.data_admissao).toLocaleDateString('pt-BR')}
                     </td>
                     <td className="p-4">
                       <div className="flex space-x-2">
                         <button
                           className="p-1 text-blue-500 hover:text-blue-700 transition hover:bg-blue-50 rounded"
                           title="Editar residente"
-                          onClick={() => navigate('/app/admin/paciente', { state: { idoso } })}
+                          onClick={() => navigate('/app/admin/residente/formulario', { state: { residente } })}
                         >
                           <Edit className="h-4 w-4" />
                         </button>
                         <button
                           className="p-1 text-red-500 hover:text-red-700 transition hover:bg-red-50 rounded"
-                          onClick={() => handleDelete(idoso.id)}
+                          onClick={() => handleDelete(residente.id)}
                           title="Excluir residente"
-                          disabled={deletingId === idoso.id}
+                          disabled={deletingId === residente.id}
                         >
-                          {deletingId === idoso.id ? (
+                          {deletingId === residente.id ? (
                             <Loader2 className="h-4 w-4 animate-spin" />
                           ) : (
                             <Trash2 className="h-4 w-4" />
@@ -218,7 +218,7 @@ const Residentes: React.FC = () => {
               </tbody>
             </table>
 
-            {filteredIdosos.length === 0 && (
+            {filteredResidentes.length === 0 && (
               <div className="text-center py-12">
                 <User className="h-12 w-12 text-gray-300 mx-auto mb-4" />
                 <p className="text-gray-500">
@@ -234,7 +234,7 @@ const Residentes: React.FC = () => {
 
         {/* Contagem de residentes */}
         <div className="mt-4 text-sm text-odara-dark/70">
-          Total de {filteredIdosos.length} residente(s) encontrado(s) de {idosos.length}
+          Total de {filteredResidentes.length} residente(s) encontrado(s) de {residentes.length}
         </div>
       </div>
     </div>

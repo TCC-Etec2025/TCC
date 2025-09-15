@@ -6,9 +6,9 @@ import FuncionarioDashboard from './pages/FuncionarioDashboard';
 import RotaProtegida from './components/RotaProtegida';
 import DashboardRedirect from './components/DashboardRedirect';
 import ProtectedLayout from './layouts/ProtectedLayout';
-import CadastroIdoso from './pages/CadastroIdoso';
+import CadastroIdoso from './pages/CadastroResidente';
 import Residentes from './pages/Residentes';
-import Familiares from './pages/Familiares';
+import Familiares from './pages/Responsaveis';
 import Funcionario from './pages/Funcionarios';
 import CadastroPertences from './pages/CadastroPertences';
 import CadastroResponsavel from './pages/CadastroResponsavel';
@@ -34,13 +34,15 @@ export default function App() {
         {/* Rota para o dashboard do admin */}
         <Route path="admin" element={<AdminDashboard />} />
         
-        {/* Rota para a página de cadastro de pacientes */}
-        <Route path="admin/paciente" element={<CadastroIdoso />} />
-        <Route path="admin/responsavel" element={<CadastroResponsavel />} />
-        <Route path="admin/funcionario" element={<CadastroFuncionario />} />
-        <Route path="admin/pertence" element={<CadastroPertences />} />
-        <Route path="admin/pacientes" element={<Residentes />} />
-        <Route path="admin/responsavel" element={<Familiares />} />
+        {/* Rota para as páginas de cadastro/edição */}
+        <Route path="admin/residente/formulario" element={<CadastroIdoso />} />
+        <Route path="admin/responsavel/formulario" element={<CadastroResponsavel />} />
+        <Route path="admin/funcionario/formulario" element={<CadastroFuncionario />} />
+        <Route path="admin/pertence/formulario" element={<CadastroPertences />} />
+
+        
+        <Route path="admin/residentes" element={<Residentes />} />
+        <Route path="admin/responsaveis" element={<Familiares />} />
         <Route path="admin/funcionarios" element={<Funcionario />} />
 
         {/* Outras rotas */}

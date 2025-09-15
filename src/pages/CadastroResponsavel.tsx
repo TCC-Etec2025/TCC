@@ -60,21 +60,33 @@ export default function CadastroResponsavel() {
 
   useEffect(() => {
     if (responsavel) {
-      reset({
-        nome_completo: responsavel.nome_completo,
-        cpf: responsavel.cpf,
-        telefone_principal: responsavel.telefone_principal,
-        telefone_secundario: responsavel.telefone_secundario,
-        email: responsavel.email,
-        cep: responsavel.endereco.cep,
-        logradouro: responsavel.endereco.logradouro,
-        numero: responsavel.endereco.numero,
-        complemento: responsavel.endereco.complemento,
-        bairro: responsavel.endereco.bairro,
-        cidade: responsavel.endereco.cidade,
-        estado: responsavel.endereco.estado,
-        observacoes: responsavel.observacoes,
-      });
+      const fetchEndereco = async () => {
+        const { data, error } = await supabase
+          .from('enderecos')
+          .select('*')
+          .eq('id', responsavel.id_endereco)
+          .single();
+        if (error) {
+          console.error('Erro ao buscar endereço:', error);
+        } else if (data) {
+          reset({
+            nome_completo: responsavel.nome_completo,
+            cpf: responsavel.cpf,
+            telefone_principal: responsavel.telefone_principal,
+            telefone_secundario: responsavel.telefone_secundario,
+            email: responsavel.email,
+            cep: data.cep,
+            logradouro: data.logradouro,
+            numero: data.numero,
+            complemento: data.complemento || null,
+            bairro: data.bairro,
+            cidade: data.cidade,
+            estado: data.estado,
+            observacoes: responsavel.observacoes,
+          });
+        }
+      };
+      fetchEndereco();
     }
   }, [responsavel, reset]);
 
@@ -127,30 +139,43 @@ export default function CadastroResponsavel() {
 
       setModalConfig({
         title: "Sucesso!",
-        description: `Colaborador ${data.nome_completo} ${responsavel ? "atualizado" : "cadastrado"} com sucesso!`,
+        description: `Responsável ${data.nome_completo} ${responsavel ? "atualizado" : "cadastrado"} com sucesso!`,
         actions: [
           {
             label: "Voltar à lista",
             className: "bg-blue-500 text-white hover:bg-blue-600",
-            onClick: () => navigate("/app/admin/responsavel"),
+            onClick: () => navigate("/app/admin/responsaveis"),
           },
-          {
+          ...(!responsavel ? [{
             label: "Cadastrar outro",
             className: "bg-gray-200 text-gray-700 hover:bg-gray-300",
             onClick: () => {
               reset();
               setModalOpen(false);
             },
-          },
+          }] : []),
+          {
+            label: "Dashboard",
+            className: "bg-gray-200 text-gray-700 hover:bg-gray-300",
+            onClick: () => navigate("/app/admin"),
+          }
         ],
       });
       setModalOpen(true);
 
     } catch (err: any) {
-      setFormMessage({
-        type: 'error',
-        text: `Erro no cadastro: ${err.message}`,
+      setModalConfig({
+        title: "Erro!",
+        description: `Erro ao ${responsavel ? "editar" : "cadastrar"} responsável.${err.message}`,
+        actions: [
+          {
+            label: "Fechar",
+            className: "bg-red-500 text-white hover:bg-red-600",
+            onClick: () => setModalOpen(false),
+          },
+        ],
       });
+      setModalOpen(true);
     } finally {
       setIsLoading(false);
     }

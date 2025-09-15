@@ -8,8 +8,8 @@ import { Home, Users, BarChart3, Settings, LogOut } from "lucide-react"
 const menuItems = {
   Administrador: [
     { id: "dashboard", label: "Dashboard", icon: Home, path: "/app/admin" },
-    { id: "pacientes", label: "Pacientes", icon: Users, path: "/app/admin/pacientes" },
-    { id: "responsaveis", label: "Responsáveis", icon: Users, path: "/app/admin/familiares" },
+    { id: "pacientes", label: "Pacientes", icon: Users, path: "/app/admin/residentes" },
+    { id: "responsaveis", label: "Responsáveis", icon: Users, path: "/app/admin/responsaveis" },
     { id: "funcionarios", label: "Funcionários", icon: Users, path: "/app/admin/funcionarios" },
     { id: "relatorios", label: "Relatórios", icon: BarChart3, path: "/app/admin/relatorios" },
   ],

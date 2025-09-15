@@ -26,7 +26,7 @@ const schema = yup.object({
 }).required();
 
 // ============================== Componente Principal ==============================
-export default function CadastroIdoso() {
+export default function CadastroResidente() {
   const navigate = useNavigate();
   const location = useLocation();
   const [isLoading, setIsLoading] = useState(false);
@@ -34,7 +34,7 @@ export default function CadastroIdoso() {
   const [isUploading, setIsUploading] = useState(false);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
-  const idoso = location.state?.idoso;
+  const residente = location.state?.residente;
   const [modalOpen, setModalOpen] = useState(false);
   const [modalConfig, setModalConfig] = useState<{
     title: string;
@@ -62,24 +62,24 @@ export default function CadastroIdoso() {
   });
 
   useEffect(() => {
-    if (idoso) {
+    if (residente) {
       reset({
-        nome_completo: idoso.nome_completo || '',
-        data_nascimento: idoso.data_nascimento || '',
-        cpf: idoso.cpf || '',
-        sexo: idoso.sexo || '',
-        data_admissao: idoso.data_admissao || '',
-        estado_civil: idoso.estado_civil || null,
-        naturalidade: idoso.naturalidade || null,
-        localizacao_quarto: idoso.localizacao_quarto || null,
-        nivel_dependencia: idoso.nivel_dependencia || null,
-        plano_saude: idoso.plano_saude || null,
-        numero_carteirinha: idoso.numero_carteirinha || null,
-        observacoes: idoso.observacoes || null,
-        foto_perfil_url: idoso.foto_perfil_url || null,
+        nome_completo: residente.nome_completo || '',
+        data_nascimento: residente.data_nascimento || '',
+        cpf: residente.cpf || '',
+        sexo: residente.sexo || '',
+        data_admissao: residente.data_admissao || '',
+        estado_civil: residente.estado_civil || null,
+        naturalidade: residente.naturalidade || null,
+        localizacao_quarto: residente.localizacao_quarto || null,
+        nivel_dependencia: residente.nivel_dependencia || null,
+        plano_saude: residente.plano_saude || null,
+        numero_carteirinha: residente.numero_carteirinha || null,
+        observacoes: residente.observacoes || null,
+        foto_perfil_url: residente.foto_perfil_url || null,
       });
     }
-  }, [idoso, reset]);
+  }, [residente, reset]);
 
   const handleFileSelect = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -177,11 +177,11 @@ export default function CadastroIdoso() {
         foto_perfil_url: fotoUrl,
       };
 
-      if (idoso) {
+      if (residente) {
         const { error: updateError } = await supabase
           .from('idosos')
           .update(insertData)
-          .eq('id', idoso.id);
+          .eq('id', residente.id);
         if (updateError) {
           throw new Error('Erro ao atualizar o paciente: ' + updateError.message);
         }
@@ -210,23 +210,29 @@ export default function CadastroIdoso() {
         }
       }
 
+
       setModalConfig({
         title: "Sucesso!",
-        description: `Colaborador ${data.nome_completo} ${idoso ? "atualizado" : "cadastrado"} com sucesso!`,
+        description: `Responsável ${data.nome_completo} ${residente ? "atualizado" : "cadastrado"} com sucesso!`,
         actions: [
           {
             label: "Voltar à lista",
             className: "bg-blue-500 text-white hover:bg-blue-600",
-            onClick: () => navigate("/app/admin/funcionarios"),
+            onClick: () => navigate("/app/admin/responsaveis"),
           },
-          {
+          ...(!residente ? [{
             label: "Cadastrar outro",
             className: "bg-gray-200 text-gray-700 hover:bg-gray-300",
             onClick: () => {
               reset();
               setModalOpen(false);
             },
-          },
+          }] : []),
+          {
+            label: "Dashboard",
+            className: "bg-gray-200 text-gray-700 hover:bg-gray-300",
+            onClick: () => navigate("/app/admin"),
+          }
         ],
       });
       setModalOpen(true);
@@ -256,7 +262,7 @@ export default function CadastroIdoso() {
       />
       <div className="flex items-center justify-center space-x-4 mb-8">
         <User size={48} className="text-blue-500" />
-        <h1 className="text-3xl font-bold text-gray-800">{idoso ? `Edição de ${idoso.nome_completo}` : 'Cadastro de Paciente'}</h1>
+        <h1 className="text-3xl font-bold text-gray-800">{residente ? `Edição de ${residente.nome_completo}` : 'Cadastro de Paciente'}</h1>
       </div>
       <p className="text-center mb-8 text-gray-600">
         Preencha as informações do paciente
@@ -480,7 +486,7 @@ export default function CadastroIdoso() {
                 {isUploading ? 'Enviando imagem...' : 'Carregando...'}
               </>
             ) : (
-              idoso ? 'Atualizar Paciente' :
+              residente ? 'Atualizar Paciente' :
                 'Cadastrar Paciente'
             )}
           </button>

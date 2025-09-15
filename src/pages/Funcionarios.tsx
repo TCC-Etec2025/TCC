@@ -189,7 +189,7 @@ const Funcionarios: React.FC = () => {
                         <button
                           className="p-1 text-blue-500 hover:text-blue-700 transition hover:bg-blue-50 rounded"
                           title="Editar funcionário"
-                          onClick={() => navigate('/app/admin/funcionario', {state: { funcionario }})}
+                          onClick={() => navigate('/app/admin/funcionario/formulario', {state: { funcionario }})}
                         >
                           <Edit className="h-4 w-4" />
                         </button>

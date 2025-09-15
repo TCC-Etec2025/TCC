@@ -70,26 +70,38 @@ export default function CadastroFuncionario() {
 
   useEffect(() => {
     if (funcionario) {
-      reset({
-        tipo_vinculo: funcionario.tipo_vinculo,
-        nome_completo: funcionario.nome_completo,
-        cpf: funcionario.cpf,
-        email: funcionario.email,
-        data_nascimento: funcionario.data_nascimento,
-        cargo: funcionario.cargo,
-        registro_profissional: funcionario.registro_profissional,
-        data_admissao: funcionario.data_admissao ? funcionario.data_admissao.split('T')[0] : '',
-        telefone: funcionario.telefone,
-        cep: funcionario.endereco?.cep || '',
-        logradouro: funcionario.endereco?.logradouro || '',
-        numero: funcionario.endereco?.numero || '',
-        complemento: funcionario.endereco?.complemento || null,
-        bairro: funcionario.endereco?.bairro || '',
-        cidade: funcionario.endereco?.cidade || '',
-        estado: funcionario.endereco?.estado || '',
-        contato_emergencia_nome: funcionario.contato_emergencia_nome || null,
-        contato_emergencia_telefone: funcionario.contato_emergencia_telefone || null,
-      });
+      const fetchEndereco = async () => {
+        const { data, error } = await supabase
+          .from('enderecos')
+          .select('*')
+          .eq('id', funcionario.id_endereco)
+          .single();
+        if (error) {
+          console.error('Erro ao buscar endereço:', error);
+        } else if (data) {
+          reset({
+            tipo_vinculo: funcionario.tipo_vinculo,
+            nome_completo: funcionario.nome_completo,
+            cpf: funcionario.cpf,
+            email: funcionario.email,
+            data_nascimento: funcionario.data_nascimento,
+            cargo: funcionario.cargo,
+            registro_profissional: funcionario.registro_profissional,
+            data_admissao: funcionario.data_admissao ? funcionario.data_admissao.split('T')[0] : '',
+            telefone: funcionario.telefone,
+            cep: data.cep,
+            logradouro: data.logradouro,
+            numero: data.numero,
+            complemento: data.complemento || null,
+            bairro: data.bairro,
+            cidade: data.cidade,
+            estado: data.estado,
+            contato_emergencia_nome: funcionario.contato_emergencia_nome || null,
+            contato_emergencia_telefone: funcionario.contato_emergencia_telefone || null,
+          });
+        }
+      };
+      fetchEndereco();
     }
   }, [funcionario, reset]);
 
@@ -100,8 +112,8 @@ export default function CadastroFuncionario() {
     try {
       const params = {
         // Dados do usuário
-        p_email_usuario: data.email, // ou outro email gerado
-        p_nome_role: 'Funcionario', // ou outro nome da role
+        p_email_usuario: data.email,
+        p_nome_role: 'Funcionario',
 
         // Endereço
         p_cep: data.cep,
@@ -149,14 +161,19 @@ export default function CadastroFuncionario() {
             className: "bg-blue-500 text-white hover:bg-blue-600",
             onClick: () => navigate("/app/admin/funcionarios"),
           },
-          {
+          ...(!funcionario ? [{
             label: "Cadastrar outro",
             className: "bg-gray-200 text-gray-700 hover:bg-gray-300",
             onClick: () => {
               reset();
               setModalOpen(false);
             },
-          },
+          }] : []),
+          {
+            label: "Dashboard",
+            className: "bg-gray-200 text-gray-700 hover:bg-gray-300",
+            onClick: () => navigate("/app/admin"),
+          }
         ],
       });
       setModalOpen(true);
@@ -520,7 +537,8 @@ export default function CadastroFuncionario() {
                 {funcionario ? 'Salvando' : 'Cadastrando'}...
               </>
             ) : (
-              'Cadastrar Funcionário'
+              funcionario ? 'Salvar Alterações' :
+                'Cadastrar Funcionário'
             )}
           </button>
         </div>

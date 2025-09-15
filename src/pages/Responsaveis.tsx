@@ -9,7 +9,7 @@ interface IdosoVinculado {
   parentesco: string;
 }
 
-interface Familiar {
+interface Responsavel {
   id: number;
   nome_completo: string;
   cpf: string;
@@ -24,14 +24,14 @@ interface Familiar {
   idosos: IdosoVinculado[]; // Idosos vinculados a este responsável
 }
 
-const Familiares: React.FC = () => {
+const Responsaveis: React.FC = () => {
   const navigate = useNavigate();
   const [searchTerm, setSearchTerm] = useState<string>('');
-  const [familiares, setFamiliares] = useState<Familiar[]>([]);
+  const [responsaveis, setResponsaveis] = useState<Responsavel[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
 
   useEffect(() => {
-    const fetchFamiliares = async () => {
+    const fetchResponsaveis = async () => {
       try {
         setLoading(true);
 
@@ -52,7 +52,7 @@ const Familiares: React.FC = () => {
         if (idososError) throw idososError;
 
         // 3. Combinar os dados
-        const familiaresComIdosos = responsaveisData.map(responsavel => {
+        const responsaveisComIdosos = responsaveisData.map(responsavel => {
           const idososDoResponsavel = idososData
             .filter(idoso => idoso.id_responsavel === responsavel.id)
             .map(idoso => ({
@@ -67,7 +67,7 @@ const Familiares: React.FC = () => {
           };
         });
 
-        setFamiliares(familiaresComIdosos);
+        setResponsaveis(responsaveisComIdosos);
 
       } catch (error) {
         console.error('Erro ao buscar responsáveis:', error);
@@ -76,21 +76,21 @@ const Familiares: React.FC = () => {
       }
     };
 
-    fetchFamiliares();
+    fetchResponsaveis();
   }, []);
 
-  const filteredFamiliares = familiares.filter(familiar => {
-    if (!familiar) return false;
+  const filteredResponsaveis = responsaveis.filter(responsavel => {
+    if (!responsavel) return false;
 
     const searchLower = searchTerm.toLowerCase();
 
     return (
-      (familiar.nome_completo?.toLowerCase() || '').includes(searchLower) ||
-      (familiar.parentesco?.toLowerCase() || '').includes(searchLower) ||
-      (familiar.telefone_principal?.toLowerCase() || '').includes(searchLower) ||
-      (familiar.email?.toLowerCase() || '').includes(searchLower) ||
+      (responsavel.nome_completo?.toLowerCase() || '').includes(searchLower) ||
+      (responsavel.parentesco?.toLowerCase() || '').includes(searchLower) ||
+      (responsavel.telefone_principal?.toLowerCase() || '').includes(searchLower) ||
+      (responsavel.email?.toLowerCase() || '').includes(searchLower) ||
       // Buscar também nos nomes dos idosos vinculados
-      familiar.idosos.some(idoso =>
+      responsavel.idosos.some(idoso =>
         idoso.nome_completo?.toLowerCase().includes(searchLower)
       )
     );
@@ -115,7 +115,7 @@ const Familiares: React.FC = () => {
 
         if (deleteError) throw deleteError;
 
-        setFamiliares(familiares.filter(familiar => familiar.id !== id));
+        setResponsaveis(responsaveis.filter(responsavel => responsavel.id !== id));
       } catch (error) {
         console.error('Erro ao excluir responsável:', error);
         alert('Erro ao excluir responsável');
@@ -179,45 +179,45 @@ const Familiares: React.FC = () => {
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-100">
-                {filteredFamiliares.map((familiar) => (
-                  <tr key={familiar.id} className="hover:bg-odara-offwhite/40 transition-colors">
+                {filteredResponsaveis.map((responsavel) => (
+                  <tr key={responsavel.id} className="hover:bg-odara-offwhite/40 transition-colors">
                     <td className="p-4">
                       <div className="flex items-center gap-3 min-w-[200px]">
                         <div className="bg-odara-primary/20 rounded-full p-2 flex-shrink-0">
                           <User className="h-4 w-4 text-odara-primary" />
                         </div>
                         <div>
-                          <p className="font-medium text-odara-dark">{familiar.nome_completo || 'Não informado'}</p>
-                          <p className="text-xs text-gray-500">{familiar.cpf || 'Sem CPF'}</p>
+                          <p className="font-medium text-odara-dark">{responsavel.nome_completo || 'Não informado'}</p>
+                          <p className="text-xs text-gray-500">{responsavel.cpf || 'Sem CPF'}</p>
                         </div>
                       </div>
                     </td>
                     <td className="p-4">
                       <span className="px-2 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-700 capitalize">
-                        {familiar.parentesco || 'Não informado'}
+                        {responsavel.parentesco || 'Não informado'}
                       </span>
                     </td>
                     <td className="p-4">
                       <div className="space-y-1">
                         <div className="flex items-center gap-2">
                           <Phone className="h-3 w-3 text-gray-500" />
-                          <span className="text-sm">{familiar.telefone_principal || 'Não informado'}</span>
+                          <span className="text-sm">{responsavel.telefone_principal || 'Não informado'}</span>
                         </div>
-                        {familiar.telefone_secundario && (
+                        {responsavel.telefone_secundario && (
                           <div className="flex items-center gap-2">
                             <Phone className="h-3 w-3 text-gray-500" />
-                            <span className="text-sm">{familiar.telefone_secundario}</span>
+                            <span className="text-sm">{responsavel.telefone_secundario}</span>
                           </div>
                         )}
                         <div className="flex items-center gap-2">
                           <Mail className="h-3 w-3 text-gray-500" />
-                          <span className="text-sm truncate">{familiar.email || 'Não informado'}</span>
+                          <span className="text-sm truncate">{responsavel.email || 'Não informado'}</span>
                         </div>
                       </div>
                     </td>
                     <td className="p-4">
                       <div className="space-y-2">
-                        {familiar.idosos.map((idoso) => (
+                        {responsavel.idosos.map((idoso) => (
                           <div key={idoso.id} className="flex items-center gap-2">
                             <User className="h-3 w-3 text-gray-400" />
                             <span className="text-sm font-medium text-odara-dark">
@@ -228,34 +228,35 @@ const Familiares: React.FC = () => {
                             </span>
                           </div>
                         ))}
-                        {familiar.idosos.length === 0 && (
+                        {responsavel.idosos.length === 0 && (
                           <span className="text-sm text-gray-500">Nenhum residente vinculado</span>
                         )}
                       </div>
                     </td>
                     <td className="p-4">
                       <span className={`px-3 py-1 rounded-full text-xs font-medium
-                        ${familiar.status === 'Ativo'
+                        ${responsavel.status === 'Ativo'
                           ? 'bg-green-100 text-green-700'
                           : 'bg-gray-200 text-gray-700'}
                       `}>
-                        {familiar.status || 'Não definido'}
+                        {responsavel.status || 'Não definido'}
                       </span>
                     </td>
                     <td className="p-4 whitespace-nowrap">
-                      {familiar.criado_em ? new Date(familiar.criado_em).toLocaleDateString('pt-BR') : 'Não informado'}
+                      {responsavel.criado_em ? new Date(responsavel.criado_em).toLocaleDateString('pt-BR') : 'Não informado'}
                     </td>
                     <td className="p-4">
                       <div className="flex space-x-2">
                         <button
                           className="p-1 text-blue-500 hover:text-blue-700 transition hover:bg-blue-50 rounded"
                           title="Editar responsável"
+                          onClick={() => navigate('/app/admin/responsavel/formulario', {state: { responsavel }})}
                         >
                           <Edit className="h-4 w-4" />
                         </button>
                         <button
                           className="p-1 text-red-500 hover:text-red-700 transition hover:bg-red-50 rounded"
-                          onClick={() => handleDelete(familiar.id)}
+                          onClick={() => handleDelete(responsavel.id)}
                           title="Excluir responsável"
                         >
                           <Trash2 className="h-4 w-4" />
@@ -267,7 +268,7 @@ const Familiares: React.FC = () => {
               </tbody>
             </table>
 
-            {filteredFamiliares.length === 0 && (
+            {filteredResponsaveis.length === 0 && (
               <div className="text-center py-12">
                 <User className="h-12 w-12 text-gray-300 mx-auto mb-4" />
                 <p className="text-gray-500">
@@ -283,11 +284,11 @@ const Familiares: React.FC = () => {
 
         {/* Contagem */}
         <div className="mt-4 text-sm text-odara-dark/70">
-          Total de {filteredFamiliares.length} responsável(eis) encontrado(s) de {familiares.length}
+          Total de {filteredResponsaveis.length} responsável(eis) encontrado(s) de {responsaveis.length}
         </div>
       </div>
     </div>
   );
 };
 
-export default Familiares;
+export default Responsaveis;

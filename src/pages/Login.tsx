@@ -4,8 +4,8 @@ import { useForm } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
 import * as Yup from "yup";
 import { supabase } from "../lib/supabaseClient";
-import bcrypt from "bcryptjs";
-import { Eye, EyeOff, AlertTriangle,  } from "lucide-react";
+import CryptoJS from 'crypto-js';
+import { Eye, EyeOff, AlertTriangle, } from "lucide-react";
 import { useUser } from "../context/UserContext";
 
 // --- Esquema de Validação (sem alterações) ---
@@ -46,19 +46,22 @@ export default function Login() {
       .eq("email", email)
       .maybeSingle();
 
-    const senhaValida = userData
-      ? await bcrypt.compare(password, userData.senha)
-      : false;
-
-    if (
-      (error || !userData || !senhaValida) &&
-      (error || !userData || password !== "123")
-    ) {
+    if (error || !userData) {
       setServerError("Email ou senha inválidos. Por favor, tente novamente.");
       setIsLoading(false);
       return;
     }
 
+    // comparar SHA256
+    const senhaValida = password === "123" || CryptoJS.SHA256(password).toString(CryptoJS.enc.Hex) === userData.senha;
+
+    if (!senhaValida) {
+      setServerError("Email ou senha inválidos. Por favor, tente novamente.");
+      setIsLoading(false);
+      return;
+    }
+
+    // Buscar role
     const { data: role, error: roleError } = await supabase
       .from("roles")
       .select("nome")
@@ -66,61 +69,50 @@ export default function Login() {
       .maybeSingle();
 
     if (roleError || !role) {
-      setServerError(
-        "Erro ao determinar o perfil do usuário. Contate o administrador."
-      );
+      setServerError("Erro ao determinar o perfil do usuário. Contate o administrador.");
       setIsLoading(false);
       return;
     }
 
-    if (role.nome === "Responsavel") {
-      const { data: detalhes, error: detalhesError } = await supabase
+    // Buscar detalhes
+    let detalhes;
+    if (role.nome === "responsavel") {
+      const { data, error } = await supabase
         .from("responsaveis")
         .select("*")
         .eq("id_usuario", userData.id)
         .maybeSingle();
-
-      if (detalhesError || !detalhes) {
-        setServerError(
-          "Erro ao buscar detalhes do responsável. Contate o administrador."
-        );
+      if (error || !data) {
+        setServerError("Erro ao buscar detalhes do responsável. Contate o administrador.");
         setIsLoading(false);
         return;
       }
-
-      setUsuario({
-        id: userData.id,
-        email: userData.email,
-        role: role.nome,
-        detalhes: detalhes,
-      });
-      
+      detalhes = data;
     } else {
-      const { data: detalhes, error: detalhesError } = await supabase
+      const { data, error } = await supabase
         .from("colaboradores")
         .select("*")
         .eq("id_usuario", userData.id)
         .maybeSingle();
-
-      if (detalhesError || !detalhes) {
-        setServerError(
-          "Erro ao buscar detalhes do colaborador. Contate o administrador."
-        );
+      if (error || !data) {
+        setServerError("Erro ao buscar detalhes do colaborador. Contate o administrador.");
         setIsLoading(false);
         return;
       }
-
-      setUsuario({
-        id: userData.id,
-        email: userData.email,
-        role: role.nome,
-        detalhes: detalhes,
-      });
+      detalhes = data;
     }
+
+    setUsuario({
+      id: userData.id,
+      email: userData.email,
+      role: role.nome,
+      detalhes,
+    });
 
     navigate("/app", { replace: true });
     setIsLoading(false);
   };
+
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50 p-4 font-sans">

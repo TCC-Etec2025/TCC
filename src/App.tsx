@@ -13,6 +13,7 @@ import Funcionario from './pages/Funcionarios';
 import CadastroPertences from './pages/CadastroPertences';
 import CadastroResponsavel from './pages/CadastroResponsavel';
 import CadastroFuncionario from './pages/CadastroFuncionario';
+import Usuarios from './pages/Usuarios'
 
 export default function App() {
   return (
@@ -40,10 +41,11 @@ export default function App() {
         <Route path="admin/funcionario/formulario" element={<CadastroFuncionario />} />
         <Route path="admin/pertence/formulario" element={<CadastroPertences />} />
 
-        
+        {/* Rotas as páginas de listagens*/}
         <Route path="admin/residentes" element={<Residentes />} />
         <Route path="admin/responsaveis" element={<Familiares />} />
         <Route path="admin/funcionarios" element={<Funcionario />} />
+        <Route path="admin/usuarios" element={<Usuarios />} />
 
         {/* Outras rotas */}
         <Route path="responsavel" element={<ResponsavelDashboard />} />

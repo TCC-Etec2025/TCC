@@ -213,35 +213,90 @@ function RecentActivity() {
   );
 }
 
+// Componente de alerta detalhado
+interface AlertItem {
+  title: string;
+  description: string;
+  status: ActivityStatus;
+}
+
+function AlertButton({ numeroAlertas, alertas }: { numeroAlertas: number, alertas: AlertItem[] }) {
+  return (
+    <div className="relative group">
+      {/* Botão principal */}
+      <button className="flex items-center justify-between w-full rounded-lg bg-white p-6 shadow hover:bg-red-50 transition-colors">
+        <div>
+          <div className="text-sm text-gray-500">Alertas Críticos</div>
+          <div className="mt-1 text-3xl font-semibold text-gray-900">{numeroAlertas}</div>
+          <div className="mt-2 text-xs font-medium text-red-500">resolvido pendente</div>
+        </div>
+        <div className="rounded-full bg-gray-100 p-3 text-gray-400">
+          <LuTriangleAlert className="h-6 w-6" />
+        </div>
+      </button>
+
+      {/* Dropdown de alertas */}
+      <div className="absolute right-0 z-10 mt-2 hidden w-80 rounded-lg bg-white shadow-lg group-hover:block">
+        <div className="max-h-64 overflow-y-auto p-4 space-y-2">
+          {alertas.map((alerta, idx) => (
+            <div
+              key={idx}
+              className={`flex items-start gap-3 rounded-lg p-3 ${statusColors[alerta.status]}`}
+            >
+              <div className="mt-1">{statusIcons[alerta.status]}</div>
+              <div>
+                <h4 className="font-medium text-gray-800">{alerta.title}</h4>
+                <p className="text-sm text-gray-500">{alerta.description}</p>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+
 // Componente principal da Dashboard
 export default function AdminDashboard() {
   const [numeroIdosos, setNumeroIdosos] = useState(0);
   const [numeroColaboradores, setNumeroColaboradores] = useState(0);
+  const [numeroAlertas, setNumeroAlertas] = useState(0);
 
   useEffect(() => {
     const numeroPessoas = async () => {
       const [
-        { data: idososData, error: idososError },
-        { data: colaboradoresData, error: colaboradoresError }
+        { count: idososCount, error: idososError },
+        { count: colaboradoresCount, error: colaboradoresError },
+        { count: alertasCount, error: alertasError }
       ] = await Promise.all([
-        supabase.from('idosos').select('*', { count: 'exact' }),
-        supabase.from('colaboradores').select('*', { count: 'exact' }),
+        supabase.from('idosos').select('*', { count: 'exact', head: true }),
+        supabase.from('colaboradores').select('*', { count: 'exact', head: true }),
+        supabase.from('colaboradores').select('id, idosos!left(id)', { count: 'exact', head: true })
       ]);
-      if (!idososError) {
-        setNumeroIdosos(idososData?.length || 0);
-      }
-      if (!colaboradoresError) {
-        setNumeroColaboradores(colaboradoresData?.length || 0);
-      }
+
+      if (!idososError) setNumeroIdosos(idososCount ?? 0);
+      if (!colaboradoresError) setNumeroColaboradores(colaboradoresCount ?? 0);
+      if (!alertasError) setNumeroAlertas(alertasCount ?? 0);
     };
+
     numeroPessoas();
   }, []);
+
 
   return (
     <div className="min-h-screen bg-gray-100 p-8 font-sans text-gray-800">
       <Header />
       <div className="mt-8 grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
         <StatsCards numeroIdosos={numeroIdosos} numeroColaboradores={numeroColaboradores} />
+        <AlertButton
+          numeroAlertas={numeroAlertas}
+          alertas={[
+            { title: "Medicamento em falta", description: "Verificar estoque de insulina", status: "warning" },
+            { title: "Checklist não concluído", description: "Completar checklist do residente João Silva", status: "info" },
+            { title: "Relatório pendente", description: "Enviar relatório semanal do medicamento", status: "success" },
+          ]}
+        />
       </div>
       <div className="mt-8 grid grid-cols-1 gap-6 lg:grid-cols-3">
         <div className="lg:col-span-2">

@@ -14,19 +14,13 @@ export default function DashboardRedirect() {
   // Agora, fazemos o redirecionamento com base no perfil
   const role = usuario.role;
 
-  if (role === 'Administrador') {
+  if (role === 'administrador') {
     return <Navigate to="/app/admin" replace />;
-  }
-  
-  if (role === 'Responsavel') {
+  } else if (role === 'responsavel') {
     return <Navigate to="/app/responsavel" replace />;
-  }
-
-  if (role === 'Funcionario') {
+  } else if (role !== null) {
     return <Navigate to="/app/funcionario" replace />;
   }
 
-  // Fallback: se o perfil for desconhecido, volta para o login
-  // (O ideal seria também deslogar o usuário aqui)
   return <Navigate to="/login" replace />;
 }

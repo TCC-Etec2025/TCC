@@ -6,7 +6,7 @@ import { useNavigate } from "react-router-dom"
 import { Home, Users, BarChart3, Settings, LogOut } from "lucide-react"
 
 const menuItems = {
-  Administrador: [
+  administrador: [
     { id: "dashboard", label: "Dashboard", icon: Home, path: "/app/admin" },
     { id: "pacientes", label: "Pacientes", icon: Users, path: "/app/admin/residentes" },
     { id: "responsaveis", label: "Responsáveis", icon: Users, path: "/app/admin/responsaveis" },

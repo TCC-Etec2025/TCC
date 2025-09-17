@@ -1,19 +1,20 @@
-import { Routes, Route } from 'react-router-dom';
-import Login from './pages/Login';
-import AdminDashboard from './pages/AdminDashboard';
-import ResponsavelDashboard from './pages/ResponsavelDashboard';
-import FuncionarioDashboard from './pages/FuncionarioDashboard';
-import RotaProtegida from './components/RotaProtegida';
-import DashboardRedirect from './components/DashboardRedirect';
-import ProtectedLayout from './layouts/ProtectedLayout';
-import CadastroIdoso from './pages/CadastroResidente';
-import Residentes from './pages/Residentes';
-import Familiares from './pages/Responsaveis';
-import Funcionario from './pages/Funcionarios';
-import CadastroPertences from './pages/CadastroPertences';
-import CadastroResponsavel from './pages/CadastroResponsavel';
-import CadastroFuncionario from './pages/CadastroFuncionario';
+import { Routes, Route } from 'react-router-dom'
+import Login from './pages/Login'
+import AdminDashboard from './pages/AdminDashboard'
+import ResponsavelDashboard from './pages/ResponsavelDashboard'
+import FuncionarioDashboard from './pages/FuncionarioDashboard'
+import RotaProtegida from './components/RotaProtegida'
+import DashboardRedirect from './components/DashboardRedirect'
+import ProtectedLayout from './layouts/ProtectedLayout'
+import CadastroIdoso from './pages/CadastroResidente'
+import Residentes from './pages/Residentes'
+import Familiares from './pages/Responsaveis'
+import Funcionario from './pages/Funcionarios'
+import CadastroPertences from './pages/CadastroPertences'
+import CadastroResponsavel from './pages/CadastroResponsavel'
+import CadastroFuncionario from './pages/CadastroFuncionario'
 import Usuarios from './pages/Usuarios'
+import Perfil from './pages/Perfil'
 
 export default function App() {
   return (
@@ -46,6 +47,8 @@ export default function App() {
         <Route path="admin/responsaveis" element={<Familiares />} />
         <Route path="admin/funcionarios" element={<Funcionario />} />
         <Route path="admin/usuarios" element={<Usuarios />} />
+
+        <Route path="admin/perfil" element={<Perfil />} />
 
         {/* Outras rotas */}
         <Route path="responsavel" element={<ResponsavelDashboard />} />

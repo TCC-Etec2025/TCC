@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect } from 'react';
 import { useUser } from "../context/UserContext"
 import { User, Settings, LogOut } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 
 type TopbarProps = {
     onToggleCollapse: () => void;
@@ -8,7 +9,7 @@ type TopbarProps = {
 
 type DropdownItem = {
     label: string;
-    icon: React.ReactNode; // Mudamos para ReactNode para usar componentes Lucide
+    icon: React.ReactNode;
     action: () => void;
 };
 
@@ -24,10 +25,11 @@ type Usuario = {
 };
 
 export default function Topbar({ onToggleCollapse }: TopbarProps) {
+    const navigate = useNavigate()
     const { usuario, logout } = useUser() as { usuario: Usuario, logout: () => void }
-    const [imageError, setImageError] = useState(false);
-    const [dropdownOpen, setDropdownOpen] = useState(false);
-    const dropdownRef = useRef<HTMLDivElement>(null);
+    const [imageError, setImageError] = useState(false)
+    const [dropdownOpen, setDropdownOpen] = useState(false)
+    const dropdownRef = useRef<HTMLDivElement>(null)
 
     // Fechar dropdown ao clicar fora
     useEffect(() => {
@@ -53,7 +55,7 @@ export default function Topbar({ onToggleCollapse }: TopbarProps) {
         {
             label: "Meu Perfil",
             icon: <User className="w-4 h-4 mr-2 text-gray-400" />,
-            action: () => console.log("Perfil clicado")
+            action: () => navigate("/app/admin/perfil")
         },
         {
             label: "Configurações",
@@ -63,7 +65,7 @@ export default function Topbar({ onToggleCollapse }: TopbarProps) {
         {
             label: "Sair",
             icon: <LogOut className="w-4 h-4 mr-2 text-gray-400" />,
-            action: logout // Corrigido: removidos os parênteses
+            action: logout
         }
     ];
 

@@ -4,7 +4,7 @@ import { useUser } from '../context/UserContext';
 // Este componente decide para qual dashboard redirecionar o usuário
 // com base no perfil que já está carregado no AuthContext.
 export default function DashboardRedirect() {
-  const { usuario} = useUser();
+  const { usuario } = useUser();
 
   // Se por algum motivo não houver perfil, volta para o login
   if (!usuario) {

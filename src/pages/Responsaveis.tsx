@@ -155,7 +155,7 @@ const Responsaveis: React.FC = () => {
             <Search className="text-gray-400 mr-3 h-4 w-4 flex-shrink-0" />
             <input
               type="text"
-              placeholder="Buscar por nome, parentesco, telefone, email ou nome do residente..."
+              placeholder="Buscar por nome, telefone, email ou nome do residente..."
               className="w-full p-2 outline-none bg-transparent"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
@@ -170,7 +170,6 @@ const Responsaveis: React.FC = () => {
               <thead className="bg-odara-primary text-odara-contorno">
                 <tr>
                   <th className="p-4 text-left font-medium">Responsável</th>
-                  <th className="p-4 text-left font-medium">Parentesco</th>
                   <th className="p-4 text-left font-medium">Contato</th>
                   <th className="p-4 text-left font-medium">Residentes Vinculados</th>
                   <th className="p-4 text-left font-medium">Status</th>
@@ -191,11 +190,6 @@ const Responsaveis: React.FC = () => {
                           <p className="text-xs text-gray-500">{responsavel.cpf || 'Sem CPF'}</p>
                         </div>
                       </div>
-                    </td>
-                    <td className="p-4">
-                      <span className="px-2 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-700 capitalize">
-                        {responsavel.parentesco || 'Não informado'}
-                      </span>
                     </td>
                     <td className="p-4">
                       <div className="space-y-1">

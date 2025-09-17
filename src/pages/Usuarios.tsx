@@ -1,6 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { Search, Plus, Edit, Trash2, User, Mail, ShieldCheck, CheckCircle, Ban } from 'lucide-react';
+import { Search, Plus, Edit, Trash2, User, ShieldCheck, CheckCircle, Ban } from 'lucide-react';
 import { supabase } from '../lib/supabaseClient';
 
 interface Usuario {
@@ -14,7 +13,6 @@ interface Usuario {
 }
 
 const Usuarios: React.FC = () => {
-  const navigate = useNavigate();
   const [searchTerm, setSearchTerm] = useState<string>('');
   const [usuarios, setUsuarios] = useState<Usuario[]>([]);
   const [loading, setLoading] = useState<boolean>(true);

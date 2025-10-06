@@ -1,7 +1,7 @@
 "use client"
 
 import { useState } from "react"
-import { useUser } from "../context/UserContext"
+import { useUser, type PerfilUsuario } from "../context/UserContext"
 import { useNavigate } from "react-router-dom"
 import { Home, Users, BarChart3, Settings, LogOut } from "lucide-react"
 
@@ -19,22 +19,13 @@ type SidebarProps = {
   estado: boolean;
 };
 
-type UsuarioDetalhes = {
-  nome_completo?: string;
-};
-
-type Usuario = {
-  role: string;
-  detalhes: UsuarioDetalhes;
-};
-
 export default function Sidebar({ estado }: SidebarProps) {
-  const { usuario, logout } = useUser() as { usuario: Usuario, logout: () => void }
+  const { usuario, logout } = useUser() as { usuario: PerfilUsuario, logout: () => void }
   const navigate = useNavigate()
   const [isHovered, setIsHovered] = useState(false)
 
   if (!usuario) return null
-  const items = menuItems[usuario.role as keyof typeof menuItems] || []
+  const items = menuItems[usuario.papel as keyof typeof menuItems] || []
   const expanded = isHovered || !estado;
 
   return (

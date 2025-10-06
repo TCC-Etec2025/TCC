@@ -41,10 +41,12 @@ export default function Login() {
     const { email, password } = data;
 
     const { data: userData, error } = await supabase
-      .from("usuarios_sistema")
-      .select("id, email, id_role, senha")
+      .from("usuario_sistema")
+      .select("id, id_papel, senha")
       .eq("email", email)
       .maybeSingle();
+
+    alert(error?.message);
 
     if (error || !userData) {
       setServerError("Email ou senha inválidos. Por favor, tente novamente.");
@@ -61,11 +63,10 @@ export default function Login() {
       return;
     }
 
-    // Buscar role
     const { data: role, error: roleError } = await supabase
-      .from("roles")
+      .from("papel")
       .select("nome")
-      .eq("id", userData.id_role)
+      .eq("id", userData.id_papel)
       .maybeSingle();
 
     if (roleError || !role) {
@@ -74,11 +75,9 @@ export default function Login() {
       return;
     }
 
-    // Buscar detalhes
-    let detalhes;
     if (role.nome === "responsavel") {
       const { data, error } = await supabase
-        .from("responsaveis")
+        .from("responsavel")
         .select("*")
         .eq("id_usuario", userData.id)
         .maybeSingle();
@@ -87,10 +86,13 @@ export default function Login() {
         setIsLoading(false);
         return;
       }
-      detalhes = data;
+      setUsuario({
+        ...data,
+        papel: "responsavel",
+      });
     } else {
       const { data, error } = await supabase
-        .from("colaboradores")
+        .from("funcionario")
         .select("*")
         .eq("id_usuario", userData.id)
         .maybeSingle();
@@ -99,15 +101,12 @@ export default function Login() {
         setIsLoading(false);
         return;
       }
-      detalhes = data;
+      setUsuario({
+        ...data,
+        papel: role.nome,
+      });
     }
 
-    setUsuario({
-      id: userData.id,
-      email: userData.email,
-      role: role.nome,
-      detalhes,
-    });
 
     navigate("/app", { replace: true });
     setIsLoading(false);

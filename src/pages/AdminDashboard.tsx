@@ -256,7 +256,6 @@ function AlertButton({ numeroAlertas, alertas }: { numeroAlertas: number, alerta
   );
 }
 
-
 // Componente principal da Dashboard
 export default function AdminDashboard() {
   const [numeroIdosos, setNumeroIdosos] = useState(0);
@@ -270,9 +269,9 @@ export default function AdminDashboard() {
         { count: colaboradoresCount, error: colaboradoresError },
         { count: alertasCount, error: alertasError }
       ] = await Promise.all([
-        supabase.from('idosos').select('*', { count: 'exact', head: true }),
-        supabase.from('colaboradores').select('*', { count: 'exact', head: true }),
-        supabase.from('colaboradores').select('id, idosos!left(id)', { count: 'exact', head: true })
+        supabase.from('residentes').select('*', { count: 'exact', head: true }),
+        supabase.from('funcionarios').select('*', { count: 'exact', head: true }),
+        supabase.from('funcionarios').select('id, idosos!left(id)', { count: 'exact', head: true })
       ]);
 
       if (!idososError) setNumeroIdosos(idososCount ?? 0);

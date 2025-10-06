@@ -2,21 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Search, Plus, Edit, Trash2, User, Mail, Phone, Badge } from 'lucide-react';
 import { supabase } from '../lib/supabaseClient';
-
-interface Funcionario {
-  id: number;
-  nome_completo: string;
-  cpf: string;
-  cargo: string;
-  tipo_vinculo: string;
-  registro_profissional?: string;
-  data_admissao: string;
-  data_demissao?: string;
-  telefone: string;
-  email?: string;
-  status: string;
-  criado_em: string;
-}
+import type { Funcionario } from '../Modelos';
 
 const Funcionarios: React.FC = () => {
   const navigate = useNavigate();
@@ -29,9 +15,8 @@ const Funcionarios: React.FC = () => {
       try {
         setLoading(true);
         const { data, error } = await supabase
-          .from('colaboradores')
-          .select('*')
-          .order('nome_completo', { ascending: true });
+          .from('funcionario')
+          .select('*');
 
         if (error) throw error;
         if (data) setFuncionarios(data);
@@ -46,9 +31,9 @@ const Funcionarios: React.FC = () => {
   }, []);
 
   const filteredFuncionarios = funcionarios.filter(funcionario =>
-    (funcionario.nome_completo?.toLowerCase() || '').includes(searchTerm.toLowerCase()) ||
+    (funcionario.nome?.toLowerCase() || '').includes(searchTerm.toLowerCase()) ||
     (funcionario.cargo?.toLowerCase() || '').includes(searchTerm.toLowerCase()) ||
-    (funcionario.tipo_vinculo?.toLowerCase() || '').includes(searchTerm.toLowerCase()) ||
+    (funcionario.vinculo?.toLowerCase() || '').includes(searchTerm.toLowerCase()) ||
     (funcionario.registro_profissional?.toLowerCase() || '').includes(searchTerm.toLowerCase())
   );
 
@@ -56,7 +41,7 @@ const Funcionarios: React.FC = () => {
     if (window.confirm('Tem certeza que deseja excluir este funcionário?')) {
       try {
         const { error } = await supabase
-          .from('colaboradores')
+          .from('funcionario')
           .delete()
           .eq('id', id);
 
@@ -143,15 +128,15 @@ const Funcionarios: React.FC = () => {
                           <User className="h-4 w-4 text-odara-primary" />
                         </div>
                         <div>
-                          <p className="font-medium text-odara-dark">{funcionario.nome_completo || 'Não informado'}</p>
-                          <p className="text-xs text-gray-500">{funcionario.cpf || 'Sem CPF'}</p>
+                          <p className="font-medium text-odara-dark">{funcionario.nome}</p>
+                          <p className="text-xs text-gray-500">{funcionario.cpf}</p>
                         </div>
                       </div>
                     </td>
                     <td className="p-4">
                       <div className="flex items-center gap-2">
                         <Badge className="h-3 w-3 text-gray-500" />
-                        <span>{funcionario.cargo || 'Não informado'}</span>
+                        <span>{funcionario.cargo}</span>
                       </div>
                       {funcionario.registro_profissional && (
                         <p className="text-xs text-gray-500 mt-1">{funcionario.registro_profissional}</p>
@@ -159,14 +144,14 @@ const Funcionarios: React.FC = () => {
                     </td>
                     <td className="p-4">
                       <span className="px-2 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-700 capitalize">
-                        {funcionario.tipo_vinculo || 'Não informado'}
+                        {funcionario.vinculo}
                       </span>
                     </td>
                     <td className="p-4">
                       <div className="space-y-1">
                         <div className="flex items-center gap-2">
                           <Phone className="h-3 w-3 text-gray-500" />
-                          <span className="text-sm">{funcionario.telefone || 'Não informado'}</span>
+                          <span className="text-sm">{funcionario.telefone}</span>
                         </div>
                         {funcionario.email && (
                           <div className="flex items-center gap-2">
@@ -178,11 +163,11 @@ const Funcionarios: React.FC = () => {
                     </td>
                     <td className="p-4">
                       <span className={`px-3 py-1 rounded-full text-xs font-medium ${getStatusColor(funcionario.status)}`}>
-                        {funcionario.status || 'Não definido'}
+                        {funcionario.status}
                       </span>
                     </td>
                     <td className="p-4 whitespace-nowrap">
-                      {funcionario.data_admissao ? new Date(funcionario.data_admissao).toLocaleDateString('pt-BR') : 'Não informado'}
+                      {new Date(funcionario.data_admissao).toLocaleDateString('pt-BR')}
                     </td>
                     <td className="p-4">
                       <div className="flex space-x-2">

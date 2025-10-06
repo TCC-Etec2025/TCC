@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from 'react';
-import { useUser } from "../context/UserContext"
+import { useUser, type PerfilUsuario } from "../context/UserContext"
 import { User, Settings, LogOut } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 
@@ -13,20 +13,9 @@ type DropdownItem = {
     action: () => void;
 };
 
-type UsuarioDetalhes = {
-    nome_completo: string;
-};
-
-type Usuario = {
-    id: number;
-    email: string;
-    role: string;
-    detalhes: UsuarioDetalhes;
-};
-
 export default function Topbar({ onToggleCollapse }: TopbarProps) {
     const navigate = useNavigate()
-    const { usuario, logout } = useUser() as { usuario: Usuario, logout: () => void }
+    const { usuario, logout } = useUser() as { usuario: PerfilUsuario, logout: () => void }
     const [imageError, setImageError] = useState(false)
     const [dropdownOpen, setDropdownOpen] = useState(false)
     const dropdownRef = useRef<HTMLDivElement>(null)
@@ -92,7 +81,7 @@ export default function Topbar({ onToggleCollapse }: TopbarProps) {
                             />
                         ) : (
                             <span className="text-sm font-medium text-gray-600">
-                                {getInitials(usuario.detalhes.nome_completo)}
+                                {getInitials(usuario.nome)}
                             </span>
                         )}
                     </div>
@@ -101,7 +90,7 @@ export default function Topbar({ onToggleCollapse }: TopbarProps) {
                     {dropdownOpen && (
                         <div className="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg py-1 z-20 border border-gray-200">
                             <div className="px-4 py-2 border-b border-gray-100">
-                                <p className="text-gray-800 text-sm font-medium">{usuario.detalhes.nome_completo}</p>
+                                <p className="text-gray-800 text-sm font-medium">{usuario.nome}</p>
                                 <p className="text-gray-500 text-xs">{usuario.email}</p>
                             </div>
 

@@ -12,7 +12,7 @@ export default function DashboardRedirect() {
   }
 
   // Agora, fazemos o redirecionamento com base no perfil
-  const role = usuario.role;
+  const role = usuario.papel;
 
   if (role === 'administrador') {
     return <Navigate to="/app/admin" replace />;

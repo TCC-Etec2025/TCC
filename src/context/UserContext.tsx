@@ -1,16 +1,14 @@
 import { createContext, useState, useContext, useEffect } from "react";
 import type { ReactNode } from "react";
+import type { Funcionario, Responsavel } from "../Modelos";
 
-type UserProfile = {
-  id: number;
-  email: string;
-  role: string;
-  detalhes: unknown;
+export type PerfilUsuario = (Funcionario | Responsavel) & {
+  papel: string;
 };
 
 type UserContextType = {
-  usuario: UserProfile | null;
-  setUsuario: (user: UserProfile | null) => void;
+  usuario: PerfilUsuario | null;
+  setUsuario: (user: PerfilUsuario | null) => void;
   logout: () => void;
 };
 
@@ -20,7 +18,7 @@ const USER_STORAGE_KEY = "ilpi_user";
 
 export function UserProvider({ children }: { children: ReactNode }) {
   // 1. Inicializa o estado do usuário com o que está no localStorage
-  const [usuario, setUsuario] = useState<UserProfile | null>(() => {
+  const [usuario, setUsuario] = useState<PerfilUsuario | null>(() => {
     try {
       const storedUser = localStorage.getItem(USER_STORAGE_KEY);
       if (storedUser) {

@@ -8,13 +8,13 @@ export default function Perfil() {
   const [isEditing, setIsEditing] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [currentTab, setCurrentTab] = useState("personal");
-  const usuario = useUser().usuario;
+  const { usuario } = useUser();
 
-  // Dados mockados baseados no role
+  // Dados do usuário baseados no perfil
   const [userData, setUserData] = useState({
-    nome_completo: "",
+    nome: "",
     email: "",
-    role: "",
+    papel: "",
     telefone: "",
     endereco_completo: "",
     data_nascimento: "",
@@ -27,16 +27,19 @@ export default function Perfil() {
 
   const [formData, setFormData] = useState(userData);
 
-  // Simular carregamento dos dados do usuário baseado no role
+  // Carregar dados do usuário
   useEffect(() => {
-    // Em uma aplicação real, isso viria de uma API/contexto de autenticação
+    if (!usuario) return;
+    
     const loadUserData = () => {
-      if (usuario?.role === "responsavel") {
+      if (usuario.papel === "responsavel") {
+        // Para responsável
+        const responsavel = usuario as any;
         setUserData({
-          nome_completo: usuario?.detalhes.nome_completo,
-          email: usuario?.detalhes.email,
-          role: usuario.role,
-          telefone: usuario?.detalhes.telefone_principal,
+          nome: responsavel.nome || "",
+          email: responsavel.email || "",
+          papel: usuario.papel,
+          telefone: responsavel.telefone_principal || "",
           endereco_completo: "São Paulo, SP",
           data_nascimento: "1985-03-15",
           cargo: "",
@@ -46,25 +49,26 @@ export default function Perfil() {
           avatar: "/professional-woman-doctor.png",
         });
       } else {
-        // Colaborador (admin/funcionario)
+        // Para funcionário
+        const funcionario = usuario as any;
         setUserData({
-          nome_completo: usuario?.detalhes.nome_completo,
-          email: usuario?.detalhes.email,
-          role: usuario.role,
-          telefone: usuario?.detalhes.telefone_principal,
+          nome: funcionario.nome || "",
+          email: funcionario.email || "",
+          papel: usuario.papel,
+          telefone: funcionario.telefone || "",
           endereco_completo: "São Paulo, SP",
-          data_nascimento: "1985-03-15",
-          cargo: "",
-          registro_profissional: "",
-          data_admissao: "",
-          bio: "Responsável por pacientes na instituição.",
+          data_nascimento: funcionario.data_nascimento || "",
+          cargo: funcionario.cargo || "",
+          registro_profissional: funcionario.registro_profissional || "",
+          data_admissao: funcionario.data_admissao || "",
+          bio: "Funcionário da instituição.",
           avatar: "/professional-woman-doctor.png",
         });
       }
     };
 
     loadUserData();
-  }, [usuario?.role]);
+  }, [usuario]);
 
   useEffect(() => {
     setFormData(userData);
@@ -84,13 +88,13 @@ export default function Perfil() {
     setIsEditing(false);
   };
 
-  const getRoleBadge = (role: string) => {
+  const getRoleBadge = (papel: string) => {
     const roleConfig = {
       admin: { label: "Administrador", className: "bg-blue-100 text-blue-800" },
-      colaborador: { label: "Colaborador", className: "bg-gray-100 text-gray-800" },
+      funcionario: { label: "Funcionário", className: "bg-gray-100 text-gray-800" },
       responsavel: { label: "Responsável", className: "bg-green-100 text-green-800" },
     };
-    return roleConfig[role as keyof typeof roleConfig] || { label: role, className: "bg-gray-200 text-gray-800" };
+    return roleConfig[papel as keyof typeof roleConfig] || { label: papel, className: "bg-gray-200 text-gray-800" };
   };
 
   const formatDate = (dateString: string) => {
@@ -166,15 +170,15 @@ export default function Perfil() {
               )}
             </div>
             <div className="mt-4 space-y-2">
-              <h2 className="text-xl font-semibold">{userData.nome_completo}</h2>
+              <h2 className="text-xl font-semibold">{userData.nome}</h2>
               <span
                 className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                  getRoleBadge(userData.role).className
+                  getRoleBadge(userData.papel).className
                 }`}
               >
-                {getRoleBadge(userData.role).label}
+                {getRoleBadge(userData.papel).label}
               </span>
-              {userData.role === "colaborador" && userData.cargo && (
+              {userData.papel === "funcionario" && userData.cargo && (
                 <p className="text-sm text-gray-500">{userData.cargo}</p>
               )}
             </div>
@@ -195,7 +199,7 @@ export default function Perfil() {
               <MapPin className="h-4 w-4 text-gray-400" />
               <span>{userData.endereco_completo}</span>
             </div>
-            {userData.role === "colaborador" && userData.data_admissao && (
+            {userData.papel === "funcionario" && userData.data_admissao && (
               <div className="flex items-center gap-3 text-sm text-gray-600">
                 <Calendar className="h-4 w-4 text-gray-400" />
                 <span>Desde {formatDate(userData.data_admissao)}</span>
@@ -251,12 +255,12 @@ export default function Perfil() {
                   <p className="mt-1 text-sm text-gray-500">Atualize suas informações pessoais e de contato</p>
                   <div className="mt-6 grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div className="space-y-2">
-                      <label htmlFor="nome_completo" className="block text-sm font-medium text-gray-700">Nome Completo</label>
+                      <label htmlFor="nome" className="block text-sm font-medium text-gray-700">Nome Completo</label>
                       <input
-                        id="nome_completo"
+                        id="nome"
                         type="text"
-                        value={formData.nome_completo}
-                        onChange={(e) => setFormData({ ...formData, nome_completo: e.target.value })}
+                        value={formData.nome}
+                        onChange={(e) => setFormData({ ...formData, nome: e.target.value })}
                         disabled={!isEditing}
                         className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 disabled:bg-gray-50"
                       />
@@ -294,7 +298,7 @@ export default function Perfil() {
                         className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 disabled:bg-gray-50"
                       />
                     </div>
-                    {userData.role === "colaborador" && (
+                    {userData.papel === "funcionario" && (
                       <>
                         <div className="space-y-2">
                           <label htmlFor="cargo" className="block text-sm font-medium text-gray-700">Cargo</label>

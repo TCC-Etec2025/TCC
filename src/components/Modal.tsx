@@ -3,7 +3,7 @@ import { Modal, Typography } from "@mui/material";
 interface ActionButton {
   label: string;
   onClick: () => void;
-  className?: string; // Tailwind classes
+  className?: string;
 }
 
 interface CustomModalProps {

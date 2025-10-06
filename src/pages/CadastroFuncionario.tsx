@@ -9,11 +9,12 @@ import { supabase } from '../lib/supabaseClient';
 import Modal from '../components/Modal';
 
 const schema = yup.object({
-  tipo_vinculo: yup.string().required('O tipo de vínculo é obrigatório'),
-  nome_completo: yup.string().required('O nome completo é obrigatório'),
+  vinculo: yup.string().required('O tipo de vínculo é obrigatório'),
+  nome: yup.string().required('O nome completo é obrigatório'),
   cpf: yup.string().required('O CPF é obrigatório'),
   email: yup.string().email('Email inválido').required('O email é obrigatório'),
-  data_nascimento: yup.string().nullable(),
+  data_nascimento: yup.string().nullable().required('A data de nascimento é obrigatória'),
+  papel: yup.string().default('Funcionario'),
   cargo: yup.string().required('O cargo é obrigatório'),
   registro_profissional: yup.string().nullable(),
   data_admissao: yup.string().required('A data de admissão é obrigatória'),
@@ -47,11 +48,12 @@ export default function CadastroFuncionario() {
   const { register, handleSubmit, formState: { errors }, reset } = useForm({
     resolver: yupResolver(schema),
     defaultValues: {
-      tipo_vinculo: '',
-      nome_completo: '',
+      vinculo: '',
+      nome: '',
       cpf: '',
       email: '',
-      data_nascimento: null,
+      data_nascimento: '',
+      papel: '',
       cargo: '',
       registro_profissional: null,
       data_admissao: '',
@@ -72,7 +74,7 @@ export default function CadastroFuncionario() {
     if (funcionario) {
       const fetchEndereco = async () => {
         const { data, error } = await supabase
-          .from('enderecos')
+          .from('endereco')
           .select('*')
           .eq('id', funcionario.id_endereco)
           .single();
@@ -80,11 +82,12 @@ export default function CadastroFuncionario() {
           console.error('Erro ao buscar endereço:', error);
         } else if (data) {
           reset({
-            tipo_vinculo: funcionario.tipo_vinculo,
-            nome_completo: funcionario.nome_completo,
+            vinculo: funcionario.tipo_vinculo,
+            nome: funcionario.nome_completo,
             cpf: funcionario.cpf,
             email: funcionario.email,
             data_nascimento: funcionario.data_nascimento,
+            papel: funcionario.papel,
             cargo: funcionario.cargo,
             registro_profissional: funcionario.registro_profissional,
             data_admissao: funcionario.data_admissao ? funcionario.data_admissao.split('T')[0] : '',
@@ -113,7 +116,7 @@ export default function CadastroFuncionario() {
       const params = {
         // Dados do usuário
         p_email_usuario: data.email,
-        p_nome_role: 'Funcionario',
+        p_nome_role: data.papel,
 
         // Endereço
         p_cep: data.cep,
@@ -125,10 +128,10 @@ export default function CadastroFuncionario() {
         p_estado: data.estado,
 
         // Dados do colaborador
-        p_tipo_vinculo: data.tipo_vinculo,
-        p_nome_completo: data.nome_completo,
+        p_vinculo: data.vinculo,
+        p_nome: data.nome,
         p_cpf: data.cpf,
-        p_data_nascimento: data.data_nascimento || null,
+        p_data_nascimento: data.data_nascimento,
         p_cargo: data.cargo,
         p_registro_profissional: data.registro_profissional || null,
         p_data_admissao: data.data_admissao,
@@ -154,7 +157,7 @@ export default function CadastroFuncionario() {
 
       setModalConfig({
         title: "Sucesso!",
-        description: `Colaborador ${data.nome_completo} ${funcionario ? "atualizado" : "cadastrado"} com sucesso!`,
+        description: `Colaborador ${data.nome} ${funcionario ? "atualizado" : "cadastrado"} com sucesso!`,
         actions: [
           {
             label: "Voltar à lista",
@@ -230,7 +233,7 @@ export default function CadastroFuncionario() {
               Tipo de Vínculo *
             </label>
             <select
-              {...register('tipo_vinculo')}
+              {...register('vinculo')}
               className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors bg-white"
             >
               <option value="">Selecione o tipo de vínculo</option>
@@ -240,9 +243,9 @@ export default function CadastroFuncionario() {
               <option value="Voluntário">Voluntário</option>
               <option value="Outro">Outro</option>
             </select>
-            {errors.tipo_vinculo && (
+            {errors.vinculo && (
               <p className="text-red-500 text-sm mt-2 font-medium">
-                {errors.tipo_vinculo.message}
+                {errors.vinculo.message}
               </p>
             )}
           </div>
@@ -252,13 +255,13 @@ export default function CadastroFuncionario() {
               Nome Completo *
             </label>
             <input
-              {...register('nome_completo')}
+              {...register('nome')}
               className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
               placeholder="Digite o nome completo"
             />
-            {errors.nome_completo && (
+            {errors.nome && (
               <p className="text-red-500 text-sm mt-2 font-medium">
-                {errors.nome_completo.message}
+                {errors.nome.message}
               </p>
             )}
           </div>

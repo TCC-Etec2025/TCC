@@ -2,27 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { Search, Plus, Edit, Trash2, User, Phone, Mail } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '../lib/supabaseClient';
-
-interface IdosoVinculado {
-  id: number;
-  nome_completo: string;
-  parentesco: string;
-}
-
-interface Responsavel {
-  id: number;
-  nome_completo: string;
-  cpf: string;
-  telefone_principal: string;
-  telefone_secundario?: string;
-  email: string;
-  parentesco: string;
-  id_residente: number;
-  observacoes?: string;
-  status: string;
-  criado_em: string;
-  idosos: IdosoVinculado[]; // Idosos vinculados a este responsável
-}
+import type { Responsavel } from '../Modelos'
 
 const Responsaveis: React.FC = () => {
   const navigate = useNavigate();
@@ -37,27 +17,27 @@ const Responsaveis: React.FC = () => {
 
         // 1. Buscar todos os responsáveis
         const { data: responsaveisData, error: responsaveisError } = await supabase
-          .from('responsaveis')
+          .from('responsavel')
           .select('*')
-          .order('nome_completo', { ascending: true });
+          .order('nome', { ascending: true });
 
         if (responsaveisError) throw responsaveisError;
 
-        // 2. Buscar todos os idosos com seus responsáveis
-        const { data: idososData, error: idososError } = await supabase
-          .from('idosos')
-          .select('id, nome_completo, id_responsavel, responsavel_parentesco')
+        // 2. Buscar todos os residentes com seus responsáveis
+        const { data: residentesData, error: residentesError } = await supabase
+          .from('residente')
+          .select('id, nome, id_responsavel, responsavel_parentesco')
           .not('id_responsavel', 'is', null);
 
-        if (idososError) throw idososError;
+        if (residentesError) throw residentesError;
 
         // 3. Combinar os dados
         const responsaveisComIdosos = responsaveisData.map(responsavel => {
-          const idososDoResponsavel = idososData
+          const idososDoResponsavel = residentesData
             .filter(idoso => idoso.id_responsavel === responsavel.id)
             .map(idoso => ({
               id: idoso.id,
-              nome_completo: idoso.nome_completo,
+              nome_completo: idoso.nome,
               parentesco: idoso.responsavel_parentesco
             }));
 
@@ -85,13 +65,12 @@ const Responsaveis: React.FC = () => {
     const searchLower = searchTerm.toLowerCase();
 
     return (
-      (responsavel.nome_completo?.toLowerCase() || '').includes(searchLower) ||
-      (responsavel.parentesco?.toLowerCase() || '').includes(searchLower) ||
+      (responsavel.nome?.toLowerCase() || '').includes(searchLower) ||
       (responsavel.telefone_principal?.toLowerCase() || '').includes(searchLower) ||
       (responsavel.email?.toLowerCase() || '').includes(searchLower) ||
-      // Buscar também nos nomes dos idosos vinculados
-      responsavel.idosos.some(idoso =>
-        idoso.nome_completo?.toLowerCase().includes(searchLower)
+      // Buscar também nos nomes dos residentes vinculados
+      responsavel.residentes?.some(residente =>
+        residente.nome?.toLowerCase().includes(searchLower)
       )
     );
   });
@@ -186,7 +165,7 @@ const Responsaveis: React.FC = () => {
                           <User className="h-4 w-4 text-odara-primary" />
                         </div>
                         <div>
-                          <p className="font-medium text-odara-dark">{responsavel.nome_completo || 'Não informado'}</p>
+                          <p className="font-medium text-odara-dark">{responsavel.nome || 'Não informado'}</p>
                           <p className="text-xs text-gray-500">{responsavel.cpf || 'Sem CPF'}</p>
                         </div>
                       </div>
@@ -211,25 +190,25 @@ const Responsaveis: React.FC = () => {
                     </td>
                     <td className="p-4">
                       <div className="space-y-2">
-                        {responsavel.idosos.map((idoso) => (
-                          <div key={idoso.id} className="flex items-center gap-2">
+                        {responsavel.residentes?.map((residente) => (
+                          <div key={residente.id} className="flex items-center gap-2">
                             <User className="h-3 w-3 text-gray-400" />
                             <span className="text-sm font-medium text-odara-dark">
-                              {idoso.nome_completo}
+                              {residente.nome}
                             </span>
                             <span className="text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded">
-                              {idoso.parentesco}
+                              {residente.responsavel_parentesco}
                             </span>
                           </div>
                         ))}
-                        {responsavel.idosos.length === 0 && (
+                        {responsavel.residentes?.length === 0 && (
                           <span className="text-sm text-gray-500">Nenhum residente vinculado</span>
                         )}
                       </div>
                     </td>
                     <td className="p-4">
                       <span className={`px-3 py-1 rounded-full text-xs font-medium
-                        ${responsavel.status === 'Ativo'
+                        ${responsavel.status
                           ? 'bg-green-100 text-green-700'
                           : 'bg-gray-200 text-gray-700'}
                       `}>

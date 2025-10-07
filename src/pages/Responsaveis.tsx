@@ -4,10 +4,18 @@ import { useNavigate } from 'react-router-dom';
 import { supabase } from '../lib/supabaseClient';
 import type { Responsavel } from '../Modelos'
 
+type ResponsavelComResidente = Responsavel & {
+  residentes: {
+    id: number;
+    nome: string;
+    parentesco: string;
+  }[];
+};
+
 const Responsaveis: React.FC = () => {
   const navigate = useNavigate();
   const [searchTerm, setSearchTerm] = useState<string>('');
-  const [responsaveis, setResponsaveis] = useState<Responsavel[]>([]);
+  const [responsaveis, setResponsaveis] = useState<ResponsavelComResidente[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
 
   useEffect(() => {
@@ -37,7 +45,7 @@ const Responsaveis: React.FC = () => {
             .filter(idoso => idoso.id_responsavel === responsavel.id)
             .map(idoso => ({
               id: idoso.id,
-              nome_completo: idoso.nome,
+              nome: idoso.nome,
               parentesco: idoso.responsavel_parentesco
             }));
 
@@ -197,7 +205,7 @@ const Responsaveis: React.FC = () => {
                               {residente.nome}
                             </span>
                             <span className="text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded">
-                              {residente.responsavel_parentesco}
+                              {residente.parentesco}
                             </span>
                           </div>
                         ))}

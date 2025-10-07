@@ -1,90 +1,125 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { ArrowLeft, Camera, Save, User, Lock, Shield, Phone, Mail, MapPin, Calendar } from "lucide-react";
-import { useUser } from "../context/UserContext";
+import { ArrowLeft, Save, User, Lock, Shield, Phone, Mail, MapPin, Calendar } from "lucide-react";
+import { useUser, type PerfilUsuario } from "../context/UserContext";
+import type { Funcionario, Responsavel } from "../Modelos";
+
+// Componente para formulário de endereço
+function FormularioEndereco({ formData, setFormData, isEditing }: {
+  formData: any;
+  setFormData: (data: any) => void;
+  isEditing: boolean;
+}) {
+  return (
+    <div className="space-y-4">
+      <h3 className="text-lg font-medium text-gray-900">Endereço</h3>
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className="space-y-2">
+          <label htmlFor="cep" className="block text-sm font-medium text-gray-700">CEP</label>
+          <input
+            id="cep"
+            type="text"
+            value={formData?.cep || ""}
+            onChange={(e) => setFormData({ ...formData, cep: e.target.value })}
+            disabled={!isEditing}
+            className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 disabled:bg-gray-50"
+          />
+        </div>
+        <div className="space-y-2">
+          <label htmlFor="logradouro" className="block text-sm font-medium text-gray-700">Logradouro</label>
+          <input
+            id="logradouro"
+            type="text"
+            value={formData?.logradouro || ""}
+            onChange={(e) => setFormData({ ...formData, logradouro: e.target.value })}
+            disabled={!isEditing}
+            className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 disabled:bg-gray-50"
+          />
+        </div>
+        <div className="space-y-2">
+          <label htmlFor="numero" className="block text-sm font-medium text-gray-700">Número</label>
+          <input
+            id="numero"
+            type="text"
+            value={formData?.numero || ""}
+            onChange={(e) => setFormData({ ...formData, numero: e.target.value })}
+            disabled={!isEditing}
+            className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 disabled:bg-gray-50"
+          />
+        </div>
+        <div className="space-y-2">
+          <label htmlFor="complemento" className="block text-sm font-medium text-gray-700">Complemento</label>
+          <input
+            id="complemento"
+            type="text"
+            value={formData?.complemento || ""}
+            onChange={(e) => setFormData({ ...formData, complemento: e.target.value })}
+            disabled={!isEditing}
+            className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 disabled:bg-gray-50"
+          />
+        </div>
+        <div className="space-y-2">
+          <label htmlFor="bairro" className="block text-sm font-medium text-gray-700">Bairro</label>
+          <input
+            id="bairro"
+            type="text"
+            value={formData?.bairro || ""}
+            onChange={(e) => setFormData({ ...formData, bairro: e.target.value })}
+            disabled={!isEditing}
+            className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 disabled:bg-gray-50"
+          />
+        </div>
+        <div className="space-y-2">
+          <label htmlFor="cidade" className="block text-sm font-medium text-gray-700">Cidade</label>
+          <input
+            id="cidade"
+            type="text"
+            value={formData?.cidade || ""}
+            onChange={(e) => setFormData({ ...formData, cidade: e.target.value })}
+            disabled={!isEditing}
+            className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 disabled:bg-gray-50"
+          />
+        </div>
+        <div className="space-y-2">
+          <label htmlFor="estado" className="block text-sm font-medium text-gray-700">Estado</label>
+          <select
+            id="estado"
+            value={formData?.estado || ""}
+            onChange={(e) => setFormData({ ...formData, estado: e.target.value })}
+            disabled={!isEditing}
+            className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 disabled:bg-gray-50"
+          >
+            <option value="">Selecione...</option>
+            <option value="SP">São Paulo</option>
+            <option value="RJ">Rio de Janeiro</option>
+            <option value="MG">Minas Gerais</option>
+            {/* Adicione outros estados conforme necessário */}
+          </select>
+        </div>
+      </div>
+    </div>
+  );
+}
 
 export default function Perfil() {
   const navigate = useNavigate();
   const [isEditing, setIsEditing] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [currentTab, setCurrentTab] = useState("personal");
-  const { usuario } = useUser();
+  const { usuario } = useUser() as { usuario: PerfilUsuario };
 
-  // Dados do usuário baseados no perfil
-  const [userData, setUserData] = useState({
-    nome: "",
-    email: "",
-    papel: "",
-    telefone: "",
-    endereco_completo: "",
-    data_nascimento: "",
-    cargo: "",
-    registro_profissional: "",
-    data_admissao: "",
-    bio: "",
-    avatar: "",
-  });
-
-  const [formData, setFormData] = useState(userData);
-
-  // Carregar dados do usuário
-  useEffect(() => {
-    if (!usuario) return;
-    
-    const loadUserData = () => {
-      if (usuario.papel === "responsavel") {
-        // Para responsável
-        const responsavel = usuario as any;
-        setUserData({
-          nome: responsavel.nome || "",
-          email: responsavel.email || "",
-          papel: usuario.papel,
-          telefone: responsavel.telefone_principal || "",
-          endereco_completo: "São Paulo, SP",
-          data_nascimento: "1985-03-15",
-          cargo: "",
-          registro_profissional: "",
-          data_admissao: "",
-          bio: "Responsável por pacientes na instituição.",
-          avatar: "/professional-woman-doctor.png",
-        });
-      } else {
-        // Para funcionário
-        const funcionario = usuario as any;
-        setUserData({
-          nome: funcionario.nome || "",
-          email: funcionario.email || "",
-          papel: usuario.papel,
-          telefone: funcionario.telefone || "",
-          endereco_completo: "São Paulo, SP",
-          data_nascimento: funcionario.data_nascimento || "",
-          cargo: funcionario.cargo || "",
-          registro_profissional: funcionario.registro_profissional || "",
-          data_admissao: funcionario.data_admissao || "",
-          bio: "Funcionário da instituição.",
-          avatar: "/professional-woman-doctor.png",
-        });
-      }
-    };
-
-    loadUserData();
-  }, [usuario]);
-
-  useEffect(() => {
-    setFormData(userData);
-  }, [userData]);
+  const [formData, setFormData] = useState<any>(usuario);
 
   const handleSave = async () => {
     setIsSaving(true);
     // Simulate API call
     await new Promise((resolve) => setTimeout(resolve, 1000));
-    setUserData(formData);
     setIsEditing(false);
     setIsSaving(false);
   };
 
   const handleCancel = () => {
-    setFormData(userData);
+    setFormData(usuario);
     setIsEditing(false);
   };
 
@@ -155,31 +190,16 @@ export default function Perfil() {
         {/* Profile Card */}
         <div className="lg:col-span-1 bg-white p-6 rounded-xl shadow-sm">
           <div className="flex flex-col items-center text-center">
-            <div className="relative">
-              <img
-                src={formData.avatar || "/placeholder.svg"}
-                alt="Avatar"
-                className="h-32 w-32 rounded-full object-cover"
-              />
-              {isEditing && (
-                <button
-                  className="absolute bottom-0 right-0 p-2 bg-gray-800 text-white rounded-full h-8 w-8 flex items-center justify-center hover:bg-gray-900"
-                >
-                  <Camera className="h-4 w-4" />
-                </button>
-              )}
-            </div>
             <div className="mt-4 space-y-2">
-              <h2 className="text-xl font-semibold">{userData.nome}</h2>
+              <h2 className="text-xl font-semibold">{usuario.nome}</h2>
               <span
-                className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                  getRoleBadge(userData.papel).className
-                }`}
+                className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getRoleBadge(usuario.papel).className
+                  }`}
               >
-                {getRoleBadge(userData.papel).label}
+                {getRoleBadge(usuario.papel).label}
               </span>
-              {userData.papel === "funcionario" && userData.cargo && (
-                <p className="text-sm text-gray-500">{userData.cargo}</p>
+              {usuario.papel.toLowerCase() !== "responsavel" && (
+                <p className="text-sm text-gray-500">{(usuario as Funcionario & { papel: string }).cargo}</p>
               )}
             </div>
           </div>
@@ -189,20 +209,28 @@ export default function Perfil() {
           <div className="space-y-4">
             <div className="flex items-center gap-3 text-sm text-gray-600">
               <Mail className="h-4 w-4 text-gray-400" />
-              <span>{userData.email}</span>
+              <span>{usuario.email}</span>
             </div>
             <div className="flex items-center gap-3 text-sm text-gray-600">
               <Phone className="h-4 w-4 text-gray-400" />
-              <span>{userData.telefone}</span>
+              <span>
+                {usuario.papel.toLowerCase() !== "responsavel" 
+                  ? (usuario as Funcionario & { papel: string }).telefone
+                  : (usuario as Responsavel & { papel: string }).telefone_principal
+                }
+              </span>
+              {usuario.papel.toLowerCase() === "responsavel" && (usuario as Responsavel & { papel: string }).telefone_secundario && (
+                <span className="text-gray-400">• {(usuario as Responsavel & { papel: string }).telefone_secundario}</span>
+              )}
             </div>
             <div className="flex items-center gap-3 text-sm text-gray-600">
               <MapPin className="h-4 w-4 text-gray-400" />
-              <span>{userData.endereco_completo}</span>
+              <span>{usuario.logradouro}, {usuario.numero} - {usuario.bairro}, {usuario.cidade} - {usuario.estado}</span>
             </div>
-            {userData.papel === "funcionario" && userData.data_admissao && (
+            {usuario.papel.toLowerCase() !== "responsavel" && (usuario as Funcionario & { papel: string }).data_admissao && (
               <div className="flex items-center gap-3 text-sm text-gray-600">
                 <Calendar className="h-4 w-4 text-gray-400" />
-                <span>Desde {formatDate(userData.data_admissao)}</span>
+                <span>Desde {formatDate((usuario as Funcionario & { papel: string }).data_admissao)}</span>
               </div>
             )}
           </div>
@@ -215,33 +243,29 @@ export default function Perfil() {
               <nav className="flex space-x-4 p-2" aria-label="Tabs">
                 <button
                   onClick={() => setCurrentTab("personal")}
-                  className={`px-3 py-2 font-medium text-sm rounded-md transition-colors ${
-                    currentTab === "personal" ? "bg-gray-100 text-gray-900" : "text-gray-500 hover:text-gray-700"
-                  }`}
+                  className={`px-3 py-2 font-medium text-sm rounded-md transition-colors ${currentTab === "personal" ? "bg-gray-100 text-gray-900" : "text-gray-500 hover:text-gray-700"
+                    }`}
                 >
                   Pessoal
                 </button>
                 <button
                   onClick={() => setCurrentTab("security")}
-                  className={`px-3 py-2 font-medium text-sm rounded-md transition-colors ${
-                    currentTab === "security" ? "bg-gray-100 text-gray-900" : "text-gray-500 hover:text-gray-700"
-                  }`}
+                  className={`px-3 py-2 font-medium text-sm rounded-md transition-colors ${currentTab === "security" ? "bg-gray-100 text-gray-900" : "text-gray-500 hover:text-gray-700"
+                    }`}
                 >
                   Segurança
                 </button>
                 <button
                   onClick={() => setCurrentTab("notifications")}
-                  className={`px-3 py-2 font-medium text-sm rounded-md transition-colors ${
-                    currentTab === "notifications" ? "bg-gray-100 text-gray-900" : "text-gray-500 hover:text-gray-700"
-                  }`}
+                  className={`px-3 py-2 font-medium text-sm rounded-md transition-colors ${currentTab === "notifications" ? "bg-gray-100 text-gray-900" : "text-gray-500 hover:text-gray-700"
+                    }`}
                 >
                   Notificações
                 </button>
                 <button
                   onClick={() => setCurrentTab("privacy")}
-                  className={`px-3 py-2 font-medium text-sm rounded-md transition-colors ${
-                    currentTab === "privacy" ? "bg-gray-100 text-gray-900" : "text-gray-500 hover:text-gray-700"
-                  }`}
+                  className={`px-3 py-2 font-medium text-sm rounded-md transition-colors ${currentTab === "privacy" ? "bg-gray-100 text-gray-900" : "text-gray-500 hover:text-gray-700"
+                    }`}
                 >
                   Privacidade
                 </button>
@@ -254,12 +278,13 @@ export default function Perfil() {
                   <h2 className="text-xl font-semibold">Informações Pessoais</h2>
                   <p className="mt-1 text-sm text-gray-500">Atualize suas informações pessoais e de contato</p>
                   <div className="mt-6 grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {/* Campos comuns */}
                     <div className="space-y-2">
                       <label htmlFor="nome" className="block text-sm font-medium text-gray-700">Nome Completo</label>
                       <input
                         id="nome"
                         type="text"
-                        value={formData.nome}
+                        value={formData?.nome || ""}
                         onChange={(e) => setFormData({ ...formData, nome: e.target.value })}
                         disabled={!isEditing}
                         className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 disabled:bg-gray-50"
@@ -270,42 +295,55 @@ export default function Perfil() {
                       <input
                         id="email"
                         type="email"
-                        value={formData.email}
+                        value={formData?.email || ""}
                         onChange={(e) => setFormData({ ...formData, email: e.target.value })}
                         disabled={!isEditing}
                         className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 disabled:bg-gray-50"
                       />
                     </div>
                     <div className="space-y-2">
-                      <label htmlFor="telefone" className="block text-sm font-medium text-gray-700">Telefone</label>
+                      <label htmlFor="cpf" className="block text-sm font-medium text-gray-700">CPF</label>
                       <input
-                        id="telefone"
+                        id="cpf"
                         type="text"
-                        value={formData.telefone}
-                        onChange={(e) => setFormData({ ...formData, telefone: e.target.value })}
+                        value={formData?.cpf || ""}
+                        onChange={(e) => setFormData({ ...formData, cpf: e.target.value })}
                         disabled={!isEditing}
                         className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 disabled:bg-gray-50"
                       />
                     </div>
-                    <div className="space-y-2">
-                      <label htmlFor="data_nascimento" className="block text-sm font-medium text-gray-700">Data de Nascimento</label>
-                      <input
-                        id="data_nascimento"
-                        type="date"
-                        value={formData.data_nascimento}
-                        onChange={(e) => setFormData({ ...formData, data_nascimento: e.target.value })}
-                        disabled={!isEditing}
-                        className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 disabled:bg-gray-50"
-                      />
-                    </div>
-                    {userData.papel === "funcionario" && (
+
+                    {/* Campos específicos para funcionário */}
+                    {usuario.papel.toLowerCase() !== "responsavel" && (
                       <>
+                        <div className="space-y-2">
+                          <label htmlFor="telefone" className="block text-sm font-medium text-gray-700">Telefone</label>
+                          <input
+                            id="telefone"
+                            type="text"
+                            value={formData?.telefone || ""}
+                            onChange={(e) => setFormData({ ...formData, telefone: e.target.value })}
+                            disabled={!isEditing}
+                            className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 disabled:bg-gray-50"
+                          />
+                        </div>
+                        <div className="space-y-2">
+                          <label htmlFor="data_nascimento" className="block text-sm font-medium text-gray-700">Data de Nascimento</label>
+                          <input
+                            id="data_nascimento"
+                            type="date"
+                            value={formData?.data_nascimento || ""}
+                            onChange={(e) => setFormData({ ...formData, data_nascimento: e.target.value })}
+                            disabled={!isEditing}
+                            className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 disabled:bg-gray-50"
+                          />
+                        </div>
                         <div className="space-y-2">
                           <label htmlFor="cargo" className="block text-sm font-medium text-gray-700">Cargo</label>
                           <input
                             id="cargo"
                             type="text"
-                            value={formData.cargo}
+                            value={formData?.cargo || ""}
                             onChange={(e) => setFormData({ ...formData, cargo: e.target.value })}
                             disabled={!isEditing}
                             className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 disabled:bg-gray-50"
@@ -316,8 +354,73 @@ export default function Perfil() {
                           <input
                             id="registro_profissional"
                             type="text"
-                            value={formData.registro_profissional}
+                            value={formData?.registro_profissional || ""}
                             onChange={(e) => setFormData({ ...formData, registro_profissional: e.target.value })}
+                            disabled={!isEditing}
+                            className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 disabled:bg-gray-50"
+                          />
+                        </div>
+                        <div className="space-y-2">
+                          <label htmlFor="vinculo" className="block text-sm font-medium text-gray-700">Vínculo</label>
+                          <select
+                            id="vinculo"
+                            value={formData?.vinculo || ""}
+                            onChange={(e) => setFormData({ ...formData, vinculo: e.target.value })}
+                            disabled={!isEditing}
+                            className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 disabled:bg-gray-50"
+                          >
+                            <option value="">Selecione...</option>
+                            <option value="CLT">CLT</option>
+                            <option value="Terceirizado">Terceirizado</option>
+                            <option value="Voluntário">Voluntário</option>
+                          </select>
+                        </div>
+                        <div className="space-y-2">
+                          <label htmlFor="contato_emergencia_nome" className="block text-sm font-medium text-gray-700">Contato de Emergência - Nome</label>
+                          <input
+                            id="contato_emergencia_nome"
+                            type="text"
+                            value={formData?.contato_emergencia_nome || ""}
+                            onChange={(e) => setFormData({ ...formData, contato_emergencia_nome: e.target.value })}
+                            disabled={!isEditing}
+                            className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 disabled:bg-gray-50"
+                          />
+                        </div>
+                        <div className="space-y-2">
+                          <label htmlFor="contato_emergencia_telefone" className="block text-sm font-medium text-gray-700">Contato de Emergência - Telefone</label>
+                          <input
+                            id="contato_emergencia_telefone"
+                            type="text"
+                            value={formData?.contato_emergencia_telefone || ""}
+                            onChange={(e) => setFormData({ ...formData, contato_emergencia_telefone: e.target.value })}
+                            disabled={!isEditing}
+                            className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 disabled:bg-gray-50"
+                          />
+                        </div>
+                      </>
+                    )}
+
+                    {/* Campos específicos para responsável */}
+                    {usuario.papel.toLowerCase() === "responsavel" && (
+                      <>
+                        <div className="space-y-2">
+                          <label htmlFor="telefone_principal" className="block text-sm font-medium text-gray-700">Telefone Principal</label>
+                          <input
+                            id="telefone_principal"
+                            type="text"
+                            value={formData?.telefone_principal || ""}
+                            onChange={(e) => setFormData({ ...formData, telefone_principal: e.target.value })}
+                            disabled={!isEditing}
+                            className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 disabled:bg-gray-50"
+                          />
+                        </div>
+                        <div className="space-y-2">
+                          <label htmlFor="telefone_secundario" className="block text-sm font-medium text-gray-700">Telefone Secundário</label>
+                          <input
+                            id="telefone_secundario"
+                            type="text"
+                            value={formData?.telefone_secundario || ""}
+                            onChange={(e) => setFormData({ ...formData, telefone_secundario: e.target.value })}
                             disabled={!isEditing}
                             className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 disabled:bg-gray-50"
                           />
@@ -325,28 +428,26 @@ export default function Perfil() {
                       </>
                     )}
                   </div>
-                  <div className="mt-4 space-y-2">
-                    <label htmlFor="endereco_completo" className="block text-sm font-medium text-gray-700">Endereço</label>
-                    <input
-                      id="endereco_completo"
-                      type="text"
-                      value={formData.endereco_completo}
-                      onChange={(e) => setFormData({ ...formData, endereco_completo: e.target.value })}
-                      disabled={!isEditing}
-                      className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 disabled:bg-gray-50"
-                    />
+
+                  {/* Formulário de Endereço */}
+                  <div className="mt-8">
+                    <FormularioEndereco formData={formData} setFormData={setFormData} isEditing={isEditing} />
                   </div>
-                  <div className="mt-4 space-y-2">
-                    <label htmlFor="bio" className="block text-sm font-medium text-gray-700">Biografia</label>
-                    <textarea
-                      id="bio"
-                      value={formData.bio}
-                      onChange={(e) => setFormData({ ...formData, bio: e.target.value })}
-                      disabled={!isEditing}
-                      rows={4}
-                      className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 disabled:bg-gray-50"
-                    />
-                  </div>
+
+                  {/* Observações para responsáveis */}
+                  {usuario.papel.toLowerCase() === "responsavel" && (
+                    <div className="mt-6 space-y-2">
+                      <label htmlFor="observacoes" className="block text-sm font-medium text-gray-700">Observações</label>
+                      <textarea
+                        id="observacoes"
+                        value={formData?.observacoes || ""}
+                        onChange={(e) => setFormData({ ...formData, observacoes: e.target.value })}
+                        disabled={!isEditing}
+                        rows={4}
+                        className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 disabled:bg-gray-50"
+                      />
+                    </div>
+                  )}
                 </div>
               )}
 

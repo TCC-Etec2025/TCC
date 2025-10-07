@@ -1,19 +1,24 @@
 import { Routes, Route } from 'react-router-dom'
 import Login from './pages/Login'
+/* Dashboards */
 import AdminDashboard from './pages/AdminDashboard'
 import ResponsavelDashboard from './pages/ResponsavelDashboard'
 import FuncionarioDashboard from './pages/FuncionarioDashboard'
+/* Componentes de Rota e Layout */
 import RotaProtegida from './components/RotaProtegida'
 import DashboardRedirect from './components/DashboardRedirect'
 import ProtectedLayout from './layouts/ProtectedLayout'
-import CadastroIdoso from './pages/CadastroResidente'
+/* Páginas de Listagem */
 import Residentes from './pages/Residentes'
 import Familiares from './pages/Responsaveis'
 import Funcionario from './pages/Funcionarios'
-import CadastroPertences from './pages/CadastroPertences'
-import CadastroResponsavel from './pages/CadastroResponsavel'
-import CadastroFuncionario from './pages/CadastroFuncionario'
 import Usuarios from './pages/Usuarios'
+/* Páginas de Formulário(Cadastro/Edição) */
+import FormularioResidente from './pages/FormularioResidente'
+import FormularioPertence from './pages/FormularioPertence'
+import FormularioResponsavel from './pages/FormularioResponsavel'
+import FormularioFuncionario from './pages/FormularioFuncionario'
+/* Página de Perfil */
 import Perfil from './pages/Perfil'
 
 export default function App() {
@@ -37,10 +42,10 @@ export default function App() {
         <Route path="admin" element={<AdminDashboard />} />
         
         {/* Rota para as páginas de cadastro/edição */}
-        <Route path="admin/residente/formulario" element={<CadastroIdoso />} />
-        <Route path="admin/responsavel/formulario" element={<CadastroResponsavel />} />
-        <Route path="admin/funcionario/formulario" element={<CadastroFuncionario />} />
-        <Route path="admin/pertence/formulario" element={<CadastroPertences />} />
+        <Route path="admin/residente/formulario" element={<FormularioResidente />} />
+        <Route path="admin/responsavel/formulario" element={<FormularioResponsavel />} />
+        <Route path="admin/funcionario/formulario" element={<FormularioFuncionario />} />
+        <Route path="admin/pertence/formulario" element={<FormularioPertence />} />
 
         {/* Rotas as páginas de listagens*/}
         <Route path="admin/residentes" element={<Residentes />} />

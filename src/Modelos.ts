@@ -3,7 +3,6 @@
 // =======================================================================
 
 export interface Endereco {
-  id: number;
   cep: string;
   logradouro: string;
   numero: string;
@@ -16,7 +15,6 @@ export interface Endereco {
 }
 
 export interface Papel {
-  id: number;
   nome: string;
   descricao?: string;
   criado_em: string;
@@ -53,6 +51,7 @@ export interface Funcionario {
   id_endereco: number;
   contato_emergencia_nome?: string;
   contato_emergencia_telefone?: string;
+  foto?: string;
   status: string;
   criado_em: string;
   atualizado_em: string;
@@ -71,7 +70,6 @@ export interface Responsavel {
   observacoes?: string;
   criado_em: string;
   atualizado_em: string;
-  residentes?: Pick<Residente, 'id' | 'nome' | 'cpf' | 'status' | 'responsavel_parentesco'>[];
 }
 
 export interface Residente {
@@ -89,7 +87,7 @@ export interface Residente {
   plano_saude?: string;
   numero_carteirinha?: string;
   observacoes?: string;
-  foto_perfil?: string;
+  foto?: string;
   id_responsavel: number;
   responsavel_parentesco: string;
   criado_em: string;

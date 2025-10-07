@@ -269,9 +269,9 @@ export default function AdminDashboard() {
         { count: colaboradoresCount, error: colaboradoresError },
         { count: alertasCount, error: alertasError }
       ] = await Promise.all([
-        supabase.from('residentes').select('*', { count: 'exact', head: true }),
-        supabase.from('funcionarios').select('*', { count: 'exact', head: true }),
-        supabase.from('funcionarios').select('id, idosos!left(id)', { count: 'exact', head: true })
+        supabase.from('residente').select('*', { count: 'exact', head: true }),
+        supabase.from('funcionario').select('*', { count: 'exact', head: true }),
+        supabase.from('funcionario').select('id, idosos!left(id)', { count: 'exact', head: true })
       ]);
 
       if (!idososError) setNumeroIdosos(idososCount ?? 0);

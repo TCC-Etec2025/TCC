@@ -42,11 +42,9 @@ export default function Login() {
 
     const { data: userData, error } = await supabase
       .from("usuario_sistema")
-      .select("id, id_papel, senha")
+      .select("id, senha, papel(nome)")
       .eq("email", email)
       .maybeSingle();
-
-    alert(error?.message);
 
     if (error || !userData) {
       setServerError("Email ou senha inválidos. Por favor, tente novamente.");
@@ -54,7 +52,6 @@ export default function Login() {
       return;
     }
 
-    // comparar SHA256
     const senhaValida = password === "123" || CryptoJS.SHA256(password).toString(CryptoJS.enc.Hex) === userData.senha;
 
     if (!senhaValida) {
@@ -63,22 +60,12 @@ export default function Login() {
       return;
     }
 
-    const { data: role, error: roleError } = await supabase
-      .from("papel")
-      .select("nome")
-      .eq("id", userData.id_papel)
-      .maybeSingle();
+    const papel = userData.papel?.[0];
 
-    if (roleError || !role) {
-      setServerError("Erro ao determinar o perfil do usuário. Contate o administrador.");
-      setIsLoading(false);
-      return;
-    }
-
-    if (role.nome === "responsavel") {
+    if (papel?.nome === "responsavel") {
       const { data, error } = await supabase
         .from("responsavel")
-        .select("*")
+        .select("*, endereco(*)")
         .eq("id_usuario", userData.id)
         .maybeSingle();
       if (error || !data) {
@@ -87,13 +74,13 @@ export default function Login() {
         return;
       }
       setUsuario({
+        papel: papel.nome,
         ...data,
-        papel: "responsavel",
       });
     } else {
       const { data, error } = await supabase
         .from("funcionario")
-        .select("*")
+        .select("*, endereco(*)")
         .eq("id_usuario", userData.id)
         .maybeSingle();
       if (error || !data) {
@@ -102,8 +89,8 @@ export default function Login() {
         return;
       }
       setUsuario({
+        papel: papel.nome,
         ...data,
-        papel: role.nome,
       });
     }
 

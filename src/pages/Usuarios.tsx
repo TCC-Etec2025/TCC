@@ -1,11 +1,10 @@
 import React, { useEffect, useState } from 'react';
 import { Search, Plus, Edit, Trash2, User, ShieldCheck, CheckCircle, Ban } from 'lucide-react';
 import { supabase } from '../lib/supabaseClient';
-import { type Usuario } from '../Modelos';
 
 const Usuarios: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState<string>('');
-  const [usuarios, setUsuarios] = useState<Usuario[]>([]);
+  const [usuarios, setUsuarios] = useState<any[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
 
   useEffect(() => {
@@ -21,32 +20,16 @@ const Usuarios: React.FC = () => {
           status,
           criado_em,
           atualizado_em,
-          papel ( nome ),
-          funcionario!usuario_sistema_id ( nome, cpf ),
-          responsavel!usuario_sistema_id ( nome, cpf )
+          funcionario (nome, cpf),
+          responsavel (nome, cpf),
+          papel (nome)
         `);
 
         if (error) {
           throw new Error("Erro ao buscar usuários: " + error.message);
+        } else {
+          setUsuarios(data);
         }
-
-        const allUsers: Usuario[] = data.map((user) => {
-          const funcionario = user.funcionario;
-          const responsavel = user.responsavel;
-
-          return {
-            id: user.id,
-            email: user.email,
-            status: user.status,
-            criado_em: user.criado_em,
-            atualizado_em: user.atualizado_em,
-            nome: funcionario?.nome || responsavel?.nome,
-            cpf: funcionario?.cpf || responsavel?.cpf,
-            papel: user.papel?.nome || "",
-          };
-        });
-
-        setUsuarios(allUsers);
       } catch (error) {
         console.error("Erro ao buscar usuários:", error);
       } finally {
@@ -57,24 +40,11 @@ const Usuarios: React.FC = () => {
     fetchUsuarios();
   }, []);
 
-  const filteredUsuarios = usuarios.filter(usuario => {
-    const nome = usuario.nome || '';
-    const cpf = usuario.cpf || '';
-    const roleNome = usuario.papel || '';
-
-    return (
-      nome.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      usuario.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      cpf.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      roleNome.toLowerCase().includes(searchTerm.toLowerCase())
-    );
-  });
-
   const handleDelete = async (id: number): Promise<void> => {
     if (window.confirm('Tem certeza que deseja excluir este usuário? Esta ação é irreversível.')) {
       try {
         const { error } = await supabase
-          .from('usuarios_sistema')
+          .from('usuario_sistema')
           .delete()
           .eq('id', id);
 
@@ -88,8 +58,8 @@ const Usuarios: React.FC = () => {
     }
   };
 
-  const getStatusColor = (is_ativo: boolean) => {
-    return is_ativo ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700';
+  const getStatusColor = (status: boolean) => {
+    return status ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700';
   };
 
   const getRoleColor = (role: string) => {
@@ -100,6 +70,18 @@ const Usuarios: React.FC = () => {
       default: return 'bg-gray-100 text-gray-700';
     }
   };
+
+  const filteredUsuarios = usuarios.filter((usuario) => {
+    const searchLower = searchTerm.toLowerCase();
+    return (
+      usuario.email.toLowerCase().includes(searchLower) ||
+      (usuario.funcionario && usuario.funcionario.nome.toLowerCase().includes(searchLower)) ||
+      (usuario.funcionario && usuario.funcionario.cpf.includes(searchLower)) ||
+      (usuario.responsavel && usuario.responsavel.nome.toLowerCase().includes(searchLower)) ||
+      (usuario.responsavel && usuario.responsavel.cpf.includes(searchLower)) ||
+      (usuario.papel && usuario.papel.nome.toLowerCase().includes(searchLower))
+    );
+  });
 
   if (loading) {
     return (
@@ -154,7 +136,11 @@ const Usuarios: React.FC = () => {
               </thead>
               <tbody className="divide-y divide-gray-100">
                 {filteredUsuarios.map((usuario) => {
-                  const roleNome = usuario.papel || 'Não definido';
+                  const roleNome = usuario.papel?.nome;
+                  const nomeFuncionario = usuario.funcionario?.nome;
+                  const cpfFuncionario = usuario.funcionario?.cpf;
+                  const nomeResponsavel = usuario.responsavel?.nome;
+                  const cpfResponsavel = usuario.responsavel?.cpf;
 
                   return (
                     <tr key={usuario.id} className="hover:bg-odara-offwhite/40 transition-colors">
@@ -164,9 +150,9 @@ const Usuarios: React.FC = () => {
                             <User className="h-4 w-4 text-odara-primary" />
                           </div>
                           <div>
-                            <p className="font-medium text-odara-dark">{usuario.nome}</p>
+                            <p className="font-medium text-odara-dark">{nomeFuncionario || nomeResponsavel}</p>
                             <p className="text-xs text-gray-500">{usuario.email}</p>
-                            <p className="text-xs text-gray-500 mt-1">{usuario.cpf}</p>
+                            <p className="text-xs text-gray-500 mt-1">{cpfFuncionario || cpfResponsavel}</p>
                           </div>
                         </div>
                       </td>
@@ -225,7 +211,7 @@ const Usuarios: React.FC = () => {
 
         {/* Contagem */}
         <div className="mt-4 text-sm text-odara-dark/70">
-          Total de {filteredUsuarios.length} usuário(s) encontrado(s) de {usuarios.length}
+          Total de {filteredUsuarios.length} usuário(s) encontrado(s)
         </div>
       </div>
     </div>

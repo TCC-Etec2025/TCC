@@ -1,10 +1,10 @@
 import { createContext, useState, useContext, useEffect } from "react";
 import type { ReactNode } from "react";
-import type { Funcionario, Responsavel } from "../Modelos";
+import type { Endereco, Funcionario, Responsavel } from "../Modelos";
 
-export type PerfilUsuario = (Funcionario | Responsavel) & {
+export type PerfilUsuario = {
   papel: string;
-};
+} & (Funcionario | Responsavel) & Endereco;
 
 type UserContextType = {
   usuario: PerfilUsuario | null;

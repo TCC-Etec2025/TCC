@@ -8,19 +8,24 @@ import CryptoJS from 'crypto-js';
 import { Eye, EyeOff, AlertTriangle, } from "lucide-react";
 import { useUser } from "../context/UserContext";
 
+type UsuarioLogin = {
+  id: number;
+  papel: { nome: string };
+};
+
 // --- Esquema de Validação (sem alterações) ---
 const schema = Yup.object().shape({
   email: Yup.string()
     .email("Digite um e-mail válido")
     .required("O campo e-mail é obrigatório"),
-  password: Yup.string().required("O campo senha é obrigatório"),
+  senha: Yup.string().required("O campo senha é obrigatório"),
 });
 
 type FormData = Yup.InferType<typeof schema>;
 
 export default function Login() {
   const navigate = useNavigate();
-  const [showPassword, setShowPassword] = useState(false);
+  const [showSenha, setShowSenha] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [serverError, setServerError] = useState("");
 
@@ -38,65 +43,69 @@ export default function Login() {
     setIsLoading(true);
     setServerError("");
 
-    const { email, password } = data;
+    try {
+      const { email, senha } = data;
 
-    const { data: userData, error } = await supabase
-      .from("usuario_sistema")
-      .select("id, senha, papel(nome)")
-      .eq("email", email)
-      .maybeSingle();
+      const senhaCriptografada = CryptoJS.SHA256(senha).toString(CryptoJS.enc.Hex);
 
-    if (error || !userData) {
-      setServerError("Email ou senha inválidos. Por favor, tente novamente.");
-      setIsLoading(false);
-      return;
-    }
+      const { data: userData, error } = await supabase
+        .from("usuario_sistema")
+        .select(`
+          id,
+          papel!inner(nome)
+        `)
+        .eq("email", email)
+        .eq("senha", senhaCriptografada)
+        .maybeSingle() as { data: UsuarioLogin | null; error: any };
 
-    const senhaValida = password === "123" || CryptoJS.SHA256(password).toString(CryptoJS.enc.Hex) === userData.senha;
-
-    if (!senhaValida) {
-      setServerError("Email ou senha inválidos. Por favor, tente novamente.");
-      setIsLoading(false);
-      return;
-    }
-
-    const papel = userData.papel?.[0];
-
-    if (papel?.nome === "responsavel") {
-      const { data, error } = await supabase
-        .from("responsavel")
-        .select("*, endereco(*)")
-        .eq("id_usuario", userData.id)
-        .maybeSingle();
-      if (error || !data) {
-        setServerError("Erro ao buscar detalhes do responsável. Contate o administrador.");
+      if (error || !userData) {
+        setServerError("Email ou senha inválidos. Por favor, tente novamente.");
         setIsLoading(false);
         return;
       }
-      setUsuario({
-        papel: papel.nome,
-        ...data,
-      });
-    } else {
-      const { data, error } = await supabase
-        .from("funcionario")
-        .select("*, endereco(*)")
-        .eq("id_usuario", userData.id)
-        .maybeSingle();
-      if (error || !data) {
-        setServerError("Erro ao buscar detalhes do colaborador. Contate o administrador.");
-        setIsLoading(false);
-        return;
+
+      const papel = userData.papel.nome;
+
+      if (papel === "responsavel") {
+        const { data, error } = await supabase
+          .from("responsavel")
+          .select("*, endereco(*)")
+          .eq("id_usuario", userData.id)
+          .maybeSingle();
+        
+        if (error || !data) {
+          setServerError("Erro ao buscar detalhes do responsável. Contate o administrador.");
+          setIsLoading(false);
+          return;
+        }
+        setUsuario({
+          papel: papel,
+          ...data,
+        });
+      } else {
+        const { data, error } = await supabase
+          .from("funcionario")
+          .select("*, endereco(*)")
+          .eq("id_usuario", userData.id)
+          .maybeSingle();
+        
+        if (error || !data) {
+          setServerError("Erro ao buscar detalhes do colaborador. Contate o administrador.");
+          setIsLoading(false);
+          return;
+        }
+        setUsuario({
+          papel: papel,
+          ...data,
+        });
       }
-      setUsuario({
-        papel: papel.nome,
-        ...data,
-      });
+
+      navigate("/app", { replace: true });
+      setIsLoading(false);
+    } catch (err) {
+      setServerError("Erro interno. Tente novamente.");
+      setIsLoading(false);
     }
-
-
-    navigate("/app", { replace: true });
-    setIsLoading(false);
   };
 
 
@@ -138,35 +147,35 @@ export default function Login() {
             </div>
             <div className="space-y-2">
               <label
-                htmlFor="password"
+                htmlFor="senha"
                 className="text-sm font-medium text-gray-700 text-left block"
               >
                 Senha
               </label>
               <div className="relative">
                 <input
-                  id="password"
-                  type={showPassword ? "text" : "password"}
+                  id="senha"
+                  type={showSenha ? "text" : "senha"}
                   placeholder="Digite a sua senha"
                   className="w-full h-10 px-3 pr-10 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
-                  {...register("password")}
+                  {...register("senha")}
                 />
                 <button
                   type="button"
-                  onClick={() => setShowPassword(!showPassword)}
+                  onClick={() => setShowSenha(!showSenha)}
                   className="absolute inset-y-0 right-0 flex items-center pr-3 text-gray-400 hover:text-gray-600"
-                  aria-label={showPassword ? "Esconder senha" : "Mostrar senha"}
+                  aria-label={showSenha ? "Esconder senha" : "Mostrar senha"}
                 >
-                  {showPassword ? (
+                  {showSenha ? (
                     <EyeOff className="w-5 h-5" />
                   ) : (
                     <Eye className="w-5 h-5" />
                   )}
                 </button>
               </div>
-              {errors.password && (
+              {errors.senha && (
                 <p className="text-xs text-red-600 mt-1">
-                  {errors.password.message}
+                  {errors.senha.message}
                 </p>
               )}
             </div>

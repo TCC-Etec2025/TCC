@@ -1,11 +1,8 @@
 import { useState, useRef, useEffect } from 'react';
 import { useUser, type PerfilUsuario } from "../context/UserContext"
+import { useLayout } from "../context/LayoutContext"
 import { User, Settings, LogOut } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
-
-type TopbarProps = {
-    onToggleCollapse: () => void;
-};
 
 type DropdownItem = {
     label: string;
@@ -13,9 +10,10 @@ type DropdownItem = {
     action: () => void;
 };
 
-export default function Topbar({ onToggleCollapse }: TopbarProps) {
+export default function Topbar() {
     const navigate = useNavigate()
     const { usuario, logout } = useUser() as { usuario: PerfilUsuario, logout: () => void }
+    const { toggleSidebar } = useLayout()
     const [imageError, setImageError] = useState(false)
     const [dropdownOpen, setDropdownOpen] = useState(false)
     const dropdownRef = useRef<HTMLDivElement>(null)
@@ -60,7 +58,7 @@ export default function Topbar({ onToggleCollapse }: TopbarProps) {
 
     return (
         <div className="h-16 bg-white border-b border-gray-200 px-6 flex items-center justify-between relative">
-            <button onClick={onToggleCollapse} className="text-gray-600 hover:text-black">
+            <button onClick={toggleSidebar} className="text-gray-600 hover:text-black">
                 ☰
             </button>
             <h1 className="text-xl font-semibold text-gray-800">Minha Aplicação</h1>

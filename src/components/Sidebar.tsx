@@ -2,6 +2,7 @@
 
 import { useState } from "react"
 import { useUser, type PerfilUsuario } from "../context/UserContext"
+import { useLayout } from "../context/LayoutContext"
 import { useNavigate } from "react-router-dom"
 import { Home, Users, BarChart3, Settings, LogOut } from "lucide-react"
 
@@ -15,18 +16,15 @@ const menuItems = {
   ],
 }
 
-type SidebarProps = {
-  estado: boolean;
-};
-
-export default function Sidebar({ estado }: SidebarProps) {
+export default function Sidebar() {
   const { usuario, logout } = useUser() as { usuario: PerfilUsuario, logout: () => void }
+  const { isSidebarCollapsed } = useLayout()
   const navigate = useNavigate()
   const [isHovered, setIsHovered] = useState(false)
 
   if (!usuario) return null
   const items = menuItems[usuario.papel as keyof typeof menuItems] || []
-  const expanded = isHovered || !estado;
+  const expanded = isHovered || !isSidebarCollapsed;
 
   return (
     <div

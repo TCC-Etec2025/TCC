@@ -542,10 +542,8 @@ export default function Perfil() {
             <div className="flex items-center gap-3 text-sm text-gray-600">
               <Phone className="h-4 w-4 text-gray-400 flex-shrink-0" />
               <span>
-                {usuario.papel.toLowerCase() !== "responsavel" 
-                  ? (usuario as Funcionario).telefone
-                  : (usuario as Responsavel).telefone_principal
-                }
+                {usuario.telefone_principal}
+                {usuario.telefone_secundario && ` • ${usuario.telefone_secundario}`}
               </span>
               {usuario.papel.toLowerCase() === "responsavel" && (usuario as Responsavel).telefone_secundario && (
                 <span className="text-gray-400">• {(usuario as Responsavel).telefone_secundario}</span>

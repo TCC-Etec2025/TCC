@@ -43,12 +43,13 @@ export interface Funcionario {
   nome: string;
   cpf: string;
   email: string;
-  data_nascimento: string;
+  data_nascimento: Date;
   cargo: string;
   registro_profissional?: string;
-  data_admissao: string;
-  data_demissao?: string;
-  telefone: string;
+  data_admissao: Date;
+  data_demissao?: Date;
+  telefone_principal: string;
+  telefone_secundario?: string;
   id_endereco: number;
   contato_emergencia_nome?: string;
   contato_emergencia_telefone?: string;
@@ -63,11 +64,14 @@ export interface Responsavel {
   nome: string;
   cpf: string;
   email: string;
+  data_nascimento: Date;
   telefone_principal: string;
   telefone_secundario?: string;
   id_endereco: number;
   id_usuario: number;
   status: boolean;
+  contato_emergencia_nome?: string;
+  contato_emergencia_telefone?: string;
   observacoes?: string;
   criado_em: string;
   atualizado_em: string;
@@ -76,12 +80,12 @@ export interface Responsavel {
 export interface Residente {
   id: number;
   nome: string;
-  data_nascimento: string;
+  data_nascimento: Date;
   cpf: string;
   sexo: string;
   estado_civil: string;
   naturalidade?: string;
-  data_admissao: string;
+  data_admissao: Date;
   quarto?: string;
   dependencia?: string;
   status: boolean;
@@ -137,7 +141,7 @@ export interface AdministracaoMedicamento {
   id: number;
   id_prescricao: number;
   id_funcionario: number;
-  data_hora_administracao: string;
+  data_hora_administracao: Date;
   status: string;
   observacao?: string;
 }
@@ -146,7 +150,7 @@ export interface SinaisVitais {
   id: number;
   id_residente: number;
   id_funcionario: number;
-  data_hora_medicao: string;
+  data_hora_medicao: Date;
   pressao_arterial?: string;
   temperatura_celsius?: number;
   frequencia_cardiaca_bpm?: number;
@@ -162,7 +166,7 @@ export interface Ocorrencia {
   id: number;
   id_residente?: number;
   id_funcionario: number;
-  data_hora_ocorrencia: string;
+  data_hora_ocorrencia: Date;
   titulo: string;
   descricao_detalhada: string;
   providencias?: string;
@@ -177,8 +181,8 @@ export interface Visita {
   id: number;
   nome: string;
   cpf: string;
-  data_hora_entrada: string;
-  data_hora_saida?: string;
+  data_hora_entrada: Date;
+  data_hora_saida?: Date;
   id_funcionario?: number;
   observacoes?: string;
 }
@@ -187,7 +191,7 @@ export interface AvaliacaoNutricional {
   id: number;
   id_residente: number;
   id_funcionario: number;
-  data_avaliacao: string;
+  data_avaliacao: Date;
   peso_kg: number;
   altura_m?: number;
   imc?: number;
@@ -211,9 +215,9 @@ export interface Pertence {
   nome: string;
   descricao?: string;
   estado?: string;
-  data_registro: string;
+  data_registro: Date;
   status: string;
-  data_baixa?: string;
+  data_baixa?: Date;
   observacoes?: string;
 }
 

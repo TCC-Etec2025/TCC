@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { type SubmitHandler } from 'react-hook-form';
 import { supabase } from '../../../lib/supabaseClient';
@@ -10,7 +10,7 @@ import { type Responsavel } from '../../../Modelos';
 
 
 type Props = {
-    responsavel?: Responsavel;
+    responsavel: Responsavel;
 };
 
 export default function CadastroResponsavel({ responsavel }: Props) {
@@ -36,7 +36,31 @@ export default function CadastroResponsavel({ responsavel }: Props) {
         handleSubmit,
         formState: { errors },
         reset,
+        watch,
+        setValue,
+        getValues,
     } = useCadastroForm(responsavel);
+
+    useEffect(() => {
+        const fetchEndereco = async () => {
+            
+            try {
+                const response = await fetch(`https://viacep.com.br/ws/${watch('cep')}/json/`);
+                const data = await response.json();
+                
+                if (!data.erro) {
+                    setValue('logradouro', data.logradouro || '');
+                    setValue('bairro', data.bairro || '');
+                    setValue('cidade', data.localidade || '');
+                    setValue('estado', data.uf || '');
+                }
+            } catch (error) {
+                console.log('Erro ao buscar CEP:', error);
+            }
+        };
+
+        fetchEndereco();
+    }, [watch('cep'), setValue, getValues]);
 
     const onSubmit: SubmitHandler<FormValues> = async (data) => {
         setIsLoading(true);
@@ -55,6 +79,9 @@ export default function CadastroResponsavel({ responsavel }: Props) {
                 p_cpf: data.cpf,
                 p_telefone_principal: data.telefone_principal,
                 p_telefone_secundario: data.telefone_secundario || null,
+                p_data_nascimento: data.data_nascimento || null,
+                p_contato_emergencia_nome: data.contato_emergencia_nome || null,
+                p_contato_emergencia_telefone: data.contato_emergencia_telefone || null,
                 p_observacoes: data.observacoes || null,
             };
 
@@ -169,6 +196,17 @@ export default function CadastroResponsavel({ responsavel }: Props) {
                     </div>
                     <div>
                         <label className="block text-sm font-medium text-gray-700 mb-2">
+                            Data de Nascimento
+                        </label>
+                        <input
+                            type="date"
+                            {...register('data_nascimento')}
+                            className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+                            placeholder="DD/MM/AAAA"
+                        />
+                    </div>
+                    <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">
                             E-mail *
                         </label>
                         <input
@@ -208,6 +246,26 @@ export default function CadastroResponsavel({ responsavel }: Props) {
                             placeholder="(11) 88888-8888"
                         />
                     </div>
+                    <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                            Nome do Contato de Emergência
+                        </label>
+                        <input
+                            {...register('contato_emergencia_nome')}
+                            className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+                            placeholder="Nome do contato"
+                        />
+                    </div>
+                    <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                            Telefone do Contato de Emergência
+                        </label>
+                        <input
+                            {...register('contato_emergencia_telefone')}
+                            className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+                            placeholder="(11) 88888-8888"
+                        />
+                    </div>
                     <div className="md:col-span-2 grid grid-cols-1 md:grid-cols-3 gap-6">
                         <div>
                             <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -217,6 +275,15 @@ export default function CadastroResponsavel({ responsavel }: Props) {
                                 {...register('cep')}
                                 className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
                                 placeholder="00000-000"
+                                maxLength={9}
+                                onChange={(e) => {
+                                    let value = e.target.value.replace(/\D/g, '');
+                                    if (value.length > 5) {
+                                        value = value.replace(/^(\d{5})(\d{1,3})/, '$1-$2');
+                                    }
+                                    e.target.value = value;
+                                    setValue('cep', value);
+                                }}
                             />
                             {errors.cep && (
                                 <p className="text-red-500 text-sm mt-2 font-medium">

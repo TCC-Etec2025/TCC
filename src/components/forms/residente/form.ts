@@ -2,16 +2,17 @@ import { useForm } from 'react-hook-form';
 import { yupResolver } from '@hookform/resolvers/yup';
 import { useEffect } from 'react';
 import { residenteSchema } from './schema';
+import { type Residente } from '../../../Modelos'
 
-export const useCadastroForm = (residente: any) => {
+export const useCadastroForm = (residente: Residente) => {
     const form = useForm({
         resolver: yupResolver(residenteSchema),
         defaultValues: {
             nome: '',
-            data_nascimento: '',
+            data_nascimento: undefined,
             cpf: '',
             sexo: '',
-            data_admissao: '',
+            data_admissao: undefined,
             estado_civil: '',
             naturalidade: '',
             quarto: '',
@@ -19,7 +20,7 @@ export const useCadastroForm = (residente: any) => {
             plano_saude: '',
             numero_carteirinha: '',
             observacoes: '',
-            foto_perfil_url: '',
+            foto: '',
         },
     });
 
@@ -29,10 +30,10 @@ export const useCadastroForm = (residente: any) => {
         if (residente) {
             reset({
                 nome: residente.nome || '',
-                data_nascimento: residente.data_nascimento || '',
+                data_nascimento: residente.data_nascimento || undefined,
                 cpf: residente.cpf || '',
                 sexo: residente.sexo || '',
-                data_admissao: residente.data_admissao || '',
+                data_admissao: residente.data_admissao || undefined,
                 estado_civil: residente.estado_civil || '',
                 naturalidade: residente.naturalidade || '',
                 quarto: residente.quarto || '',
@@ -40,7 +41,7 @@ export const useCadastroForm = (residente: any) => {
                 plano_saude: residente.plano_saude || '',
                 numero_carteirinha: residente.numero_carteirinha || '',
                 observacoes: residente.observacoes || '',
-                foto_perfil_url: residente.foto_perfil_url || '',
+                foto: residente.foto || '',
             });
         }
     }, [residente, reset]);

@@ -10,7 +10,7 @@ import { type Residente } from '../../../Modelos';
 
 
 type Props = {
-    residente?: Residente;
+    residente: Residente;
 };
 
 export default function CadastroResidente({ residente }: Props) {
@@ -101,7 +101,7 @@ export default function CadastroResidente({ residente }: Props) {
     const onSubmit: SubmitHandler<FormValues> = async (data) => {
         setIsLoading(true);
         try {
-            let fotoUrl = data.foto_perfil_url;
+            let fotoUrl = data.foto;
 
             // Fazer upload da imagem se uma foi selecionada
             if (selectedFile) {
@@ -377,7 +377,7 @@ export default function CadastroResidente({ residente }: Props) {
                                         onClick={() => {
                                             setPreviewUrl(null);
                                             setSelectedFile(null);
-                                            setValue('foto_perfil_url', '');
+                                            setValue('foto', '');
                                         }}
                                         className="absolute -top-1 -right-1 bg-red-500 text-white rounded-full p-1"
                                     >
@@ -406,7 +406,7 @@ export default function CadastroResidente({ residente }: Props) {
                                 </p>
                             </div>
                         </div>
-                        <input type="hidden" {...register('foto_perfil_url')} />
+                        <input type="hidden" {...register('foto')} />
                     </div>
 
                     <div>

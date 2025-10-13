@@ -151,7 +151,10 @@ const Funcionarios: React.FC = () => {
                       <div className="space-y-1">
                         <div className="flex items-center gap-2">
                           <Phone className="h-3 w-3 text-gray-500" />
-                          <span className="text-sm">{funcionario.telefone}</span>
+                          <span className="text-sm">{funcionario.telefone_principal}</span>
+                          {funcionario.telefone_secundario && (
+                            <span className="text-sm text-gray-500">/{funcionario.telefone_secundario}</span>
+                          )}
                         </div>
                         {funcionario.email && (
                           <div className="flex items-center gap-2">

@@ -12,7 +12,10 @@ export const useCadastroForm = (responsavel: any) => {
             cpf: '',
             telefone_principal: '',
             telefone_secundario: '',
+            data_nascimento: undefined,
             email: '',
+            contato_emergencia_nome: '',
+            contato_emergencia_telefone: '',
             cep: '',
             logradouro: '',
             numero: '',
@@ -41,7 +44,10 @@ export const useCadastroForm = (responsavel: any) => {
                         cpf: responsavel.cpf || '',
                         telefone_principal: responsavel.telefone_principal || '',
                         telefone_secundario: responsavel.telefone_secundario || '',
+                        data_nascimento: responsavel.data_nascimento || null,
                         email: responsavel.email || '',
+                        contato_emergencia_nome: responsavel.contato_emergencia_nome || '',
+                        contato_emergencia_telefone: responsavel.contato_emergencia_telefone || '',
                         cep: data.cep || '',
                         logradouro: data.logradouro || '',
                         numero: data.numero || '',
@@ -58,5 +64,14 @@ export const useCadastroForm = (responsavel: any) => {
         }
     }, [responsavel, reset]);
 
-    return form;
+    return {
+        ...form,
+        register: form.register,
+        handleSubmit: form.handleSubmit,
+        formState: form.formState,
+        reset: form.reset,
+        watch: form.watch,
+        setValue: form.setValue,
+        getValues: form.getValues,
+    };
 };

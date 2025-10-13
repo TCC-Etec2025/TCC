@@ -63,7 +63,8 @@ export default function CadastroFuncionario({ funcionario }: Props) {
                 p_cargo: data.cargo,
                 p_registro_profissional: data.registro_profissional || null,
                 p_data_admissao: data.data_admissao,
-                p_telefone: data.telefone,
+                p_telefone_principal: data.telefone_principal,
+                p_telefone_secundario: data.telefone_secundario || null,
                 p_contato_emergencia_nome: data.contato_emergencia_nome || null,
                 p_contato_emergencia_telefone: data.contato_emergencia_telefone || null,
             };
@@ -242,13 +243,26 @@ export default function CadastroFuncionario({ funcionario }: Props) {
                             Telefone *
                         </label>
                         <input
-                            {...register('telefone')}
+                            {...register('telefone_principal')}
                             className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
                             placeholder="(11) 99999-9999"
                         />
-                        {errors.telefone && (
+                        {errors.telefone_principal && (
                             <p className="text-red-500 text-sm mt-2 font-medium">
-                                {errors.telefone.message}
+                                {errors.telefone_principal.message}
+                            </p>
+                        )}
+                        <label className="block text-sm font-medium text-gray-700 mb-2 mt-4">
+                            Telefone Secundário
+                        </label>
+                        <input
+                            {...register('telefone_secundario')}
+                            className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+                            placeholder="(11) 99999-9999"
+                        />
+                        {errors.telefone_secundario && (
+                            <p className="text-red-500 text-sm mt-2 font-medium">
+                                {errors.telefone_secundario.message}
                             </p>
                         )}
                     </div>

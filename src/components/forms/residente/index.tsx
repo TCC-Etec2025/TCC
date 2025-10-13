@@ -6,10 +6,11 @@ import Modal from '../../Modal';
 import { useCadastroForm } from './form';
 import { type FormValues } from './types';
 import { Loader2, UserPlus, X, Upload, User } from 'lucide-react';
+import { type Residente } from '../../../Modelos';
 
 
 type Props = {
-    residente?: any;
+    residente?: Residente;
 };
 
 export default function CadastroResidente({ residente }: Props) {
@@ -100,7 +101,7 @@ export default function CadastroResidente({ residente }: Props) {
     const onSubmit: SubmitHandler<FormValues> = async (data) => {
         setIsLoading(true);
         try {
-            let fotoUrl = data.foto_perfil_url || undefined;
+            let fotoUrl = data.foto_perfil_url;
 
             // Fazer upload da imagem se uma foi selecionada
             if (selectedFile) {
@@ -111,19 +112,19 @@ export default function CadastroResidente({ residente }: Props) {
             }
 
             const insertData = {
-                nome_completo: data.nome_completo,
+                nome: data.nome,
                 data_nascimento: data.data_nascimento,
                 cpf: data.cpf,
                 sexo: data.sexo,
                 data_admissao: data.data_admissao,
-                estado_civil: data.estado_civil || null,
-                naturalidade: data.naturalidade || null,
-                localizacao_quarto: data.localizacao_quarto || null,
-                nivel_dependencia: data.nivel_dependencia || null,
-                plano_saude: data.plano_saude || null,
-                numero_carteirinha: data.numero_carteirinha || null,
-                observacoes: data.observacoes || null,
-                foto_perfil_url: fotoUrl,
+                estado_civil: data.estado_civil,
+                naturalidade: data.naturalidade,
+                quarto: data.quarto,
+                dependencia: data.dependencia,
+                plano_saude: data.plano_saude,
+                numero_carteirinha: data.numero_carteirinha,
+                observacoes: data.observacoes,
+                foto_perfil: fotoUrl,
             };
 
             let error;
@@ -133,31 +134,17 @@ export default function CadastroResidente({ residente }: Props) {
                     .update(insertData)
                     .eq('id', residente.id));
             } else {
-                const { data: residenteData, error: residenteError } = await supabase
+                ({ error } = await supabase
                     .from('residente')
-                    .insert(insertData)
-                    .select()
-                    .single();
+                    .insert(insertData));
 
-                if (residenteError || !residenteData) {
-                    throw new Error('Erro ao cadastrar o residente: ' + residenteError?.message);
-                }
-
-                // Criar prontuário para o residente
-                const { error: prontuarioError } = await supabase
-                    .from('prontuarios')
-                    .insert({ id_residente: residenteData.id });
-
-                if (prontuarioError) {
-                    throw new Error('Erro ao criar o prontuário: ' + prontuarioError?.message);
-                }
             }
 
             if (error) throw new Error(error.message);
 
             setModalConfig({
                 title: 'Sucesso!',
-                description: `Residente ${data.nome_completo} ${residente ? 'atualizado' : 'cadastrado'} com sucesso!`,
+                description: `Residente ${data.nome} ${residente ? 'atualizado' : 'cadastrado'} com sucesso!`,
                 actions: [
                     {
                         label: 'Voltar à lista',
@@ -187,10 +174,10 @@ export default function CadastroResidente({ residente }: Props) {
             });
 
             setModalOpen(true);
-        } catch (err: any) {
+        } catch {
             setModalConfig({
                 title: 'Erro!',
-                description: err.message,
+                description: `Erro ao ${residente ? 'atualizar' : 'cadastrar'} o residente.`,
                 actions: [
                     {
                         label: 'Fechar',
@@ -217,7 +204,7 @@ export default function CadastroResidente({ residente }: Props) {
             <div className="flex items-center justify-center space-x-4 mb-8">
                 <UserPlus size={48} className="text-blue-500" />
                 <h1 className="text-3xl font-bold text-gray-800">
-                    {residente ? `Edição de ${residente.nome_completo}` : 'Cadastro de Residente'}
+                    {residente ? `Edição de ${residente.nome}` : 'Cadastro de Residente'}
                 </h1>
             </div>
             <p className="text-center mb-8 text-gray-600">Preencha os dados do residente.</p>
@@ -230,13 +217,13 @@ export default function CadastroResidente({ residente }: Props) {
                                 Nome Completo *
                             </label>
                             <input
-                                {...register('nome_completo')}
+                                {...register('nome')}
                                 className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
                                 placeholder="Digite o nome completo"
                             />
-                            {errors.nome_completo && (
+                            {errors.nome && (
                                 <p className="text-red-500 text-sm mt-2 font-medium">
-                                    {errors.nome_completo.message}
+                                    {errors.nome.message}
                                 </p>
                             )}
                         </div>
@@ -332,7 +319,7 @@ export default function CadastroResidente({ residente }: Props) {
                                 Localização do Quarto
                             </label>
                             <input
-                                {...register('localizacao_quarto')}
+                                {...register('quarto')}
                                 placeholder="Ex: Quarto 12A, Ala B"
                                 className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
                             />
@@ -342,7 +329,7 @@ export default function CadastroResidente({ residente }: Props) {
                                 Nível de Dependência
                             </label>
                             <select
-                                {...register('nivel_dependencia')}
+                                {...register('dependencia')}
                                 className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors bg-white"
                             >
                                 <option value="">Selecione o nível...</option>

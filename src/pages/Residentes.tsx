@@ -2,17 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Search, Plus, Edit, Trash2, User, Loader2 } from 'lucide-react';
 import { supabase } from '../lib/supabaseClient';
-
-interface Residente {
-  id: number;
-  nome_completo: string;
-  sexo: string;
-  localizacao_quarto: string;
-  data_nascimento: string;
-  data_admissao: string;
-  status: string;
-  nivel_dependencia: string;
-}
+import { type Residente } from '../Modelos';
 
 const Residentes: React.FC = () => {
   const navigate = useNavigate();
@@ -26,9 +16,9 @@ const Residentes: React.FC = () => {
       try {
         setLoading(true);
         const { data, error } = await supabase
-          .from('idosos')
+          .from('residente')
           .select('*')
-          .order('nome_completo', { ascending: true });
+          .order('nome', { ascending: true });
 
         if (error) throw error;
         if (data) setResidentes(data);
@@ -82,8 +72,8 @@ const Residentes: React.FC = () => {
 
     const searchLower = searchTerm.toLowerCase();
 
-    const nomeMatch = residente.nome_completo?.toLowerCase().includes(searchLower) || false;
-    const quartoMatch = residente.localizacao_quarto?.toLowerCase().includes(searchLower) || false;
+    const nomeMatch = residente.nome?.toLowerCase().includes(searchLower) || false;
+    const quartoMatch = residente.quarto?.toLowerCase().includes(searchLower) || false;
 
     return nomeMatch || quartoMatch;
   });
@@ -110,7 +100,7 @@ const Residentes: React.FC = () => {
           </div>
           <div className="flex-shrink-0">
             <button className="bg-odara-accent hover:bg-odara-secondary text-white font-medium py-3 px-6 rounded-lg flex items-center justify-center transition-colors shadow-md hover:shadow-lg w-full lg:w-auto"
-              onClick={() => navigate('/app/admin/pacientes/cadastrar')}>
+              onClick={() => navigate('/app/admin/residente/formulario')}>
               <Plus className="mr-2 h-5 w-5" />
               Cadastrar Residente
             </button>
@@ -156,7 +146,7 @@ const Residentes: React.FC = () => {
                           <User className="h-4 w-4 text-odara-primary" />
                         </div>
                         <span className="font-medium text-odara-dark truncate">
-                          {residente.nome_completo}
+                          {residente.nome}
                         </span>
                       </div>
                     </td>
@@ -165,22 +155,22 @@ const Residentes: React.FC = () => {
                         {residente.sexo.toLowerCase()}
                       </span>
                     </td>
-                    <td className="p-4 font-medium">{residente.localizacao_quarto}</td>
+                    <td className="p-4 font-medium">{residente.quarto}</td>
                     <td className="p-4">{calcularIdade(residente.data_nascimento)} anos</td>
                     <td className="p-4">
                       <span className={`px-2 py-1 rounded-full text-xs font-medium
-                        ${residente.nivel_dependencia === 'Alta'
+                        ${residente.dependencia === 'Alta'
                           ? 'bg-red-100 text-red-700'
-                          : residente.nivel_dependencia === 'Média'
+                          : residente.dependencia === 'Média'
                             ? 'bg-yellow-100 text-yellow-700'
                             : 'bg-green-100 text-green-700'}
                       `}>
-                        {residente.nivel_dependencia ? residente.nivel_dependencia:'Não informado'}
+                        {residente.dependencia ? residente.dependencia:'Não informado'}
                       </span>
                     </td>
                     <td className="p-4">
                       <span className={`px-3 py-1 rounded-full text-xs font-medium
-                        ${residente.status === 'Ativo'
+                        ${residente.status
                           ? 'bg-green-100 text-green-700'
                           : 'bg-gray-200 text-gray-700'}
                       `}>

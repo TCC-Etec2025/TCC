@@ -6,10 +6,11 @@ import Modal from '../../Modal';
 import { useCadastroForm } from './form';
 import { type FormValues } from './types';
 import { Loader2, UserPlus } from 'lucide-react';
+import { type Responsavel } from '../../../Modelos';
 
 
 type Props = {
-    responsavel?: any;
+    responsavel?: Responsavel;
 };
 
 export default function CadastroResponsavel({ responsavel }: Props) {
@@ -41,8 +42,8 @@ export default function CadastroResponsavel({ responsavel }: Props) {
         setIsLoading(true);
         try {
             const params = {
-                p_email_usuario: data.email,
-                p_nome_role: 'responsável',
+                p_email: data.email,
+                p_papel: 'responsavel',
                 p_cep: data.cep,
                 p_logradouro: data.logradouro,
                 p_numero: data.numero,
@@ -50,9 +51,8 @@ export default function CadastroResponsavel({ responsavel }: Props) {
                 p_bairro: data.bairro,
                 p_cidade: data.cidade,
                 p_estado: data.estado,
-                p_nome_completo: data.nome,
+                p_nome: data.nome,
                 p_cpf: data.cpf,
-                p_email_responsavel: data.email,
                 p_telefone_principal: data.telefone_principal,
                 p_telefone_secundario: data.telefone_secundario || null,
                 p_observacoes: data.observacoes || null,
@@ -60,12 +60,12 @@ export default function CadastroResponsavel({ responsavel }: Props) {
 
             let error;
             if (responsavel) {
-                ({ error } = await supabase.rpc('editar_responsavel_com_usuario', {
+                ({ error } = await supabase.schema('public').rpc('editar_responsavel_com_usuario', {
                     p_id_responsavel: responsavel.id,
                     ...params,
                 }));
             } else {
-                ({ error } = await supabase.rpc('cadastrar_responsavel_com_usuario', params));
+                ({ error } = await supabase.schema('public').rpc('cadastrar_responsavel_com_usuario', params));
             }
 
             if (error) throw new Error(error.message);
@@ -100,10 +100,10 @@ export default function CadastroResponsavel({ responsavel }: Props) {
             });
 
             setModalOpen(true);
-        } catch (err: any) {
+        } catch {
             setModalConfig({
                 title: 'Erro!',
-                description: err.message,
+                description: `Erro ao ${responsavel ? "editar" : "cadastrar"} responsável.`,
                 actions: [
                     {
                         label: 'Fechar',

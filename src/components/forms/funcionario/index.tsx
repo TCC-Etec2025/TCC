@@ -6,9 +6,10 @@ import Modal from '../../Modal';
 import { useCadastroForm } from './form';
 import { type FormValues } from './types';
 import { Loader2, UserPlus } from 'lucide-react';
+import { type Funcionario } from '../../../Modelos';
 
 type Props = {
-    funcionario?: any;
+    funcionario?: Funcionario;
 };
 
 export default function CadastroFuncionario({ funcionario }: Props) {
@@ -42,8 +43,8 @@ export default function CadastroFuncionario({ funcionario }: Props) {
         try {
             const params = {
                 // Dados do usuário
-                p_email_usuario: data.email,
-                p_nome_role: data.papel,
+                p_email: data.email,
+                p_papel: data.papel,
 
                 // Endereço
                 p_cep: data.cep,
@@ -110,10 +111,10 @@ export default function CadastroFuncionario({ funcionario }: Props) {
 
             if (!funcionario) reset();
 
-        } catch (err: any) {
+        } catch {
             setModalConfig({
                 title: "Erro!",
-                description: `Erro ao ${funcionario ? "editar" : "cadastrar"} colaborador.${err.message}`,
+                description: `Erro ao ${funcionario ? "editar" : "cadastrar"} colaborador.`,
                 actions: [
                     {
                         label: "Fechar",
@@ -142,7 +143,7 @@ export default function CadastroFuncionario({ funcionario }: Props) {
 
             <div className="flex items-center justify-center space-x-4 mb-8">
                 <UserPlus size={48} className="text-blue-500" />
-                <h1 className="text-3xl font-bold text-gray-800">{funcionario ? `Edição de ${funcionario.nome_completo}` : 'Cadastro de Responsável'}</h1>
+                <h1 className="text-3xl font-bold text-gray-800">{funcionario ? `Edição de ${funcionario.nome}` : 'Cadastro de Responsável'}</h1>
             </div>
             <p className="text-center mb-8 text-gray-600">
                 Preencha os dados do funcionário/colaborador.

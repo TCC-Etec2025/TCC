@@ -7,15 +7,15 @@ export const useCadastroForm = (residente: any) => {
     const form = useForm({
         resolver: yupResolver(residenteSchema),
         defaultValues: {
-            nome_completo: '',
+            nome: '',
             data_nascimento: '',
             cpf: '',
             sexo: '',
             data_admissao: '',
             estado_civil: '',
             naturalidade: '',
-            localizacao_quarto: '',
-            nivel_dependencia: '',
+            quarto: '',
+            dependencia: '',
             plano_saude: '',
             numero_carteirinha: '',
             observacoes: '',
@@ -28,15 +28,15 @@ export const useCadastroForm = (residente: any) => {
     useEffect(() => {
         if (residente) {
             reset({
-                nome_completo: residente.nome_completo || '',
+                nome: residente.nome || '',
                 data_nascimento: residente.data_nascimento || '',
                 cpf: residente.cpf || '',
                 sexo: residente.sexo || '',
                 data_admissao: residente.data_admissao || '',
                 estado_civil: residente.estado_civil || '',
                 naturalidade: residente.naturalidade || '',
-                localizacao_quarto: residente.localizacao_quarto || '',
-                nivel_dependencia: residente.nivel_dependencia || '',
+                quarto: residente.quarto || '',
+                dependencia: residente.dependencia || '',
                 plano_saude: residente.plano_saude || '',
                 numero_carteirinha: residente.numero_carteirinha || '',
                 observacoes: residente.observacoes || '',

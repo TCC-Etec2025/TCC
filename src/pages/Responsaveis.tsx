@@ -129,7 +129,7 @@ const Responsaveis: React.FC = () => {
           </div>
           <div className="flex-shrink-0">
             <button className="bg-odara-accent hover:bg-odara-secondary text-white font-medium py-3 px-6 rounded-lg flex items-center justify-center transition-colors shadow-md hover:shadow-lg w-full lg:w-auto"
-              onClick={() => navigate('/app/admin/responsavel')}>
+              onClick={() => navigate('/app/admin/responsavel/formulario')}>
               <Plus className="mr-2 h-5 w-5" />
               Cadastrar Responsável
             </button>

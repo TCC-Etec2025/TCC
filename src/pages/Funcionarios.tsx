@@ -83,7 +83,7 @@ const Funcionarios: React.FC = () => {
             <p className="text-sm text-odara-dark/70 mt-1">Gestão de equipe e profissionais</p>
           </div>
           <div className="flex-shrink-0">
-            <button className="bg-odara-accent hover:bg-odara-secondary text-white font-medium py-2 px-4 rounded-lg flex items-center justify-center transition-colors w-full lg:w-auto">
+            <button className="bg-odara-accent hover:bg-odara-secondary text-white font-medium py-2 px-4 rounded-lg flex items-center justify-center transition-colors w-full lg:w-auto" onClick={() => navigate('/app/admin/funcionario/formulario')}>
               <Plus className="mr-2 h-4 w-4" />
               Cadastrar Funcionário
             </button>

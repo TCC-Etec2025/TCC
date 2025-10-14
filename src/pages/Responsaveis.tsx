@@ -83,6 +83,10 @@ const Responsaveis: React.FC = () => {
     );
   });
 
+  const formatarTelefone = (telefone: string) => {
+    return `(${telefone.slice(0, 2)}) ${telefone.slice(2, 7)}-${telefone.slice(7)}`;
+  };
+
   const handleDelete = async (id: number): Promise<void> => {
     if (window.confirm('Tem certeza que deseja excluir este responsável?')) {
       try {
@@ -173,8 +177,8 @@ const Responsaveis: React.FC = () => {
                           <User className="h-4 w-4 text-odara-primary" />
                         </div>
                         <div>
-                          <p className="font-medium text-odara-dark">{responsavel.nome || 'Não informado'}</p>
-                          <p className="text-xs text-gray-500">{responsavel.cpf || 'Sem CPF'}</p>
+                          <p className="font-medium text-odara-dark">{responsavel.nome}</p>
+                          <p className="text-xs text-gray-500">{responsavel.cpf}</p>
                         </div>
                       </div>
                     </td>
@@ -182,17 +186,17 @@ const Responsaveis: React.FC = () => {
                       <div className="space-y-1">
                         <div className="flex items-center gap-2">
                           <Phone className="h-3 w-3 text-gray-500" />
-                          <span className="text-sm">{responsavel.telefone_principal || 'Não informado'}</span>
+                          <span className="text-sm">{formatarTelefone(responsavel.telefone_principal)}</span>
                         </div>
                         {responsavel.telefone_secundario && (
                           <div className="flex items-center gap-2">
                             <Phone className="h-3 w-3 text-gray-500" />
-                            <span className="text-sm">{responsavel.telefone_secundario}</span>
+                            <span className="text-sm">{formatarTelefone(responsavel.telefone_secundario)}</span>
                           </div>
                         )}
                         <div className="flex items-center gap-2">
                           <Mail className="h-3 w-3 text-gray-500" />
-                          <span className="text-sm truncate">{responsavel.email || 'Não informado'}</span>
+                          <span className="text-sm truncate">{responsavel.email}</span>
                         </div>
                       </div>
                     </td>
@@ -215,12 +219,10 @@ const Responsaveis: React.FC = () => {
                       </div>
                     </td>
                     <td className="p-4">
-                      <span className={`px-3 py-1 rounded-full text-xs font-medium
-                        ${responsavel.status
-                          ? 'bg-green-100 text-green-700'
-                          : 'bg-gray-200 text-gray-700'}
-                      `}>
-                        {responsavel.status || 'Não definido'}
+                      <span className={"px-3 py-1 rounded-full text-xs font-medium"}>
+                        {responsavel.status
+                          ? <span className='bg-green-100 text-green-700'>Ativo</span>
+                          : <span className='bg-gray-200 text-gray-700'>Inativo</span>}
                       </span>
                     </td>
                     <td className="p-4 whitespace-nowrap">

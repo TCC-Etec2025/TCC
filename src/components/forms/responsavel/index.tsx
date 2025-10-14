@@ -16,6 +16,7 @@ type Props = {
 export default function CadastroResponsavel({ responsavel }: Props) {
     const navigate = useNavigate();
     const [isLoading, setIsLoading] = useState(false);
+    const [isCepAutoFilled, setIsCepAutoFilled] = useState(false);
     const [modalOpen, setModalOpen] = useState(false);
     const [modalConfig, setModalConfig] = useState<{
         title: string;
@@ -41,11 +42,25 @@ export default function CadastroResponsavel({ responsavel }: Props) {
         getValues,
     } = useCadastroForm(responsavel);
 
+    const cepValue = watch('cep');
+
     useEffect(() => {
         const fetchEndereco = async () => {
+            if (!cepValue) {
+                setIsCepAutoFilled(false);
+                return;
+            }
+            
+            // Remove caracteres não numéricos do CEP
+            const cepLimpo = cepValue.replace(/\D/g, '');
+            
+            if (cepLimpo.length !== 8) {
+                setIsCepAutoFilled(false);
+                return;
+            }
             
             try {
-                const response = await fetch(`https://viacep.com.br/ws/${watch('cep')}/json/`);
+                const response = await fetch(`https://viacep.com.br/ws/${cepLimpo}/json/`);
                 const data = await response.json();
                 
                 if (!data.erro) {
@@ -53,14 +68,18 @@ export default function CadastroResponsavel({ responsavel }: Props) {
                     setValue('bairro', data.bairro || '');
                     setValue('cidade', data.localidade || '');
                     setValue('estado', data.uf || '');
+                    setIsCepAutoFilled(true);
+                } else {
+                    setIsCepAutoFilled(false);
                 }
             } catch (error) {
                 console.log('Erro ao buscar CEP:', error);
+                setIsCepAutoFilled(false);
             }
         };
 
         fetchEndereco();
-    }, [watch('cep'), setValue, getValues]);
+    }, [cepValue, setValue, getValues]);
 
     const onSubmit: SubmitHandler<FormValues> = async (data) => {
         setIsLoading(true);
@@ -187,6 +206,21 @@ export default function CadastroResponsavel({ responsavel }: Props) {
                             {...register('cpf')}
                             className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
                             placeholder="000.000.000-00"
+                            maxLength={14}
+                            onChange={(e) => {
+                                let value = e.target.value.replace(/\D/g, '');
+                                if (value.length > 3) {
+                                    value = value.replace(/^(\d{3})(\d{1,3})/, '$1.$2');
+                                }
+                                if (value.length > 6) {
+                                    value = value.replace(/^(\d{3})\.(\d{3})(\d{1,3})/, '$1.$2.$3');
+                                }
+                                if (value.length > 9) {
+                                    value = value.replace(/^(\d{3})\.(\d{3})\.(\d{3})(\d{1,2})/, '$1.$2.$3-$4');
+                                }
+                                e.target.value = value;
+                                setValue('cpf', value);
+                            }}
                         />
                         {errors.cpf && (
                             <p className="text-red-500 text-sm mt-2 font-medium">
@@ -229,6 +263,18 @@ export default function CadastroResponsavel({ responsavel }: Props) {
                             {...register('telefone_principal')}
                             className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
                             placeholder="(11) 99999-9999"
+                            maxLength={15}
+                            onChange={(e) => {
+                                let value = e.target.value.replace(/\D/g, '');
+                                if (value.length > 2) {
+                                    value = value.replace(/^(\d{2})(\d)/, '($1) $2');
+                                }
+                                if (value.length > 7) {
+                                    value = value.replace(/^(\(\d{2}\)\s)(\d{5})(\d{1,4})/, '$1$2-$3');
+                                }
+                                e.target.value = value;
+                                setValue('telefone_principal', value);
+                            }}
                         />
                         {errors.telefone_principal && (
                             <p className="text-red-500 text-sm mt-2 font-medium">
@@ -244,6 +290,18 @@ export default function CadastroResponsavel({ responsavel }: Props) {
                             {...register('telefone_secundario')}
                             className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
                             placeholder="(11) 88888-8888"
+                            maxLength={15}
+                            onChange={(e) => {
+                                let value = e.target.value.replace(/\D/g, '');
+                                if (value.length > 2) {
+                                    value = value.replace(/^(\d{2})(\d)/, '($1) $2');
+                                }
+                                if (value.length > 7) {
+                                    value = value.replace(/^(\(\d{2}\)\s)(\d{5})(\d{1,4})/, '$1$2-$3');
+                                }
+                                e.target.value = value;
+                                setValue('telefone_secundario', value);
+                            }}
                         />
                     </div>
                     <div>
@@ -264,6 +322,18 @@ export default function CadastroResponsavel({ responsavel }: Props) {
                             {...register('contato_emergencia_telefone')}
                             className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
                             placeholder="(11) 88888-8888"
+                            maxLength={15}
+                            onChange={(e) => {
+                                let value = e.target.value.replace(/\D/g, '');
+                                if (value.length > 2) {
+                                    value = value.replace(/^(\d{2})(\d)/, '($1) $2');
+                                }
+                                if (value.length > 7) {
+                                    value = value.replace(/^(\(\d{2}\)\s)(\d{5})(\d{1,4})/, '$1$2-$3');
+                                }
+                                e.target.value = value;
+                                setValue('contato_emergencia_telefone', value);
+                            }}
                         />
                     </div>
                     <div className="md:col-span-2 grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -291,13 +361,30 @@ export default function CadastroResponsavel({ responsavel }: Props) {
                                 </p>
                             )}
                         </div>
+                        {isCepAutoFilled && (
+                            <div className="md:col-span-3 flex items-center justify-center">
+                                <button
+                                    type="button"
+                                    onClick={() => setIsCepAutoFilled(false)}
+                                    className="px-4 py-2 text-sm font-medium text-blue-600 bg-blue-50 border border-blue-200 rounded-lg hover:bg-blue-100 transition-colors"
+                                >
+                                    🔓 Editar endereço manualmente
+                                </button>
+                            </div>
+                        )}
                         <div className="md:col-span-2">
                             <label className="block text-sm font-medium text-gray-700 mb-2">
                                 Logradouro *
+                                {isCepAutoFilled && (
+                                    <span className="text-xs text-blue-600 ml-2">(preenchido pelo CEP)</span>
+                                )}
                             </label>
                             <input
                                 {...register('logradouro')}
-                                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+                                disabled={isCepAutoFilled}
+                                className={`w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors ${
+                                    isCepAutoFilled ? 'bg-gray-100 text-gray-600 cursor-not-allowed' : ''
+                                }`}
                                 placeholder="Rua, Avenida, etc."
                             />
                             {errors.logradouro && (
@@ -335,10 +422,16 @@ export default function CadastroResponsavel({ responsavel }: Props) {
                     <div>
                         <label className="block text-sm font-medium text-gray-700 mb-2">
                             Bairro *
+                            {isCepAutoFilled && (
+                                <span className="text-xs text-blue-600 ml-2">(preenchido pelo CEP)</span>
+                            )}
                         </label>
                         <input
                             {...register('bairro')}
-                            className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+                            disabled={isCepAutoFilled}
+                            className={`w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors ${
+                                isCepAutoFilled ? 'bg-gray-100 text-gray-600 cursor-not-allowed' : ''
+                            }`}
                             placeholder="Bairro"
                         />
                         {errors.bairro && (
@@ -350,10 +443,16 @@ export default function CadastroResponsavel({ responsavel }: Props) {
                     <div>
                         <label className="block text-sm font-medium text-gray-700 mb-2">
                             Cidade *
+                            {isCepAutoFilled && (
+                                <span className="text-xs text-blue-600 ml-2">(preenchido pelo CEP)</span>
+                            )}
                         </label>
                         <input
                             {...register('cidade')}
-                            className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+                            disabled={isCepAutoFilled}
+                            className={`w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors ${
+                                isCepAutoFilled ? 'bg-gray-100 text-gray-600 cursor-not-allowed' : ''
+                            }`}
                             placeholder="Cidade"
                         />
                         {errors.cidade && (
@@ -365,10 +464,16 @@ export default function CadastroResponsavel({ responsavel }: Props) {
                     <div>
                         <label className="block text-sm font-medium text-gray-700 mb-2">
                             Estado *
+                            {isCepAutoFilled && (
+                                <span className="text-xs text-blue-600 ml-2">(preenchido pelo CEP)</span>
+                            )}
                         </label>
                         <input
                             {...register('estado')}
-                            className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+                            disabled={isCepAutoFilled}
+                            className={`w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors ${
+                                isCepAutoFilled ? 'bg-gray-100 text-gray-600 cursor-not-allowed' : ''
+                            }`}
                             placeholder="SP"
                         />
                         {errors.estado && (

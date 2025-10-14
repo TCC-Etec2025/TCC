@@ -5,7 +5,7 @@ import { supabase } from '../../../lib/supabaseClient';
 import Modal from '../../Modal';
 import { useCadastroForm } from './form';
 import { type FormValues } from './types';
-import { Loader2, UserPlus, X, Upload, User } from 'lucide-react';
+import { Loader2, UserPlus, X, Upload, User, Info } from 'lucide-react';
 import { type Residente } from '../../../Modelos';
 
 
@@ -266,9 +266,8 @@ export default function CadastroResidente({ residente }: Props) {
                                 className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors bg-white"
                             >
                                 <option value="">Selecione o sexo...</option>
-                                <option value="Masculino">Masculino</option>
-                                <option value="Feminino">Feminino</option>
-                                <option value="Outro">Outro</option>
+                                <option value="M">Masculino</option>
+                                <option value="F">Feminino</option>
                             </select>
                         </div>
                         <div>
@@ -325,17 +324,28 @@ export default function CadastroResidente({ residente }: Props) {
                             />
                         </div>
                         <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-2">
+                            <label className="block text-sm font-medium text-gray-700 mb-2 flex items-center gap-1">
                                 Nível de Dependência
+                                <span
+                                    title="Indica o grau de autonomia do residente"
+                                    className="text-blue-500 cursor-pointer relative group"
+                                >
+                                    <Info size={16} />
+                                    <span className="absolute left-6 top-1 z-10 hidden group-hover:block bg-white border border-gray-300 rounded shadow-lg px-3 py-2 text-xs text-gray-700 w-56">
+                                        <b>Grau de Dependência I:</b> idosos independentes, mesmo que requeiram uso de equipamentos de auto-ajuda<br />
+                                        <b>Grau de Dependência II:</b> idosos com dependência em até três atividades de autocuidado para a vida diária tais como: alimentação, mobilidade, higiene; sem comprometimento cognitivo ou com alteração cognitiva controlada;<br />
+                                        <b>Grau de Dependência III:</b> idosos com dependência que requeiram assistência em todas as atividades de autocuidado para a vida diária e ou com comprometimento cognitivo.
+                                    </span>
+                                </span>
                             </label>
                             <select
                                 {...register('dependencia')}
                                 className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors bg-white"
                             >
                                 <option value="">Selecione o nível...</option>
-                                <option value="Independente">Independente</option>
-                                <option value="Parcialmente dependente">Parcialmente dependente</option>
-                                <option value="Totalmente dependente">Totalmente dependente</option>
+                                <option value="Grau I">Grau de Dependência I</option>
+                                <option value="Grau II">Grau de Dependência II</option>
+                                <option value="Grau III">Grau de Dependência III</option>
                             </select>
                         </div>
                         <div>

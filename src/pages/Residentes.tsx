@@ -34,12 +34,17 @@ const Residentes: React.FC = () => {
   }, []);
 
   const calcularIdade = (dataNascimento: string) => {
-    const nascimento = new Date(dataNascimento);
     const hoje = new Date();
+    const nascimento = new Date(dataNascimento);
     let idade = hoje.getFullYear() - nascimento.getFullYear();
-    const mes = hoje.getMonth() - nascimento.getMonth();
-
-    if (mes < 0 || (mes === 0 && hoje.getDate() < nascimento.getDate())) {
+    
+    const mesAtual = hoje.getMonth();
+    const diaAtual = hoje.getDate();
+    const mesNascimento = nascimento.getMonth();
+    const diaNascimento = nascimento.getDate();
+    
+    // Ajusta a idade se ainda não fez aniversário este ano
+    if (mesAtual < mesNascimento || (mesAtual === mesNascimento && diaAtual < diaNascimento)) {
       idade--;
     }
 
@@ -169,12 +174,10 @@ const Residentes: React.FC = () => {
                       </span>
                     </td>
                     <td className="p-4">
-                      <span className={`px-3 py-1 rounded-full text-xs font-medium
-                        ${residente.status
-                          ? 'bg-green-100 text-green-700'
-                          : 'bg-gray-200 text-gray-700'}
-                      `}>
-                        {residente.status}
+                      <span className={"px-3 py-1 rounded-full text-xs font-medium"}>
+                        {residente.status
+                          ? <span className='bg-green-100 text-green-700'>Ativo</span>
+                          : <span className='bg-gray-200 text-gray-700'>Inativo</span>}
                       </span>
                     </td>
                     <td className="p-4 whitespace-nowrap">

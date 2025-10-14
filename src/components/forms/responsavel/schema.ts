@@ -10,12 +10,17 @@ export const responsavelSchema = yup.object().shape({
   telefone_principal: yup.string()
     .required('O telefone principal é obrigatório'),
   telefone_secundario: yup.string().optional().nullable(),
-  data_nascimento: yup.date()
+  data_nascimento: yup.string()
     .required('A data de nascimento é obrigatória'),
   contato_emergencia_nome: yup.string().optional().nullable(),
   contato_emergencia_telefone: yup.string().optional().nullable(),
   cep: yup.string()
-    .required('O CEP é obrigatório'),
+    .required('O CEP é obrigatório')
+    .matches(/^\d{5}-?\d{3}$/, 'CEP deve ter 8 dígitos (formato: 00000-000)')
+    .transform((value) => value?.replace(/\D/g, '')) // Remove caracteres não numéricos para validação
+    .test('cep-length', 'CEP deve ter exatamente 8 dígitos', (value) => {
+      return value ? value.length === 8 : false;
+    }),
   logradouro: yup.string()
     .required('O logradouro é obrigatório'),
   numero: yup.string()

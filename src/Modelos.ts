@@ -43,11 +43,11 @@ export interface Funcionario {
   nome: string;
   cpf: string;
   email: string;
-  data_nascimento: Date;
+  data_nascimento: string;
   cargo: string;
   registro_profissional?: string;
-  data_admissao: Date;
-  data_demissao?: Date;
+  data_admissao: string;
+  data_demissao?: string;
   telefone_principal: string;
   telefone_secundario?: string;
   id_endereco: number;
@@ -64,7 +64,7 @@ export interface Responsavel {
   nome: string;
   cpf: string;
   email: string;
-  data_nascimento: Date;
+  data_nascimento: string;
   telefone_principal: string;
   telefone_secundario?: string;
   id_endereco: number;
@@ -80,12 +80,12 @@ export interface Responsavel {
 export interface Residente {
   id: number;
   nome: string;
-  data_nascimento: Date;
+  data_nascimento: string;
   cpf: string;
   sexo: string;
   estado_civil: string;
   naturalidade?: string;
-  data_admissao: Date;
+  data_admissao: string;
   quarto?: string;
   dependencia?: string;
   status: boolean;
@@ -141,7 +141,7 @@ export interface AdministracaoMedicamento {
   id: number;
   id_prescricao: number;
   id_funcionario: number;
-  data_hora_administracao: Date;
+  data_hora_administracao: string;
   status: string;
   observacao?: string;
 }
@@ -150,7 +150,7 @@ export interface SinaisVitais {
   id: number;
   id_residente: number;
   id_funcionario: number;
-  data_hora_medicao: Date;
+  data_hora_medicao: string;
   pressao_arterial?: string;
   temperatura_celsius?: number;
   frequencia_cardiaca_bpm?: number;
@@ -166,7 +166,7 @@ export interface Ocorrencia {
   id: number;
   id_residente?: number;
   id_funcionario: number;
-  data_hora_ocorrencia: Date;
+  data_hora_ocorrencia: string;
   titulo: string;
   descricao_detalhada: string;
   providencias?: string;
@@ -181,8 +181,8 @@ export interface Visita {
   id: number;
   nome: string;
   cpf: string;
-  data_hora_entrada: Date;
-  data_hora_saida?: Date;
+  data_hora_entrada: string;
+  data_hora_saida?: string;
   id_funcionario?: number;
   observacoes?: string;
 }
@@ -191,7 +191,7 @@ export interface AvaliacaoNutricional {
   id: number;
   id_residente: number;
   id_funcionario: number;
-  data_avaliacao: Date;
+  data_avaliacao: string;
   peso_kg: number;
   altura_m?: number;
   imc?: number;
@@ -215,9 +215,9 @@ export interface Pertence {
   nome: string;
   descricao?: string;
   estado?: string;
-  data_registro: Date;
+  data_registro: string;
   status: string;
-  data_baixa?: Date;
+  data_baixa?: string;
   observacoes?: string;
 }
 

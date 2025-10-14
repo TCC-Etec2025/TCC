@@ -13,7 +13,7 @@ const Usuarios: React.FC = () => {
         setLoading(true);
 
         const { data, error } = await supabase
-          .from("usuario_sistema")
+          .from("usuario")
           .select(`
           id,
           email,

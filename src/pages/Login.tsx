@@ -49,7 +49,7 @@ export default function Login() {
       const senhaCriptografada = CryptoJS.SHA256(senha).toString(CryptoJS.enc.Hex);
 
       const { data: userData, error } = await supabase
-        .from("usuario_sistema")
+        .from("usuario")
         .select(`
           id,
           papel!inner(nome)

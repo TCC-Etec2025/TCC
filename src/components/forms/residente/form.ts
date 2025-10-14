@@ -9,10 +9,10 @@ export const useCadastroForm = (residente: Residente) => {
         resolver: yupResolver(residenteSchema),
         defaultValues: {
             nome: '',
-            data_nascimento: undefined,
+            data_nascimento: '',
             cpf: '',
             sexo: '',
-            data_admissao: undefined,
+            data_admissao: new Date().toISOString().split('T')[0],
             estado_civil: '',
             naturalidade: '',
             quarto: '',
@@ -30,10 +30,10 @@ export const useCadastroForm = (residente: Residente) => {
         if (residente) {
             reset({
                 nome: residente.nome || '',
-                data_nascimento: residente.data_nascimento || undefined,
+                data_nascimento: residente.data_nascimento || '',
                 cpf: residente.cpf || '',
                 sexo: residente.sexo || '',
-                data_admissao: residente.data_admissao || undefined,
+                data_admissao: residente.data_admissao || '',
                 estado_civil: residente.estado_civil || '',
                 naturalidade: residente.naturalidade || '',
                 quarto: residente.quarto || '',

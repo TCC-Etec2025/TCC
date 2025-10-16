@@ -3,8 +3,10 @@ import { yupResolver } from '@hookform/resolvers/yup';
 import { useEffect } from 'react';
 import { supabase } from '../../../lib/supabaseClient';
 import { funcionarioSchema } from './schema';
+import type { PerfilUsuario } from '../../../context/UserContext';
+import { formatCEP, formatCPF, formatTelefone } from '../../../utils/formatters';
 
-export const useCadastroForm = (funcionario: any) => {
+export const useCadastroForm = (funcionario: PerfilUsuario) => {
     const form = useForm({
         resolver: yupResolver(funcionarioSchema),
         defaultValues: {
@@ -34,7 +36,7 @@ export const useCadastroForm = (funcionario: any) => {
     const { reset } = form;
 
     useEffect(() => {
-        if (funcionario) {
+        if (funcionario && 'cargo' in funcionario) {
             const fetchEndereco = async () => {
                 const { data, error } = await supabase
                     .from('endereco')
@@ -45,24 +47,24 @@ export const useCadastroForm = (funcionario: any) => {
                     console.error('Erro ao buscar endereço:', error);
                 } else if (data) {
                     reset({
-                        vinculo: funcionario.tipo_vinculo,
-                        nome: funcionario.nome_completo,
-                        cpf: funcionario.cpf,
-                        email: funcionario.email,
+                        vinculo: funcionario.vinculo || '',
+                        nome: funcionario.nome || '',
+                        cpf: formatCPF(funcionario.cpf) || '',
+                        email: funcionario.email || '',
                         data_nascimento: funcionario.data_nascimento || '',
-                        papel: funcionario.papel,
-                        cargo: funcionario.cargo,
-                        registro_profissional: funcionario.registro_profissional,
+                        papel: funcionario.papel || '',
+                        cargo: funcionario.cargo || '',
+                        registro_profissional: funcionario.registro_profissional || '',
                         data_admissao: funcionario.data_admissao || '',
-                        telefone_principal: funcionario.telefone_principal,
-                        telefone_secundario: funcionario.telefone_secundario,
-                        cep: data.cep,
-                        logradouro: data.logradouro,
-                        numero: data.numero,
+                        telefone_principal: formatTelefone(funcionario.telefone_principal) || '',
+                        telefone_secundario: formatTelefone(funcionario.telefone_secundario) || '',
+                        cep: formatCEP(data.cep) || '',
+                        logradouro: data.logradouro || '',
+                        numero: data.numero || '',
                         complemento: data.complemento || '',
-                        bairro: data.bairro,
-                        cidade: data.cidade,
-                        estado: data.estado,
+                        bairro: data.bairro || '',
+                        cidade: data.cidade || '',
+                        estado: data.estado || '',
                         contato_emergencia_nome: funcionario.contato_emergencia_nome || '',
                         contato_emergencia_telefone: funcionario.contato_emergencia_telefone || '',
                     });

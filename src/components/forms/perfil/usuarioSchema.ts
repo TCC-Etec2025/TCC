@@ -7,7 +7,7 @@ export const usuarioSchema = yup.object().shape({
         .required("Email é obrigatório"),
     cpf: yup.string()
         .required("CPF é obrigatório"),
-    data_nascimento: yup.date()
+    data_nascimento: yup.string()
         .required("Data de nascimento é obrigatória"),
     telefone_principal: yup.string()
         .required("Telefone principal é obrigatório"),

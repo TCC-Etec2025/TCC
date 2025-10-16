@@ -17,7 +17,7 @@ export const responsavelSchema = yup.object().shape({
   cep: yup.string()
     .required('O CEP é obrigatório')
     .matches(/^\d{5}-?\d{3}$/, 'CEP deve ter 8 dígitos (formato: 00000-000)')
-    .transform((value) => value?.replace(/\D/g, '')) // Remove caracteres não numéricos para validação
+    .transform((value) => value?.replace(/\D/g, ''))
     .test('cep-length', 'CEP deve ter exatamente 8 dígitos', (value) => {
       return value ? value.length === 8 : false;
     }),

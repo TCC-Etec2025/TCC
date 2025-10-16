@@ -1,14 +1,10 @@
 import { type PerfilUsuario } from "../../../../context/UserContext";
 import { Calendar, Mail, MapPin, Phone } from "lucide-react";
+import { formatDate, formatTelefone } from "../../../../utils/formatters";
 import type { Funcionario } from "../../../../Modelos";
 
 type Props = {
     usuario: PerfilUsuario;
-};
-
-const formatDate = (dateString: string) => {
-    if (!dateString) return "";
-    return new Date(dateString).toLocaleDateString("pt-BR");
 };
 
 export default function PerfilCard({ usuario }: Props) {
@@ -33,9 +29,9 @@ export default function PerfilCard({ usuario }: Props) {
                 <div className="flex items-center gap-3 text-sm text-gray-600">
                     <Phone className="h-4 w-4 text-gray-400 flex-shrink-0" />
                     <span>
-                        {usuario.telefone_principal}
+                        {formatTelefone(usuario.telefone_principal)}
                         {usuario.telefone_secundario && (
-                            <span className="text-gray-400"> • {usuario.telefone_secundario}</span>
+                            <span className="text-gray-400"> • {formatTelefone(usuario.telefone_secundario)}</span>
                         )}
                     </span>
                 </div>

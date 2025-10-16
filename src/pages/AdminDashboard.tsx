@@ -140,6 +140,12 @@ function AdministrativeActions() {
       acao: () => navigate('/app/admin/funcionario/formulario')
     },
     {
+      nome: 'Cadastrar Pertence',
+      descricao: 'Adicionar novo pertence ao sistema',
+      icone: <LuUserPlus className="h-6 w-6" />,
+      acao: () => navigate('/app/admin/pertence/formulario')
+    },
+    {
       nome: 'Gerenciar Usuários',
       descricao: 'Editar ou remover usuários do sistema',
       icone: <LuUsers className="h-6 w-6" />,

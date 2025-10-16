@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { Search, Plus, Edit, Trash2, User, Loader2 } from 'lucide-react';
 import { supabase } from '../lib/supabaseClient';
 import { type Residente } from '../Modelos';
+import { differenceInYears } from 'date-fns';
 
 const Residentes: React.FC = () => {
   const navigate = useNavigate();
@@ -32,24 +33,6 @@ const Residentes: React.FC = () => {
 
     fetchResidentes();
   }, []);
-
-  const calcularIdade = (dataNascimento: string) => {
-    const hoje = new Date();
-    const nascimento = new Date(dataNascimento);
-    let idade = hoje.getFullYear() - nascimento.getFullYear();
-    
-    const mesAtual = hoje.getMonth();
-    const diaAtual = hoje.getDate();
-    const mesNascimento = nascimento.getMonth();
-    const diaNascimento = nascimento.getDate();
-    
-    // Ajusta a idade se ainda não fez aniversário este ano
-    if (mesAtual < mesNascimento || (mesAtual === mesNascimento && diaAtual < diaNascimento)) {
-      idade--;
-    }
-
-    return idade;
-  };
 
   const handleDelete = async (id: number): Promise<void> => {
     if (window.confirm('Tem certeza que deseja excluir este residente?')) {
@@ -161,7 +144,7 @@ const Residentes: React.FC = () => {
                       </span>
                     </td>
                     <td className="p-4 font-medium">{residente.quarto}</td>
-                    <td className="p-4">{calcularIdade(residente.data_nascimento)} anos</td>
+                    <td className="p-4">{differenceInYears(new Date(), new Date(residente.data_nascimento))} anos</td>
                     <td className="p-4">
                       <span className={`px-2 py-1 rounded-full text-xs font-medium
                         ${residente.dependencia === 'Alta'

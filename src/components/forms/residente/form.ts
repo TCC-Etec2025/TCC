@@ -3,6 +3,7 @@ import { yupResolver } from '@hookform/resolvers/yup';
 import { useEffect } from 'react';
 import { residenteSchema } from './schema';
 import { type Residente } from '../../../Modelos'
+import { formatCPF } from '../../../utils/formatters';
 
 export const useCadastroForm = (residente: Residente) => {
     const form = useForm({
@@ -31,7 +32,7 @@ export const useCadastroForm = (residente: Residente) => {
             reset({
                 nome: residente.nome || '',
                 data_nascimento: residente.data_nascimento || '',
-                cpf: residente.cpf || '',
+                cpf: formatCPF(residente.cpf) || '',
                 sexo: residente.sexo || '',
                 data_admissao: residente.data_admissao || '',
                 estado_civil: residente.estado_civil || '',

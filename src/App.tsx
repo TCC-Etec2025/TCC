@@ -46,6 +46,7 @@ export default function App() {
         <Route path="admin/responsavel/formulario" element={<FormularioResponsavel />} />
         <Route path="admin/funcionario/formulario" element={<FormularioFuncionario />} />
         <Route path="admin/pertence/formulario" element={<FormularioPertence />} />
+        <Route path="admin/pertence/formulario" element={<FormularioPertence />} />
 
         {/* Rotas as páginas de listagens*/}
         <Route path="admin/residentes" element={<Residentes />} />

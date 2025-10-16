@@ -56,10 +56,10 @@ export default function Login() {
         `)
         .eq("email", email)
         .eq("senha", senhaCriptografada)
-        .maybeSingle() as { data: UsuarioLogin | null; error: any };
+        .maybeSingle() as { data: UsuarioLogin | null; error: { message: string } };
 
       if (error || !userData) {
-        setServerError("Email ou senha inválidos. Por favor, tente novamente.");
+        setServerError("Email ou senha inválidos. Por favor, tente novamente." + (error?.message ? ` (${error.message})` : ""));
         setIsLoading(false);
         return;
       }

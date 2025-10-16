@@ -18,13 +18,13 @@ export const useProfileForm = (usuario: PerfilUsuario) => {
                 cpf: data.cpf,
                 telefone_principal: data.telefone_principal,
                 telefone_secundario: data.telefone_secundario,
-                data_nascimento: data.data_nascimento?.toISOString(),
+                data_nascimento: data.data_nascimento,
                 contato_emergencia_nome: data.contato_emergencia_nome,
                 contato_emergencia_telefone: data.contato_emergencia_telefone,
             };
             
             const { error } = await supabase
-                .from("usuarios")
+                .from("usuario")
                 .update(params)
                 .eq("id", usuario.id);
                 

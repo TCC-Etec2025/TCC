@@ -1,9 +1,11 @@
 import type { SubmitHandler } from "react-hook-form";
-import { type PerfilUsuario } from "../../../../context/UserContext";
+import { type PerfilUsuario, useUser } from "../../../../context/UserContext";
 import { useUsuarioForm } from "../usuarioForm";
 import type { FormUsuarioValues } from "../types";
 import { removeFormatting } from "../../../../utils";
 import { supabase } from "../../../../lib/supabaseClient";
+import { useState } from "react";
+import { CheckCircle, AlertCircle, Loader2 } from "lucide-react";
 
 type Props = {
   usuario: PerfilUsuario;
@@ -11,6 +13,10 @@ type Props = {
 };
 
 export default function UsuarioForm({ usuario, isEditing }: Props) {
+  const { atualizarUsuario } = useUser();
+  const [isLoading, setIsLoading] = useState(false);
+  const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
+  
   const {
     register,
     handleSubmit,
@@ -19,25 +25,38 @@ export default function UsuarioForm({ usuario, isEditing }: Props) {
   } = useUsuarioForm(usuario);
 
   const onSubmit: SubmitHandler<FormUsuarioValues> = async (formData) => {
+    setIsLoading(true);
+    setMessage(null);
+    
     try {
-      const { data, error } = await supabase
-        .from('usuario')
-        .update({
-          ...formData,
-          cpf: removeFormatting(formData.cpf),
-          telefone_principal: removeFormatting(formData.telefone_principal),
-          telefone_secundario: removeFormatting(formData.telefone_secundario || ''),
-          contato_emergencia_telefone: removeFormatting(formData.contato_emergencia_telefone || ''),
-        })
-        .eq('id', usuario.id);
+      const { data, error } = await supabase.rpc('atualizar_perfil_usuario', {
+        p_id_usuario: usuario.id_usuario,
+        p_tipo_usuario: usuario.papel.toLocaleLowerCase() === 'responsavel' ? 'responsavel' : 'funcionario',
+        p_email: formData.email,
+        p_nome: formData.nome,
+        p_cpf: removeFormatting(formData.cpf),
+        p_telefone_principal: removeFormatting(formData.telefone_principal),
+        p_telefone_secundario: removeFormatting(formData.telefone_secundario || ''),
+        p_data_nascimento: formData.data_nascimento,
+        p_contato_emergencia_nome: formData.contato_emergencia_nome,
+        p_contato_emergencia_telefone: removeFormatting(formData.contato_emergencia_telefone || ''),
+      });
 
       if (error) {
+        setMessage({ type: 'error', text: 'Erro ao atualizar informações pessoais' });
         console.error("Erro ao atualizar usuário:", error.message);
       } else {
+        setMessage({ type: 'success', text: 'Informações pessoais atualizadas com sucesso!' });
         console.log("Usuário atualizado com sucesso:", data);
+        
+        // Atualiza o contexto com os dados mais recentes
+        await atualizarUsuario();
       }
     } catch (err) {
+      setMessage({ type: 'error', text: 'Erro inesperado ao atualizar informações' });
       console.error("Erro inesperado ao atualizar usuário:", err);
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -267,9 +286,37 @@ export default function UsuarioForm({ usuario, isEditing }: Props) {
           />
         </div>
       </div>
+
+      {/* Mensagem de feedback */}
+      {message && (
+        <div className={`flex items-center gap-2 p-3 rounded-md ${
+          message.type === 'success' 
+            ? 'bg-green-50 border border-green-200 text-green-800' 
+            : 'bg-red-50 border border-red-200 text-red-800'
+        }`}>
+          {message.type === 'success' ? (
+            <CheckCircle className="h-4 w-4" />
+          ) : (
+            <AlertCircle className="h-4 w-4" />
+          )}
+          <span className="text-sm font-medium">{message.text}</span>
+        </div>
+      )}
+
       {isEditing && (
-        <button type="submit" className="mt-4 inline-flex items-center px-4 py-2 text-sm font-medium text-white bg-blue-600 border border-transparent rounded-md hover:bg-blue-700 transition-colors">
-          Salvar
+        <button 
+          type="submit" 
+          disabled={isLoading}
+          className="mt-4 inline-flex items-center px-4 py-2 text-sm font-medium text-white bg-blue-600 border border-transparent rounded-md hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+        >
+          {isLoading ? (
+            <>
+              <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+              Salvando...
+            </>
+          ) : (
+            'Salvar Informações Pessoais'
+          )}
         </button>
       )}
     </form>

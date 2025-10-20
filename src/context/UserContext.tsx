@@ -1,12 +1,14 @@
 import { createContext, useState, useContext, useEffect } from "react";
 import type { ReactNode } from "react";
 import type { Endereco, Funcionario, Responsavel } from "../Modelos";
+import { supabase } from "../lib/supabaseClient";
 
 export type PerfilUsuario = { papel: string; } & (Funcionario | Responsavel) & { endereco: Endereco };
 
 type UserContextType = {
   usuario: PerfilUsuario | null;
   setUsuario: (user: PerfilUsuario | null) => void;
+  atualizarUsuario: () => Promise<void>;
   logout: () => void;
 };
 
@@ -39,13 +41,48 @@ export function UserProvider({ children }: { children: ReactNode }) {
     }
   }, [usuario]);
 
-  // 3. Adiciona a lógica de logout para o localStorage
+  // 3. Função para recarregar dados do usuário do banco
+  const atualizarUsuario = async () => {
+    if (!usuario?.id_usuario) return;
+
+    try {
+      const { data, error } = await supabase.rpc('obter_perfil_usuario', {
+        p_id_usuario: usuario.id_usuario
+      });
+
+      if (error) {
+        console.error("Erro ao recarregar dados do usuário:", error.message);
+        return;
+      }
+
+      if (data && data.length > 0) {
+        const dadosAtualizados = data[0];
+        const usuarioAtualizado: PerfilUsuario = {
+          ...dadosAtualizados,
+          endereco: {
+            cep: dadosAtualizados.cep,
+            logradouro: dadosAtualizados.logradouro,
+            numero: dadosAtualizados.numero,
+            complemento: dadosAtualizados.complemento,
+            bairro: dadosAtualizados.bairro,
+            cidade: dadosAtualizados.cidade,
+            estado: dadosAtualizados.estado,
+          }
+        };
+        setUsuario(usuarioAtualizado);
+      }
+    } catch (err) {
+      console.error("Erro inesperado ao recarregar usuário:", err);
+    }
+  };
+
+  // 4. Adiciona a lógica de logout para o localStorage
   const logout = () => {
     setUsuario(null);
   };
 
   return (
-    <UserContext.Provider value={{ usuario, setUsuario, logout }}>
+    <UserContext.Provider value={{ usuario, setUsuario, atualizarUsuario, logout }}>
       {children}
     </UserContext.Provider>
   );

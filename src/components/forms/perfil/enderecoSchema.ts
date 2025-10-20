@@ -1,7 +1,7 @@
 import * as yup from 'yup';
 
 export const enderecoSchema = yup.object().shape({
-    id: yup.number(),
+    id: yup.number().required(),
     cep: yup.string()
         .required("CEP é obrigatório"),
     logradouro: yup.string()

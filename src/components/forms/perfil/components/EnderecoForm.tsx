@@ -1,9 +1,11 @@
 import type { SubmitHandler } from "react-hook-form";
-import { type PerfilUsuario } from "../../../../context/UserContext";
+import { type PerfilUsuario, useUser } from "../../../../context/UserContext";
 import { useEnderecoForm } from "../enderecoForm";
 import type { FormEnderecoValues } from "../types";
 import { removeFormatting } from "../../../../utils";
 import { supabase } from "../../../../lib/supabaseClient";
+import { useState } from "react";
+import { CheckCircle, AlertCircle, Loader2 } from "lucide-react";
 
 type Props = {
     usuario: PerfilUsuario;
@@ -11,6 +13,10 @@ type Props = {
 };
 
 export default function EnderecoForm({ usuario, isEditing }: Props) {
+    const { atualizarUsuario } = useUser();
+    const [isLoading, setIsLoading] = useState(false);
+    const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
+    
     const {
         register,
         handleSubmit,
@@ -18,6 +24,9 @@ export default function EnderecoForm({ usuario, isEditing }: Props) {
     } = useEnderecoForm(usuario);
 
     const onSubmit: SubmitHandler<FormEnderecoValues> = async (formData) => {
+        setIsLoading(true);
+        setMessage(null);
+        
         try {
             const { data, error } = await supabase
                 .from('endereco')
@@ -33,12 +42,20 @@ export default function EnderecoForm({ usuario, isEditing }: Props) {
                 .eq('id', Number(formData.id));
 
             if (error) {
-                alert("Erro ao atualizar endereço: " + error.message);
+                setMessage({ type: 'error', text: 'Erro ao atualizar endereço' });
+                console.error("Erro ao atualizar endereço:", error.message);
             } else {
-                alert("Endereço atualizado com sucesso: " + JSON.stringify(data));
+                setMessage({ type: 'success', text: 'Endereço atualizado com sucesso!' });
+                console.log("Endereço atualizado com sucesso:", data);
+                
+                // Atualiza o contexto com os dados mais recentes
+                await atualizarUsuario();
             }
         } catch (err) {
-            alert("Erro inesperado ao atualizar endereço: " + err);
+            setMessage({ type: 'error', text: 'Erro inesperado ao atualizar endereço' });
+            console.error("Erro inesperado ao atualizar endereço:", err);
+        } finally {
+            setIsLoading(false);
         }
     };
 
@@ -170,9 +187,37 @@ export default function EnderecoForm({ usuario, isEditing }: Props) {
                     )}
                 </div>
             </div>
+
+            {/* Mensagem de feedback */}
+            {message && (
+                <div className={`flex items-center gap-2 p-3 rounded-md ${
+                    message.type === 'success' 
+                        ? 'bg-green-50 border border-green-200 text-green-800' 
+                        : 'bg-red-50 border border-red-200 text-red-800'
+                }`}>
+                    {message.type === 'success' ? (
+                        <CheckCircle className="h-4 w-4" />
+                    ) : (
+                        <AlertCircle className="h-4 w-4" />
+                    )}
+                    <span className="text-sm font-medium">{message.text}</span>
+                </div>
+            )}
+
             {isEditing && (
-                <button type="submit" className="mt-4 inline-flex items-center px-4 py-2 text-sm font-medium text-white bg-blue-600 border border-transparent rounded-md hover:bg-blue-700 transition-colors">
-                    Salvar
+                <button 
+                    type="submit" 
+                    disabled={isLoading}
+                    className="mt-4 inline-flex items-center px-4 py-2 text-sm font-medium text-white bg-blue-600 border border-transparent rounded-md hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                >
+                    {isLoading ? (
+                        <>
+                            <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                            Salvando...
+                        </>
+                    ) : (
+                        'Salvar Endereço'
+                    )}
                 </button>
             )}
         </form>

@@ -9,6 +9,7 @@ export const useCadastroForm = (residente: Residente) => {
     const form = useForm({
         resolver: yupResolver(residenteSchema),
         defaultValues: {
+            id_responsavel: undefined,
             nome: '',
             data_nascimento: '',
             cpf: '',
@@ -30,6 +31,7 @@ export const useCadastroForm = (residente: Residente) => {
     useEffect(() => {
         if (residente) {
             reset({
+                id_responsavel: residente.id_responsavel ?? undefined,
                 nome: residente.nome || '',
                 data_nascimento: residente.data_nascimento || '',
                 cpf: formatCPF(residente.cpf) || '',

@@ -2,20 +2,44 @@ import type { SubmitHandler } from "react-hook-form";
 import { type PerfilUsuario } from "../../../../context/UserContext";
 import { useUsuarioForm } from "../usuarioForm";
 import type { FormUsuarioValues } from "../types";
+import { removeFormatting } from "../../../../utils";
+import { supabase } from "../../../../lib/supabaseClient";
 
 type Props = {
   usuario: PerfilUsuario;
   isEditing: boolean;
-  onSubmit: SubmitHandler<FormUsuarioValues>;
 };
 
-export default function UsuarioForm({ usuario, isEditing, onSubmit }: Props) {
+export default function UsuarioForm({ usuario, isEditing }: Props) {
   const {
     register,
     handleSubmit,
     setValue,
     formState: { errors },
   } = useUsuarioForm(usuario);
+
+  const onSubmit: SubmitHandler<FormUsuarioValues> = async (formData) => {
+    try {
+      const { data, error } = await supabase
+        .from('usuario')
+        .update({
+          ...formData,
+          cpf: removeFormatting(formData.cpf),
+          telefone_principal: removeFormatting(formData.telefone_principal),
+          telefone_secundario: removeFormatting(formData.telefone_secundario || ''),
+          contato_emergencia_telefone: removeFormatting(formData.contato_emergencia_telefone || ''),
+        })
+        .eq('id', usuario.id);
+
+      if (error) {
+        console.error("Erro ao atualizar usuário:", error.message);
+      } else {
+        console.log("Usuário atualizado com sucesso:", data);
+      }
+    } catch (err) {
+      console.error("Erro inesperado ao atualizar usuário:", err);
+    }
+  };
 
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
@@ -243,6 +267,11 @@ export default function UsuarioForm({ usuario, isEditing, onSubmit }: Props) {
           />
         </div>
       </div>
+      {isEditing && (
+        <button type="submit" className="mt-4 inline-flex items-center px-4 py-2 text-sm font-medium text-white bg-blue-600 border border-transparent rounded-md hover:bg-blue-700 transition-colors">
+          Salvar
+        </button>
+      )}
     </form>
   );
 }

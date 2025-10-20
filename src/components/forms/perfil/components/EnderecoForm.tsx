@@ -2,19 +2,45 @@ import type { SubmitHandler } from "react-hook-form";
 import { type PerfilUsuario } from "../../../../context/UserContext";
 import { useEnderecoForm } from "../enderecoForm";
 import type { FormEnderecoValues } from "../types";
+import { removeFormatting } from "../../../../utils";
+import { supabase } from "../../../../lib/supabaseClient";
 
 type Props = {
     usuario: PerfilUsuario;
     isEditing: boolean;
-    onSubmit: SubmitHandler<FormEnderecoValues>;
 };
 
-export default function EnderecoForm({ usuario, isEditing, onSubmit }: Props) {
+export default function EnderecoForm({ usuario, isEditing }: Props) {
     const {
         register,
         handleSubmit,
         formState: { errors },
     } = useEnderecoForm(usuario);
+
+    const onSubmit: SubmitHandler<FormEnderecoValues> = async (formData) => {
+        try {
+            const { data, error } = await supabase
+                .from('endereco')
+                .update({
+                    cep: removeFormatting(formData.cep),
+                    logradouro: formData.logradouro,
+                    numero: formData.numero,
+                    complemento: formData.complemento,
+                    bairro: formData.bairro,
+                    cidade: formData.cidade,
+                    estado: formData.estado,
+                })
+                .eq('id', Number(formData.id));
+
+            if (error) {
+                alert("Erro ao atualizar endereço: " + error.message);
+            } else {
+                alert("Endereço atualizado com sucesso: " + JSON.stringify(data));
+            }
+        } catch (err) {
+            alert("Erro inesperado ao atualizar endereço: " + err);
+        }
+    };
 
     return (
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
@@ -22,6 +48,7 @@ export default function EnderecoForm({ usuario, isEditing, onSubmit }: Props) {
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 gap-4">
                 <div className="space-y-2">
                     <label htmlFor="cep" className="block text-sm font-medium text-gray-700">CEP</label>
+                    <input type="hidden" {...register("id")} />
                     <input
                         id="cep"
                         type="text"
@@ -143,6 +170,11 @@ export default function EnderecoForm({ usuario, isEditing, onSubmit }: Props) {
                     )}
                 </div>
             </div>
+            {isEditing && (
+                <button type="submit" className="mt-4 inline-flex items-center px-4 py-2 text-sm font-medium text-white bg-blue-600 border border-transparent rounded-md hover:bg-blue-700 transition-colors">
+                    Salvar
+                </button>
+            )}
         </form>
     );
 }

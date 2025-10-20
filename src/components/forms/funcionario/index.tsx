@@ -7,6 +7,7 @@ import { useCadastroForm } from "./form";
 import { type FormValues } from "./types";
 import { Loader2, UserPlus } from "lucide-react";
 import { type PerfilUsuario } from "../../../context/UserContext";
+import { formatDateNumeric, removeFormatting } from "../../../utils";
 
 type Props = {
   funcionario: PerfilUsuario;
@@ -96,10 +97,10 @@ export default function CadastroFuncionario({ funcionario }: Props) {
       const params = {
         // Dados do usuário
         p_email: data.email,
-        p_papel: data.papel,
+        p_papel: data.papel || "funcionario",
 
         // Endereço
-        p_cep: data.cep,
+        p_cep: removeFormatting(data.cep),
         p_logradouro: data.logradouro,
         p_numero: data.numero,
         p_complemento: data.complemento || null,
@@ -107,30 +108,30 @@ export default function CadastroFuncionario({ funcionario }: Props) {
         p_cidade: data.cidade,
         p_estado: data.estado,
 
-        // Dados do colaborador
+        // Dados do funcionário
         p_vinculo: data.vinculo,
         p_nome: data.nome,
-        p_cpf: data.cpf,
+        p_cpf: removeFormatting(data.cpf),
         p_data_nascimento: data.data_nascimento,
         p_cargo: data.cargo,
         p_registro_profissional: data.registro_profissional || null,
         p_data_admissao: data.data_admissao,
-        p_telefone_principal: data.telefone_principal,
-        p_telefone_secundario: data.telefone_secundario || null,
+        p_telefone_principal: removeFormatting(data.telefone_principal),
+        p_telefone_secundario: removeFormatting(data.telefone_secundario || "") || null,
         p_contato_emergencia_nome: data.contato_emergencia_nome || null,
-        p_contato_emergencia_telefone: data.contato_emergencia_telefone || null,
+        p_contato_emergencia_telefone: removeFormatting(data.contato_emergencia_telefone || "") || null,
       };
 
       let rpcResult;
 
       if (funcionario) {
-        rpcResult = await supabase.rpc("editar_colaborador_com_usuario", {
-          p_id_colaborador: funcionario.id,
+        rpcResult = await supabase.rpc("editar_funcionario_com_usuario", {
+          p_id_funcionario: funcionario.id,
           ...params,
         });
       } else {
         rpcResult = await supabase.rpc(
-          "cadastrar_colaborador_com_usuario",
+          "cadastrar_funcionario_com_usuario",
           params
         );
       }
@@ -141,9 +142,8 @@ export default function CadastroFuncionario({ funcionario }: Props) {
 
       setModalConfig({
         title: "Sucesso!",
-        description: `Colaborador ${data.nome} ${
-          funcionario ? "atualizado" : "cadastrado"
-        } com sucesso!`,
+        description: `Funcionário ${data.nome} ${funcionario ? "atualizado" : "cadastrado"
+          } com sucesso!`,
         actions: [
           {
             label: "Voltar à lista",
@@ -152,15 +152,15 @@ export default function CadastroFuncionario({ funcionario }: Props) {
           },
           ...(!funcionario
             ? [
-                {
-                  label: "Cadastrar outro",
-                  className: "bg-gray-200 text-gray-700 hover:bg-gray-300",
-                  onClick: () => {
-                    reset();
-                    setModalOpen(false);
-                  },
+              {
+                label: "Cadastrar outro",
+                className: "bg-gray-200 text-gray-700 hover:bg-gray-300",
+                onClick: () => {
+                  reset();
+                  setModalOpen(false);
                 },
-              ]
+              },
+            ]
             : []),
           {
             label: "Dashboard",
@@ -172,12 +172,11 @@ export default function CadastroFuncionario({ funcionario }: Props) {
       setModalOpen(true);
 
       if (!funcionario) reset();
-    } catch {
+    } catch (error) {
       setModalConfig({
         title: "Erro!",
-        description: `Erro ao ${
-          funcionario ? "editar" : "cadastrar"
-        } colaborador.`,
+        description: `Erro ao ${funcionario ? "editar" : "cadastrar"
+          } funcionário: ${error.message}`,
         actions: [
           {
             label: "Fechar",
@@ -207,11 +206,11 @@ export default function CadastroFuncionario({ funcionario }: Props) {
         <h1 className="text-3xl font-bold text-gray-800">
           {funcionario
             ? `Edição de ${funcionario.nome}`
-            : "Cadastro de Responsável"}
+            : "Cadastro de Funcionário"}
         </h1>
       </div>
       <p className="text-center mb-8 text-gray-600">
-        Preencha os dados do funcionário/colaborador.
+        Preencha os dados do funcionário.
       </p>
 
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
@@ -322,6 +321,11 @@ export default function CadastroFuncionario({ funcionario }: Props) {
               type="date"
               {...register("data_nascimento")}
               className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+              max={(() => {
+                const hoje = new Date();
+                hoje.setFullYear(hoje.getFullYear() - 18);
+                return formatDateNumeric(hoje);
+              })()}
             />
           </div>
 
@@ -409,6 +413,20 @@ export default function CadastroFuncionario({ funcionario }: Props) {
 
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
+              Papel *
+            </label>
+            <select
+              //{...register("papel")}
+              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors bg-white"
+            >
+              <option value="funcionario" selected>
+                Funcionário
+              </option>
+            </select>
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
               Registro Profissional
             </label>
             <input
@@ -475,11 +493,10 @@ export default function CadastroFuncionario({ funcionario }: Props) {
             <input
               {...register("logradouro")}
               disabled={isCepAutoFilled}
-              className={`w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors ${
-                isCepAutoFilled
+              className={`w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors ${isCepAutoFilled
                   ? "bg-gray-200 text-dark-600 cursor-not-allowed"
                   : ""
-              }`}
+                }`}
               placeholder="Rua, Avenida, etc."
             />
             {errors.logradouro && (
@@ -523,11 +540,10 @@ export default function CadastroFuncionario({ funcionario }: Props) {
             <input
               {...register("bairro")}
               disabled={isCepAutoFilled}
-              className={`w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors ${
-                isCepAutoFilled
+              className={`w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors ${isCepAutoFilled
                   ? "bg-gray-200 text-dark-600 cursor-not-allowed"
                   : ""
-              }`}
+                }`}
               placeholder="Bairro"
             />
             {errors.bairro && (
@@ -544,11 +560,10 @@ export default function CadastroFuncionario({ funcionario }: Props) {
             <input
               {...register("cidade")}
               disabled={isCepAutoFilled}
-              className={`w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors ${
-                isCepAutoFilled
+              className={`w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors ${isCepAutoFilled
                   ? "bg-gray-200 text-dark-600 cursor-not-allowed"
                   : ""
-              }`}
+                }`}
               placeholder="Cidade"
             />
             {errors.cidade && (
@@ -565,11 +580,10 @@ export default function CadastroFuncionario({ funcionario }: Props) {
             <input
               {...register("estado")}
               disabled={isCepAutoFilled}
-              className={`w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors ${
-                isCepAutoFilled
+              className={`w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors ${isCepAutoFilled
                   ? "bg-gray-200 text-dark-600 cursor-not-allowed"
                   : ""
-              }`}
+                }`}
               placeholder="SP"
               maxLength={2}
             />

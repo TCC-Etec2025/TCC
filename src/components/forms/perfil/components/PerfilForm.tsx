@@ -1,7 +1,7 @@
-import { ArrowLeft, Save, User } from "lucide-react";
+import { ArrowLeft, User } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { type PerfilUsuario } from "../../../../context/UserContext";
-import { useProfileForm } from "../hooks/useProfileForm";
+import { usePerfilForm } from "../hooks/usePerfilForm";
 import ProfileTabs from "./ProfileTabs";
 import UsuarioForm from "./UsuarioForm";
 import EnderecoForm from "./EnderecoForm";
@@ -15,14 +15,11 @@ export default function PerfilForm({ usuario }: Props) {
     const navigate = useNavigate();
     const {
         isEditing,
-        isSaving,
         currentTab,
         setCurrentTab,
-        handleUsuarioSubmit,
-        handleEnderecoSubmit,
         handleCancel,
         startEditing,
-    } = useProfileForm(usuario);
+    } = usePerfilForm(usuario);
 
     return (
         <div className="min-h-screen bg-odara-offwhite text-odara-dark p-6 lg:p-8">
@@ -50,15 +47,6 @@ export default function PerfilForm({ usuario }: Props) {
                                     className="flex-1 sm:flex-none px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 transition-colors"
                                 >
                                     Cancelar
-                                </button>
-                                <button
-                                    type="submit"
-                                    form={currentTab === "personal" ? "usuario-form" : "endereco-form"}
-                                    disabled={isSaving}
-                                    className="flex-1 sm:flex-none px-4 py-2 text-sm font-medium text-white bg-blue-600 border border-transparent rounded-md hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                                >
-                                    <Save className="h-4 w-4 mr-2 inline-block" />
-                                    {isSaving ? "Salvando..." : "Salvar"}
                                 </button>
                             </>
                         ) : (
@@ -95,7 +83,6 @@ export default function PerfilForm({ usuario }: Props) {
                                         <UsuarioForm 
                                             usuario={usuario} 
                                             isEditing={isEditing}
-                                            onSubmit={handleUsuarioSubmit}
                                         />
                                     </div>
                                 </div>
@@ -110,7 +97,6 @@ export default function PerfilForm({ usuario }: Props) {
                                         <EnderecoForm 
                                             usuario={usuario}
                                             isEditing={isEditing}
-                                            onSubmit={handleEnderecoSubmit}
                                         />
                                     </div>
                                 </div>

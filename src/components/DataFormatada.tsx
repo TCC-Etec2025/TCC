@@ -1,19 +1,7 @@
-import { format } from 'date-fns'
-import { ptBR } from 'date-fns/locale'
+import { formatDateLong } from "../utils/date";
 
 function DataFormatada() {
-  const hoje = new Date()
-
-  const dataFormatada = format(
-    hoje,
-    "EEEE, d 'de' MMMM 'de' yyyy",
-    { locale: ptBR }
-  )
-
-  const formatadaComMaiuscula =
-    dataFormatada.charAt(0).toUpperCase() + dataFormatada.slice(1)
-
-  return formatadaComMaiuscula
+  return formatDateLong();
 }
 
-export default DataFormatada
+export default DataFormatada;

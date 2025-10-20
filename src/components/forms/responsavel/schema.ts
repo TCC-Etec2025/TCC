@@ -3,8 +3,9 @@ import * as yup from 'yup';
 export const responsavelSchema = yup.object().shape({
   nome: yup.string()
     .required('O nome é obrigatório'),
-  cpf: yup.string()
-    .required('O CPF é obrigatório'),
+  cpf: yup.string().required("O CPF do paciente é obrigatório")
+        .matches(/^\d{3}\.?\d{3}\.?\d{3}-?\d{2}$/, "CPF inválido")
+        .transform((value) => value?.replace(/\D/g, '')),
   email: yup.string().email('Email inválido')
     .required('O email é obrigatório'),
   telefone_principal: yup.string()

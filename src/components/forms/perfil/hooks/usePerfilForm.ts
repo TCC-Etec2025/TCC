@@ -4,7 +4,7 @@ import { type PerfilUsuario } from "../../../../context/UserContext";
 import type { FormUsuarioValues, FormEnderecoValues } from "../types";
 import { supabase } from "../../../../lib/supabaseClient";
 
-export const useProfileForm = (usuario: PerfilUsuario) => {
+export const usePerfilForm = (usuario: PerfilUsuario) => {
     const [isEditing, setIsEditing] = useState(false);
     const [isSaving, setIsSaving] = useState(false);
     const [currentTab, setCurrentTab] = useState("personal");

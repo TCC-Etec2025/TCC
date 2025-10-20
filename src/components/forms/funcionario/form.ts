@@ -18,7 +18,7 @@ export const useCadastroForm = (funcionario: PerfilUsuario) => {
             papel: '',
             cargo: '',
             registro_profissional: '',
-            data_admissao: '',
+            data_admissao: new Date().toISOString().split('T')[0],
             telefone_principal: '',
             telefone_secundario: '',
             cep: '',

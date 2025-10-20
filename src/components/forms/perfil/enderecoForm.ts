@@ -9,6 +9,7 @@ export const useEnderecoForm = (usuario: PerfilUsuario) => {
     const form = useForm({
         resolver: yupResolver(enderecoSchema),
         defaultValues: {
+            id: usuario.endereco?.id || undefined,
             cep: formatCEP(usuario.endereco.cep) || '',
             logradouro: usuario.endereco.logradouro || '',
             numero: usuario.endereco.numero || '',

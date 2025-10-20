@@ -7,6 +7,7 @@ import { useCadastroForm } from "./form";
 import { type FormValues } from "./types";
 import { Loader2, UserPlus } from "lucide-react";
 import { type PerfilUsuario } from "../../../context/UserContext";
+import { formatDateNumeric, removeFormatting } from "../../../utils";
 
 type Props = {
   responsavel: PerfilUsuario;
@@ -95,22 +96,25 @@ export default function CadastroResponsavel({ responsavel }: Props) {
     setIsLoading(true);
     try {
       const params = {
+        // Dados do usuário
         p_email: data.email,
         p_papel: "responsavel",
-        p_cep: data.cep,
+        // Dados do endereço
+        p_cep: removeFormatting(data.cep),
         p_logradouro: data.logradouro,
         p_numero: data.numero,
         p_complemento: data.complemento || null,
         p_bairro: data.bairro,
         p_cidade: data.cidade,
         p_estado: data.estado,
+        // Dados do responsável
         p_nome: data.nome,
-        p_cpf: data.cpf,
-        p_telefone_principal: data.telefone_principal,
-        p_telefone_secundario: data.telefone_secundario || null,
+        p_cpf: removeFormatting(data.cpf),
+        p_telefone_principal: removeFormatting(data.telefone_principal),
+        p_telefone_secundario: removeFormatting(data.telefone_secundario || "") || null,
         p_data_nascimento: data.data_nascimento || null,
         p_contato_emergencia_nome: data.contato_emergencia_nome || null,
-        p_contato_emergencia_telefone: data.contato_emergencia_telefone || null,
+        p_contato_emergencia_telefone: removeFormatting(data.contato_emergencia_telefone || "") || null,
         p_observacoes: data.observacoes || null,
       };
 
@@ -132,9 +136,8 @@ export default function CadastroResponsavel({ responsavel }: Props) {
 
       setModalConfig({
         title: "Sucesso!",
-        description: `Responsável ${data.nome} ${
-          responsavel ? "atualizado" : "cadastrado"
-        } com sucesso!`,
+        description: `Responsável ${data.nome} ${responsavel ? "atualizado" : "cadastrado"
+          } com sucesso!`,
         actions: [
           {
             label: "Voltar à lista",
@@ -143,15 +146,15 @@ export default function CadastroResponsavel({ responsavel }: Props) {
           },
           ...(!responsavel
             ? [
-                {
-                  label: "Cadastrar outro",
-                  onClick: () => {
-                    reset();
-                    setModalOpen(false);
-                  },
-                  className: "bg-gray-200 text-gray-700 hover:bg-gray-300",
+              {
+                label: "Cadastrar outro",
+                onClick: () => {
+                  reset();
+                  setModalOpen(false);
                 },
-              ]
+                className: "bg-gray-200 text-gray-700 hover:bg-gray-300",
+              },
+            ]
             : []),
           {
             label: "Dashboard",
@@ -162,12 +165,11 @@ export default function CadastroResponsavel({ responsavel }: Props) {
       });
 
       setModalOpen(true);
-    } catch {
+    } catch (error) {
       setModalConfig({
         title: "Erro!",
-        description: `Erro ao ${
-          responsavel ? "editar" : "cadastrar"
-        } responsável.`,
+        description: `Erro ao ${responsavel ? "editar" : "cadastrar"
+          } responsável: ${error.message}`,
         actions: [
           {
             label: "Fechar",
@@ -265,6 +267,11 @@ export default function CadastroResponsavel({ responsavel }: Props) {
               {...register("data_nascimento")}
               className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
               placeholder="DD/MM/AAAA"
+              max={(() => {
+                const hoje = new Date();
+                hoje.setFullYear(hoje.getFullYear() - 18);
+                return formatDateNumeric(hoje);
+              })()}
             />
           </div>
           <div>
@@ -421,11 +428,10 @@ export default function CadastroResponsavel({ responsavel }: Props) {
               <input
                 {...register("logradouro")}
                 disabled={isCepAutoFilled}
-                className={`w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors ${
-                  isCepAutoFilled
+                className={`w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors ${isCepAutoFilled
                     ? "bg-gray-100 text-gray-600 cursor-not-allowed"
                     : ""
-                }`}
+                  }`}
                 placeholder="Rua, Avenida, etc."
               />
               {errors.logradouro && (
@@ -472,11 +478,10 @@ export default function CadastroResponsavel({ responsavel }: Props) {
             <input
               {...register("bairro")}
               disabled={isCepAutoFilled}
-              className={`w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors ${
-                isCepAutoFilled
+              className={`w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors ${isCepAutoFilled
                   ? "bg-gray-100 text-gray-600 cursor-not-allowed"
                   : ""
-              }`}
+                }`}
               placeholder="Bairro"
             />
             {errors.bairro && (
@@ -497,11 +502,10 @@ export default function CadastroResponsavel({ responsavel }: Props) {
             <input
               {...register("cidade")}
               disabled={isCepAutoFilled}
-              className={`w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors ${
-                isCepAutoFilled
+              className={`w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors ${isCepAutoFilled
                   ? "bg-gray-100 text-gray-600 cursor-not-allowed"
                   : ""
-              }`}
+                }`}
               placeholder="Cidade"
             />
             {errors.cidade && (
@@ -522,11 +526,10 @@ export default function CadastroResponsavel({ responsavel }: Props) {
             <input
               {...register("estado")}
               disabled={isCepAutoFilled}
-              className={`w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors ${
-                isCepAutoFilled
+              className={`w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors ${isCepAutoFilled
                   ? "bg-gray-100 text-gray-600 cursor-not-allowed"
                   : ""
-              }`}
+                }`}
               placeholder="SP"
             />
             {errors.estado && (

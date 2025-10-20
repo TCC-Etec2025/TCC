@@ -12,7 +12,13 @@ const menuItems = {
     { id: "pacientes", label: "Pacientes", icon: Users, path: "/app/admin/residentes" },
     { id: "responsaveis", label: "Responsáveis", icon: Users, path: "/app/admin/responsaveis" },
     { id: "funcionarios", label: "Funcionários", icon: Users, path: "/app/admin/funcionarios" },
-    { id: "relatorios", label: "Relatórios", icon: BarChart3, path: "/app/admin/relatorios" },
+    { id: "registros", label: "Registros", icon: BarChart3, path: "/app/admin/registros" },
+  ],
+  funcionario: [
+    { id: "dashboard", label: "Dashboard", icon: Home, path: "/app/funcionario" },
+    { id: "residentes", label: "Residentes", icon: Users, path: "/app/funcionario/residentes/funcionario" },
+    { id: "checklist", label: "Checklist", icon: BarChart3, path: "/app/funcionario/checklist" },
+    { id: "relatorios", label: "Relatórios", icon: BarChart3, path: "/app/funcionario/relatorios" },
   ],
 }
 

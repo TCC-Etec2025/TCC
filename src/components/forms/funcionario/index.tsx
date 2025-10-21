@@ -172,11 +172,11 @@ export default function CadastroFuncionario({ funcionario }: Props) {
       setModalOpen(true);
 
       if (!funcionario) reset();
-    } catch (error) {
+    } catch {
       setModalConfig({
         title: "Erro!",
         description: `Erro ao ${funcionario ? "editar" : "cadastrar"
-          } funcionário: ${error.message}`,
+          } funcionário.`,
         actions: [
           {
             label: "Fechar",

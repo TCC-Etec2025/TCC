@@ -77,10 +77,8 @@ export default function CadastroFuncionario({ funcionario }: Props) {
         } else {
           setIsCepAutoFilled(false);
         }
-      } catch (err) {
-        const error = err as unknown as { name?: string };
-        if (error.name === "AbortError") return;
-        console.log("Erro ao buscar CEP:", err);
+      } catch {
+        console.log("Erro ao buscar CEP.");
         setIsCepAutoFilled(false);
       }
     };

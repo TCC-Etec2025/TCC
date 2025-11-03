@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   FaPlus, FaEdit, FaTrash, FaFilter, FaInfoCircle,
   FaFilePdf, FaArrowLeft, FaChevronLeft, FaChevronRight, FaTimes
@@ -6,6 +6,23 @@ import {
 import { Link } from 'react-router-dom';
 import Calendar from 'react-calendar';
 import 'react-calendar/dist/Calendar.css';
+import { supabase } from '../../lib/supabaseClient';
+
+type Consultas = {
+  id: number,
+  id_residente: number,
+  data_consulta: Date | string,
+  horario: string,
+  medico: string,
+  motivo_consulta: string, 
+  idade: number,
+  numero_prontuario: number,
+  historico_clinico: string,
+  tratamento_indicado: string,
+  exames_solicitados: string,
+  receitas_medicas: string,
+  anexos_medicos: string
+}
 
 const mesesLista = [
   { id: 'todos', label: 'Todos os meses' },
@@ -13,6 +30,7 @@ const mesesLista = [
   { id: 'abr', label: 'ABR' }, { id: 'mai', label: 'MAI' }, { id: 'jun', label: 'JUN' },
   { id: 'jul', label: 'JUL' }, { id: 'ago', label: 'AGO' }, { id: 'set', label: 'SET' },
   { id: 'out', label: 'OUT' }, { id: 'nov', label: 'NOV' }, { id: 'dez', label: 'DEZ' }
+  
 ];
 
 const mesIdParaIndex = {
@@ -21,40 +39,9 @@ const mesIdParaIndex = {
 };
 
 const RegistroConsultas = () => {
-  const [consultas, setConsultas] = useState([
-    {
-      id: 1,
-      paciente: "João Silva",
-      idade: 72,
-      sexo: "Masculino",
-      prontuario: "2023001",
-      data: new Date(2023, 0, 15),
-      horario: "10:30",
-      medico: "Dr. Carlos Mendes",
-      motivo: "Check-up regular",
-      historico: "Hipertensão controlada com medicamentos",
-      tratamento: "Manter uso de Losartana 50mg",
-      exames: "Hemograma completo, Eletrocardiograma",
-      receitas: "Losartana 50mg - 30 comprimidos",
-      anexos: []
-    },
-    {
-      id: 2,
-      paciente: "Maria Oliveira",
-      idade: 68,
-      sexo: "Feminino",
-      prontuario: "2023002",
-      data: new Date(2023, 0, 16),
-      horario: "14:15",
-      medico: "Dra. Ana Santos",
-      motivo: "Dor articular no joelho direito",
-      historico: "Artrose diagnosticada há 5 anos",
-      tratamento: "Fisioterapia 2x por semana, Paracetamol 500mg se necessário",
-      exames: "Radiografia do joelho direito",
-      receitas: "Paracetamol 500mg - 20 comprimidos",
-      anexos: []
-    }
-  ]);
+  const [loading, setLoading] = useState(false);
+
+  const [consultas, setConsultas] = useState<Consultas[]>([]);
 
   const [modalAberto, setModalAberto] = useState(false);
   const [consultaEditando, setConsultaEditando] = useState(null);
@@ -66,8 +53,26 @@ const RegistroConsultas = () => {
   const [dataAtual, setDataAtual] = useState(new Date());
   const [filtroDiaAtivo, setFiltroDiaAtivo] = useState(false);
   const [filtroDia, setFiltroDia] = useState(null);
-
   const pacientes = Array.from(new Set(consultas.map(c => c.paciente).filter(Boolean)));
+
+  useEffect(() => {
+    const fetchConsultas = async () => {
+      try {
+        setLoading(true);
+        const { data, error } = await supabase
+        .from('consultas_medicas')
+        .select('*');
+
+        if (error) throw error;
+        if (data) setConsultas(data);
+      } catch (error){
+        console.error('Erro ao encontrar consulta medica')
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchConsultas();
+  }, []);
 
   const abrirModalAdicionar = () => {
     setConsultaEditando(null);

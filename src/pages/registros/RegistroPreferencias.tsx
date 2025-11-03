@@ -1,33 +1,36 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { FaUtensils, FaWalking, FaPlus, FaEdit, FaTrash, FaFilter, FaInfoCircle, FaTimes, FaArrowLeft } from 'react-icons/fa';
 import { Link } from 'react-router-dom';
+import { supabase } from '../../lib/supabaseClient';
+
+type Preferencia = {
+  id: number;
+  id_residente: number;
+  tipo_preferencia: string;
+  titulo: string;
+  descricao: string;
+  foto_url: string;
+  residente?: string; // Adicionado campo opcional
+}
 
 const RegistroPreferencias = () => {
-  const [preferences, setPreferences] = useState({
-    alimentar: [
-      { id: 1, title: "Comida Italiana", description: "Prefere massas e pratos da culinária italiana", residente: "João", foto: "/images/foto-idoso-joao.jpg" },
-      { id: 2, title: "Vegetariano", description: "Prefere refeições sem carne", residente: "Maria", foto: "/images/foto-idosa-maria.png" }
-    ],
-    atividades: [
-      { id: 3, title: "Leitura", description: "Gosta de ler livros no tempo livre", residente: "João", foto: "/images/foto-idoso-joao.jpg" },
-      { id: 4, title: "Caminhada", description: "Prefere caminhar ao ar livre", residente: "Maria", foto: "/images/foto-idosa-maria.png" }
-    ],
-    cuidador: [
-      { id: 5, title: "Leticia", description: "Prefere que Leticia sirva seu alimento", residente: "João", foto: "/images/foto-idoso-joao.jpg" },
-      { id: 6, title: "Maria", description: "Prefere que Maria dê banho e cuide de sua higiene", residente: "Maria", foto: "/images/foto-idosa-maria.png" }
-    ]
-  });
-
+  const [loading, setLoading] = useState(false);
+  const [preferencias, setPreferencias] = useState<Preferencia[]>([]); // Corrigido para preferencias
   const [modalAberto, setModalAberto] = useState(false);
   const [categoriaAtual, setCategoriaAtual] = useState('');
-  const [novaPreferencia, setNovaPreferencia] = useState({ titulo: '', descricao: '', residente: '', foto: '' });
+  const [novaPreferencia, setNovaPreferencia] = useState({ 
+    titulo: '', 
+    descricao: '', 
+    residente: '', 
+    foto: '' 
+  });
   const [filtroAtivo, setFiltroAtivo] = useState('todos');
   const [filtroAberto, setFiltroAberto] = useState(false);
   const [editando, setEditando] = useState(false);
-  const [idEditando, setIdEditando] = useState(null);
+  const [idEditando, setIdEditando] = useState<number | null>(null);
   const [infoVisivel, setInfoVisivel] = useState(false);
   const [residenteSelecionado, setResidenteSelecionado] = useState('');
-  const [residenteAtual, setResidenteAtual] = useState(null);
+  const [residenteAtual, setResidenteAtual] = useState<Preferencia | null>(null);
   const [dropdownAberto, setDropdownAberto] = useState(false);
 
   const CATEGORIAS = {
@@ -61,7 +64,38 @@ const RegistroPreferencias = () => {
     { id: CATEGORIAS.CUIDADOR, label: CATEGORIA_LABELS[CATEGORIAS.CUIDADOR] }
   ];
 
-  const abrirModalAdicionar = (categoria) => {
+  useEffect(() => {
+    const fetchPreferencias = async () => {
+      try {
+        setLoading(true);
+        const { data, error } = await supabase
+          .from('preferencia')
+          .select('*');
+
+        if (error) throw error;
+        if (data) setPreferencias(data); // Agora usando setPreferencias
+      } catch (error) {
+        console.error('Erro ao encontrar preferências:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchPreferencias();
+    alert(JSON.stringify(preferencias))
+  }, []);
+
+  // Função para agrupar preferências por categoria
+  const getPreferenciasPorCategoria = () => {
+    const agrupadas = {
+      [CATEGORIAS.ALIMENTAR]: preferencias.filter(p => p.tipo_preferencia === CATEGORIAS.ALIMENTAR),
+      [CATEGORIAS.ATIVIDADES]: preferencias.filter(p => p.tipo_preferencia === CATEGORIAS.ATIVIDADES),
+      [CATEGORIAS.CUIDADOR]: preferencias.filter(p => p.tipo_preferencia === CATEGORIAS.CUIDADOR)
+    };
+    return agrupadas;
+  };
+
+  const abrirModalAdicionar = (categoria: string) => {
     setCategoriaAtual(categoria);
     setNovaPreferencia({ titulo: '', descricao: '', residente: '', foto: '' });
     setEditando(false);
@@ -69,15 +103,17 @@ const RegistroPreferencias = () => {
     setModalAberto(true);
   };
 
-  const abrirModalEditar = (categoria, id) => {
-    const preferenciaParaEditar = preferences[categoria].find(item => item.id === id);
+  const abrirModalEditar = (categoria: string, id: number) => {
+    const preferenciasCategoria = getPreferenciasPorCategoria()[categoria];
+    const preferenciaParaEditar = preferenciasCategoria.find(item => item.id === id);
+    
     if (preferenciaParaEditar) {
       setCategoriaAtual(categoria);
       setNovaPreferencia({
-        titulo: preferenciaParaEditar.title,
-        descricao: preferenciaParaEditar.description,
-        residente: preferenciaParaEditar.residente,
-        foto: preferenciaParaEditar.foto
+        titulo: preferenciaParaEditar.titulo,
+        descricao: preferenciaParaEditar.descricao,
+        residente: preferenciaParaEditar.residente || '',
+        foto: preferenciaParaEditar.foto_url
       });
       setEditando(true);
       setIdEditando(id);
@@ -85,65 +121,109 @@ const RegistroPreferencias = () => {
     }
   };
 
-  const salvarPreferencia = () => {
-    if (!novaPreferencia.titulo || !novaPreferencia.descricao) return;
+  const salvarPreferencia = async () => {
+    if (!novaPreferencia.titulo || !novaPreferencia.descricao || !novaPreferencia.residente) return;
 
-    if (editando && idEditando) {
-      setPreferences(prev => ({
-        ...prev,
-        [categoriaAtual]: prev[categoriaAtual].map(item =>
-          item.id === idEditando
-            ? {
-              ...item,
-              title: novaPreferencia.titulo,
-              description: novaPreferencia.descricao,
-              residente: novaPreferencia.residente,
-              foto: novaPreferencia.foto
-            }
-            : item
-        )
-      }));
-    } else {
-      const novoItem = {
-        id: Date.now(),
-        title: novaPreferencia.titulo,
-        description: novaPreferencia.descricao,
-        residente: novaPreferencia.residente,
-        foto: novaPreferencia.foto
-      };
-      setPreferences(prev => ({
-        ...prev,
-        [categoriaAtual]: [...prev[categoriaAtual], novoItem]
-      }));
+    try {
+      if (editando && idEditando) {
+        // Atualizar preferência existente
+        const { error } = await supabase
+          .from('preferencia')
+          .update({
+            titulo: novaPreferencia.titulo,
+            descricao: novaPreferencia.descricao,
+            residente: novaPreferencia.residente,
+            foto_url: novaPreferencia.foto,
+            tipo_preferencia: categoriaAtual
+          })
+          .eq('id', idEditando);
+
+        if (error) throw error;
+
+        // Atualizar estado local
+        setPreferencias(prev => 
+          prev.map(item => 
+            item.id === idEditando 
+              ? {
+                  ...item,
+                  titulo: novaPreferencia.titulo,
+                  descricao: novaPreferencia.descricao,
+                  residente: novaPreferencia.residente,
+                  foto_url: novaPreferencia.foto
+                }
+              : item
+          )
+        );
+      } else {
+        // Criar nova preferência
+        const { data, error } = await supabase
+          .from('preferencia')
+          .insert({
+            titulo: novaPreferencia.titulo,
+            descricao: novaPreferencia.descricao,
+            residente: novaPreferencia.residente,
+            foto_url: novaPreferencia.foto,
+            tipo_preferencia: categoriaAtual
+          })
+          .select();
+
+        if (error) throw error;
+
+        if (data) {
+          setPreferencias(prev => [...prev, data[0]]);
+        }
+      }
+
+      setModalAberto(false);
+    } catch (error) {
+      console.error('Erro ao salvar preferência:', error);
     }
-
-    setModalAberto(false);
   };
 
-  const excluirPreferencia = (categoria, id) => {
+  const excluirPreferencia = async (id: number) => {
     if (window.confirm('Tem certeza que deseja excluir esta preferência?')) {
-      setPreferences(prev => ({
-        ...prev,
-        [categoria]: prev[categoria].filter(item => item.id !== id)
-      }));
+      try {
+        const { error } = await supabase
+          .from('preferencia')
+          .delete()
+          .eq('id', id);
+
+        if (error) throw error;
+
+        setPreferencias(prev => prev.filter(item => item.id !== id));
+      } catch (error) {
+        console.error('Erro ao excluir preferência:', error);
+      }
     }
   };
 
   const residentes = Array.from(new Set(
-    [...preferences.alimentar, ...preferences.atividades, ...preferences.cuidador]
+    preferencias
       .map(item => item.residente)
       .filter(Boolean)
   ));
 
-  const preferenciasFiltradas = Object.fromEntries(
-    Object.entries(preferences).map(([cat, items]) => [
-      cat,
-      items.filter(item =>
-        (filtroAtivo === 'todos' || filtroAtivo === cat) &&
-        (!residenteSelecionado || item.residente === residenteSelecionado)
+  // Preferências filtradas
+  const preferenciasFiltradas = getPreferenciasPorCategoria();
+
+  // Aplicar filtros
+  const preferenciasParaExibir = Object.entries(preferenciasFiltradas)
+    .filter(([categoria]) => filtroAtivo === 'todos' || filtroAtivo === categoria)
+    .map(([categoria, items]) => ({
+      categoria,
+      items: items.filter(item => 
+        !residenteSelecionado || item.residente === residenteSelecionado
       )
-    ])
-  );
+    }))
+    .filter(({ items }) => items.length > 0);
+
+  if (loading) {
+    return (
+      <div className="flex min-h-screen bg-odara-offwhite items-center justify-center">
+        <div className="text-odara-dark text-xl">Carregando...</div>
+      </div>
+    );
+  }
 
   return (
     <div className="flex min-h-screen bg-odara-offwhite">
@@ -290,8 +370,8 @@ const RegistroPreferencias = () => {
             </p>
 
             <div className="space-y-4 max-h-[600px] overflow-y-auto">
-              {Object.entries(preferenciasFiltradas).map(([categoria, items]) => (
-                items.length > 0 && (
+              {preferenciasParaExibir.length > 0 ? (
+                preferenciasParaExibir.map(({ categoria, items }) => (
                   <div key={categoria} className="mb-6">
                     <h3 className="text-lg font-semibold text-odara-dark mb-3 flex items-center">
                       <span className={`w-3 h-3 rounded-full mr-2 ${CORES_CALENDARIO[categoria]}`}></span>
@@ -318,7 +398,7 @@ const RegistroPreferencias = () => {
                                 <FaEdit size={14} />
                               </button>
                               <button 
-                                onClick={() => excluirPreferencia(categoria, item.id)}
+                                onClick={() => excluirPreferencia(item.id)}
                                 className="text-odara-alerta hover:text-red-700 transition-colors duration-200 p-2 rounded-full hover:bg-odara-alerta/50"
                                 title="Excluir preferência"
                               >
@@ -327,8 +407,8 @@ const RegistroPreferencias = () => {
                             </div>
                           </div>
                           
-                          <h6 className="text-lg font-bold mb-1">{item.title}</h6>
-                          <p className="text-base mb-2">{item.description}</p>
+                          <h6 className="text-lg font-bold mb-1">{item.titulo}</h6>
+                          <p className="text-base mb-2">{item.descricao}</p>
                           
                           <div className="flex items-center justify-between">
                             <span className="bg-odara-dropdown text-odara-dropdown-name/60 px-2 py-1 rounded-md text-xs">
@@ -339,10 +419,8 @@ const RegistroPreferencias = () => {
                       ))}
                     </div>
                   </div>
-                )
-              ))}
-              
-              {Object.values(preferenciasFiltradas).every(items => items.length === 0) && (
+                ))
+              ) : (
                 <div className="p-6 rounded-xl bg-odara-name/10 text-center">
                   <p className="text-odara-dark/60">
                     Nenhuma preferência encontrada
@@ -356,9 +434,9 @@ const RegistroPreferencias = () => {
             <h3 className="text-xl font-bold text-odara-dark mb-4">RESIDENTE</h3>
             <div className="text-center">
               <div className="w-48 h-48 mx-auto rounded-2xl flex items-center justify-center mb-4 bg-odara-offwhite">
-                {residenteAtual?.foto ? (
+                {residenteAtual?.foto_url ? (
                   <img 
-                    src={residenteAtual.foto} 
+                    src={residenteAtual.foto_url} 
                     alt={residenteAtual.residente} 
                     className="w-48 h-48 rounded-2xl object-cover" 
                   />

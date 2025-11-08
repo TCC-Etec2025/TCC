@@ -77,10 +77,8 @@ export default function CadastroFuncionario({ funcionario }: Props) {
         } else {
           setIsCepAutoFilled(false);
         }
-      } catch (err) {
-        const error = err as unknown as { name?: string };
-        if (error.name === "AbortError") return;
-        console.log("Erro ao buscar CEP:", err);
+      } catch {
+        console.log("Erro ao buscar CEP.");
         setIsCepAutoFilled(false);
       }
     };
@@ -172,11 +170,11 @@ export default function CadastroFuncionario({ funcionario }: Props) {
       setModalOpen(true);
 
       if (!funcionario) reset();
-    } catch (error) {
+    } catch {
       setModalConfig({
         title: "Erro!",
         description: `Erro ao ${funcionario ? "editar" : "cadastrar"
-          } funcionário: ${error.message}`,
+          } funcionário.`,
         actions: [
           {
             label: "Fechar",

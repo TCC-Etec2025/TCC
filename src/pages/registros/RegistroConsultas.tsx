@@ -9,64 +9,114 @@ import 'react-calendar/dist/Calendar.css';
 import { supabase } from '../../lib/supabaseClient';
 
 type Consultas = {
-  id: number,
-  id_residente: number,
-  data_consulta: Date | string,
-  horario: string,
-  medico: string,
-  motivo_consulta: string, 
-  idade: number,
-  numero_prontuario: number,
-  historico_clinico: string,
-  tratamento_indicado: string,
-  exames_solicitados: string,
-  receitas_medicas: string,
-  anexos_medicos: string
+  id: number;
+  id_residente: number;
+  sexo: string;
+  data_consulta: string; 
+  horario: string;      
+  medico: string;
+  motivo_consulta: string; 
+  idade: number;
+  numero_prontuario: string;
+  historico_clinico: string;
+  tratamento_indicado: string;
+  exames_solicitados: string;
+  receitas_medicas: string;
+  anexos_medicos: string;
+  residente?: { nome: string }; 
+  data?: Date; // Conselho da IA para compatibilidade
 }
 
-const mesesLista = [
-  { id: 'todos', label: 'Todos os meses' },
-  { id: 'jan', label: 'JAN' }, { id: 'fev', label: 'FEV' }, { id: 'mar', label: 'MAR' },
-  { id: 'abr', label: 'ABR' }, { id: 'mai', label: 'MAI' }, { id: 'jun', label: 'JUN' },
-  { id: 'jul', label: 'JUL' }, { id: 'ago', label: 'AGO' }, { id: 'set', label: 'SET' },
-  { id: 'out', label: 'OUT' }, { id: 'nov', label: 'NOV' }, { id: 'dez', label: 'DEZ' }
-  
-];
+type Residente = {
+  id: number;
+  nome: string;
+}
 
-const mesIdParaIndex = {
-  jan: 0, fev: 1, mar: 2, abr: 3, mai: 4, jun: 5,
-  jul: 6, ago: 7, set: 8, out: 9, nov: 10, dez: 11
-};
+type ConsultaEditando = Consultas | null;
 
 const RegistroConsultas = () => {
   const [loading, setLoading] = useState(false);
-
   const [consultas, setConsultas] = useState<Consultas[]>([]);
-
-  const [modalAberto, setModalAberto] = useState(false);
-  const [consultaEditando, setConsultaEditando] = useState(null);
+  const [novaConsulta, setNovaConsulta] = useState({ 
+    id_residente: '',     
+    sexo: '',
+    data_consulta: '',    
+    horario: '',          
+    medico: '',
+    motivo_consulta: '',
+    idade: '',
+    numero_prontuario: '',
+    historico_clinico: '',
+    tratamento_indicado: '',
+    exames_solicitados: '',
+    receitas_medicas: '',
+    anexos_medicos: ''
+  });
   const [filtroAberto, setFiltroAberto] = useState(false);
   const [filtroMes, setFiltroMes] = useState('todos');
+  const [modalAberto, setModalAberto] = useState(false);
+  const [consultaEditando, setConsultaEditando] = useState<ConsultaEditando>(null); 
   const [infoVisivel, setInfoVisivel] = useState(false);
   const [pacienteSelecionado, setPacienteSelecionado] = useState('todos');
-  const [consultaSelecionada, setConsultaSelecionada] = useState(null);
+  const [consultaSelecionada, setConsultaSelecionada] = useState<any>(null);
   const [dataAtual, setDataAtual] = useState(new Date());
   const [filtroDiaAtivo, setFiltroDiaAtivo] = useState(false);
-  const [filtroDia, setFiltroDia] = useState(null);
-  const pacientes = Array.from(new Set(consultas.map(c => c.paciente).filter(Boolean)));
+  const [filtroDia, setFiltroDia] = useState<Date | null>(null);
+  const [residentes, setResidentes] = useState<Residente[]>([]);
+  const [sugestoesResidentes, setSugestoesResidentes] = useState<Residente[]>([]);
+  const [mostrarSugestoes, setMostrarSugestoes] = useState(false);
+  const [carregandoResidentes, setCarregandoResidentes] = useState(false);
 
+  // Carrega residentes do banco
+  useEffect(() => {
+    const carregarResidentes = async () => {
+      try {
+        setCarregandoResidentes(true);
+        const { data, error } = await supabase
+          .from('residente')
+          .select('id, nome')
+          .order('nome');
+
+        if (error) throw error;
+        if (data) {
+          setResidentes(data);
+        }
+      } catch (error) {
+        console.error('Erro ao carregar residentes:', error);
+      } finally {
+        setCarregandoResidentes(false);
+      }
+    };
+
+    carregarResidentes();
+  }, []);
+
+  // Carrega Consultas do banco
   useEffect(() => {
     const fetchConsultas = async () => {
       try {
         setLoading(true);
         const { data, error } = await supabase
-        .from('consultas_medicas')
-        .select('*');
+          .from('consultas_medicas')
+          .select(`
+            *,
+            residente:residente(id, nome)
+          `)
+          .order('data_consulta', { ascending: false })
+          .order('horario', { ascending: true });
 
         if (error) throw error;
-        if (data) setConsultas(data);
-      } catch (error){
-        console.error('Erro ao encontrar consulta medica')
+        if (data) {
+          // Converter data_consulta para Date object para o calendário
+          const consultasComData = data.map(consulta => ({
+            ...consulta,
+            data: new Date(consulta.data_consulta + 'T00:00:00') // Converte string para Date
+          }));
+          setConsultas(consultasComData);
+        }
+      } catch (error) {
+        console.error('Erro ao carregar consultas médicas:', error);
+        alert('Erro ao carregar consultas médicas.');
       } finally {
         setLoading(false);
       }
@@ -79,7 +129,7 @@ const RegistroConsultas = () => {
     setModalAberto(true);
   };
 
-  const abrirModalEditar = (consulta) => {
+  const abrirModalEditar = (consulta: Consultas) => {
     const copia = {
       ...consulta,
       data: consulta.data instanceof Date ? consulta.data.toISOString().split('T')[0] : consulta.data
@@ -88,36 +138,157 @@ const RegistroConsultas = () => {
     setModalAberto(true);
   };
 
-  const salvarConsulta = (novaConsulta) => {
-    const form = { ...novaConsulta };
-    if (typeof form.data === 'string' && form.data.includes('-')) {
-      const [y, m, d] = form.data.split('-').map(Number);
-      form.data = new Date(y, m - 1, d);
+  const salvarConsulta = async (formData: any) => {
+    try {
+      setLoading(true);
+
+      // Validar campos obrigatórios
+      if (!formData.id_residente || !formData.data_consulta || !formData.horario || 
+          !formData.medico || !formData.motivo_consulta) {
+        alert('Preencha todos os campos obrigatórios!');
+        return;
+      }
+
+      const dadosConsulta = {
+        id_residente: parseInt(formData.id_residente),
+        sexo: formData.sexo,
+        data_consulta: formData.data_consulta,
+        horario: formData.horario, 
+        medico: formData.medico,
+        motivo_consulta: formData.motivo_consulta,
+        idade: formData.idade ? parseInt(formData.idade) : null,
+        numero_prontuario: formData.numero_prontuario,
+        historico_clinico: formData.historico_clinico,
+        tratamento_indicado: formData.tratamento_indicado,
+        exames_solicitados: formData.exames_solicitados,
+        receitas_medicas: formData.receitas_medicas,
+        anexos_medicos: formData.anexos_medicos
+      };
+
+      if (consultaEditando) {
+        // ATUALIZAR consulta
+        const { data, error } = await supabase
+          .from('consultas_medicas')
+          .update(dadosConsulta)
+          .eq('id', consultaEditando.id)
+          .select(`
+            *,
+            residente:residente(id, nome)
+          `);
+
+        if (error) throw error;
+
+        if (data) {
+          const consultaAtualizada = {
+            ...data[0],
+            data: new Date(data[0].data_consulta + 'T00:00:00')
+          };
+          setConsultas(prev => 
+            prev.map(item => 
+              item.id === consultaEditando.id ? consultaAtualizada : item
+            )
+          );
+          alert('Consulta atualizada com sucesso!');
+        }
+      } else {
+        // CRIAR nova consulta
+        const { data, error } = await supabase
+          .from('consultas_medicas')
+          .insert(dadosConsulta)
+          .select(`
+            *,
+            residente:residente(id, nome)
+          `);
+
+        if (error) throw error;
+
+        if (data && data[0]) {
+          const novaConsultaComData = {
+            ...data[0],
+            data: new Date(data[0].data_consulta + 'T00:00:00')
+          };
+          setConsultas(prev => [...prev, novaConsultaComData]);
+          alert('Consulta criada com sucesso!');
+        }
+      }
+
+      setModalAberto(false);
+      setConsultaEditando(null);
+    } catch (error: any) {
+      console.error('Erro ao salvar consulta:', error);
+      alert(`Erro ao salvar consulta: ${error.message}`);
+    } finally {
+      setLoading(false);
     }
-    if (consultaEditando) {
-      setConsultas(prev => prev.map(c => c.id === consultaEditando.id ? { ...form, id: consultaEditando.id } : c));
-    } else {
-      setConsultas(prev => [...prev, { ...form, id: Date.now() }]);
-    }
-    setModalAberto(false);
   };
 
-  const excluirConsulta = (id) => {
-    if (window.confirm('Tem certeza que deseja excluir esta consulta?')) {
-      setConsultas(prev => prev.filter(c => c.id !== id));
+  const excluirConsulta = async (id: number) => {
+    if (!window.confirm('Tem certeza que deseja excluir esta consulta?')) return;
+
+    try {
+      setLoading(true);
+      const { error } = await supabase
+        .from('consultas_medicas')
+        .delete()
+        .eq('id', id);
+
+      if (error) throw error;
+
+      setConsultas(prev => prev.filter(item => item.id !== id));
+      alert('Consulta excluída com sucesso!');
+    } catch (error: any) {
+      console.error('Erro ao excluir consulta:', error);
+      alert(`Erro ao excluir consulta: ${error.message}`);
+    } finally {
+      setLoading(false);
     }
   };
+
+  // Residentes únicos para o filtro
+  const pacientes = Array.from(new Set(
+    consultas.map(c => c.residente?.nome).filter(Boolean)
+  ));
 
   // Filtros
   const consultasFiltradas = consultas.filter(consulta => {
-    const mesConsulta = consulta.data instanceof Date ? consulta.data.getMonth() : null;
-    const passaMes = filtroMes === 'todos' || (mesIdParaIndex[filtroMes] === mesConsulta);
-    const passaPaciente = pacienteSelecionado === 'todos' || consulta.paciente === pacienteSelecionado;
+    const dataConsulta = consulta.data; // Já é Date object
+    if (!dataConsulta) return false;
+    
+    const mesConsulta = dataConsulta.getMonth();
+    const passaMes = filtroMes === 'todos' || (mesIdParaIndex[filtroMes as keyof typeof mesIdParaIndex] === mesConsulta);
+    const passaPaciente = pacienteSelecionado === 'todos' || consulta.residente?.nome === pacienteSelecionado;
     return passaMes && passaPaciente;
-  }).sort((a,b)=> a.data - b.data || a.horario.localeCompare(b.horario));
+  }).sort((a,b) => {
+    // Ordenar por data e horário
+    if (!a.data || !b.data) return 0;
+    const dataDiff = a.data.getTime() - b.data.getTime();
+    if (dataDiff !== 0) return dataDiff;
+    return a.horario.localeCompare(b.horario);
+  });
 
   // Funções no calendário
-  const alterarMes = (deslocamento) => {
+  const mesesLista = [
+    { id: 'todos', label: 'Todos os meses' },
+    { id: 'janeiro', label: 'Janeiro' },
+    { id: 'fevereiro', label: 'Fevereiro' },
+    { id: 'marco', label: 'Março' },
+    { id: 'abril', label: 'Abril' },
+    { id: 'maio', label: 'Maio' },
+    { id: 'junho', label: 'Junho' },
+    { id: 'julho', label: 'Julho' },
+    { id: 'agosto', label: 'Agosto' },
+    { id: 'setembro', label: 'Setembro' },
+    { id: 'outubro', label: 'Outubro' },
+    { id: 'novembro', label: 'Novembro' },
+    { id: 'dezembro', label: 'Dezembro' }
+  ];
+
+  const mesIdParaIndex = {
+    janeiro: 0, fevereiro: 1, marco: 2, abril: 3, maio: 4, junho: 5,
+    julho: 6, agosto: 7, setembro: 8, outubro: 9, novembro: 10, dezembro: 11
+  };
+
+  const alterarMes = (deslocamento: number) => {
     setDataAtual(ant => {
       const nova = new Date(ant);
       nova.setMonth(ant.getMonth() + deslocamento);
@@ -133,6 +304,7 @@ const RegistroConsultas = () => {
   };
 
   const irParaDiaAtual = () => {
+    // Implementação vazia - pode ser removida se não for usada
   };
 
   const renderizarCabecalhoCalendario = () => {
@@ -140,14 +312,14 @@ const RegistroConsultas = () => {
     return `${nomes[dataAtual.getMonth()]} ${dataAtual.getFullYear()}`;
   };
 
-  const obterConsultasDoDia = (dia, mes, ano) => {
+  const obterConsultasDoDia = (dia: number, mes: number, ano: number) => {
     return consultas.filter(c => {
       if (!(c.data instanceof Date)) return false;
       return c.data.getDate() === dia && c.data.getMonth() === mes && c.data.getFullYear() === ano;
     });
   };
 
-  const getTileClassName = ({ date, view }) => {
+  const getTileClassName = ({ date, view }: { date: Date; view: string }) => {
     let classes = [];
 
     const hoje = new Date();
@@ -167,7 +339,7 @@ const RegistroConsultas = () => {
     return classes.join(' ');
   };
 
-  const getTileContent = ({ date, view }) => {
+  const getTileContent = ({ date, view }: { date: Date; view: string }) => {
     if (view !== 'month') return null;
 
     const consultasDoDia = obterConsultasDoDia(date.getDate(), date.getMonth(), date.getFullYear());
@@ -186,7 +358,7 @@ const RegistroConsultas = () => {
     return null;
   };
 
-  const handleDayClick = (value) => {
+  const handleDayClick = (value: Date) => {
     if (filtroDiaAtivo && filtroDia &&
       value.getDate() === filtroDia.getDate() &&
       value.getMonth() === filtroDia.getMonth() &&
@@ -378,7 +550,7 @@ const RegistroConsultas = () => {
                         <p className="text-base font-semibold">
                           {consulta.data instanceof Date 
                             ? `${consulta.data.getDate().toString().padStart(2,'0')}/${(consulta.data.getMonth()+1).toString().padStart(2,'0')}/${consulta.data.getFullYear()}`
-                            : consulta.data
+                            : consulta.data_consulta
                           } às {consulta.horario}
                         </p>
                       </div>
@@ -401,7 +573,7 @@ const RegistroConsultas = () => {
                       </div>
                     </div>
 
-                    <h6 className="text-xl font-bold mb-1">{consulta.paciente}</h6>
+                    <h6 className="text-xl font-bold mb-1">{consulta.residente?.nome}</h6>
                     
                     <div className="grid grid-cols-2 gap-2 mb-2 text-sm">
                       <div>
@@ -411,7 +583,7 @@ const RegistroConsultas = () => {
                         <strong>Sexo:</strong> {consulta.sexo}
                       </div>
                       <div>
-                        <strong>Prontuário:</strong> {consulta.prontuario}
+                        <strong>Prontuário:</strong> {consulta.numero_prontuario}
                       </div>
                       <div>
                         <strong>Médico:</strong> {consulta.medico}
@@ -419,43 +591,41 @@ const RegistroConsultas = () => {
                     </div>
 
                     <div className="mb-2">
-                      <strong>Motivo:</strong> {consulta.motivo}
+                      <strong>Motivo:</strong> {consulta.motivo_consulta}
                     </div>
 
-                    {consulta.historico && (
+                    {consulta.historico_clinico && (
                       <div className="mb-2">
-                        <strong>Histórico:</strong> {consulta.historico}
+                        <strong>Histórico:</strong> {consulta.historico_clinico}
                       </div>
                     )}
 
-                    {consulta.tratamento && (
+                    {consulta.tratamento_indicado && (
                       <div className="mb-2">
-                        <strong>Tratamento:</strong> {consulta.tratamento}
+                        <strong>Tratamento:</strong> {consulta.tratamento_indicado}
                       </div>
                     )}
 
-                    {consulta.exames && (
+                    {consulta.exames_solicitados && (
                       <div className="mb-2">
-                        <strong>Exames:</strong> {consulta.exames}
+                        <strong>Exames:</strong> {consulta.exames_solicitados}
                       </div>
                     )}
 
-                    {consulta.receitas && (
+                    {consulta.receitas_medicas && (
                       <div className="mb-2">
-                        <strong>Receitas:</strong> {consulta.receitas}
+                        <strong>Receitas:</strong> {consulta.receitas_medicas}
                       </div>
                     )}
 
-                    {consulta.anexos && consulta.anexos.length > 0 && (
+                    {consulta.anexos_medicos && (
                       <div className="mb-2">
                         <strong>Anexos:</strong>
                         <div className="flex space-x-2 mt-1">
-                          {consulta.anexos.map((anexo, idx) => (
-                            <div key={idx} className="flex items-center text-odara-accent text-sm">
-                              <FaFilePdf className="mr-1" />
-                              <span>{anexo.name || `Anexo_${idx+1}.pdf`}</span>
-                            </div>
-                          ))}
+                          <div className="flex items-center text-odara-accent text-sm">
+                            <FaFilePdf className="mr-1" />
+                            <span>Documento médico</span>
+                          </div>
                         </div>
                       </div>
                     )}
@@ -513,7 +683,7 @@ const RegistroConsultas = () => {
                   <div className="flex justify-between">
                     <span>Pacientes:</span>
                     <span className="font-semibold">
-                      {[...new Set(obterConsultasDoDia(filtroDia.getDate(), filtroDia.getMonth(), filtroDia.getFullYear()).map(c => c.paciente))].length} pacientes
+                      {[...new Set(obterConsultasDoDia(filtroDia.getDate(), filtroDia.getMonth(), filtroDia.getFullYear()).map(c => c.residente?.nome))].length} pacientes
                     </span>
                   </div>
                 </div>
@@ -539,6 +709,7 @@ const RegistroConsultas = () => {
             consulta={consultaEditando}
             onClose={() => { setModalAberto(false); setConsultaEditando(null); }}
             onSave={salvarConsulta}
+            residentes={residentes}
           />
         )}
       </div>
@@ -546,39 +717,42 @@ const RegistroConsultas = () => {
   );
 };
 
-// Conteúdo do Modal
-const ModalConsulta = ({ consulta, onClose, onSave }) => {
+// Componente Modal
+type ModalConsultaProps = {
+  consulta: ConsultaEditando;
+  onClose: () => void;
+  onSave: (formData: any) => void;
+  residentes: Residente[];
+};
+
+const ModalConsulta = ({ consulta, onClose, onSave, residentes }: ModalConsultaProps) => {
   const initial = consulta ? {
     ...consulta,
-    data: consulta.data instanceof Date ? consulta.data.toISOString().split('T')[0] : (consulta.data || '')
+    data_consulta: consulta.data instanceof Date ? consulta.data.toISOString().split('T')[0] : (consulta.data_consulta || '')
   } : {
-    paciente: '',
+    id_residente: '',
     idade: '',
     sexo: 'Masculino',
-    prontuario: '',
-    data: '',
+    numero_prontuario: '',
+    data_consulta: '',
     horario: '',
     medico: '',
-    motivo: '',
-    historico: '',
-    tratamento: '',
-    exames: '',
-    receitas: '',
-    anexos: []
+    motivo_consulta: '',
+    historico_clinico: '',
+    tratamento_indicado: '',
+    exames_solicitados: '',
+    receitas_medicas: '',
+    anexos_medicos: ''
   };
 
   const [formData, setFormData] = useState(initial);
 
-  const handleChange = (e) => {
-    const { name, value, files } = e.target;
-    if (name === 'anexos' && files) {
-      setFormData(prev => ({ ...prev, anexos: Array.from(files) }));
-    } else {
-      setFormData(prev => ({ ...prev, [name]: value }));
-    }
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
+    const { name, value } = e.target;
+    setFormData(prev => ({ ...prev, [name]: value }));
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     onSave(formData);
   };
@@ -601,14 +775,19 @@ const ModalConsulta = ({ consulta, onClose, onSave }) => {
         <form onSubmit={handleSubmit} className="space-y-6">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div>
-              <label className="block text-odara-dark font-medium mb-2">Paciente *</label>
-              <input 
-                name="paciente" 
-                value={formData.paciente} 
+              <label className="block text-odara-dark font-medium mb-2">Residente *</label>
+              <select 
+                name="id_residente" 
+                value={formData.id_residente} 
                 onChange={handleChange} 
                 className="w-full px-4 py-2 border border-odara-primary rounded-lg focus:border-odara-secondary text-odara-secondary" 
-                required 
-              />
+                required
+              >
+                <option value="">Selecione um residente</option>
+                {residentes.map(r => (
+                  <option key={r.id} value={r.id}>{r.nome}</option>
+                ))}
+              </select>
             </div>
             <div>
               <label className="block text-odara-dark font-medium mb-2">Idade *</label>
@@ -638,8 +817,8 @@ const ModalConsulta = ({ consulta, onClose, onSave }) => {
             <div>
               <label className="block text-odara-dark font-medium mb-2">Nº Prontuário *</label>
               <input 
-                name="prontuario" 
-                value={formData.prontuario} 
+                name="numero_prontuario" 
+                value={formData.numero_prontuario} 
                 onChange={handleChange} 
                 className="w-full px-4 py-2 border border-odara-primary rounded-lg focus:border-odara-secondary text-odara-secondary" 
                 required 
@@ -649,9 +828,9 @@ const ModalConsulta = ({ consulta, onClose, onSave }) => {
             <div>
               <label className="block text-odara-dark font-medium mb-2">Data *</label>
               <input 
-                name="data" 
+                name="data_consulta" 
                 type="date" 
-                value={formData.data} 
+                value={formData.data_consulta} 
                 onChange={handleChange} 
                 className="w-full px-4 py-2 border border-odara-primary rounded-lg focus:border-odara-secondary text-odara-secondary" 
                 required 
@@ -684,8 +863,8 @@ const ModalConsulta = ({ consulta, onClose, onSave }) => {
           <div>
             <label className="block text-odara-dark font-medium mb-2">Motivo da Consulta *</label>
             <textarea 
-              name="motivo" 
-              value={formData.motivo} 
+              name="motivo_consulta" 
+              value={formData.motivo_consulta} 
               onChange={handleChange} 
               className="w-full px-4 py-2 border border-odara-primary rounded-lg focus:border-odara-secondary text-odara-secondary" 
               rows="3" 
@@ -696,8 +875,8 @@ const ModalConsulta = ({ consulta, onClose, onSave }) => {
           <div>
             <label className="block text-odara-dark font-medium mb-2">Histórico e Evolução Clínica</label>
             <textarea 
-              name="historico" 
-              value={formData.historico} 
+              name="historico_clinico" 
+              value={formData.historico_clinico} 
               onChange={handleChange} 
               className="w-full px-4 py-2 border border-odara-primary rounded-lg focus:border-odara-secondary text-odara-secondary" 
               rows="3" 
@@ -707,8 +886,8 @@ const ModalConsulta = ({ consulta, onClose, onSave }) => {
           <div>
             <label className="block text-odara-dark font-medium mb-2">Tratamento Indicado</label>
             <textarea 
-              name="tratamento" 
-              value={formData.tratamento} 
+              name="tratamento_indicado" 
+              value={formData.tratamento_indicado} 
               onChange={handleChange} 
               className="w-full px-4 py-2 border border-odara-primary rounded-lg focus:border-odara-secondary text-odara-secondary" 
               rows="2" 
@@ -718,8 +897,8 @@ const ModalConsulta = ({ consulta, onClose, onSave }) => {
           <div>
             <label className="block text-odara-dark font-medium mb-2">Exames Solicitados</label>
             <textarea 
-              name="exames" 
-              value={formData.exames} 
+              name="exames_solicitados" 
+              value={formData.exames_solicitados} 
               onChange={handleChange} 
               className="w-full px-4 py-2 border border-odara-primary rounded-lg focus:border-odara-secondary text-odara-secondary" 
               rows="2" 
@@ -729,8 +908,8 @@ const ModalConsulta = ({ consulta, onClose, onSave }) => {
           <div>
             <label className="block text-odara-dark font-medium mb-2">Receitas Médicas</label>
             <textarea 
-              name="receitas" 
-              value={formData.receitas} 
+              name="receitas_medicas" 
+              value={formData.receitas_medicas} 
               onChange={handleChange} 
               className="w-full px-4 py-2 border border-odara-primary rounded-lg focus:border-odara-secondary text-odara-secondary" 
               rows="2" 
@@ -738,14 +917,14 @@ const ModalConsulta = ({ consulta, onClose, onSave }) => {
           </div>
 
           <div>
-            <label className="block text-odara-dark font-medium mb-2">Anexos (PDF)</label>
+            <label className="block text-odara-dark font-medium mb-2">Anexos Médicos</label>
             <input 
-              name="anexos" 
-              type="file" 
+              name="anexos_medicos" 
+              type="text" 
+              value={formData.anexos_medicos} 
               onChange={handleChange} 
-              accept="application/pdf" 
-              multiple 
               className="w-full px-4 py-2 border border-odara-primary rounded-lg focus:border-odara-secondary text-odara-secondary"
+              placeholder="Descrição dos anexos médicos"
             />
           </div>
 
@@ -761,7 +940,7 @@ const ModalConsulta = ({ consulta, onClose, onSave }) => {
               type="submit" 
               className="px-6 py-2 bg-odara-accent text-odara-white rounded-lg hover:bg-odara-secondary transition-colors duration-200"
             >
-              {consulta ? 'Salvar Alterações' : 'Agendar Consulta'}
+              {consulta ? 'Salvar Alterações' : 'Salvar Consulta'}
             </button>
           </div>
         </form>

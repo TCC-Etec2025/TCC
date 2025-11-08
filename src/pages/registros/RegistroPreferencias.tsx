@@ -10,18 +10,23 @@ type Preferencia = {
   titulo: string;
   descricao: string;
   foto_url: string;
-  residente?: string; // Adicionado campo opcional
+  residente?: string;
+}
+
+type Residente = {
+  id: number;
+  nome: string;
 }
 
 const RegistroPreferencias = () => {
   const [loading, setLoading] = useState(false);
-  const [preferencias, setPreferencias] = useState<Preferencia[]>([]); // Corrigido para preferencias
+  const [preferencias, setPreferencias] = useState<Preferencia[]>([]);
   const [modalAberto, setModalAberto] = useState(false);
   const [categoriaAtual, setCategoriaAtual] = useState('');
   const [novaPreferencia, setNovaPreferencia] = useState({ 
+    residente: '',
     titulo: '', 
-    descricao: '', 
-    residente: '', 
+    descricao: '',  
     foto: '' 
   });
   const [filtroAtivo, setFiltroAtivo] = useState('todos');
@@ -31,12 +36,16 @@ const RegistroPreferencias = () => {
   const [infoVisivel, setInfoVisivel] = useState(false);
   const [residenteSelecionado, setResidenteSelecionado] = useState('');
   const [residenteAtual, setResidenteAtual] = useState<Preferencia | null>(null);
-  const [dropdownAberto, setDropdownAberto] = useState(false);
+  const [dropdownAberto, setDropdownAberto] = useState(false); 
+  const [residentes, setResidentes] = useState<Residente[]>([]);
+  const [sugestoesResidentes, setSugestoesResidentes] = useState<Residente[]>([]);
+  const [mostrarSugestoes, setMostrarSugestoes] = useState(false);
+  const [carregandoResidentes, setCarregandoResidentes] = useState(false);
 
   const CATEGORIAS = {
-    ALIMENTAR: 'alimentar',
-    ATIVIDADES: 'atividades',
-    CUIDADOR: 'cuidador'
+    ALIMENTAR: 'Alimentar',
+    ATIVIDADES: 'Atividades',
+    CUIDADOR: 'Cuidador'
   };
 
   const CATEGORIA_LABELS = {
@@ -53,7 +62,7 @@ const RegistroPreferencias = () => {
 
   const CORES_CALENDARIO = {
     [CATEGORIAS.ALIMENTAR]: 'bg-odara-primary',
-    [CATEGORIAS.ATIVIDADES]: 'bg-odara-accent',
+    [CATEGORIAS.ATIVIDADES]: 'bg-odara-accent', 
     [CATEGORIAS.CUIDADOR]: 'bg-odara-secondary'
   };
 
@@ -64,26 +73,82 @@ const RegistroPreferencias = () => {
     { id: CATEGORIAS.CUIDADOR, label: CATEGORIA_LABELS[CATEGORIAS.CUIDADOR] }
   ];
 
+  // Carrega residentes do banco
+  useEffect(() => {
+    const carregarResidentes = async () => {
+      try {
+        setCarregandoResidentes(true);
+        const { data, error } = await supabase
+          .from('residente')
+          .select('id, nome')
+          .order('nome');
+
+        if (error) throw error;
+        if (data) {
+          setResidentes(data);
+        }
+      } catch (error) {
+        console.error('Erro ao carregar residentes:', error);
+      } finally {
+        setCarregandoResidentes(false);
+      }
+    };
+
+    carregarResidentes();
+  }, []);
+
+  // Carrega preferências do banco
   useEffect(() => {
     const fetchPreferencias = async () => {
       try {
         setLoading(true);
+        
+        // Busca preferências com JOIN para pegar o nome do residente
         const { data, error } = await supabase
           .from('preferencia')
-          .select('*');
+          .select(`
+            *,
+            residente:residente(id, nome)
+          `);
 
         if (error) throw error;
-        if (data) setPreferencias(data); // Agora usando setPreferencias
+
+        if (data) {
+          // Transforma os dados para incluir o nome do residente
+          const preferenciasComNomes = data.map(pref => ({
+            ...pref,
+            residente: pref.residente?.nome || 'Residente não encontrado'
+          }));
+          setPreferencias(preferenciasComNomes);
+        } else {
+          setPreferencias([]);
+        }
       } catch (error) {
-        console.error('Erro ao encontrar preferências:', error);
+        console.error('Erro ao carregar preferências:', error);
+        alert('Erro ao carregar preferências.');
       } finally {
         setLoading(false);
       }
     };
 
     fetchPreferencias();
-    alert(JSON.stringify(preferencias))
   }, []);
+
+  // Função para filtrar sugestões de residentes
+  const filtrarSugestoes = (input: string) => {
+    if (!input.trim()) {
+      setSugestoesResidentes([]);
+      setMostrarSugestoes(false);
+      return;
+    }
+
+    const sugestoesFiltradas = residentes.filter(residente =>
+      residente.nome.toLowerCase().includes(input.toLowerCase())
+    );
+
+    setSugestoesResidentes(sugestoesFiltradas.slice(0, 5));
+    setMostrarSugestoes(sugestoesFiltradas.length > 0);
+  };
 
   // Função para agrupar preferências por categoria
   const getPreferenciasPorCategoria = () => {
@@ -122,38 +187,50 @@ const RegistroPreferencias = () => {
   };
 
   const salvarPreferencia = async () => {
-    if (!novaPreferencia.titulo || !novaPreferencia.descricao || !novaPreferencia.residente) return;
+    if (!novaPreferencia.titulo || !novaPreferencia.descricao || !novaPreferencia.residente) {
+      alert('Preencha todos os campos obrigatórios!');
+      return;
+    }
 
     try {
+      setLoading(true);
+
+      // Encontra o ID do residente selecionado
+      const residenteSelecionado = residentes.find(r => 
+        r.nome === novaPreferencia.residente
+      );
+
+      if (!residenteSelecionado) {
+        alert('Residente não encontrado! Selecione um residente válido da lista.');
+        return;
+      }
+
       if (editando && idEditando) {
         // Atualizar preferência existente
-        const { error } = await supabase
+        const { data, error } = await supabase
           .from('preferencia')
           .update({
             titulo: novaPreferencia.titulo,
             descricao: novaPreferencia.descricao,
-            residente: novaPreferencia.residente,
+            id_residente: residenteSelecionado.id,
             foto_url: novaPreferencia.foto,
             tipo_preferencia: categoriaAtual
           })
-          .eq('id', idEditando);
+          .eq('id', idEditando)
+          .select();
 
         if (error) throw error;
 
-        // Atualizar estado local
-        setPreferencias(prev => 
-          prev.map(item => 
-            item.id === idEditando 
-              ? {
-                  ...item,
-                  titulo: novaPreferencia.titulo,
-                  descricao: novaPreferencia.descricao,
-                  residente: novaPreferencia.residente,
-                  foto_url: novaPreferencia.foto
-                }
-              : item
-          )
-        );
+        if (data) {
+          setPreferencias(prev => 
+            prev.map(item => 
+              item.id === idEditando 
+                ? { ...data[0], residente: novaPreferencia.residente }
+                : item
+            )
+          );
+          alert('Preferência atualizada com sucesso!');
+        }
       } else {
         // Criar nova preferência
         const { data, error } = await supabase
@@ -161,7 +238,7 @@ const RegistroPreferencias = () => {
           .insert({
             titulo: novaPreferencia.titulo,
             descricao: novaPreferencia.descricao,
-            residente: novaPreferencia.residente,
+            id_residente: residenteSelecionado.id,
             foto_url: novaPreferencia.foto,
             tipo_preferencia: categoriaAtual
           })
@@ -169,35 +246,51 @@ const RegistroPreferencias = () => {
 
         if (error) throw error;
 
-        if (data) {
-          setPreferencias(prev => [...prev, data[0]]);
+        if (data && data[0]) {
+          // Adiciona o nome do residente para exibição
+          const novaPreferenciaComResidente = {
+            ...data[0],
+            residente: novaPreferencia.residente
+          };
+          setPreferencias(prev => [...prev, novaPreferenciaComResidente]);
+          alert('Preferência criada com sucesso!');
         }
       }
 
       setModalAberto(false);
-    } catch (error) {
+    } catch (error: any) {
       console.error('Erro ao salvar preferência:', error);
+      alert(`Erro ao salvar preferência: ${error.message}`);
+    } finally {
+      setLoading(false);
     }
   };
 
   const excluirPreferencia = async (id: number) => {
-    if (window.confirm('Tem certeza que deseja excluir esta preferência?')) {
-      try {
-        const { error } = await supabase
-          .from('preferencia')
-          .delete()
-          .eq('id', id);
+    if (!window.confirm('Tem certeza que deseja excluir esta preferência?')) return;
 
-        if (error) throw error;
+    try {
+      setLoading(true);
 
-        setPreferencias(prev => prev.filter(item => item.id !== id));
-      } catch (error) {
-        console.error('Erro ao excluir preferência:', error);
-      }
+      const { error } = await supabase
+        .from('preferencia')
+        .delete()
+        .eq('id', id);
+
+      if (error) throw error;
+
+      setPreferencias(prev => prev.filter(item => item.id !== id));
+      alert('Preferência excluída com sucesso!');
+    } catch (error: any) {
+      console.error('Erro ao excluir preferência:', error);
+      alert(`Erro ao excluir preferência: ${error.message}`);
+    } finally {
+      setLoading(false);
     }
   };
 
-  const residentes = Array.from(new Set(
+  // Residentes únicos para o filtro
+  const residentesUnicos = Array.from(new Set(
     preferencias
       .map(item => item.residente)
       .filter(Boolean)
@@ -323,7 +416,7 @@ const RegistroPreferencias = () => {
               onChange={(e) => setResidenteSelecionado(e.target.value)}
             >
               <option value="">Todos os residentes</option>
-              {residentes.map(r => <option key={r} value={r}>{r}</option>)}
+              {residentesUnicos.map(r => <option key={r} value={r}>{r}</option>)}
             </select>
           </div>
 
@@ -453,19 +546,6 @@ const RegistroPreferencias = () => {
                 </p>
               )}
             </div>
-
-            {/* Legenda das categorias */}
-            <div className="mt-6 p-4 bg-odara-offwhite rounded-lg">
-              <h6 className="font-semibold text-odara-dark mb-3 text-center">Legenda das Categorias:</h6>
-              <div className="space-y-2">
-                {Object.entries(CATEGORIAS).map(([chave, valor]) => (
-                  <div key={valor} className="flex items-center gap-3">
-                    <div className={`w-3 h-3 rounded-full ${CORES_CALENDARIO[valor]}`}></div>
-                    <span className="text-sm">{CATEGORIA_LABELS[valor]}</span>
-                  </div>
-                ))}
-              </div>
-            </div>
           </div>
         </div>
 
@@ -477,24 +557,70 @@ const RegistroPreferencias = () => {
                 <h2 className="text-2xl font-bold text-odara-accent">
                   {editando ? 'Editar' : 'Adicionar'} Preferência - {CATEGORIA_LABELS[categoriaAtual]}
                 </h2>
-                <button
+                <button 
                   onClick={() => setModalAberto(false)}
-                  className="text-odara-primary hover:text-odara-secondary transition-colors duration-200"
+                  className="text-odara-dark hover:text-odara-secondary"
                 >
-                  <FaTimes />
+                  <FaTimes size={20} />
                 </button>
               </div>
 
-              <div className="space-y-4">
-                <div>
+              <form onSubmit={(e) => {
+                e.preventDefault();
+                salvarPreferencia();
+              }} className="space-y-4">
+                <div className="relative">
                   <label className="block text-odara-dark font-medium mb-2">Residente *</label>
                   <input 
                     type="text" 
                     className="w-full px-4 py-2 border border-odara-primary rounded-lg focus:border-odara-secondary text-odara-secondary"
                     value={novaPreferencia.residente}
-                    onChange={(e) => setNovaPreferencia({ ...novaPreferencia, residente: e.target.value })}
-                    placeholder="Nome do residente" 
+                    onChange={(e) => {
+                      const valor = e.target.value;
+                      setNovaPreferencia({ ...novaPreferencia, residente: valor });
+                      filtrarSugestoes(valor);
+                    }}
+                    onFocus={() => {
+                      if (residentes.length > 0) {
+                        setMostrarSugestoes(true);
+                        // Mostra todas as sugestões quando foca
+                        setSugestoesResidentes(residentes.slice(0, 5));
+                      }
+                    }}
+                    onBlur={() => setTimeout(() => setMostrarSugestoes(false), 200)}
+                    placeholder="Digite o nome do residente ou clique para ver opções" 
+                    required
                   />
+                  
+                  {/* Lista de sugestões */}
+                  {mostrarSugestoes && sugestoesResidentes.length > 0 && (
+                    <div className="absolute z-50 w-full mt-1 bg-white border border-odara-primary rounded-lg shadow-lg max-h-60 overflow-y-auto">
+                      {sugestoesResidentes.map((residente) => (
+                        <div
+                          key={residente.id}
+                          className="px-4 py-3 hover:bg-odara-primary hover:text-odara-white cursor-pointer transition-colors duration-200 border-b last:border-b-0"
+                          onMouseDown={(e) => {
+                            e.preventDefault();
+                            setNovaPreferencia({ 
+                              ...novaPreferencia, 
+                              residente: residente.nome 
+                            });
+                            setMostrarSugestoes(false);
+                          }}
+                        >
+                          <div className="font-medium">{residente.nome}</div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                  
+                  {carregandoResidentes && (
+                    <div className="absolute right-3 top-10 text-odara-primary text-sm">Carregando residentes...</div>
+                  )}
+                  
+                  {!carregandoResidentes && residentes.length === 0 && (
+                    <div className="text-sm text-red-500 mt-1">⚠️ Nenhum residente cadastrado no sistema</div>
+                  )}
                 </div>
                 <div>
                   <label className="block text-odara-dark font-medium mb-2">Título *</label>
@@ -504,6 +630,7 @@ const RegistroPreferencias = () => {
                     value={novaPreferencia.titulo}
                     onChange={(e) => setNovaPreferencia({ ...novaPreferencia, titulo: e.target.value })}
                     placeholder="Digite o título" 
+                    required
                   />
                 </div>
                 <div>
@@ -514,6 +641,7 @@ const RegistroPreferencias = () => {
                     value={novaPreferencia.descricao}
                     onChange={(e) => setNovaPreferencia({ ...novaPreferencia, descricao: e.target.value })}
                     placeholder="Digite a descrição"
+                    required
                   ></textarea>
                 </div>
                 <div>
@@ -526,23 +654,23 @@ const RegistroPreferencias = () => {
                     placeholder="Link da foto" 
                   />
                 </div>
-              </div>
-
-              <div className="flex justify-end space-x-3 mt-6">
-                <button 
-                  onClick={() => setModalAberto(false)}
-                  className="px-4 py-2 border-2 border-odara-primary text-odara-primary rounded-lg hover:bg-odara-primary hover:text-odara-white transition-colors duration-200"
-                >
-                  Cancelar
-                </button>
-                <button 
-                  onClick={salvarPreferencia}
-                  className="px-4 py-2 bg-odara-accent text-odara-white rounded-lg hover:bg-odara-secondary transition-colors duration-200"
-                  disabled={!novaPreferencia.titulo || !novaPreferencia.descricao || !novaPreferencia.residente}
-                >
-                  {editando ? 'Atualizar' : 'Salvar'}
-                </button>
-              </div>
+                <div className="flex justify-end space-x-3 mt-6">
+                  <button 
+                    type="button"
+                    onClick={() => setModalAberto(false)}
+                    className="px-4 py-2 border-2 border-odara-primary text-odara-primary rounded-lg hover:bg-odara-primary hover:text-odara-white transition-colors duration-200"
+                  >
+                    Cancelar
+                  </button>
+                  <button 
+                    type="submit"
+                    className="px-4 py-2 bg-odara-accent text-odara-white rounded-lg hover:bg-odara-secondary transition-colors duration-200"
+                    disabled={!novaPreferencia.titulo || !novaPreferencia.descricao || !novaPreferencia.residente}
+                  >
+                    {editando ? 'Atualizar' : 'Salvar'}
+                  </button>
+                </div>
+              </form>
             </div>
           </div>
         )}

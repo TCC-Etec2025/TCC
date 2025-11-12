@@ -421,8 +421,8 @@ const RegistroOcorrencias: React.FC = () => {
 						<button
 							className={`flex items-center bg-white rounded-full px-3 py-2 shadow-sm border-2 font-medium hover:border-2 hover:border-odara-primary transition text-sm
                 ${filtroResidenteAberto
-								? 'border-odara-primary text-gray-700'
-								: 'border-odara-primary/40 text-gray-700'} 
+									? 'border-odara-primary text-gray-700'
+									: 'border-odara-primary/40 text-gray-700'} 
                 `}
 							onClick={() => {
 								setFiltroResidenteAberto(!filtroResidenteAberto);
@@ -437,13 +437,13 @@ const RegistroOcorrencias: React.FC = () => {
 							<div className="absolute mt-2 w-48 bg-white rounded-lg shadow-lg border-2 border-odara-primary z-10 max-h-60 overflow-y-auto">
 								<button
 									onClick={() => {
-									setResidenteSelecionado("");
-									setFiltroResidenteAberto(false);
-								}}
-								className={`block w-full text-left px-4 py-2 text-sm rounded-lg hover:bg-odara-primary/20 transition-colors duration-200 ${!residenteSelecionado
-									? 'bg-odara-accent/20 font-semibold text-odara-accent'
-									: 'text-odara-dark'
-								}`}
+										setResidenteSelecionado("");
+										setFiltroResidenteAberto(false);
+									}}
+									className={`block w-full text-left px-4 py-2 text-sm rounded-lg hover:bg-odara-primary/20 transition-colors duration-200 ${!residenteSelecionado
+										? 'bg-odara-accent/20 font-semibold text-odara-accent'
+										: 'text-odara-dark'
+										}`}
 								>
 									Todos
 								</button>
@@ -457,9 +457,9 @@ const RegistroOcorrencias: React.FC = () => {
 										className={`block w-full text-left px-4 py-2 text-sm rounded-lg hover:bg-odara-primary/20 transition-colors duration-200 ${String(residenteSelecionado) === String(residente.id)
 											? 'bg-odara-accent/20 font-semibold text-odara-accent'
 											: 'text-odara-dark'
-										}`}
+											}`}
 									>
-									{residente.nome}
+										{residente.nome}
 									</button>
 								))}
 							</div>
@@ -471,8 +471,8 @@ const RegistroOcorrencias: React.FC = () => {
 						<button
 							className={`flex items-center bg-white rounded-full px-3 py-2 shadow-sm border-2 font-medium hover:border-2 hover:border-odara-primary transition text-sm
                 ${filtroAberto
-								? 'border-odara-primary text-gray-700'
-								: 'border-odara-primary/40 text-gray-700'} 
+									? 'border-odara-primary text-gray-700'
+									: 'border-odara-primary/40 text-gray-700'} 
                 `}
 							onClick={() => {
 								setFiltroAberto(!filtroAberto);
@@ -495,9 +495,9 @@ const RegistroOcorrencias: React.FC = () => {
 										className={`block w-full text-left px-4 py-2 text-sm rounded-lg hover:bg-odara-primary/20 transition-colors duration-200 ${filtroAtivo === f.id
 											? 'bg-odara-accent/20 font-semibold text-odara-accent'
 											: 'text-odara-dark'
-										}`}
+											}`}
 									>
-									{f.label}
+										{f.label}
 									</button>
 								))}
 							</div>
@@ -509,8 +509,8 @@ const RegistroOcorrencias: React.FC = () => {
 						<button
 							className={`flex items-center bg-white rounded-full px-3 py-2 shadow-sm border-2 
                 ${filtroStatusAberto
-								? 'border-odara-primary text-gray-700'
-								: 'border-odara-primary/40 text-gray-700'} 
+									? 'border-odara-primary text-gray-700'
+									: 'border-odara-primary/40 text-gray-700'} 
                 font-medium hover:border-2 hover:border-odara-primary transition text-sm`}
 							onClick={() => {
 								setFiltroStatusAberto(!filtroStatusAberto);
@@ -533,9 +533,9 @@ const RegistroOcorrencias: React.FC = () => {
 										className={`block w-full text-left px-4 py-2 text-sm rounded-lg hover:bg-odara-primary/20 transition-colors duration-200 ${filtroStatus === opcao.id
 											? 'bg-odara-accent/20 font-semibold text-odara-accent'
 											: 'text-odara-dark'
-										}`}
+											}`}
 									>
-									{opcao.label}
+										{opcao.label}
 									</button>
 								))}
 							</div>
@@ -556,7 +556,7 @@ const RegistroOcorrencias: React.FC = () => {
 						</button>
 					)}
 				</div>
-				
+
 				{/* conteúdo */}
 				<section className="grid grid-cols-1 lg:grid-cols-2 gap-8">
 					{/* lista */}
@@ -621,50 +621,50 @@ const RegistroOcorrencias: React.FC = () => {
 						/>
 
 						{/* Estatísticas e Legenda */}
-<div className="mt-6 border-t border-gray-200 pt-4">
-  {/* Estatísticas */}
-  <h3 className="text-lg font-semibold text-odara-dark mb-2">Estatísticas</h3>
-  <div className="grid grid-cols-3 gap-2 text-center text-sm">
-    <div className="bg-odara-primary/10 rounded-lg py-2">
-      <p className="font-bold text-odara-primary">{ocorrencias.length}</p>
-      <p className="text-gray-600">Total</p>
-    </div>
-    <div className="bg-odara-accent/10 rounded-lg py-2">
-      <p className="font-bold text-odara-accent">{contadorPendentes}</p>
-      <p className="text-gray-600">Pendentes</p>
-    </div>
-    <div className="bg-odara-secondary/10 rounded-lg py-2">
-      <p className="font-bold text-odara-secondary">{contadorResolvidas}</p>
-      <p className="text-gray-600">Resolvidas</p>
-    </div>
-  </div>
+						<div className="mt-6 border-t border-gray-200 pt-4">
+							{/* Estatísticas */}
+							<h3 className="text-lg font-semibold text-odara-dark mb-2">Estatísticas</h3>
+							<div className="grid grid-cols-3 gap-2 text-center text-sm">
+								<div className="bg-odara-primary/10 rounded-lg py-2">
+									<p className="font-bold text-odara-primary">{ocorrencias.length}</p>
+									<p className="text-gray-600">Total</p>
+								</div>
+								<div className="bg-odara-accent/10 rounded-lg py-2">
+									<p className="font-bold text-odara-accent">{contadorPendentes}</p>
+									<p className="text-gray-600">Pendentes</p>
+								</div>
+								<div className="bg-odara-secondary/10 rounded-lg py-2">
+									<p className="font-bold text-odara-secondary">{contadorResolvidas}</p>
+									<p className="text-gray-600">Resolvidas</p>
+								</div>
+							</div>
 
-  {/* Legenda */}
-  <h3 className="text-lg font-semibold text-odara-dark mt-6 mb-2">Legenda</h3>
-  <ul className="space-y-2 text-sm">
-    <li className="flex items-center gap-2">
-      <span className="w-3 h-3 rounded-full bg-odara-dropdown-accent" />
-      <span>Acidente</span>
-    </li>
-    <li className="flex items-center gap-2">
-      <span className="w-3 h-3 rounded-full bg-odara-primary" />
-      <span>Saúde</span>
-    </li>
-    <li className="flex items-center gap-2">
-      <span className="w-3 h-3 rounded-full bg-odara-accent" />
-      <span>Comportamental</span>
-    </li>
-    <li className="flex items-center gap-2">
-      <span className="w-3 h-3 rounded-full bg-odara-secondary" />
-      <span>Estrutural</span>
-    </li>
-  </ul>
-</div>
- 
+							{/* Legenda */}
+							<h3 className="text-lg font-semibold text-odara-dark mt-6 mb-2">Legenda</h3>
+							<ul className="space-y-2 text-sm">
+								<li className="flex items-center gap-2">
+									<span className="w-3 h-3 rounded-full bg-odara-dropdown-accent" />
+									<span>Acidente</span>
+								</li>
+								<li className="flex items-center gap-2">
+									<span className="w-3 h-3 rounded-full bg-odara-primary" />
+									<span>Saúde</span>
+								</li>
+								<li className="flex items-center gap-2">
+									<span className="w-3 h-3 rounded-full bg-odara-accent" />
+									<span>Comportamental</span>
+								</li>
+								<li className="flex items-center gap-2">
+									<span className="w-3 h-3 rounded-full bg-odara-secondary" />
+									<span>Estrutural</span>
+								</li>
+							</ul>
+						</div>
+
 					</aside>
 				</section>
-				
-				
+
+
 				{/* modal */}
 				{modalAberto && (
 					<div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 p-4">

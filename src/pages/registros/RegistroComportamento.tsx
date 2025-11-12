@@ -867,161 +867,172 @@ const RegistroComportamento = () => {
 
 
         {/* Modal para adicionar/editar comportamento */}
-        {/* MODAL DE CRIAÇÃO / EDIÇÃO */}
-        {/* MODAL DE CRIAÇÃO / EDIÇÃO */}
-        {modalAberto && (
-          <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4">
-            <div className="relative bg-white text-odara-dark border-4 border-odara-primary rounded-2xl shadow-2xl w-full max-w-lg p-6 animate-in fade-in zoom-in duration-200">
-              {/* Botão de Fechar */}
-              <button
-                onClick={fecharModal}
-                className="absolute top-3 right-3 text-odara-dark hover:text-odara-accent transition-colors"
-              >
-                <FaTimes size={22} />
-              </button>
+{modalAberto && (
+  <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4">
+    <div className="relative bg-white text-odara-dark border-4 border-odara-primary rounded-2xl shadow-2xl w-full max-w-lg max-h-[85vh] overflow-y-auto p-4 animate-in fade-in zoom-in duration-200">
+      {/* Botão de Fechar */}
+      <button
+        onClick={fecharModal}
+        className="absolute top-3 right-3 text-odara-dark hover:text-odara-accent transition-colors"
+      >
+        <FaTimes size={22} />
+      </button>
 
-              {/* Título */}
-              <h2 className="text-2xl font-bold mb-6 text-center border-b border-odara-primary/30 pb-2">
-                {editando ? "Editar Registro de Comportamento" : "Novo Registro de Comportamento"}
-              </h2>
+      {/* Título */}
+      <h2 className="text-2xl font-bold mb-6 text-center border-b border-odara-primary/30 pb-2">
+        {editando ? "Editar Registro de Comportamento" : "Novo Registro de Comportamento"}
+      </h2>
 
-              {/* Formulário */}
-              <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+      {/* Formulário */}
+      <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
 
+        {/* Campo Título */}
+        <div>
+          <label className="block text-sm font-semibold mb-1 text-odara-dark">
+            Título
+          </label>
+          <input
+            {...register("titulo")}
+            className="w-full border border-odara-primary/40 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-odara-primary focus:outline-none transition"
+            placeholder="Ex: Comportamento cooperativo"
+          />
+          {errors.titulo && (
+            <p className="text-red-500 text-xs mt-1">{errors.titulo.message}</p>
+          )}
+        </div>
 
-                {/* Campo Título */}
-                <div>
-                  <label className="block text-sm font-semibold mb-1 text-odara-dark">
-                    Título
-                  </label>
-                  <input
-                    {...register("titulo")}
-                    className="w-full border border-odara-primary/40 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-odara-primary focus:outline-none transition"
-                    placeholder="Ex: Comportamento cooperativo"
-                  />
-                  {errors.titulo && (
-                    <p className="text-red-500 text-xs mt-1">{errors.titulo.message}</p>
-                  )}
-                </div>
+        {/* Campo Descrição */}
+        <div>
+          <label className="block text-sm font-semibold mb-1 text-odara-dark">
+            Descrição
+          </label>
+          <textarea
+            {...register("descricao")}
+            rows={3}
+            className="w-full border border-odara-primary/40 rounded-lg px-3 py-2 text-sm resize-none focus:ring-2 focus:ring-odara-primary focus:outline-none transition"
+            placeholder="Descreva o comportamento observado..."
+          />
+        </div>
 
-                {/* Campo Descrição */}
-                <div>
-                  <label className="block text-sm font-semibold mb-1 text-odara-dark">
-                    Descrição
-                  </label>
-                  <textarea
-                    {...register("descricao")}
-                    rows={3}
-                    className="w-full border border-odara-primary/40 rounded-lg px-3 py-2 text-sm resize-none focus:ring-2 focus:ring-odara-primary focus:outline-none transition"
-                    placeholder="Descreva o comportamento observado..."
-                  />
-                </div>
-
-                {/* Linha Data + Horário */}
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-sm font-semibold mb-1 text-odara-dark">
-                      Data
-                    </label>
-                    <input
-                      type="date"
-                      {...register("data")}
-                      className="w-full border border-odara-primary/40 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-odara-primary focus:outline-none transition"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-semibold mb-1 text-odara-dark">
-                      Horário
-                    </label>
-                    <input
-                      type="time"
-                      {...register("horario")}
-                      className="w-full border border-odara-primary/40 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-odara-primary focus:outline-none transition"
-                    />
-                  </div>
-                </div>
-
-                 {/* Campo Residente */}
-                <div>
-                  <label className="block text-sm font-semibold mb-1 text-odara-dark">
-                    Residente
-                  </label>
-                  <select
-                    {...register("residente")}
-                    className="w-full border border-odara-primary/40 rounded-lg px-3 py-2 text-sm bg-white focus:ring-2 focus:ring-odara-primary focus:outline-none transition"
-                  >
-                    <option value="">Selecione o residente...</option>
-                    {residentes.map((r) => (
-                      <option key={r.id} value={r.id}>
-                        {r.nome}
-                      </option>
-                    ))}
-                  </select>
-                  {errors.residente && (
-                    <p className="text-red-500 text-xs mt-1">{errors.residente.message}</p>
-                  )}
-                </div>
-
-                {/* Campo Funcionário */}
-                <div>
-                  <label className="block text-sm font-semibold mb-1 text-odara-dark">
-                    Funcionário
-                  </label>
-                  <select
-                    {...register("funcionario")}
-                    className="w-full border border-odara-primary/40 rounded-lg px-3 py-2 text-sm bg-white focus:ring-2 focus:ring-odara-primary focus:outline-none transition"
-                  >
-                    <option value="">Selecione o funcionário responsável...</option>
-                    {funcionarios.map((f) => (
-                      <option key={f.id} value={f.id}>
-                        {f.nome}
-                      </option>
-                    ))}
-                  </select>
-                  {errors.funcionario && (
-                    <p className="text-red-500 text-xs mt-1">{errors.funcionario.message}</p>
-                  )}
-                </div>
-
-                {/* Categoria */}
-                <div>
-                  <label className="block text-sm font-semibold mb-1 text-odara-dark">
-                    Categoria
-                  </label>
-                  <select
-                    {...register("categoria")}
-                    className="w-full border border-odara-primary/40 rounded-lg px-3 py-2 text-sm bg-white focus:ring-2 focus:ring-odara-primary focus:outline-none transition"
-                  >
-                    <option value="">Selecione...</option>
-                    <option value="positivo">Positivo</option>
-                    <option value="negativo">Negativo</option>
-                    <option value="neutro">Neutro</option>
-                  </select>
-                  {errors.categoria && (
-                    <p className="text-red-500 text-xs mt-1">{errors.categoria.message}</p>
-                  )}
-                </div>
-
-                {/* Botões */}
-                <div className="flex justify-end gap-3 pt-4 border-t border-odara-primary/30">
-                  <button
-                    type="button"
-                    onClick={fecharModal}
-                    className="px-4 py-2 rounded-lg  border border-odara-primary bg-odara-white hover:bg-odara-primary text-odara-primary hover:text-odara-white font-medium transition"
-                  >
-                    Cancelar
-                  </button>
-                  <button
-                    type="submit"
-                    className="px-4 py-2 rounded-lg bg-odara-accent hover:bg-odara-secondary text-white text-sm font-medium transition"
-                  >
-                    {editando ? "Salvar Alterações" : "Registrar"}
-                  </button>
-                </div>
-              </form>
-            </div>
+        {/* Linha Data + Horário */}
+        <div className="grid grid-cols-2 gap-4">
+          <div>
+            <label className="block text-sm font-semibold mb-1 text-odara-dark">
+              Data
+            </label>
+            <input
+              type="date"
+              {...register("data")}
+              className="w-full border border-odara-primary/40 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-odara-primary focus:outline-none transition"
+            />
           </div>
-        )}
+          <div>
+            <label className="block text-sm font-semibold mb-1 text-odara-dark">
+              Horário
+            </label>
+            <input
+              type="time"
+              {...register("horario")}
+              className="w-full border border-odara-primary/40 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-odara-primary focus:outline-none transition"
+            />
+          </div>
+        </div>
+
+        {/* Campo Residente */}
+        <div>
+          <label className="block text-sm font-semibold mb-1 text-odara-dark">
+            Residente
+          </label>
+          <select
+            {...register("residente")}
+            className="w-full border border-odara-primary/40 rounded-lg px-3 py-2 text-sm bg-white focus:ring-2 focus:ring-odara-primary focus:outline-none transition"
+          >
+            <option value="">Selecionar residente</option>
+            <option value="residente1">Residente a</option>
+            <option value="residente2">Residente b</option>
+            <option value="residente3">Residente c</option>
+          </select>
+          {errors.residente && (
+            <p className="text-red-500 text-xs mt-1">{errors.residente.message}</p>
+          )}
+        </div>
+
+        {/* Campo Foto do Residente */}
+        <div>
+          <label className="block text-sm font-semibold mb-1 text-odara-dark">
+            Foto do Residente
+          </label>
+          <input
+            type="file"
+            accept="image/*"
+            {...register("fotoResidente")}
+            className="w-full border border-odara-primary/40 rounded-lg px-3 py-2 text-sm bg-white text-odara-dark focus:ring-2 focus:ring-odara-primary focus:outline-none transition file:mr-3 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-medium file:bg-odara-accent file:text-white hover:file:bg-odara-secondary"
+            placeholder="Selecionar foto do residente"
+          />
+          {errors.fotoResidente && (
+            <p className="text-red-500 text-xs mt-1">{errors.fotoResidente.message}</p>
+          )}
+        </div>
+
+        {/* Campo Funcionário */}
+        <div>
+          <label className="block text-sm font-semibold mb-1 text-odara-dark">
+            Funcionário
+          </label>
+          <select
+            {...register("funcionario")}
+            className="w-full border border-odara-primary/40 rounded-lg px-3 py-2 text-sm bg-white focus:ring-2 focus:ring-odara-primary focus:outline-none transition"
+          >
+            <option value="">Selecionar funcionário</option>
+            <option value="funcionario1">Funcionário a</option>
+            <option value="funcionario2">Funcionário b</option>
+            <option value="funcionario3">Funcionário c</option>
+          </select>
+          {errors.funcionario && (
+            <p className="text-red-500 text-xs mt-1">{errors.funcionario.message}</p>
+          )}
+        </div>
+
+        {/* Categoria */}
+        <div>
+          <label className="block text-sm font-semibold mb-1 text-odara-dark">
+            Categoria
+          </label>
+          <select
+            {...register("categoria")}
+            className="w-full border border-odara-primary/40 rounded-lg px-3 py-2 text-sm bg-white focus:ring-2 focus:ring-odara-primary focus:outline-none transition"
+          >
+            <option value="">Selecionar categoria</option>
+            <option value="positivo">Positivo</option>
+            <option value="negativo">Negativo</option>
+            <option value="neutro">Neutro</option>
+          </select>
+          {errors.categoria && (
+            <p className="text-red-500 text-xs mt-1">{errors.categoria.message}</p>
+          )}
+        </div>
+
+        {/* Botões */}
+        <div className="flex justify-end gap-3 pt-4 border-t border-odara-primary/30">
+          <button
+            type="button"
+            onClick={fecharModal}
+            className="px-4 py-2 rounded-lg  border border-odara-primary bg-odara-white hover:bg-odara-primary text-odara-primary hover:text-odara-white font-medium transition"
+          >
+            Cancelar
+          </button>
+          <button
+            type="submit"
+            className="px-4 py-2 rounded-lg bg-odara-accent hover:bg-odara-secondary text-white text-sm font-medium transition"
+          >
+            {editando ? "Salvar Alterações" : "Registrar"}
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+)}
+
 
 
 

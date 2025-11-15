@@ -279,13 +279,9 @@ const RegistroMedicamentos: React.FC = () => {
 
         if (error) throw error;
       } else {
-        // Certifica-se de não enviar campo id por engano
-        const payload: FormValues = { ...data };
-        delete payload.id;
-
         const { data: inserted, error } = await supabase
           .from('medicamento')
-          .insert([payload])
+          .insert([data])
           .select();
 
         if (error) throw error;

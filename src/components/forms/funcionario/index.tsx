@@ -176,7 +176,7 @@ export default function CadastroFuncionario({ funcionario }: Props) {
       setModalConfig({
         title: "Erro!",
         description: `Erro ao ${funcionario ? "editar" : "cadastrar"
-          } funcionário: ${error.message}`,
+          } funcionário: ${error.message} `,
         actions: [
           {
             label: "Fechar",
@@ -461,18 +461,22 @@ export default function CadastroFuncionario({ funcionario }: Props) {
 
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
-              CEP *
-            </label>
-            <input
-              {...register("cep")}
-              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
-              placeholder="00000-000"
-            />
-            {errors.cep && (
-              <p className="text-red-500 text-sm mt-2 font-medium">
-                {errors.cep.message}
-              </p>
-            )}
+                CEP *
+              </label>
+              <input
+                {...register("cep")}
+                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+                placeholder="00000-000"
+                maxLength={9}
+                onChange={(e) => {
+                  let value = e.target.value.replace(/\D/g, "");
+                  if (value.length > 5) {
+                    value = value.replace(/^(\d{5})(\d{1,3})/, "$1-$2");
+                  }
+                  e.target.value = value;
+                  setValue("cep", value);
+                }}
+              />
           </div>
           {isCepAutoFilled && (
             <div className="md:col-span-3 flex items-center justify-center">
@@ -514,6 +518,7 @@ export default function CadastroFuncionario({ funcionario }: Props) {
               {...register("numero")}
               className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
               placeholder="123"
+              type="number"
             />
             {errors.numero && (
               <p className="text-red-500 text-sm mt-2 font-medium">

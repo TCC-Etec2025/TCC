@@ -1,8 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Search, Plus, Edit, Trash2, User, Mail, Phone, Badge } from 'lucide-react';
-import { supabase } from '../lib/supabaseClient';
-import type { Funcionario } from '../Modelos';
+import { supabase } from '../../lib/supabaseClient';
+import type { Funcionario } from '../../Modelos';
 
 const Funcionarios: React.FC = () => {
   const navigate = useNavigate();

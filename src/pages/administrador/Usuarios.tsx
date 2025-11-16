@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { Search, Plus, Edit, Trash2, User, ShieldCheck, CheckCircle, Ban } from 'lucide-react';
-import { supabase } from '../lib/supabaseClient';
+import { supabase } from '../../lib/supabaseClient';
 
 const Usuarios: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState<string>('');

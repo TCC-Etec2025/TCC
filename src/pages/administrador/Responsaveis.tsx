@@ -1,8 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import { Search, Plus, Edit, Trash2, User, Phone, Mail } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
-import { supabase } from '../lib/supabaseClient';
-import type { Responsavel } from '../Modelos'
+import { supabase } from '../../lib/supabaseClient';
+import type { Responsavel } from '../../Modelos'
 
 type ResponsavelComResidente = Responsavel & {
   residentes: {

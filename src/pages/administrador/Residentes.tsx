@@ -1,8 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Search, Plus, Edit, Trash2, User, Loader2 } from 'lucide-react';
-import { supabase } from '../lib/supabaseClient';
-import { type Residente } from '../Modelos';
+import { supabase } from '../../lib/supabaseClient';
+import { type Residente } from '../../Modelos';
 import { differenceInYears } from 'date-fns';
 
 const Residentes: React.FC = () => {

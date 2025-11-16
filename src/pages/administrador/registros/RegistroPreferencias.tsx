@@ -1,39 +1,51 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { FaUtensils, FaWalking, FaPlus, FaEdit, FaTrash, FaFilter, FaInfoCircle, FaTimes, FaArrowLeft } from 'react-icons/fa';
 import { Link } from 'react-router-dom';
+import { supabase } from '../../../lib/supabaseClient';
 
-const Preferencias = () => {
-  const [preferences, setPreferences] = useState({
-    alimentar: [
-      { id: 1, title: "Comida Italiana", description: "Prefere massas e pratos da culinária italiana", residente: "João", foto: "/images/foto-idoso-joao.jpg" },
-      { id: 2, title: "Vegetariano", description: "Prefere refeições sem carne", residente: "Maria", foto: "/images/foto-idosa-maria.png" }
-    ],
-    atividades: [
-      { id: 3, title: "Leitura", description: "Gosta de ler livros no tempo livre", residente: "João", foto: "/images/foto-idoso-joao.jpg" },
-      { id: 4, title: "Caminhada", description: "Prefere caminhar ao ar livre", residente: "Maria", foto: "/images/foto-idosa-maria.png" }
-    ],
-    cuidador: [
-      { id: 5, title: "Leticia", description: "Prefere que Leticia sirva seu alimento", residente: "João", foto: "/images/foto-idoso-joao.jpg" },
-      { id: 6, title: "Maria", description: "Prefere que Maria dê banho e cuide de sua higiene", residente: "Maria", foto: "/images/foto-idosa-maria.png" }
-    ]
-  });
+type Preferencia = {
+  id: number;
+  id_residente: number;
+  tipo_preferencia: string;
+  titulo: string;
+  descricao: string;
+  foto_url: string;
+  residente?: string;
+}
 
+type Residente = {
+  id: number;
+  nome: string;
+}
+
+const RegistroPreferencias = () => {
+  const [loading, setLoading] = useState(false);
+  const [preferencias, setPreferencias] = useState<Preferencia[]>([]);
   const [modalAberto, setModalAberto] = useState(false);
   const [categoriaAtual, setCategoriaAtual] = useState('');
-  const [novaPreferencia, setNovaPreferencia] = useState({ titulo: '', descricao: '', residente: '', foto: '' });
+  const [novaPreferencia, setNovaPreferencia] = useState({ 
+    residente: '',
+    titulo: '', 
+    descricao: '',  
+    foto: '' 
+  });
   const [filtroAtivo, setFiltroAtivo] = useState('todos');
   const [filtroAberto, setFiltroAberto] = useState(false);
   const [editando, setEditando] = useState(false);
-  const [idEditando, setIdEditando] = useState(null);
+  const [idEditando, setIdEditando] = useState<number | null>(null);
   const [infoVisivel, setInfoVisivel] = useState(false);
   const [residenteSelecionado, setResidenteSelecionado] = useState('');
-  const [residenteAtual, setResidenteAtual] = useState(null);
-  const [dropdownAberto, setDropdownAberto] = useState(false);
+  const [residenteAtual, setResidenteAtual] = useState<Preferencia | null>(null);
+  const [dropdownAberto, setDropdownAberto] = useState(false); 
+  const [residentes, setResidentes] = useState<Residente[]>([]);
+  const [sugestoesResidentes, setSugestoesResidentes] = useState<Residente[]>([]);
+  const [mostrarSugestoes, setMostrarSugestoes] = useState(false);
+  const [carregandoResidentes, setCarregandoResidentes] = useState(false);
 
   const CATEGORIAS = {
-    ALIMENTAR: 'alimentar',
-    ATIVIDADES: 'atividades',
-    CUIDADOR: 'cuidador'
+    ALIMENTAR: 'Alimentar',
+    ATIVIDADES: 'Atividades',
+    CUIDADOR: 'Cuidador'
   };
 
   const CATEGORIA_LABELS = {
@@ -50,7 +62,7 @@ const Preferencias = () => {
 
   const CORES_CALENDARIO = {
     [CATEGORIAS.ALIMENTAR]: 'bg-odara-primary',
-    [CATEGORIAS.ATIVIDADES]: 'bg-odara-accent',
+    [CATEGORIAS.ATIVIDADES]: 'bg-odara-accent', 
     [CATEGORIAS.CUIDADOR]: 'bg-odara-secondary'
   };
 
@@ -61,7 +73,94 @@ const Preferencias = () => {
     { id: CATEGORIAS.CUIDADOR, label: CATEGORIA_LABELS[CATEGORIAS.CUIDADOR] }
   ];
 
-  const abrirModalAdicionar = (categoria) => {
+  // Carrega residentes do banco
+  useEffect(() => {
+    const carregarResidentes = async () => {
+      try {
+        setCarregandoResidentes(true);
+        const { data, error } = await supabase
+          .from('residente')
+          .select('id, nome')
+          .order('nome');
+
+        if (error) throw error;
+        if (data) {
+          setResidentes(data);
+        }
+      } catch (error) {
+        console.error('Erro ao carregar residentes:', error);
+      } finally {
+        setCarregandoResidentes(false);
+      }
+    };
+
+    carregarResidentes();
+  }, []);
+
+  // Carrega preferências do banco
+  useEffect(() => {
+    const fetchPreferencias = async () => {
+      try {
+        setLoading(true);
+        
+        // Busca preferências com JOIN para pegar o nome do residente
+        const { data, error } = await supabase
+          .from('preferencia')
+          .select(`
+            *,
+            residente:residente(id, nome)
+          `);
+
+        if (error) throw error;
+
+        if (data) {
+          // Transforma os dados para incluir o nome do residente
+          const preferenciasComNomes = data.map(pref => ({
+            ...pref,
+            residente: pref.residente?.nome || 'Residente não encontrado'
+          }));
+          setPreferencias(preferenciasComNomes);
+        } else {
+          setPreferencias([]);
+        }
+      } catch (error) {
+        console.error('Erro ao carregar preferências:', error);
+        alert('Erro ao carregar preferências.');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchPreferencias();
+  }, []);
+
+  // Função para filtrar sugestões de residentes
+  const filtrarSugestoes = (input: string) => {
+    if (!input.trim()) {
+      setSugestoesResidentes([]);
+      setMostrarSugestoes(false);
+      return;
+    }
+
+    const sugestoesFiltradas = residentes.filter(residente =>
+      residente.nome.toLowerCase().includes(input.toLowerCase())
+    );
+
+    setSugestoesResidentes(sugestoesFiltradas.slice(0, 5));
+    setMostrarSugestoes(sugestoesFiltradas.length > 0);
+  };
+
+  // Função para agrupar preferências por categoria
+  const getPreferenciasPorCategoria = () => {
+    const agrupadas = {
+      [CATEGORIAS.ALIMENTAR]: preferencias.filter(p => p.tipo_preferencia === CATEGORIAS.ALIMENTAR),
+      [CATEGORIAS.ATIVIDADES]: preferencias.filter(p => p.tipo_preferencia === CATEGORIAS.ATIVIDADES),
+      [CATEGORIAS.CUIDADOR]: preferencias.filter(p => p.tipo_preferencia === CATEGORIAS.CUIDADOR)
+    };
+    return agrupadas;
+  };
+
+  const abrirModalAdicionar = (categoria: string) => {
     setCategoriaAtual(categoria);
     setNovaPreferencia({ titulo: '', descricao: '', residente: '', foto: '' });
     setEditando(false);
@@ -69,15 +168,17 @@ const Preferencias = () => {
     setModalAberto(true);
   };
 
-  const abrirModalEditar = (categoria, id) => {
-    const preferenciaParaEditar = preferences[categoria].find(item => item.id === id);
+  const abrirModalEditar = (categoria: string, id: number) => {
+    const preferenciasCategoria = getPreferenciasPorCategoria()[categoria];
+    const preferenciaParaEditar = preferenciasCategoria.find(item => item.id === id);
+    
     if (preferenciaParaEditar) {
       setCategoriaAtual(categoria);
       setNovaPreferencia({
-        titulo: preferenciaParaEditar.title,
-        descricao: preferenciaParaEditar.description,
-        residente: preferenciaParaEditar.residente,
-        foto: preferenciaParaEditar.foto
+        titulo: preferenciaParaEditar.titulo,
+        descricao: preferenciaParaEditar.descricao,
+        residente: preferenciaParaEditar.residente || '',
+        foto: preferenciaParaEditar.foto_url
       });
       setEditando(true);
       setIdEditando(id);
@@ -85,65 +186,137 @@ const Preferencias = () => {
     }
   };
 
-  const salvarPreferencia = () => {
-    if (!novaPreferencia.titulo || !novaPreferencia.descricao) return;
-
-    if (editando && idEditando) {
-      setPreferences(prev => ({
-        ...prev,
-        [categoriaAtual]: prev[categoriaAtual].map(item =>
-          item.id === idEditando
-            ? {
-              ...item,
-              title: novaPreferencia.titulo,
-              description: novaPreferencia.descricao,
-              residente: novaPreferencia.residente,
-              foto: novaPreferencia.foto
-            }
-            : item
-        )
-      }));
-    } else {
-      const novoItem = {
-        id: Date.now(),
-        title: novaPreferencia.titulo,
-        description: novaPreferencia.descricao,
-        residente: novaPreferencia.residente,
-        foto: novaPreferencia.foto
-      };
-      setPreferences(prev => ({
-        ...prev,
-        [categoriaAtual]: [...prev[categoriaAtual], novoItem]
-      }));
+  const salvarPreferencia = async () => {
+    if (!novaPreferencia.titulo || !novaPreferencia.descricao || !novaPreferencia.residente) {
+      alert('Preencha todos os campos obrigatórios!');
+      return;
     }
 
-    setModalAberto(false);
-  };
+    try {
+      setLoading(true);
 
-  const excluirPreferencia = (categoria, id) => {
-    if (window.confirm('Tem certeza que deseja excluir esta preferência?')) {
-      setPreferences(prev => ({
-        ...prev,
-        [categoria]: prev[categoria].filter(item => item.id !== id)
-      }));
+      // Encontra o ID do residente selecionado
+      const residenteSelecionado = residentes.find(r => 
+        r.nome === novaPreferencia.residente
+      );
+
+      if (!residenteSelecionado) {
+        alert('Residente não encontrado! Selecione um residente válido da lista.');
+        return;
+      }
+
+      if (editando && idEditando) {
+        // Atualizar preferência existente
+        const { data, error } = await supabase
+          .from('preferencia')
+          .update({
+            titulo: novaPreferencia.titulo,
+            descricao: novaPreferencia.descricao,
+            id_residente: residenteSelecionado.id,
+            foto_url: novaPreferencia.foto,
+            tipo_preferencia: categoriaAtual
+          })
+          .eq('id', idEditando)
+          .select();
+
+        if (error) throw error;
+
+        if (data) {
+          setPreferencias(prev => 
+            prev.map(item => 
+              item.id === idEditando 
+                ? { ...data[0], residente: novaPreferencia.residente }
+                : item
+            )
+          );
+          alert('Preferência atualizada com sucesso!');
+        }
+      } else {
+        // Criar nova preferência
+        const { data, error } = await supabase
+          .from('preferencia')
+          .insert({
+            titulo: novaPreferencia.titulo,
+            descricao: novaPreferencia.descricao,
+            id_residente: residenteSelecionado.id,
+            foto_url: novaPreferencia.foto,
+            tipo_preferencia: categoriaAtual
+          })
+          .select();
+
+        if (error) throw error;
+
+        if (data && data[0]) {
+          // Adiciona o nome do residente para exibição
+          const novaPreferenciaComResidente = {
+            ...data[0],
+            residente: novaPreferencia.residente
+          };
+          setPreferencias(prev => [...prev, novaPreferenciaComResidente]);
+          alert('Preferência criada com sucesso!');
+        }
+      }
+
+      setModalAberto(false);
+    } catch (error: any) {
+      console.error('Erro ao salvar preferência:', error);
+      alert(`Erro ao salvar preferência: ${error.message}`);
+    } finally {
+      setLoading(false);
     }
   };
 
-  const residentes = Array.from(new Set(
-    [...preferences.alimentar, ...preferences.atividades, ...preferences.cuidador]
+  const excluirPreferencia = async (id: number) => {
+    if (!window.confirm('Tem certeza que deseja excluir esta preferência?')) return;
+
+    try {
+      setLoading(true);
+
+      const { error } = await supabase
+        .from('preferencia')
+        .delete()
+        .eq('id', id);
+
+      if (error) throw error;
+
+      setPreferencias(prev => prev.filter(item => item.id !== id));
+      alert('Preferência excluída com sucesso!');
+    } catch (error: any) {
+      console.error('Erro ao excluir preferência:', error);
+      alert(`Erro ao excluir preferência: ${error.message}`);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Residentes únicos para o filtro
+  const residentesUnicos = Array.from(new Set(
+    preferencias
       .map(item => item.residente)
       .filter(Boolean)
   ));
 
-  const preferenciasFiltradas = Object.fromEntries(
-    Object.entries(preferences).map(([cat, items]) => [
-      cat,
-      items.filter(item =>
-        (filtroAtivo === 'todos' || filtroAtivo === cat) &&
-        (!residenteSelecionado || item.residente === residenteSelecionado)
+  // Preferências filtradas
+  const preferenciasFiltradas = getPreferenciasPorCategoria();
+
+  // Aplicar filtros
+  const preferenciasParaExibir = Object.entries(preferenciasFiltradas)
+    .filter(([categoria]) => filtroAtivo === 'todos' || filtroAtivo === categoria)
+    .map(([categoria, items]) => ({
+      categoria,
+      items: items.filter(item => 
+        !residenteSelecionado || item.residente === residenteSelecionado
       )
-    ])
-  );
+    }))
+    .filter(({ items }) => items.length > 0);
+
+  if (loading) {
+    return (
+      <div className="flex min-h-screen bg-odara-offwhite items-center justify-center">
+        <div className="text-odara-dark text-xl">Carregando...</div>
+      </div>
+    );
+  }
 
   return (
     <div className="flex min-h-screen bg-odara-offwhite">
@@ -152,7 +325,7 @@ const Preferencias = () => {
           <div className="flex items-center">
             <div className="flex items-center mb-1">
               <Link
-                to="/funcionario"  
+                to="/gestao/PaginaRegistros"  
                 className="text-odara-accent hover:text-odara-secondary transition-colors duration-200 flex items-center"
               >
                 <FaArrowLeft className="mr-1" />
@@ -243,7 +416,7 @@ const Preferencias = () => {
               onChange={(e) => setResidenteSelecionado(e.target.value)}
             >
               <option value="">Todos os residentes</option>
-              {residentes.map(r => <option key={r} value={r}>{r}</option>)}
+              {residentesUnicos.map(r => <option key={r} value={r}>{r}</option>)}
             </select>
           </div>
 
@@ -290,8 +463,8 @@ const Preferencias = () => {
             </p>
 
             <div className="space-y-4 max-h-[600px] overflow-y-auto">
-              {Object.entries(preferenciasFiltradas).map(([categoria, items]) => (
-                items.length > 0 && (
+              {preferenciasParaExibir.length > 0 ? (
+                preferenciasParaExibir.map(({ categoria, items }) => (
                   <div key={categoria} className="mb-6">
                     <h3 className="text-lg font-semibold text-odara-dark mb-3 flex items-center">
                       <span className={`w-3 h-3 rounded-full mr-2 ${CORES_CALENDARIO[categoria]}`}></span>
@@ -318,7 +491,7 @@ const Preferencias = () => {
                                 <FaEdit size={14} />
                               </button>
                               <button 
-                                onClick={() => excluirPreferencia(categoria, item.id)}
+                                onClick={() => excluirPreferencia(item.id)}
                                 className="text-odara-alerta hover:text-red-700 transition-colors duration-200 p-2 rounded-full hover:bg-odara-alerta/50"
                                 title="Excluir preferência"
                               >
@@ -327,8 +500,8 @@ const Preferencias = () => {
                             </div>
                           </div>
                           
-                          <h6 className="text-lg font-bold mb-1">{item.title}</h6>
-                          <p className="text-base mb-2">{item.description}</p>
+                          <h6 className="text-lg font-bold mb-1">{item.titulo}</h6>
+                          <p className="text-base mb-2">{item.descricao}</p>
                           
                           <div className="flex items-center justify-between">
                             <span className="bg-odara-dropdown text-odara-dropdown-name/60 px-2 py-1 rounded-md text-xs">
@@ -339,10 +512,8 @@ const Preferencias = () => {
                       ))}
                     </div>
                   </div>
-                )
-              ))}
-              
-              {Object.values(preferenciasFiltradas).every(items => items.length === 0) && (
+                ))
+              ) : (
                 <div className="p-6 rounded-xl bg-odara-name/10 text-center">
                   <p className="text-odara-dark/60">
                     Nenhuma preferência encontrada
@@ -356,9 +527,9 @@ const Preferencias = () => {
             <h3 className="text-xl font-bold text-odara-dark mb-4">RESIDENTE</h3>
             <div className="text-center">
               <div className="w-48 h-48 mx-auto rounded-2xl flex items-center justify-center mb-4 bg-odara-offwhite">
-                {residenteAtual?.foto ? (
+                {residenteAtual?.foto_url ? (
                   <img 
-                    src={residenteAtual.foto} 
+                    src={residenteAtual.foto_url} 
                     alt={residenteAtual.residente} 
                     className="w-48 h-48 rounded-2xl object-cover" 
                   />
@@ -375,19 +546,6 @@ const Preferencias = () => {
                 </p>
               )}
             </div>
-
-            {/* Legenda das categorias */}
-            <div className="mt-6 p-4 bg-odara-offwhite rounded-lg">
-              <h6 className="font-semibold text-odara-dark mb-3 text-center">Legenda das Categorias:</h6>
-              <div className="space-y-2">
-                {Object.entries(CATEGORIAS).map(([chave, valor]) => (
-                  <div key={valor} className="flex items-center gap-3">
-                    <div className={`w-3 h-3 rounded-full ${CORES_CALENDARIO[valor]}`}></div>
-                    <span className="text-sm">{CATEGORIA_LABELS[valor]}</span>
-                  </div>
-                ))}
-              </div>
-            </div>
           </div>
         </div>
 
@@ -399,24 +557,70 @@ const Preferencias = () => {
                 <h2 className="text-2xl font-bold text-odara-accent">
                   {editando ? 'Editar' : 'Adicionar'} Preferência - {CATEGORIA_LABELS[categoriaAtual]}
                 </h2>
-                <button
+                <button 
                   onClick={() => setModalAberto(false)}
-                  className="text-odara-primary hover:text-odara-secondary transition-colors duration-200"
+                  className="text-odara-dark hover:text-odara-secondary"
                 >
-                  <FaTimes />
+                  <FaTimes size={20} />
                 </button>
               </div>
 
-              <div className="space-y-4">
-                <div>
+              <form onSubmit={(e) => {
+                e.preventDefault();
+                salvarPreferencia();
+              }} className="space-y-4">
+                <div className="relative">
                   <label className="block text-odara-dark font-medium mb-2">Residente *</label>
                   <input 
                     type="text" 
                     className="w-full px-4 py-2 border border-odara-primary rounded-lg focus:border-odara-secondary text-odara-secondary"
                     value={novaPreferencia.residente}
-                    onChange={(e) => setNovaPreferencia({ ...novaPreferencia, residente: e.target.value })}
-                    placeholder="Nome do residente" 
+                    onChange={(e) => {
+                      const valor = e.target.value;
+                      setNovaPreferencia({ ...novaPreferencia, residente: valor });
+                      filtrarSugestoes(valor);
+                    }}
+                    onFocus={() => {
+                      if (residentes.length > 0) {
+                        setMostrarSugestoes(true);
+                        // Mostra todas as sugestões quando foca
+                        setSugestoesResidentes(residentes.slice(0, 5));
+                      }
+                    }}
+                    onBlur={() => setTimeout(() => setMostrarSugestoes(false), 200)}
+                    placeholder="Digite o nome do residente ou clique para ver opções" 
+                    required
                   />
+                  
+                  {/* Lista de sugestões */}
+                  {mostrarSugestoes && sugestoesResidentes.length > 0 && (
+                    <div className="absolute z-50 w-full mt-1 bg-white border border-odara-primary rounded-lg shadow-lg max-h-60 overflow-y-auto">
+                      {sugestoesResidentes.map((residente) => (
+                        <div
+                          key={residente.id}
+                          className="px-4 py-3 hover:bg-odara-primary hover:text-odara-white cursor-pointer transition-colors duration-200 border-b last:border-b-0"
+                          onMouseDown={(e) => {
+                            e.preventDefault();
+                            setNovaPreferencia({ 
+                              ...novaPreferencia, 
+                              residente: residente.nome 
+                            });
+                            setMostrarSugestoes(false);
+                          }}
+                        >
+                          <div className="font-medium">{residente.nome}</div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                  
+                  {carregandoResidentes && (
+                    <div className="absolute right-3 top-10 text-odara-primary text-sm">Carregando residentes...</div>
+                  )}
+                  
+                  {!carregandoResidentes && residentes.length === 0 && (
+                    <div className="text-sm text-red-500 mt-1">⚠️ Nenhum residente cadastrado no sistema</div>
+                  )}
                 </div>
                 <div>
                   <label className="block text-odara-dark font-medium mb-2">Título *</label>
@@ -426,6 +630,7 @@ const Preferencias = () => {
                     value={novaPreferencia.titulo}
                     onChange={(e) => setNovaPreferencia({ ...novaPreferencia, titulo: e.target.value })}
                     placeholder="Digite o título" 
+                    required
                   />
                 </div>
                 <div>
@@ -436,6 +641,7 @@ const Preferencias = () => {
                     value={novaPreferencia.descricao}
                     onChange={(e) => setNovaPreferencia({ ...novaPreferencia, descricao: e.target.value })}
                     placeholder="Digite a descrição"
+                    required
                   ></textarea>
                 </div>
                 <div>
@@ -448,23 +654,23 @@ const Preferencias = () => {
                     placeholder="Link da foto" 
                   />
                 </div>
-              </div>
-
-              <div className="flex justify-end space-x-3 mt-6">
-                <button 
-                  onClick={() => setModalAberto(false)}
-                  className="px-4 py-2 border-2 border-odara-primary text-odara-primary rounded-lg hover:bg-odara-primary hover:text-odara-white transition-colors duration-200"
-                >
-                  Cancelar
-                </button>
-                <button 
-                  onClick={salvarPreferencia}
-                  className="px-4 py-2 bg-odara-accent text-odara-white rounded-lg hover:bg-odara-secondary transition-colors duration-200"
-                  disabled={!novaPreferencia.titulo || !novaPreferencia.descricao || !novaPreferencia.residente}
-                >
-                  {editando ? 'Atualizar' : 'Salvar'}
-                </button>
-              </div>
+                <div className="flex justify-end space-x-3 mt-6">
+                  <button 
+                    type="button"
+                    onClick={() => setModalAberto(false)}
+                    className="px-4 py-2 border-2 border-odara-primary text-odara-primary rounded-lg hover:bg-odara-primary hover:text-odara-white transition-colors duration-200"
+                  >
+                    Cancelar
+                  </button>
+                  <button 
+                    type="submit"
+                    className="px-4 py-2 bg-odara-accent text-odara-white rounded-lg hover:bg-odara-secondary transition-colors duration-200"
+                    disabled={!novaPreferencia.titulo || !novaPreferencia.descricao || !novaPreferencia.residente}
+                  >
+                    {editando ? 'Atualizar' : 'Salvar'}
+                  </button>
+                </div>
+              </form>
             </div>
           </div>
         )}
@@ -473,4 +679,4 @@ const Preferencias = () => {
   );
 };
 
-export default Preferencias;
+export default RegistroPreferencias;

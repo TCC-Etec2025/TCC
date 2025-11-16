@@ -6,7 +6,7 @@ import {
 } from 'react-icons/fa';
 import { Link } from 'react-router-dom';
 import 'react-calendar/dist/Calendar.css';
-import { supabase } from '../../lib/supabaseClient';
+import { supabase } from '../../../lib/supabaseClient';
 
 import { useForm } from 'react-hook-form';
 import { yupResolver } from '@hookform/resolvers/yup';

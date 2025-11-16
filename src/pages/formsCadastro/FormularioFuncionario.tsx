@@ -1,5 +1,5 @@
 import { useLocation } from 'react-router-dom';
-import CadastroFuncionario from '../components/forms/funcionario';
+import CadastroFuncionario from '../../components/forms/funcionario';
 
 export default function FuncionarioCadastroPage() {
   const location = useLocation();

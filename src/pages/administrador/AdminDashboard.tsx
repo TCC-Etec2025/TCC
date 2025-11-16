@@ -15,8 +15,8 @@ import {
   LuCircleAlert,
 } from 'react-icons/lu';
 import { useNavigate } from 'react-router-dom';
-import { supabase } from '../lib/supabaseClient';
-import DataFormatada from '../components/DataFormatada';
+import { supabase } from '../../lib/supabaseClient';
+import DataFormatada from '../../components/DataFormatada';
 
 // Declaração de tipo para o componente de atividade
 type ActivityStatus = 'info' | 'success' | 'warning';

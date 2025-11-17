@@ -6,6 +6,7 @@ import DashboardRedirect from './components/DashboardRedirect'
 import ProtectedLayout from './layouts/ProtectedLayout'
 
 /* Landing Page */
+import LayoutLandingPage from './layouts/LayoutLandingPage'
 import Home from './pages/landingPage/Home.tsx'
 import Documentacao from './pages/landingPage/Documentacao.tsx'
 
@@ -74,8 +75,10 @@ export default function App() {
   return (
     <Routes>
       {/* Landing Page */}
-      <Route path="/" element={<Home />} />
-      <Route path="/documentacao" element={<Documentacao />} />
+      <Route path="/" element={<LayoutLandingPage />}>
+        <Route index element={<Home />} />
+        <Route path="documentacao" element={<Documentacao />} />
+      </Route>
 
       {/* Login */}
       <Route path="/login" element={<Login />} />

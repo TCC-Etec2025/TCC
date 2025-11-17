@@ -81,7 +81,7 @@ const Home = () => {
 			>
 				<div className="absolute inset-0 opacity-33">
 					<img
-						src="../images/idosos.jpg"
+						src="../images/landingPage.jpg"
 						alt="Logo Odara Gestão"
 						className="w-full h-full object-cover"
 						onError={(e) => {
@@ -319,7 +319,7 @@ const Home = () => {
 						{/* Imagem de fundo*/}
 						<div className="absolute inset-0 opacity-30">
 							<img
-								src="../images/ceu.jpg"
+								src="../images/ceuContato.jpg"
 								alt="Logo Odara Gestão"
 								className="w-full h-full object-cover"
 								onError={(e) => {

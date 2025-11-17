@@ -45,11 +45,6 @@ export default function Topbar() {
             action: () => navigate("/app/admin/perfil")
         },
         {
-            label: "Configurações",
-            icon: <Settings className="w-4 h-4 mr-2 text-gray-400" />,
-            action: () => console.log("Configurações clicado")
-        },
-        {
             label: "Sair",
             icon: <LogOut className="w-4 h-4 mr-2 text-gray-400" />,
             action: logout

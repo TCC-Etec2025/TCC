@@ -437,11 +437,6 @@ const RegistroComportamento: React.FC = () => {
         {/* Cabeçalho */}
         <div className="flex justify-between items-center mb-6">
           <div className="flex items-center">
-            <div className="flex items-center mb-1">
-              <Link to="/gestao/PaginaRegistros" className="text-odara-accent hover:text-odara-secondary transition-colors duration-200 flex items-center">
-                <FaArrowLeft className="mr-1" />
-              </Link>
-            </div>
             <h1 className="text-3xl font-bold text-odara-dark mr-2">Registro de Comportamento</h1>
             <div className="relative">
               <button onMouseEnter={() => setInfoVisivel(true)} onMouseLeave={() => setInfoVisivel(false)} className="text-odara-dark hover:text-odara-secondary transition-colors duration-200">

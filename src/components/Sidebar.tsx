@@ -43,7 +43,7 @@ export default function Sidebar() {
         <div className="flex items-center gap-2 text-odara-contorno font-bold">
           <div className="w-8 h-8 bg-white rounded-full flex items-center justify-center overflow-hidden border-2 border-odara-contorno shadow-lg">
             <img
-              src="/logo.png"
+              src="../images/logo.png"
               alt="Logo Odara Gestão"
               className="w-full h-full object-cover"
             />
@@ -74,10 +74,6 @@ export default function Sidebar() {
 
       {/* Footer */}
       <div className="p-2 border-t border-odara-contorno/20">
-        <button className={`flex items-center gap-3 w-full p-3 rounded-lg text-odara-contorno/90 hover:bg-odara-contorno/10 hover:text-odara-contorno transition-all ${expanded ? "" : "justify-center"}`}>
-          <Settings className="w-5 h-5 flex-shrink-0" />
-          {expanded && <span>Configurações</span>}
-        </button>
         <button
           onClick={logout}
           className={`flex items-center gap-3 w-full p-3 rounded-lg text-red-400 hover:bg-red-400/10 hover:text-red-300 transition-all ${expanded ? "" : "justify-center"}`}

@@ -37,33 +37,25 @@ const DashboardFuncionario = () => {
       id: 1, 
       nome: "Registro de ocorrências", 
       icon: AlertTriangle,
-      consultarUrl: "/app/funcionario/Registros/ocorrencias",
-      editarUrl: "/app/funcionario/Registros/ocorrencias",
-      registrarUrl: "/app/funcionario/Registros/ocorrencias"
+      url: "../admin/registro/ocorrencias"
     },
     { 
       id: 2, 
       nome: "Registro de preferências", 
       icon: Star,
-      consultarUrl: "/app/funcionario/Registros/preferencias",
-      editarUrl: "/app/funcionario/Registros/preferencias",
-      registrarUrl: "/app/funcionario/Registros/preferencias"
+      url: "../admin/registro/preferencias"
     },
     { 
       id: 3, 
       nome: "Registro de comportamento", 
       icon: BarChartIcon,
-      consultarUrl: "/app/funcionario/Registros/comportamento",
-      editarUrl: "/app/funcionario/Registros/comportamento",
-      registrarUrl: "/app/funcionario/Registros/comportamento"
+      url: "../admin/registro/comportamento"
     },
     { 
       id: 4, 
       nome: "Registro da saúde corporal", 
       icon: Hospital,
-      consultarUrl: "/app/funcionario/Registros/saude/corporal",
-      editarUrl: "/app/funcionario/Registros/saude/corporal",
-      registrarUrl: "/app/funcionario/Registros/saude/corporal"
+      url: "../admin/registro/saudeInicial"
     },
   ];
 
@@ -72,36 +64,31 @@ const DashboardFuncionario = () => {
       id: 5, 
       nome: "Medicamentos", 
       icon: Pill,
-      consultarUrl: "/app/funcionario/checklist/medicamentos/check",
-      editarUrl: "/app/funcionario/checklist/medicamentos/check"
+      url: "/app/funcionario/checklist/medicamentos/check"
     },
     { 
       id: 6, 
       nome: "Exames médicos", 
       icon: Microscope,
-      consultarUrl: "/app/funcionario/checklist/exames/medicos",
-      editarUrl: "/app/funcionario/checklist/exames/medicos"
+      url: "/app/funcionario/checklist/exames/medicos"
     },
     { 
       id: 7, 
       nome: "Consultas médicas", 
       icon: Stethoscope,
-      consultarUrl: "/app/funcionario/checklist/consultas/medicas",
-      editarUrl: "/app/funcionario/checklist/consultas/medicas"
+      url: "/app/funcionario/checklist/consultas/medicas"
     },
     { 
       id: 8, 
       nome: "Atividades", 
       icon: ClipboardList,
-      consultarUrl: "/app/funcionario/checklist/atividades",
-      editarUrl: "/app/funcionario/checklist/atividades"
+      url: "/app/funcionario/checklist/atividades"
     },
     { 
       id: 9, 
       nome: "Alimentação", 
       icon: Utensils,
-      consultarUrl: "/app/funcionario/checklist/alimentacao",
-      editarUrl: "/app/funcionario/checklist/alimentacao"
+      url: "/app/funcionario/checklist/alimentacao"
     },
   ];
 
@@ -201,41 +188,6 @@ const DashboardFuncionario = () => {
     },
   ];
 
-  const ActionButton = ({ icon: Icon, label, onClick, url }) => {
-    const [isHovered, setIsHovered] = useState(false);
-
-    const handleClick = (e) => {
-      e.stopPropagation();
-      if (url) {
-        navigate(url);
-      } else if (onClick) {
-        onClick();
-      }
-    };
-
-    return (
-      <div className="relative">
-        <button
-          className="p-2 rounded-full bg-odara-primary text-white transition-all duration-200 transform hover:scale-110 hover:bg-odara-primary/90"
-          onClick={handleClick}
-          onMouseEnter={() => setIsHovered(true)}
-          onMouseLeave={() => setIsHovered(false)}
-        >
-          <Icon size={16} />
-        </button>
-        
-        {isHovered && (
-          <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 z-10">
-            <div className="bg-gray-800 text-white text-xs py-1 px-2 rounded whitespace-nowrap">
-              {label}
-              <div className="absolute top-full left-1/2 transform -translate-x-1/2 border-4 border-transparent border-t-gray-800"></div>
-            </div>
-          </div>
-        )}
-      </div>
-    );
-  };
-
   const IconWrapper = ({ icon: Icon, size = 24, className = "" }) => (
     <Icon size={size} className={`text-odara-primary ${className}`} />
   );
@@ -268,8 +220,7 @@ const DashboardFuncionario = () => {
                     <p className="text-3xl font-bold text-odara-dark mt-2">
                       {dadosDashboard.checklistDia}
                     </p>
-
-                      <p className="text-sm font-medium text-yellow-400">+5 Checklists Pendentes</p>
+                    <p className="text-sm font-medium text-yellow-400">+5 Checklists Pendentes</p>
                   </div>
                   <div className="p-3 rounded-full">
                     <IconWrapper icon={FileText} size={32} />
@@ -294,88 +245,58 @@ const DashboardFuncionario = () => {
             </div>
 
             <div className="bg-white rounded-2xl shadow p-5">
-            <h2 className="text-xl font-semibold text-odara-dark mb-4">CHECKLISTS</h2>
-            <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
-              {funcionalidadesCheck.map((func) => (
-                <div
-                  key={func.id}
-                  className={`border border-gray-200 rounded-md p-3 hover:shadow-sm transition-all duration-200 ${
-                    funcionalidadeSelecionada?.id === func.id
-                      ? "ring-2 ring-odara-primary shadow-sm"
-                      : "hover:border-odara-primary/30"
-                  }`}
-                  onClick={() => setFuncionalidadeSelecionada(func)}
-                >
-                  <div className="flex items-center gap-2 mb-2">
-                    <div className="p-2 rounded-md bg-odara-primary/10">
-                      <IconWrapper icon={func.icon} />
+              <h2 className="text-xl font-semibold text-odara-dark mb-4">CHECKLISTS</h2>
+              <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
+                {funcionalidadesCheck.map((func) => (
+                  <div
+                    key={func.id}
+                    className={`border border-gray-200 rounded-md p-4 cursor-pointer hover:shadow-md transition-all duration-200 group ${
+                      funcionalidadeSelecionada?.id === func.id
+                        ? "ring-2 ring-odara-primary shadow-sm"
+                        : "hover:border-odara-primary/50 hover:bg-odara-primary/5"
+                    }`}
+                    onClick={() => navigate(func.url)}
+                  >
+                    <div className="flex flex-col items-center text-center gap-2">
+                      <div className="p-3 rounded-lg bg-odara-primary/10 group-hover:bg-odara-primary/20 transition-colors">
+                        <IconWrapper icon={func.icon} size={28} />
+                      </div>
+                      <span className="text-sm font-medium text-odara-dark">
+                        {func.nome}
+                      </span>
                     </div>
-                    <span className="text-sm font-medium text-odara-dark flex-1 truncate">
-                      {func.nome}
-                    </span>
                   </div>
-                  <div className="flex justify-center gap-2 pt-2 border-t border-gray-100">
-                    <ActionButton
-                      icon={Eye}
-                      label="Consultar"
-                      url={func.consultarUrl}
-                    />
-                    <ActionButton
-                      icon={Edit}
-                      label="Editar"
-                      url={func.editarUrl}
-                    />
-                  </div>
-                </div>
-              ))}
-            </div>
+                ))}
+              </div>
 
-            {/* Linha separadora */}
-            <hr className="border-gray-200 my-4" />
+              {/* Linha separadora */}
+              <hr className="border-gray-200 my-6" />
 
-            {/* Registros */}
-            <h2 className="text-xl font-semibold text-odara-dark mb-4">REGISTROS</h2>
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
-              {funcionalidadesRegistro.map((func) => (
-                <div
-                  key={func.id}
-                  className={`border border-gray-200 rounded-md p-3 hover:shadow-sm transition-all duration-200 ${
-                    funcionalidadeSelecionada?.id === func.id
-                      ? "ring-2 ring-odara-primary shadow-sm"
-                      : "hover:border-odara-primary/30"
-                  }`}
-                  onClick={() => setFuncionalidadeSelecionada(func)}
-                >
-                  <div className="flex items-center gap-2 mb-2">
-                    <div className="p-2 rounded-md bg-odara-primary/10">
-                      <IconWrapper icon={func.icon} />
+              {/* Registros */}
+              <h2 className="text-xl font-semibold text-odara-dark mb-4">REGISTROS</h2>
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                {funcionalidadesRegistro.map((func) => (
+                  <div
+                    key={func.id}
+                    className={`border border-gray-200 rounded-md p-4 cursor-pointer hover:shadow-md transition-all duration-200 group ${
+                      funcionalidadeSelecionada?.id === func.id
+                        ? "ring-2 ring-odara-primary shadow-sm"
+                        : "hover:border-odara-primary/50 hover:bg-odara-primary/5"
+                    }`}
+                    onClick={() => navigate(func.url)}
+                  >
+                    <div className="flex flex-col items-center text-center gap-2">
+                      <div className="p-3 rounded-lg bg-odara-primary/10 group-hover:bg-odara-primary/20 transition-colors">
+                        <IconWrapper icon={func.icon} size={28} />
+                      </div>
+                      <span className="text-sm font-medium text-odara-dark">
+                        {func.nome}
+                      </span>
                     </div>
-                    <span className="text-sm font-medium text-odara-dark flex-1 truncate">
-                      {func.nome}
-                    </span>
                   </div>
-                  <div className="flex justify-center gap-2 pt-2 border-t border-gray-100">
-                    <ActionButton
-                      icon={Eye}
-                      label="Consultar"
-                      url={func.consultarUrl}
-                    />
-                    <ActionButton
-                      icon={Edit}
-                      label="Editar"
-                      url={func.editarUrl}
-                    />
-                    <ActionButton
-                      icon={Plus}
-                      label="Registrar"
-                      url={func.registrarUrl}
-                    />
-                  </div>
-                </div>
-              ))}
+                ))}
+              </div>
             </div>
-
-          </div>
           </div>
 
           <div className="lg:col-span-1">

@@ -556,13 +556,6 @@ const Alimentacao = () => {
           <div className="flex items-center justify-center">
             {/* Título da página - Sempre centralizado */}
             <div className="flex items-center">
-              {/* Botão voltar */}
-              <Link
-                to="/funcionario/Checklist"
-                className="text-odara-accent hover:text-odara-secondary transition-colors duration-200 mr-3"
-              >
-                <FaArrowLeft size={20} />
-              </Link>
               {/* Título da página */}
               <h1 className="text-2xl lg:text-3xl font-bold text-odara-dark">
                 Checklist de Medicamentos

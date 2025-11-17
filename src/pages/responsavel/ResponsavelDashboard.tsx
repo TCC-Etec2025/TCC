@@ -540,28 +540,6 @@ const DashboardResponsavel = () => {
 
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
           <div className="lg:col-span-3 space-y-6">
-            {/* Solicitação de Documentos */}
-            <Link 
-              to="/familiar/documentos"
-              className="block bg-white rounded-2xl shadow p-6 hover:shadow-md transition cursor-pointer"
-            >
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-4">
-                  <div className="bg-blue-100 p-3 rounded-lg">
-                    <FileText size={24} className="text-blue-600" />
-                  </div>
-                  <div>
-                    <h2 className="text-xl font-semibold text-odara-dark">Solicitação de Documentos</h2>
-                    <p className="text-odara-dark/60">Solicite relatórios, atestados e documentos médicos</p>
-                  </div>
-                </div>
-                <div className="flex items-center gap-2 text-blue-600">
-                  <span className="font-medium">Solicitar</span>
-                  <ChevronRight size={20} />
-                </div>
-              </div>
-            </Link>
-
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
               {/* Medicamentos */}
               <div 

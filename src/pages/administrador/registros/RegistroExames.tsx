@@ -146,14 +146,6 @@ const RegistroExames = () => {
       <div className="flex-1 p-6 lg:p-10">
         <div className="flex justify-between items-center mb-6">
           <div className="flex items-center">
-            <div className="flex items-center mb-1">
-              <Link
-                to="/gestao/PaginaRegistros"
-                className="text-odara-accent hover:text-odara-secondary transition-colors duration-200 flex items-center"
-              >
-                <FaArrowLeft className="mr-1" />
-              </Link>
-            </div>
             <h1 className="text-3xl font-bold text-odara-dark mr-2">Registro de Exames Médicos</h1>
             <div className="relative">
               <button

@@ -384,14 +384,6 @@ const RegistroMedicamentos: React.FC = () => {
         {/* ===== SEÇÃO 1: CABEÇALHO DA PÁGINA ===== */}
         <div className="flex flex-col sm:flex-row justify-center xl:justify-start items-start sm:items-center gap-4 mb-6">
           <div className="flex items-center">
-            <div className="flex items-center mb-1">
-              <Link
-                to="/gestao/PaginaRegistros"
-                className="text-odara-accent hover:text-odara-secondary transition-colors duration-200 flex items-center"
-              >
-                <FaArrowLeft className="mr-1" />
-              </Link>
-            </div>
 
             <h1 className="text-2xl sm:text-3xl font-bold text-odara-dark mr-2">
               Registro de Medicamentos

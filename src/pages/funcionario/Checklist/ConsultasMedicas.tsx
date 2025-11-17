@@ -506,12 +506,6 @@ const Consultas = () => {
         <div className="w-full max-w-6xl mb-6">
           <div className="flex items-center justify-center">
             <div className="flex items-center">
-              <Link
-                to="/funcionario/Checklist"
-                className="text-odara-accent hover:text-odara-secondary transition-colors duration-200 mr-3"
-              >
-                <FaArrowLeft size={20} />
-              </Link>
               <h1 className="text-2xl lg:text-3xl font-bold text-odara-dark mr-2">
                 Checklist de Consultas Médicas
               </h1>

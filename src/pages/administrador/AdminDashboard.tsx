@@ -64,10 +64,6 @@ function Header() {
       </div>
       <div className="flex items-center space-x-4 text-sm text-gray-600">
         <div className="flex items-center space-x-2">
-          <LuSearch className="text-gray-400" />
-          <span>Buscar Relatório</span>
-        </div>
-        <div className="flex items-center space-x-2">
           <LuCalendar className="text-gray-400" />
           <span><DataFormatada /></span>
         </div>
@@ -150,30 +146,6 @@ function AdministrativeActions() {
       descricao: 'Editar ou remover usuários do sistema',
       icone: <LuUsers className="h-6 w-6" />,
       acao: () => navigate('/app/admin/usuarios')
-    },
-    {
-      nome: 'Configurações',
-      descricao: 'Ajustar configurações do sistema e permissões',
-      icone: <LuCog className="h-6 w-6" />,
-      acao: () => navigate('/app/admin/configuracoes')
-    },
-    {
-      nome: 'Relatórios',
-      descricao: 'Gerar e visualizar relatórios detalhados',
-      icone: <LuClipboardList className="h-6 w-6" />,
-      acao: () => navigate('/app/admin/relatorios')
-    },
-    {
-      nome: 'Backup Sistema',
-      descricao: 'Realizar backup manual dos dados',
-      icone: <LuHardDrive className="h-6 w-6" />,
-      acao: () => alert('Backup iniciado!')
-    },
-    {
-      nome: 'Auditoria',
-      descricao: 'Visualizar logs de auditoria e segurança',
-      icone: <LuClipboardCheck className="h-6 w-6" />,
-      acao: () => navigate('/app/admin/auditoria')
     }
   ];
 

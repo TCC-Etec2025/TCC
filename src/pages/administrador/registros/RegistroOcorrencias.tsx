@@ -382,9 +382,6 @@ const RegistroOcorrencias: React.FC = () => {
 				{/* header */}
 				<header className="flex justify-between items-center mb-6">
 					<div className="flex items-center gap-2">
-						<Link to="/gestao/PaginaRegistros" className="text-odara-accent hover:text-odara-secondary flex items-center">
-							<FaArrowLeft className="mr-1" />
-						</Link>
 						<h1 className="text-3xl font-bold text-odara-dark">Registro de Ocorrências</h1>
 
 						<div className="relative ml-2">

@@ -76,7 +76,7 @@ const Footer = () => {
               <h3 className="font-bold text-odara-contorno">E-mail</h3>
             </div>
             <a href="mailto:contato@odaragestao.com" className="hover:text-odara-primary hover:underline">
-              contato@odaragestao.com
+              suporte@odaragestao.com
             </a>
           </div>
 
@@ -87,7 +87,7 @@ const Footer = () => {
               <h3 className="font-bold text-odara-contorno">Telefone</h3>
             </div>
             <p>(12) 3456-7890</p>
-            <p className="text-sm opacity-80">Seg-Sex: 9h às 18h</p>
+            <p className="text-sm opacity-80">Seguna-feira à Sexta-Feira: 8h às 18h</p>
           </div>
         </div>
 

@@ -12,7 +12,7 @@ export default function AppLayout() {
         <main className="flex-1 flex flex-col overflow-auto">
           <Topbar />
           
-          <div className="flex-1 p-6 overflow-auto">
+          <div className="flex-1 overflow-auto">
             <Outlet />
           </div>
         </main>

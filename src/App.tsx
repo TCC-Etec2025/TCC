@@ -1,37 +1,37 @@
 import { Routes, Route } from 'react-router-dom'
 
-/* Componentes de Rota e Layout */
+/* ------------------- Componentes de Rota e Layout */
 import RotaProtegida from './components/RotaProtegida'
 import DashboardRedirect from './components/DashboardRedirect'
 import ProtectedLayout from './layouts/ProtectedLayout'
 
-/* Landing Page */
+/* ------------------- Landing Page */
 import LayoutLandingPage from './layouts/LayoutLandingPage'
 import Home from './pages/landingPage/Home.tsx'
 import Documentacao from './pages/landingPage/Documentacao.tsx'
 
-/* Página de Perfil e Login */
+/* ------------------- Página de Perfil e Login */
 import Login from './pages/Login'
 import Perfil from './pages/Perfil'
 
-/* Páginas de Formulário (Cadastro/Edição) */
+/* ------------------- Páginas de Formulário (Cadastro/Edição) */
 import FormularioResidente from './pages/formsCadastro/FormularioResidente'
 import FormularioPertence from './pages/formsCadastro/FormularioPertence'
 import FormularioResponsavel from './pages/formsCadastro/FormularioResponsavel'
 import FormularioFuncionario from './pages/formsCadastro/FormularioFuncionario'
 
-/* Dashboards */
+/* ------------------- Dashboards */
 import AdminDashboard from './pages/administrador/AdminDashboard.tsx'
 import ResponsavelDashboard from './pages/responsavel/ResponsavelDashboard'
 import FuncionarioDashboard from './pages/funcionario/FuncionarioDashboard'
 
-/* Administrador - Listagens */
+/* ------------------- Administrador - Listagens */
 import Residentes from './pages/administrador/Residentes'
 import Familiares from './pages/administrador/Responsaveis'
 import Funcionario from './pages/administrador/Funcionarios'
 import Usuarios from './pages/administrador/Usuarios'
 
-/* Registros (Administrador e Funcionários) */
+/* ------------------- Registros (Administrador e Funcionários) */
 import Registros from './pages/administrador/Registros'
 
 /* Jamilly */
@@ -51,18 +51,18 @@ import RegistroExames from './pages/administrador/registros/RegistroExames'
 import RegistroPreferencias from './pages/administrador/registros/RegistroPreferencias'
 import RegistroConsultas from './pages/administrador/registros/RegistroConsultas'
 
-/* Funcionário - Listas */
+/* ------------------- Funcionário - Listas */
 import ResidentesFuncionario from './pages/funcionario/PaginaResidentes'
 import Relatorios from './pages/funcionario/PaginaRelatorios'
 
-/* Checklists */
+/* ------------------- Checklists */
 import Checklist from './pages/funcionario/Checklist/PaginaChecklist'
 
 /* Jamilly */
 import Alimentacao from './pages/funcionario/Checklist/Alimentacao'
 
 /* Leticia */
-import MedicamentosCheck from './pages/funcionario/Checklist/Medicamentos'
+import Medicamentos from './pages/funcionario/Checklist/Medicamentos'
 import Atividades from './pages/funcionario/Checklist/Atividades'
 
 /* Lucas */
@@ -133,7 +133,7 @@ export default function App() {
         {/* Checklists */}
         <Route path="funcionario/checklist" element={<Checklist />} />
         <Route path="funcionario/checklist/alimentacao" element={<Alimentacao />} />
-        <Route path="funcionario/checklist/medicamentos/check" element={<MedicamentosCheck />} />
+        <Route path="funcionario/checklist/medicamentos" element={<Medicamentos />} />
         <Route path="funcionario/checklist/atividades" element={<Atividades />} />
         <Route path="funcionario/checklist/consultas/medicas" element={<ConsultasMedicas />} />
         <Route path="funcionario/checklist/exames/medicos" element={<ExamesMedicos />} />

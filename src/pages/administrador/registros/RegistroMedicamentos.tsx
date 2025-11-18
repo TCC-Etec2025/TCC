@@ -1,11 +1,9 @@
 // src/components/RegistroMedicamentos.tsx
-import React, { useEffect, useState } from 'react';
-import {
-  FaPlus, FaEdit, FaTrash, FaFilter, FaInfoCircle, FaTimes,
-  FaArrowLeft, FaExclamationCircle, FaSpinner, FaSave
-} from 'react-icons/fa';
-import { Link } from 'react-router-dom';
+import { useEffect, useState } from 'react';
+import {FaPlus, FaEdit, FaTrash, FaFilter, FaInfoCircle, FaTimes,FaExclamationCircle, FaSpinner, FaSave} from 'react-icons/fa';
+
 import 'react-calendar/dist/Calendar.css';
+
 import { supabase } from '../../../lib/supabaseClient';
 
 import { useForm } from 'react-hook-form';
@@ -68,20 +66,39 @@ const STATUS = {
   FINALIZADO: 'finalizado'
 };
 
+  // Controla a cor do header dos cards de acordo com o status do medicamento
+  const corStatus: Record<string, {bola: string; bg: string; text: string; dropdown: string; border: string}> = {
+    'ativo': {
+      bola: 'bg-green-500',
+      bg: 'bg-green-50',
+      text: 'text-green-500 font-semibold',
+      dropdown: 'bg-green-500 text-white',
+      border: 'border-2 bg-green-500'
+    },
+
+    'suspenso': {
+      bola: 'bg-yellow-500',
+      bg: 'bg-yellow-50',
+      text: 'text-odara-dark font-semibold',
+      dropdown: 'bg-yellow-500 text-white',
+      border: 'border-2 bg-yellow-500'
+    },
+
+    'finalizado': {
+      bola: 'bg-red-500',
+      bg: 'bg-red-50',
+      text: 'text-red-500 font-semibold',
+      dropdown: 'bg-red-500 text-white',
+      border: 'border-2 bg-red-500'
+    },
+  };
+
 const CONTROLES = {
   TODOS: 'todos',
   ADMINISTRADO: 'dado',
   ATRASADO: 'atrasado',
   PENDENTE: 'pendente',
   OMITIDO: 'omitido'
-};
-
-const ROTULOS_CONTROLES: Record<string, string> = {
-  [CONTROLES.TODOS]: 'Todos',
-  [CONTROLES.ADMINISTRADO]: 'Concluídos',
-  [CONTROLES.ATRASADO]: 'Atrasados',
-  [CONTROLES.PENDENTE]: 'Pendentes',
-  [CONTROLES.OMITIDO]: 'Omitidos'
 };
 
 // novo: rótulos legíveis para tipos de recorrência
@@ -506,7 +523,7 @@ const RegistroMedicamentos: React.FC = () => {
           )}
         </div>
 
-        {/* LISTA (CARDS) - mantive visual de cards */}
+        {/* LISTA (CARDS) */}
         <div className="bg-odara-white border-l-4 border-odara-primary rounded-2xl shadow-lg p-4 sm:p-6">
           {/* Cabeçalho da lista com título e contador */}
           <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4 mb-4 text-center justify-center xl:justify-start sm:text-left">
@@ -531,14 +548,14 @@ const RegistroMedicamentos: React.FC = () => {
                   className="bg-white rounded-lg shadow-md border border-gray-200"
                 >
                   {/* HEADER - Data de início e informações básicas */}
-                  <div className="flex items-center justify-between p-3 rounded-t-lg bg-green-50 border-b border-green-200">
+                  <div className={`flex items-center justify-between p-3 rounded-t-lg ${corStatus[med.status].border} ${corStatus[med.status].bg}`}>
                     {/* Lado esquerdo: data de início */}
                     <div className="flex items-center">
                       {/* Bolinha indicadora de status ativo */}
-                      <div className="w-3 h-3 rounded-full mr-3 bg-green-500"></div>
+                      <div className={`w-3 h-3 rounded-full mr-3 ${corStatus[med.status].bola}`}></div>
                       {/* Texto com datas */}
-                      <p className="text-sm sm:text-base text-odara-dark">
-                        <span className='font-semibold'>
+                      <p className={`text-sm sm:text-base ${corStatus[med.status].text}`}>
+                        <span>
                           Início: {new Date(med.data_inicio).getDate()}/
                           {(new Date(med.data_inicio).getMonth() + 1)}/
                           {new Date(med.data_inicio).getFullYear()}
@@ -559,7 +576,7 @@ const RegistroMedicamentos: React.FC = () => {
                       <select
                         value={med.status}
                         onChange={e => updateStatus(med.id, e.target.value)}
-                        className={`border border-gray-300 rounded-lg px-2 py-1 text-sm`}
+                        className={`${[med.status].hover} rounded-lg px-2 py-1 text-sm`}
                       >
                         <option value='ativo'>Ativo</option>
                         <option value='suspenso'>Suspenso</option>
@@ -570,12 +587,28 @@ const RegistroMedicamentos: React.FC = () => {
 
                   {/* CORPO - Conteúdo principal do medicamento */}
                   <div className="p-4">
-                    {/* Nome do medicamento e residente */}
+                    {/* título do Card */}
                     <div className="flex items-start justify-between mb-3">
-                      <div>
+                      <div className='flex items-center justify-between w-full'>                        
+                        {/* Lado esquerdo: Nome do Medicamento */}
                         <h3 className="text-lg sm:text-xl font-bold text-odara-dark">{med.nome}</h3>
-                        <div className="text-sm text-odara-name mt-1">
-                          {med.residente?.nome} {med.residente?.quarto ? `(Q ${med.residente?.quarto})` : ''}
+
+                        {/* Lado direito: ações rápidas */}
+                        <div className="flex items-center gap-3">
+                          <button
+                            onClick={() => abrirModal(med)}
+                            className="text-odara-dropdown-accent hover:text-odara-white transition-colors duration-200 p-2 rounded-full hover:bg-odara-dropdown-accent"
+                            title="Editar medicamento"
+                          >
+                            <FaEdit size={14} />
+                          </button>
+                          <button
+                            onClick={() => removerMedicamento(med.id)}
+                            className="text-odara-alerta hover:text-odara-white transition-colors duration-200 p-2 rounded-full hover:bg-odara-alerta"
+                            title="Excluir medicamento"
+                          >
+                            <FaTrash size={14} />
+                          </button>
                         </div>
                       </div>
                     </div>
@@ -630,33 +663,19 @@ const RegistroMedicamentos: React.FC = () => {
                   {/* FOOTER - Informações adicionais */}
                   <div className="px-4 py-3 bg-gray-50 rounded-b-lg border-t border-gray-200">
                     <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-                      {/* Badge do residente */}
-                      <span className="bg-odara-accent text-white px-3 py-1 rounded-full text-xs font-medium">
-                        {med.residente?.nome || 'Residente'}
-                      </span>
+                      {/* Badge do residente com quarto*/}
+                      <div>
+                        <span className="bg-odara-accent text-white px-3 py-1 rounded-full text-xs font-medium">
+                          {med.residente?.nome || 'Residente'}
+                        </span>
+
+                        <span>{med.residente?.quarto ? '• Quarto: ' + med.residente?.quarto : ""}</span>
+                      </div>
 
                       {/* Informações adicionais se necessário */}
                       <div className="text-xs text-odara-name">
                         Última atualização: {new Date().toLocaleDateString('pt-BR')}
                       </div>
-                    </div>
-
-                    {/* Lado direito: ações rápidas */}
-                    <div className="flex items-center gap-3">
-                      <button
-                        onClick={() => abrirModal(med)}
-                        className="text-odara-dropdown-accent hover:text-odara-white transition-colors duration-200 p-2 rounded-full hover:bg-odara-dropdown-accent"
-                        title="Editar medicamento"
-                      >
-                        <FaEdit size={14} />
-                      </button>
-                      <button
-                        onClick={() => removerMedicamento(med.id)}
-                        className="text-odara-alerta hover:text-odara-white transition-colors duration-200 p-2 rounded-full hover:bg-odara-alerta"
-                        title="Excluir medicamento"
-                      >
-                        <FaTrash size={14} />
-                      </button>
                     </div>
                   </div>
                 </div>
@@ -819,28 +838,28 @@ const RegistroMedicamentos: React.FC = () => {
                     {/* Tipo */}
                     <div>
                       <label className="block text-sm font-semibold text-odara-dark mb-2">
-                      Recorrência *
+                        Recorrência *
                       </label>
                       <select
-                      {...register('recorrencia', {
-                        onChange: (e) => {
-                        const v = e.target.value;
-                        // se for 'unico', força intervalo = 1; caso contrário, mantém intervalo atual
-                        if (v === 'unico') {
-                          reset({ ...watch(), recorrencia: v, intervalo: 1 });
-                        } else {
-                          reset({ ...watch(), recorrencia: v });
-                        }
-                        }
-                      })}
-                      className="w-full rounded-xl border-2 border-gray-200 p-3 focus:border-odara-primary"
+                        {...register('recorrencia', {
+                          onChange: (e) => {
+                            const v = e.target.value;
+                            // se for 'unico', força intervalo = 1; caso contrário, mantém intervalo atual
+                            if (v === 'unico') {
+                              reset({ ...watch(), recorrencia: v, intervalo: 1 });
+                            } else {
+                              reset({ ...watch(), recorrencia: v });
+                            }
+                          }
+                        })}
+                        className="w-full rounded-xl border-2 border-gray-200 p-3 focus:border-odara-primary"
                       >
-                      <option value="">Selecione o tipo</option>
-                      <option value="unico">Único</option>
-                      <option value="horas">Horas</option>
-                      <option value="dias">Dias</option>
-                      <option value="meses">Meses</option>
-                      <option value="vezes">Número de vezes</option>
+                        <option value="">Selecione o tipo</option>
+                        <option value="unico">Único</option>
+                        <option value="horas">Horas</option>
+                        <option value="dias">Dias</option>
+                        <option value="meses">Meses</option>
+                        <option value="vezes">Número de vezes</option>
                       </select>
                     </div>
 
@@ -853,15 +872,15 @@ const RegistroMedicamentos: React.FC = () => {
                       <div className="relative">
                         <div className="flex items-center">
                           <input
-                          type="number"
-                          min="1"
-                          {...register('intervalo')}
-                          disabled={!watch('recorrencia') || watch('recorrencia') === 'unico'}
-                          className={`w-full rounded-xl border-2 border-gray-200 p-3 focus:border-odara-primary transition-colors duration-200 pr-24 ${(!watch('recorrencia') || watch('recorrencia') === 'unico') ? 'opacity-50 cursor-not-allowed' : ''
-                            }`}
+                            type="number"
+                            min="1"
+                            {...register('intervalo')}
+                            disabled={!watch('recorrencia') || watch('recorrencia') === 'unico'}
+                            className={`w-full rounded-xl border-2 border-gray-200 p-3 focus:border-odara-primary transition-colors duration-200 pr-24 ${(!watch('recorrencia') || watch('recorrencia') === 'unico') ? 'opacity-50 cursor-not-allowed' : ''
+                              }`}
                           />
                           <span className={`absolute right-3 text-sm text-odara-name whitespace-nowrap bg-white px-2 py-1 rounded-md ${watch('recorrencia') === 'unico' ? 'hidden' : ''}`}>
-                          {watch('recorrencia') ? RECORRENCIA_ROTULOS[watch('recorrencia')] : ''}
+                            {watch('recorrencia') ? RECORRENCIA_ROTULOS[watch('recorrencia')] : ''}
                           </span>
                         </div>
                       </div>

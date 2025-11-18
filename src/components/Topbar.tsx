@@ -56,8 +56,6 @@ export default function Topbar() {
             <button onClick={toggleSidebar} className="text-gray-600 hover:text-black">
                 ☰
             </button>
-            <h1 className="text-xl font-semibold text-gray-800">Minha Aplicação</h1>
-
             <div className="flex items-center gap-4">
                 <div
                     className="relative cursor-pointer"

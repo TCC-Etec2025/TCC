@@ -72,7 +72,7 @@ export default function Login() {
           .select("*, endereco(*)")
           .eq("id_usuario", userData.id)
           .maybeSingle();
-        
+
         if (error || !data) {
           setServerError("Erro ao buscar detalhes do responsável. Contate o administrador.");
           setIsLoading(false);
@@ -88,7 +88,7 @@ export default function Login() {
           .select("*, endereco(*)")
           .eq("id_usuario", userData.id)
           .maybeSingle();
-        
+
         if (error || !data) {
           setServerError("Erro ao buscar detalhes do colaborador. Contate o administrador.");
           setIsLoading(false);
@@ -114,9 +114,9 @@ export default function Login() {
       <div className="w-full max-w-md bg-white rounded-2xl shadow-lg border-l-2 border-odara-primary">
         <div className="p-8 space-y-6 text-center">
           <div className="space-y-1 pt-8">
-              <h1 className="text-3xl font-bold text-odara-accent mb-2">
-                Bem-vindo de volta
-                </h1>
+            <h1 className="text-3xl font-bold text-odara-accent mb-2">
+              Bem-vindo de volta
+            </h1>
             <p className="text-sm text-odara-dark">
               Faça login para acessar sua conta
             </p>
@@ -136,7 +136,7 @@ export default function Login() {
                 id="email"
                 type="email"
                 placeholder="nome@empresa.com"
-                className="w-full h-10 px-3 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                className="w-full h-10 px-3 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-odara-secondary focus:border-transparent"
                 {...register("email")}
               />
               {errors.email && (
@@ -157,7 +157,7 @@ export default function Login() {
                   id="senha"
                   type={showSenha ? "text" : "senha"}
                   placeholder="Digite a sua senha"
-                  className="w-full h-10 px-3 pr-10 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                  className="w-full h-10 px-3 pr-10 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-odara-secondary focus:border-transparent"
                   {...register("senha")}
                 />
                 <button
@@ -187,34 +187,33 @@ export default function Login() {
             )}
 
             <div className="flex items-center justify-between">
-                <div className="flex items-center">
-                  <input
-                    id="lembrar"
-                    name="lembrar"
-                    type="checkbox"
-                    className="h-4 w-4 text-odara-primary focus:ring-odara-primary border-gray-300 rounded"
-                  />
-                  <label htmlFor="lembrar" className="ml-2 block text-sm text-odara-primary hover:text-odara-dark">
-                    Lembrar de mim
-                  </label>
-                </div>
-
-                <div>
-                <button
-                  type="button"
-                  onClick={() => navigate("/recuperar-senha")}
-                  className="text-sm text-odara-primary hover:text-odara-dark"
-                >
-                  Esqueceu a senha?
-                </button>
-                </div>
-
+              <div className="flex items-center">
+                <input
+                  id="lembrar"
+                  name="lembrar"
+                  type="checkbox"
+                  className="h-4 w-4 text-odara-primary focus:ring-odara-primary border-gray-300 rounded"
+                />
+                <label htmlFor="lembrar" className="ml-2 block text-sm text-odara-primary hover:text-odara-dark">
+                  Lembrar de mim
+                </label>
               </div>
+
+              <div className="text-center">
+                <a
+                  href="#"
+                  className="text-sm text-odara-primary hover:text-odara-dark underline-offset-4 hover:underline"
+                >
+                  Esqueceu a sua senha?
+                </a>
+              </div>
+
+            </div>
 
 
             <button
               type="submit"
-              className="w-full h-10 bg-odara-accent hover:bg-odara-secondary disabled:bg-indigo-400 text-white font-medium rounded-md transition-colors flex items-center justify-center"
+              className="w-full h-10 bg-odara-accent hover:bg-odara-secondary disabled:bg-odara-secondary text-white font-medium rounded-md transition-colors flex items-center justify-center"
               disabled={isLoading}
             >
               {isLoading ? (
@@ -246,14 +245,6 @@ export default function Login() {
               )}
             </button>
           </form>
-          <div className="text-center">
-            <a
-              href="#"
-              className="text-sm text-indigo-600 hover:text-indigo-800 underline-offset-4 hover:underline"
-            >
-              Esqueceu a sua senha?
-            </a>
-          </div>
         </div>
       </div>
     </div>

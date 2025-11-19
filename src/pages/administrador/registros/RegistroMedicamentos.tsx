@@ -1,7 +1,8 @@
 // src/components/RegistroMedicamentos.tsx
 import { useEffect, useState } from 'react';
-import {FaPlus, FaEdit, FaTrash, FaFilter, FaInfoCircle, FaTimes,FaExclamationCircle, FaSpinner, FaSave} from 'react-icons/fa';
+import { FaPlus, FaEdit, FaTrash, FaFilter, FaInfoCircle, FaTimes, FaExclamationCircle, FaSpinner, FaSave, FaAngleDown, FaExclamationTriangle } from 'react-icons/fa';
 
+import toast, { Toaster } from 'react-hot-toast';
 import 'react-calendar/dist/Calendar.css';
 
 import { supabase } from '../../../lib/supabaseClient';
@@ -66,32 +67,29 @@ const STATUS = {
   FINALIZADO: 'finalizado'
 };
 
-  // Controla a cor do header dos cards de acordo com o status do medicamento
-  const corStatus: Record<string, {bola: string; bg: string; text: string; dropdown: string; border: string}> = {
-    'ativo': {
-      bola: 'bg-green-500',
-      bg: 'bg-green-50',
-      text: 'text-green-500 font-semibold',
-      dropdown: 'bg-green-500 text-white',
-      border: 'border-2 bg-green-500'
-    },
+// Controla a cor do header dos cards de acordo com o status do medicamento
+const corStatus: Record<string, { bola: string; bg: string; text: string; border: string }> = {
+  'ativo': {
+    bola: 'bg-green-500',
+    bg: 'bg-green-50',
+    text: 'text-odara-dark font-semibold',
+    border: 'border-b border-green-200'
+  },
 
-    'suspenso': {
-      bola: 'bg-yellow-500',
-      bg: 'bg-yellow-50',
-      text: 'text-odara-dark font-semibold',
-      dropdown: 'bg-yellow-500 text-white',
-      border: 'border-2 bg-yellow-500'
-    },
+  'suspenso': {
+    bola: 'bg-yellow-500',
+    bg: 'bg-yellow-50',
+    text: 'text-odara-dark font-semibold',
+    border: 'border-b border-yellow-200'
+  },
 
-    'finalizado': {
-      bola: 'bg-red-500',
-      bg: 'bg-red-50',
-      text: 'text-red-500 font-semibold',
-      dropdown: 'bg-red-500 text-white',
-      border: 'border-2 bg-red-500'
-    },
-  };
+  'finalizado': {
+    bola: 'bg-gray-500',
+    bg: 'bg-gray-50',
+    text: 'text-odara-dark font-semibold',
+    border: 'border-b border-gray-200'
+  },
+};
 
 const CONTROLES = {
   TODOS: 'todos',
@@ -295,6 +293,7 @@ const RegistroMedicamentos: React.FC = () => {
           .eq('id', id);
 
         if (error) throw error;
+        toast.success('Medicamento atualizado com sucesso!'); // NOTIFICAÇÃO DE SUCESSO
       } else {
         const { data: inserted, error } = await supabase
           .from('medicamento')
@@ -305,6 +304,7 @@ const RegistroMedicamentos: React.FC = () => {
         if (inserted && inserted[0]) {
           setMedicamentos(prev => [...prev, inserted[0]]);
         }
+        toast.success('Medicamento criado com sucesso!'); // NOTIFICAÇÃO DE SUCESSO
       }
 
       await carregarMedicamentos();
@@ -313,18 +313,66 @@ const RegistroMedicamentos: React.FC = () => {
       setIdEditando(null);
     } catch (err: any) {
       console.error('Erro ao salvar medicamento:', err);
-      alert('Erro ao salvar medicamento: ' + (err?.message ?? String(err)));
+      toast.error('Erro ao salvar medicamento: ' + (err?.message ?? String(err))); // NOTIFICAÇÃO DE ERRO
     }
   };
 
   /* ---------------------------
-     Excluir medicamento
-     --------------------------- */
+   Excluir medicamento com confirmação
+   --------------------------- */
   const removerMedicamento = async (id: number) => {
-    if (!confirm('Remover este medicamento?')) return;
-    const { error } = await supabase.from('medicamento').delete().eq('id', id);
-    if (error) console.error('Erro ao remover medicamento:', error);
-    else await carregarMedicamentos();
+    // Modal de confirmação customizado
+    const confirmarExclusao = () => {
+      return new Promise((resolve) => {
+        // Criar overlay e modal
+        const overlay = document.createElement('div');
+        overlay.className = 'fixed inset-0 bg-black/50 flex items-center justify-center z-[100] p-4';
+
+        const modal = document.createElement('div');
+        modal.className = 'bg-white rounded-2xl shadow-lg p-6 max-w-md w-full';
+        modal.innerHTML = `
+        <div class="text-center">
+          <div class="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-red-100 mb-4">
+            <FaExclamationTriangle class="h-6 w-6 text-red-600" />
+          </div>
+          <h3 class="text-lg font-bold text-odara-dark mb-2">Confirmar exclusão</h3>
+          <p class="text-odara-name mb-6">Tem certeza que deseja excluir este medicamento? Esta ação não pode ser desfeita.</p>
+          <div class="flex gap-3 justify-center">
+            <button id="cancel-btn" class="px-4 py-2 border border-gray-300 text-odara-dark rounded-lg hover:bg-gray-50 transition-colors">Cancelar</button>
+            <button id="confirm-btn" class="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors">Excluir</button>
+          </div>
+        </div>
+      `;
+
+        overlay.appendChild(modal);
+        document.body.appendChild(overlay);
+
+        // Event listeners para os botões
+        modal.querySelector('#confirm-btn')?.addEventListener('click', () => {
+          document.body.removeChild(overlay);
+          resolve(true);
+        });
+
+        modal.querySelector('#cancel-btn')?.addEventListener('click', () => {
+          document.body.removeChild(overlay);
+          resolve(false);
+        });
+      });
+    };
+
+    const usuarioConfirmou = await confirmarExclusao();
+    if (!usuarioConfirmou) return;
+
+    try {
+      const { error } = await supabase.from('medicamento').delete().eq('id', id);
+      if (error) throw error;
+
+      await carregarMedicamentos();
+      toast.success('Medicamento excluído com sucesso!'); // NOTIFICAÇÃO DE SUCESSO
+    } catch (error: any) {
+      console.error('Erro ao remover medicamento:', error);
+      toast.error('Erro ao excluir medicamento: ' + (error?.message ?? String(error))); // NOTIFICAÇÃO DE ERRO
+    }
   };
 
   /* ---------------------------
@@ -397,6 +445,36 @@ const RegistroMedicamentos: React.FC = () => {
 
   return (
     <div className="flex min-h-screen bg-odara-offwhite">
+      {/* Componente Toaster para notificações */}
+      <Toaster
+        position="top-center"
+        toastOptions={{
+          duration: 4000,
+          style: {
+            background: '#e4edfdff',
+            color: '#52323a',
+            border: '1px solid #0036caff',
+            borderRadius: '12px',
+            fontSize: '14px',
+            fontWeight: '500',
+          },
+          success: {
+            style: {              
+              background: '#f0fdf4',
+              color: '#52323a',
+              border: '1px solid #00c950',
+            },
+          },
+          error: {
+            style: {
+              background: '#fce7e7ff',
+              color: '#52323a',
+              border: '1px solid #c90d00ff',
+            },
+          },
+        }}
+      />
+
       <div className="flex-1 p-4 sm:p-6 lg:p-8">
         {/* ===== SEÇÃO 1: CABEÇALHO DA PÁGINA ===== */}
         <div className="flex flex-col sm:flex-row justify-center xl:justify-start items-start sm:items-center gap-4 mb-6">
@@ -502,7 +580,7 @@ const RegistroMedicamentos: React.FC = () => {
                   <button key={r.id_residente}
                     onClick={() => { setFiltroResidente(r.residente?.nome || ''); setFiltroResidenteAberto(false); }}
                     className={`block w-full text-left px-4 py-2 text-sm hover:bg-odara-primary/20 ${filtroResidente === r.residente?.nome ? 'bg-odara-accent/20 font-semibold' : 'border border-odara-contorno rounded'}`}>
-                    {r.residente?.nome} {r.residente?.nome ? `(Quarto ${r.residente?.quarto})` : ''}
+                    {r.residente?.nome}
                   </button>
                 ))}
               </div>
@@ -576,8 +654,9 @@ const RegistroMedicamentos: React.FC = () => {
                       <select
                         value={med.status}
                         onChange={e => updateStatus(med.id, e.target.value)}
-                        className={`${[med.status].hover} rounded-lg px-2 py-1 text-sm`}
+                        className='text-odara-dark rounded-lg px-2 py-1 text-sm'
                       >
+                        <FaAngleDown className="mr-2 text-white" />
                         <option value='ativo'>Ativo</option>
                         <option value='suspenso'>Suspenso</option>
                         <option value='finalizado'>Finalizado</option>
@@ -589,7 +668,7 @@ const RegistroMedicamentos: React.FC = () => {
                   <div className="p-4">
                     {/* título do Card */}
                     <div className="flex items-start justify-between mb-3">
-                      <div className='flex items-center justify-between w-full'>                        
+                      <div className='flex items-center justify-between w-full'>
                         {/* Lado esquerdo: Nome do Medicamento */}
                         <h3 className="text-lg sm:text-xl font-bold text-odara-dark">{med.nome}</h3>
 

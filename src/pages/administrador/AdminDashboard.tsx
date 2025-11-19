@@ -1,21 +1,12 @@
 import { useEffect, useState } from 'react';
-import {
-  LuSearch,
-  LuCalendar,
-  LuCircleUser,
-  LuUser,
-  LuUsers,
-  LuTriangleAlert,
-  LuUserPlus,
-  LuCog,
-  LuClipboardList,
-  LuHardDrive,
-  LuClipboardCheck,
-  LuCircleCheck,
-  LuCircleAlert,
-} from 'react-icons/lu';
 import { useNavigate } from 'react-router-dom';
+
+import {LuCalendar, LuCircleUser, LuUser, LuUsers, LuTriangleAlert, LuUserPlus, LuCircleCheck, LuCircleAlert} from 'react-icons/lu';
+import {FaUsers,  FaUserTie,  FaExclamationTriangle,  FaClipboardList,  FaBell, FaArrowUp, FaArrowDown, FaPlus, FaFileAlt, FaUserCheck, FaChartLine, FaEye,
+  FaTimes, FaInfoCircle} from "react-icons/fa";
+
 import { supabase } from '../../lib/supabaseClient';
+
 import DataFormatada from '../../components/DataFormatada';
 
 // Declaração de tipo para o componente de atividade

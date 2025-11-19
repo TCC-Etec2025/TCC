@@ -1,8 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import {
-  FaPlus, FaEdit, FaTrash, FaFilter, FaInfoCircle,
-  FaFilePdf, FaArrowLeft, FaChevronLeft, FaChevronRight, FaTimes
-} from 'react-icons/fa';
+import {FaPlus, FaEdit, FaTrash, FaFilter, FaInfoCircle,FaFilePdf, FaArrowLeft, FaChevronLeft, FaChevronRight, FaTimes} from 'react-icons/fa';
 import { Link } from 'react-router-dom';
 import Calendar from 'react-calendar';
 import 'react-calendar/dist/Calendar.css';

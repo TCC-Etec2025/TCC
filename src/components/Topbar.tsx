@@ -52,7 +52,7 @@ export default function Topbar() {
     ];
 
     return (
-        <div className="h-16 bg-white border-b border-gray-200 px-6 flex items-center justify-between relative">
+        <div className="h-14 bg-white border-b border-gray-200 px-6 flex items-center justify-between relative">
             <button onClick={toggleSidebar} className="text-gray-600 hover:text-black">
                 ☰
             </button>

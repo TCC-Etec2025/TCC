@@ -13,7 +13,7 @@ const Footer = () => {
             <div className="flex items-center mb-4">
               <div className="w-20 h-20 bg-odara-white rounded-full mr-3 flex items-center justify-center overflow-hidden border-2 border-odara-contorno shadow-lg">
                 <img
-                  src="../images/Logo final - Icone fundo branco redondo[1].png"
+                  src="../images/logo.png"
                   alt="Logo Odara Gestão"
                   className="w-full h-full object-cover"
                   onError={(e) => {

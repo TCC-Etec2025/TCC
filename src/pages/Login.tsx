@@ -110,9 +110,21 @@ export default function Login() {
 
 
   return (
-    <div className="min-h-screen flex items-center justify-center  bg-gray-50 p-4 font-sans">
+    <div 
+      className="min-h-screen flex items-center justify-center p-4 font-sans">
+        {/* Imagem de fundo */}
+        <div 
+          className="absolute inset-0 -z-20 opacity-30"
+          style={{
+            backgroundImage: "url('../images/landingPage.jpg')",
+            backgroundSize: "cover",
+            backgroundPosition: "center"
+          }}
+        ></div>
+        
+      <div className="absolute inset-0 -z-10 bg-odara-offwhite opacity-15"></div>
       <div className="w-full max-w-md bg-white rounded-2xl shadow-lg border-l-2 border-odara-primary">
-        <div className="p-8 space-y-6 text-center">
+        <div className="p-9 space-y-6 text-center">
           <div className="space-y-1 pt-8">
             <h1 className="text-3xl font-bold text-odara-accent mb-2">
               Bem-vindo de volta
@@ -135,7 +147,7 @@ export default function Login() {
               <input
                 id="email"
                 type="email"
-                placeholder="nome@empresa.com"
+                placeholder="Endereço de email"
                 className="w-full h-10 px-3 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-odara-secondary focus:border-transparent"
                 {...register("email")}
               />
@@ -192,9 +204,9 @@ export default function Login() {
                   id="lembrar"
                   name="lembrar"
                   type="checkbox"
-                  className="h-4 w-4 text-odara-primary focus:ring-odara-primary border-gray-300 rounded"
+                  className="h-4 w-4 text-odara-primary focus:ring-odara-primary border-odara-dark rounded"
                 />
-                <label htmlFor="lembrar" className="ml-2 block text-sm text-odara-primary hover:text-odara-dark">
+                <label htmlFor="lembrar" className="ml-2 block text-sm text-odara-dark hover:text-odara-primary">
                   Lembrar de mim
                 </label>
               </div>

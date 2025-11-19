@@ -39,7 +39,7 @@ export default function Sidebar() {
       onMouseLeave={() => setIsHovered(false)}
     >
       {/* Header */}
-      <div className="flex items-center justify-between p-4 border-b border-odara-contorno/20">
+      <div className="flex items-center justify-between p-3 border-b border-odara-contorno/20">
         <div className="flex items-center gap-2 text-odara-contorno font-bold">
           <div className="w-8 h-8 bg-white rounded-full flex items-center justify-center overflow-hidden border-2 border-odara-contorno shadow-lg">
             <img

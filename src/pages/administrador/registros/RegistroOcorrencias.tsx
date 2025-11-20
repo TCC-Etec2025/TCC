@@ -1,8 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { FaPlus, FaEdit, FaTrash, FaFilter, FaInfoCircle, FaArrowLeft, FaTimes } from "react-icons/fa";
 import { Link } from "react-router-dom";
-import Calendar from "react-calendar";
-import "react-calendar/dist/Calendar.css";
 import { supabase } from "../../../lib/supabaseClient";
 
 import { useForm } from "react-hook-form";
@@ -12,14 +10,12 @@ import { yupResolver } from "@hookform/resolvers/yup";
 const CORES_CATEGORIAS: Record<string, string> = {
 	"acidente": "bg-odara-dropdown-accent/80 text-odara-dark",
 	"saude": "bg-odara-primary/60 text-odara-dark",
-	"comportamental": "bg-odara-accent/60 text-odara-white",
 	"estrutural": "bg-odara-secondary/60 text-odara-white",
 };
 
 const CORES_CALENDARIO: Record<string, string> = {
 	"acidente": "bg-odara-dropdown-accent",
 	"saude": "bg-odara-primary",
-	"comportamental": "bg-odara-accent",
 	"estrutural": "bg-odara-secondary",
 };
 
@@ -71,7 +67,6 @@ const FILTROS = [
 	{ id: "todos", label: "Todos" },
 	{ id: "acidente", label: "Acidente" },
 	{ id: "saude", label: "Saúde" },
-	{ id: "comportamental", label: "Comportamental" },
 	{ id: "estrutural", label: "Estrutural" },
 ];
 
@@ -547,176 +542,165 @@ const RegistroOcorrencias: React.FC = () => {
 								setResidenteSelecionado('');
 								setFiltroStatus('todos');
 							}}
-							className="flex items-center bg-odara-accent text-odara-white rounded-full px-4 py-2 shadow-sm font-medium hover:bg-odara-secondary transition"
+							className="flex items-center bg-odara-accent text-odara-white rounded-full px-3 py-2 shadow-sm font-medium hover:bg-odara-secondary transition text-sm"
 						>
-							<FaTimes className="mr-1" /> Limpar Filtros
+							<FaTimes className="mr-2" /> Limpar Filtros
 						</button>
 					)}
 				</div>
 
 				{/* conteúdo */}
-				<section className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+				 <div className="bg-odara-white rounded-2xl shadow-lg p-4 sm:p-1">
 					{/* lista */}
-					<article className="bg-white border-l-4 border-odara-primary rounded-2xl shadow-lg p-6">
-						<h2 className="text-2xl text-odara-dark font-bold mb-4">{filtroStatus === 'resolvidas' ? "Ocorrências Resolvidas" : filtroStatus === 'pendentes' ? "Ocorrências Pendentes" : "Ocorrências"}</h2>
+					<div className="bg-white border-l-4 border-odara-primary rounded-2xl w-290 shadow-lg p-6">
+						<h2 className="text-2xl lg:text-4xl md:text-4xl font-bold text-odara-dark">{filtroStatus === 'resolvidas' ? "Ocorrências Resolvidas" : filtroStatus === 'pendentes' ? "Ocorrências Pendentes" : "Ocorrências"}</h2>
 
 						<div className="space-y-4 max-h-[600px] overflow-y-auto">
-							{loading && <p className="text-center text-gray-500">Carregando...</p>}
-							{!loading && ocorrenciasFiltradas.length === 0 && <p className="text-center text-gray-500">Nenhuma ocorrência encontrada</p>}
+							{loading && (
+								<p className="text-center text-gray-500">Carregando...</p>
+							)}
 
-							{!loading && ocorrenciasFiltradas.map((o) => {
-								const { data, hora } = formatData(o.data);
-								return (
-									<div key={o.id} className={`p-4 rounded-lg ${CORES_CATEGORIAS[o.categoria] || ""}`}>
-										<div className="flex justify-between items-center mb-2">
-											<div>
-												<span className="font-semibold">{data}</span>
-												{hora && ` - ${hora}`}
+							{!loading && ocorrenciasFiltradas.length === 0 && (
+								<p className="text-center text-gray-500">Nenhuma ocorrência encontrada</p>
+							)}
+
+							{!loading &&
+								ocorrenciasFiltradas.map((o) => {
+									const { data, hora } = formatData(o.data);
+
+									return (
+										<div
+											key={o.id}
+											className="p-4 rounded-lg bg-white shadow flex items-start gap-4"
+										>
+											{/* bolinha colorida */}
+											<div
+												className={`w-4 h-4 rounded-full mt-1 ${CORES_CATEGORIAS[o.categoria] || "bg-gray-400"}`}
+											></div>
+
+											{/* conteúdo */}
+											<div className="flex-1 space-y-2">
+												<div className="flex items-center justify-between">
+													<div className="text-sm text-odara-dark">
+														<span className="font-semibold text-odara-dark">{data}</span>
+														{hora && ` - ${hora}`}
+													</div>
+
+													<label className="flex items-center text-odara-dark gap-2 text-sm">
+														<input
+															type="checkbox"
+															checked={o.resolvido}
+															onChange={() => toggleResolvido(o)}
+														/>
+														{o.resolvido ? "Resolvido" : "Pendente"}
+													</label>
+												</div>
+
+												<h3 className="text-lg text-odara-dark font-bold">{o.titulo}</h3>
+
+												<p className="text-sm text-odara-dark">{o.descricao}</p>
+
+
+
+												{o.providencias && (
+													<p className="text-sm italic text-odara-dark">
+														Providências: {o.providencias}
+													</p>
+												)}
+
+												<p className="text-xs text-odara-dark">
+													<strong>Categoria:</strong>{" "}
+													{o.categoria === "acidente" && "Acidente"}
+													{o.categoria === "saude" && "Saúde"}
+													{o.categoria === "estrutural" && "Estrutural"}
+												</p>
+
+
+												<p className="text-xs text-odara-dark">
+													<strong>Residente:</strong> {o.residente.nome} |{" "}
+													<strong>Funcionário:</strong> {o.funcionario.nome}
+												</p>
+
+												<div className="flex justify-end gap-2 pt-2">
+													<button
+														onClick={() => abrirModal(o)}
+														className="px-1 py-1 text-white bg-blue-200 rounded hover:bg-blue-400"
+													>
+														<FaEdit />
+													</button>
+													<button
+														onClick={() => handleDelete(o.id)}
+														className="px-1 py-1  text-white bg-red-300 rounded hover:bg-red-400"
+													>
+														<FaTrash />
+													</button>
+												</div>
 											</div>
-											<label className="flex items-center gap-2 text-sm">
-												<input type="checkbox" checked={o.resolvido} onChange={() => toggleResolvido(o)} />
-												{o.resolvido ? "Resolvido" : "Pendente"}
-											</label>
 										</div>
-
-										<h3 className="text-lg font-bold">{o.titulo}</h3>
-										<p className="text-sm mb-1">{o.descricao}</p>
-										{o.providencias && <p className="text-sm italic mb-1">Providências: {o.providencias}</p>}
-										<p className="text-xs"><strong>Residente:</strong> {o.residente.nome} | <strong>Funcionário:</strong> {o.funcionario.nome}</p>
-
-										<div className="flex justify-end gap-2 mt-2">
-											<button onClick={() => abrirModal(o)} className="p-1 text-white bg-blue-500 rounded"><FaEdit /></button>
-											<button onClick={() => handleDelete(o.id)} className="p-1 text-white bg-red-500 rounded"><FaTrash /></button>
-										</div>
-									</div>
-								);
-							})}
-						</div>
-					</article>
-
-					{/* calendário */}
-					<aside className="bg-white rounded-2xl shadow-lg p-6">
-						<div className="flex justify-center mb-4">
-							<button
-								onClick={() => {
-									setDataAtual(new Date());
-								}}
-								className="bg-odara-accent hover:bg-odara-secondary text-white px-4 py-2 rounded-lg transition"
-							>
-								Hoje
-							</button>
+									);
+								})}
 						</div>
 
-						<Calendar
-							onChange={(date) => setDataAtual(date as Date)}
-							value={dataAtual}
-							onActiveStartDateChange={({ activeStartDate }) => activeStartDate && setDataAtual(activeStartDate as Date)}
-							activeStartDate={dataAtual}
-							tileContent={getTileContent}
-							tileClassName={getTileClassName}
-							className="border-0 mx-auto max-w-[350px] rounded-xl shadow-sm p-2"
-						/>
-
-						{/* Estatísticas e Legenda */}
-						<div className="mt-6 border-t border-gray-200 pt-4">
-							{/* Estatísticas */}
-							<h3 className="text-lg font-semibold text-odara-dark mb-2">Estatísticas</h3>
-							<div className="grid grid-cols-3 gap-2 text-center text-sm">
-								<div className="bg-odara-primary/10 rounded-lg py-2">
-									<p className="font-bold text-odara-primary">{ocorrencias.length}</p>
-									<p className="text-gray-600">Total</p>
-								</div>
-								<div className="bg-odara-accent/10 rounded-lg py-2">
-									<p className="font-bold text-odara-accent">{contadorPendentes}</p>
-									<p className="text-gray-600">Pendentes</p>
-								</div>
-								<div className="bg-odara-secondary/10 rounded-lg py-2">
-									<p className="font-bold text-odara-secondary">{contadorResolvidas}</p>
-									<p className="text-gray-600">Resolvidas</p>
-								</div>
-							</div>
-
-							{/* Legenda */}
-							<h3 className="text-lg font-semibold text-odara-dark mt-6 mb-2">Legenda</h3>
-							<ul className="space-y-2 text-sm">
-								<li className="flex items-center gap-2">
-									<span className="w-3 h-3 rounded-full bg-odara-dropdown-accent" />
-									<span>Acidente</span>
-								</li>
-								<li className="flex items-center gap-2">
-									<span className="w-3 h-3 rounded-full bg-odara-primary" />
-									<span>Saúde</span>
-								</li>
-								<li className="flex items-center gap-2">
-									<span className="w-3 h-3 rounded-full bg-odara-accent" />
-									<span>Comportamental</span>
-								</li>
-								<li className="flex items-center gap-2">
-									<span className="w-3 h-3 rounded-full bg-odara-secondary" />
-									<span>Estrutural</span>
-								</li>
-							</ul>
-						</div>
-
-					</aside>
-				</section>
-
-
-				{/* modal */}
-				{modalAberto && (
-					<div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 p-4">
-						<div className="bg-white text-odara-dark border-4 border-odara-primary rounded-lg py-2 p-6 w-full max-w-lg">
-							<h2 className="text-xl font-bold mb-4">{editando ? "Editar Ocorrência" : "Nova Ocorrência"}</h2>
-
-							<form onSubmit={handleSubmit(onSubmit)} className="space-y-3">
-								<input type="text" placeholder="Título" className="w-full border-odara-primary border rounded-lg px-3 py-2" {...register("titulo")} />
-								{errors.titulo && <p className="text-red-500 text-sm">{(errors.titulo as any).message}</p>}
-
-								<textarea placeholder="Descrição" className="w-full border-odara-primary border rounded-lg px-3 py-2" {...register("descricao")} />
-
-								<textarea placeholder="Providências" className="w-full border-odara-primary border rounded-lg px-3 py-2" {...register("providencias")} />
-
-								<div className="flex gap-2">
-									<input type="date" className="border-odara-primary border rounded-lg px-3 py-2 flex-1" {...register("data")} />
-									<input type="time" className="border-odara-primary border rounded-lg px-3 py-2 flex-1" {...register("hora")} />
-								</div>
-								{errors.data && <p className="text-red-500 text-sm">{(errors.data as any).message}</p>}
-
-								<div className="flex flex-col gap-2">
-									<select className="flex-1 border-odara-primary border rounded-lg px-3 py-2" {...register("residente")}>
-										<option value="">Selecionar Residente</option>
-										{residentes.map((r) => <option key={String(r.id)} value={String(r.id)}>{r.nome}</option>)}
-									</select>
-
-									<select className="flex-1 border-odara-primary border rounded-lg px-3 py-2" {...register("funcionario")}>
-										<option value="">Selecionar Funcionário</option>
-										{funcionarios.map((f) => <option key={String(f.id)} value={String(f.id)}>{f.nome}</option>)}
-									</select>
-								</div>
-
-								<select className="w-full border-odara-primary text-odara-dark border rounded-lg px-3 py-2" {...register("categoria")}>
-									<option value="">Selecionar Categoria</option>
-									<option value={'acidente'}>Acidente</option>
-									<option value={'saude'}>Saúde</option>
-									<option value={'comportamental'}>Comportamental</option>
-									<option value={'estrutural'}>Estrutural</option>
-								</select>
-
-								<label className="flex items-center gap-2">
-									<input type="checkbox" className="w-4 h-4 text-odara-accent border-gray-300 rounded" {...register("resolvido")} />
-									Ocorrência Resolvida
-								</label>
-
-								<div className="mt-4 flex justify-end gap-2">
-									<button type="button" className="px-4 border-odara-primary border py-2 rounded-lg text-odara-primary hover:text-odara-white hover:bg-odara-primary" onClick={() => setModalAberto(false)}>Cancelar</button>
-									<button type="submit" className="px-4 py-2 bg-odara-accent hover:bg-odara-secondary text-odara-white rounded-lg" disabled={isSubmitting || loading}>
-										{isSubmitting || loading ? "Salvando..." : "Salvar"}
-									</button>
-								</div>
-							</form>
-						</div>
 					</div>
-				)}
+
+
+
+
+					{/* modal */}
+					{modalAberto && (
+						<div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 p-4">
+							<div className="bg-white text-odara-dark border-4 border-odara-primary rounded-lg py-2 p-6 w-full max-w-lg">
+								<h2 className="text-xl font-bold mb-4">{editando ? "Editar Ocorrência" : "Nova Ocorrência"}</h2>
+
+								<form onSubmit={handleSubmit(onSubmit)} className="space-y-3">
+									<input type="text" placeholder="Título" className="w-full border-odara-primary border rounded-lg px-3 py-2" {...register("titulo")} />
+									{errors.titulo && <p className="text-red-500 text-sm">{(errors.titulo as any).message}</p>}
+
+									<textarea placeholder="Descrição" className="w-full border-odara-primary border rounded-lg px-3 py-2" {...register("descricao")} />
+
+									<textarea placeholder="Providências" className="w-full border-odara-primary border rounded-lg px-3 py-2" {...register("providencias")} />
+
+									<div className="flex gap-2">
+										<input type="date" className="border-odara-primary border rounded-lg px-3 py-2 flex-1" {...register("data")} />
+										<input type="time" className="border-odara-primary border rounded-lg px-3 py-2 flex-1" {...register("hora")} />
+									</div>
+									{errors.data && <p className="text-red-500 text-sm">{(errors.data as any).message}</p>}
+
+									<div className="flex flex-col gap-2">
+										<select className="flex-1 border-odara-primary border rounded-lg px-3 py-2" {...register("residente")}>
+											<option value="">Selecionar Residente</option>
+											{residentes.map((r) => <option key={String(r.id)} value={String(r.id)}>{r.nome}</option>)}
+										</select>
+
+										<select className="flex-1 border-odara-primary border rounded-lg px-3 py-2" {...register("funcionario")}>
+											<option value="">Selecionar Funcionário</option>
+											{funcionarios.map((f) => <option key={String(f.id)} value={String(f.id)}>{f.nome}</option>)}
+										</select>
+									</div>
+
+									<select className="w-full border-odara-primary text-odara-dark border rounded-lg px-3 py-2" {...register("categoria")}>
+										<option value="">Selecionar Categoria</option>
+										<option value={'acidente'}>Acidente</option>
+										<option value={'saude'}>Saúde</option>
+										<option value={'estrutural'}>Estrutural</option>
+									</select>
+
+									<label className="flex items-center gap-2">
+										<input type="checkbox" className="w-4 h-4 text-odara-accent border-gray-300 rounded" {...register("resolvido")} />
+										Ocorrência Resolvida
+									</label>
+
+									<div className="mt-4 flex justify-end gap-2">
+										<button type="button" className="px-4 border-odara-primary border py-2 rounded-lg text-odara-primary hover:text-odara-white hover:bg-odara-primary" onClick={() => setModalAberto(false)}>Cancelar</button>
+										<button type="submit" className="px-4 py-2 bg-odara-accent hover:bg-odara-secondary text-odara-white rounded-lg" disabled={isSubmitting || loading}>
+											{isSubmitting || loading ? "Salvando..." : "Salvar"}
+										</button>
+									</div>
+								</form>
+							</div>
+						</div>
+					)}
+				</div>
 			</main>
 		</div>
 	);

@@ -164,27 +164,27 @@ export default function Login() {
               >
                 Senha
               </label>
-              <div className="relative">
-                <input
-                  id="senha"
-                  type={showSenha ? "text" : "senha"}
-                  placeholder="Digite a sua senha"
-                  className="w-full h-10 px-3 pr-10 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-odara-secondary focus:border-transparent"
-                  {...register("senha")}
-                />
-                <button
-                  type="button"
-                  onClick={() => setShowSenha(!showSenha)}
-                  className="absolute inset-y-0 right-0 flex items-center pr-3 text-gray-400 hover:text-gray-600"
-                  aria-label={showSenha ? "Esconder senha" : "Mostrar senha"}
-                >
-                  {showSenha ? (
-                    <EyeOff className="w-5 h-5" />
-                  ) : (
-                    <Eye className="w-5 h-5" />
-                  )}
-                </button>
-              </div>
+            <div className="relative">
+              <input
+                id="senha"
+                type={showSenha ? "text" : "password"}
+                placeholder="Digite a sua senha"
+                className="w-full h-10 px-3 pr-10 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-odara-secondary focus:border-transparent"
+                {...register("senha")}
+              />
+              <button
+                type="button"
+                onClick={() => setShowSenha(!showSenha)}
+                className="absolute inset-y-0 right-0 flex items-center pr-3 text-gray-400 hover:text-gray-600"
+                aria-label={showSenha ? "Esconder senha" : "Mostrar senha"}
+              >
+                {showSenha ? (
+                  <Eye className="w-5 h-5" /> 
+                ) : (
+                  <EyeOff className="w-5 h-5" /> 
+                )}
+              </button>
+            </div>
               {errors.senha && (
                 <p className="text-xs text-red-600 mt-1">
                   {errors.senha.message}

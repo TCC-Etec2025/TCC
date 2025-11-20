@@ -1,86 +1,172 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Pill, ClipboardList, AlertTriangle, Hospital, Utensils, BarChart, Star, Users, Stethoscope, Microscope, Video, Phone } from "lucide-react"
 
-
 const Documentacao = () => {
   const [activeItem, setActiveItem] = useState(null);
   const detailsRef = useRef(null);
-
+  const topRef = useRef(null); 
 
   const funcionalidades = [
     {
       nome: 'Registro de Medicamentos',
-      descricao: 'Controle completo da medicação dos residentes com alertas e histórico detalhado',
+      descricao: 'Controle completo da medicação dos residentes',
       icone: <Pill size={24} />,
       detalhes: [
-        'O Registro de Medicamentos está localizado os respectivos cadastros para melhor controle detalhado de medicação tais quais o paciente deverá ingerir para a realização de seu tratamento.   Ele garante a segurança e continuidade do tratamento dos residentes, e auxiliam na organização, otimização e na avaliação da funcionalidade do mesmo, colaborando para o trabalho da equipe de saúde.'
+        'Cadastro completo de medicamentos com dosagens e horários',
+        'Sistema de alertas para próximas doses',
+        'Histórico detalhado de administração',
+        'Controle de estoque e validade',
+        'Relatórios de adherencia ao tratamento'
+      ],
+      beneficios: [
+        'Redução de erros na medicação',
+        'Otimização do tempo da equipe',
+        'Maior segurança para os residentes',
+        'Documentação completa para auditorias'
       ]
     },
     {
       nome: 'Registro de Exames Médicos',
-      descricao: 'Organização e resultados de exames médicos',
+      descricao: 'Organização de exames médicos',
       icone: <Microscope size={24} />,
       detalhes: [
-        'O Registro de Exames Médicos aqui será anotado e organizado todas as informações sobre exames realizados por um paciente, seja para diagnóstico, acompanhamento ou controle de rotina.No documento deve haver controle e histórico para ser fornecido informações precisas para avaliar a evolução do paciente.',
-
+        'Armazenamento digital de resultados',
+        'Agendamento de exames futuros',
+        'Alertas para exames pendentes',
+        'Histórico evolutivo completo',
+        'Acesso rápido a laudos médicos'
+      ],
+      beneficios: [
+        'Organização centralizada de documentos',
+        'Acesso rápido em emergências',
+        'Monitoramento contínuo da saúde',
+        'Facilidade no compartilhamento com especialistas'
       ]
     },
     {
       nome: 'Registro de Consultas Médicas',
-      descricao: 'Controle completo de consultas e acompanhamento médico',
+      descricao: 'Controle de consultas e acompanhamento médico',
       icone: <Stethoscope size={24} />,
       detalhes: [
-        'O Registro de Consultas Médicas é o documento onde serão anotadas todas as informações sobre os atendimentos médicos realizados a um paciente. No mesmo deve conter: nome completo, idade, sexo, número de prontuário data e horário da consulta, profissional responsável, motivo da consulta, histórico e evolução clínica, tratamentos indicados, encaminhamentos, exames solicitados e receitas médicas, assinatura e autenticação.',
-
+        'Agendamento e controle de consultas',
+        'Registro de evolução clínica',
+        'Prescrições e orientações médicas',
+        'Encaminhamentos especializados',
+        'Histórico de atendimentos'
+      ],
+      beneficios: [
+        'Continuidade do cuidado médico',
+        'Comunicação eficiente entre profissionais',
+        'Documentação legal completa',
+        'Acompanhamento personalizado'
       ]
     },
     {
       nome: 'Registro da Saúde Corporal',
-      descricao: 'Monitoramento contínuo do estado de saúde dos residentes',
+      descricao: 'Monitoramento do estado de saúde dos residentes',
       icone: <Hospital size={24} />,
       detalhes: [
-        'O Registro da Saúde Corporal Inicial se refere à investigação e registro de eventuais ferimentos e/ou questões corporais no momento da entrada inicial da pessoa idosa na Casa. Com um template anatômico prático, basta selecionar as regiões do corpo afetadas e descrever os sintomas físicos da pessoa idosa referentes a essa região, dessa forma preza-se por um acompanhamento mais completo da saúde do individuo e garante um melhor entendimento da situação da saúde dele ao entrar em seu novo lar.',
+        'Template anatômico interativo',
+        'Registro de ferimentos e lesões',
+        'Avaliação física inicial e periódica',
+        'Monitoramento de sinais vitais',
+        'Controle de curativos e tratamentos'
+      ],
+      beneficios: [
+        'Detecção precoce de problemas',
+        'Acompanhamento visual da evolução',
+        'Melhor comunicação entre equipes',
+        'Documentação precisa do estado físico'
       ]
     },
     {
       nome: 'Registro de Ocorrências',
-      descricao: 'Documentação de incidentes e acompanhamento de resolução',
+      descricao: 'Documentação de incidentes',
       icone: <AlertTriangle size={24} />,
       detalhes: [
-        'O Registro de Ocorrências ficha onde se registra qualquer situação fora do comum envolvendo os residentes, funcionários ou a rotina da casa de repouso, podendo ser clínica,  comportamental ou até mesmo relacional, esse diário ajuda a acompanhar tudo o que pode impactar o bem-estar dos idosos e na organização do local, também na ciência dos responsáveis sobre os acontecimentos do dia.',
+        'Categorização de incidentes',
+        'Registro fotográfico opcional',
+        'Fluxo de notificação automática',
+        'Acompanhamento de resolução',
+        'Relatórios estatísticos'
+      ],
+      beneficios: [
+        'Resposta rápida a incidentes',
+        'Transparência com familiares',
+        'Prevenção de recorrências',
+        'Base legal para eventuais situações'
       ]
     },
     {
       nome: 'Registro de Comportamento',
-      descricao: 'Registro e análise de padrões comportamentais',
+      descricao: 'Registros comportamentais',
       icone: <BarChart size={24} />,
       detalhes: [
-        'O Registro de Comportamento esse relatório é onde será disposto informações sobre o comportamento dos residentes, seja durante exames, momento de lazer, alimentação, e de todo o seu dia a dia. Nele deverá haver conteúdo detalhado se o mesmo provocou consequências para si mesmo ou a terceiros (enfermeiros, médicos, responsáveis, ou outros residentes).',
+        'Escalas comportamentais validadas',
+        'Registro de padrões diários',
+        'Identificação de gatilhos',
+        'Evolução temporal gráfica',
+        'Alertas para mudanças significativas'
+      ],
+      beneficios: [
+        'Cuidado personalizado',
+        'Intervenções precoces',
+        'Melhora na qualidade de vida',
+        'Suporte a diagnósticos médicos'
       ]
     },
     {
       nome: 'Registro de Atividades',
-      descricao: 'Organização e acompanhamento das atividades diárias dos residentes',
+      descricao: 'Organização das atividades dos residentes',
       icone: <ClipboardList size={24} />,
       detalhes: [
-        'O Registro de Atividades é um documento fundamental que reúne todas as ações, cuidados e acontecimentos do dia a dia na instituição. Ele serve para garantir a organização, transparência e a qualidade do atendimento aos idosos. Ele permite monitorar o que foi feito com cada residente, como medicação, alimentação, atividades físicas e sociais, também ajuda a identificar rapidamente qualquer problema. ',
+        'Programação de atividades recreativas',
+        'Controle de participação',
+        'Avaliação de engajamento',
+        'Customização por perfil',
+        'Relatórios de frequência'
+      ],
+      beneficios: [
+        'Estímulo cognitivo constante',
+        'Socialização monitorada',
+        'Rotina organizada e previsível',
+        'Identificação de preferências'
       ]
     },
     {
       nome: 'Registro de Alimentação',
-      descricao: 'Gestão nutricional e acompanhamento alimentar',
+      descricao: 'Gestão de acompanhamento alimentar',
       icone: <Utensils size={24} />,
       detalhes: [
-        'O Registro de  Quadro Alimentar é o documento no qual serão adicionadas minuciosamente todas as informações sobre alimentação do residente, para acompanhamento e avaliação, se a nutrição está adequada e se é necessário alguma alteração para atender melhor as necessidades do idoso. Deve estar registrado quantas refeições o mesmo fez, quando foi, e o que ingeriu, se ele se queixou de algo, deixou de se alimentar e o motivo de tal decisão.',
-
+        'Controle de dietas especiais',
+        'Registro de aceitação alimentar',
+        'Monitoramento hídrico',
+        'Avaliação nutricional',
+        'Cardápios personalizados'
+      ],
+      beneficios: [
+        'Adequação nutricional',
+        'Prevenção de desidratação',
+        'Identificação de dificuldades',
+        'Satisfação do residente'
       ]
     },
     {
       nome: 'Registro de Preferências',
-      descricao: 'Registro das preferências individuais de cada residente',
+      descricao: 'Registro das preferências individuais dos residente',
       icone: <Star size={24} />,
       detalhes: [
-        'O Registro de Preferências é uma ficha na qual serão anotadas as preferências pessoais de cada residente, para que a equipe possa oferecer um cuidado mais humanizado. Ele é parte importante do prontuário de atendimento, garante o bem-estar do idoso respeitando seus gostos, como comidas e temperos de preferência, sua rotina diária em geral (horário que acorda, prefere tomar banho, ou praticar seus lazeres).',
+        'Perfil completo de preferências',
+        'Histórico de hábitos pessoais',
+        'Rotinas individuais',
+        'Gostos alimentares específicos',
+        'Atividades de preferência'
+      ],
+      beneficios: [
+        'Cuidado humanizado',
+        'Respeito à individualidade',
+        'Maior conforto do residente',
+        'Fortalecimento da autonomia'
       ]
     },
   ];
@@ -88,7 +174,6 @@ const Documentacao = () => {
   // Efeito para rolar até os detalhes quando activeItem muda
   useEffect(() => {
     if (activeItem !== null && detailsRef.current) {
-      // Pequeno timeout para garantir que o DOM foi atualizado
       setTimeout(() => {
         detailsRef.current.scrollIntoView({
           behavior: 'smooth',
@@ -98,104 +183,163 @@ const Documentacao = () => {
     }
   }, [activeItem]);
 
-  const handleItemClick = (index) => {
-    setActiveItem(index);
+  const handleCloseDetails = () => {
+    setActiveItem(null);
+    // Rola para o topo após fechar os detalhes
+    setTimeout(() => {
+      if (topRef.current) {
+        topRef.current.scrollIntoView({
+          behavior: 'smooth',
+          block: 'start'
+        });
+      } else {
+        // Fallback: rola para o topo da página
+        window.scrollTo({
+          top: 0,
+          behavior: 'smooth'
+        });
+      }
+    }, 100);
   };
 
-
   return (
-    <main className="container mx-auto py-8 px-4 max-w-6xl font-sans">
-      {/* Cabeçalho */}
-      <header className="text-center mb-12">
-        <h1 className="text-4xl font-bold text-odara-accent mb-2">Funcionalidades do Sistema</h1>
-        <h2 className="text-xl text-odara-dark">Explore todas as ferramentas disponíveis para gestão de ILPIs</h2>
-      </header>
+    <main className="min-h-screen bg-odara-offwhite font-sans">
+      <div className="container mx-auto py-6 sm:py-8 px-4 sm:px-6 max-w-6xl">
+        {/* Ref para o topo da página */}
+        <div ref={topRef} />
+        
+        {/* Cabeçalho */}
+        <header className="text-center mb-8 sm:mb-12">
+          <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold text-odara-accent mb-3 sm:mb-4">
+            Funcionalidades do Sistema
+          </h1>
+          <h2 className="text-lg sm:text-xl text-odara-dark max-w-2xl mx-auto px-4">
+            Explore todas as ferramentas disponíveis para gestão de ILPIs
+          </h2>
+        </header>
 
-      {/* Lista de funcionalidades */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
-        {funcionalidades.map((item, index) => (
-          <button
-            key={index}
-            onClick={() => setActiveItem(index)}
-            className={`group text-odara-dark p-6 rounded-xl shadow-sm hover:shadow-md text-left border-l-4 transition-all duration-300 shadow-lg ${activeItem === index ? 'bg-odara-dropdown border-odara-secondary shadow-md' : 'transform hover:scale-105 bg-odara-offwhite border-odara-primary hover:bg-odara-primary/50 hover:border-odara-accent'}`}
-          >
-            <div className="flex items-center">
-              <span className={`text-2xl mr-4 ${activeItem === index ? 'text-odara-secondary' : 'text-odara-primary group-hover:text-odara-accent'}`}>{item.icone}</span>
-              <div>
-                <h3 className={`text-lg font-semibold ${activeItem === index ? 'text-odara-dropdown-accent' : 'text-odara-dark group-hover:text-odara-dark'}`}>{item.nome}</h3>
+        {/* Lista de funcionalidades */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 mb-8">
+          {funcionalidades.map((item, index) => (
+            <button
+              key={index}
+              onClick={() => setActiveItem(index)}
+              className={`group text-odara-dark p-4 sm:p-5 rounded-xl shadow-sm hover:shadow-lg text-left border-l-4 transition-all duration-300 ${
+                activeItem === index 
+                  ? 'bg-odara-dropdown border-odara-secondary shadow-md transform scale-105' 
+                  : 'bg-white border-odara-primary hover:bg-odara-primary/10 hover:border-odara-accent transform hover:scale-105'
+              }`}
+            >
+              <div className="flex items-start space-x-3">
+                <span className={`text-lg flex-shrink-0 mt-0.5 ${
+                  activeItem === index ? 'text-odara-secondary' : 'text-odara-primary group-hover:text-odara-accent'
+                }`}>
+                  {item.icone}
+                </span>
+                <div className="flex-1 min-w-0">
+                  <h3 className={`text-sm font-semibold leading-tight ${
+                    activeItem === index ? 'text-odara-dropdown-accent' : 'text-odara-dark group-hover:text-odara-dark'
+                  }`}>
+                    {item.nome}
+                  </h3>
+                  <p className="text-xs text-odara-dark/80 mt-1 line-clamp-2 leading-relaxed">
+                    {item.descricao}
+                  </p>
+                </div>
               </div>
-            </div>
-          </button>
-        ))}
-      </div>
+            </button>
+          ))}
+        </div>
 
-      {/* Seção de detalhes com ref para scroll */}
-      <div ref={detailsRef}>
-        {activeItem !== null && (
-          <section className="bg-gray-50 rounded-xl p-8 mb-8 animate-fadeIn">
-            <div className="flex items-center mb-6">
-              <span className="text-3xl mr-4 text-odara-primary">{funcionalidades[activeItem].icone}</span>
-              <div>
-                <h2 className="text-2xl font-bold text-odara-accent">{funcionalidades[activeItem].nome}</h2>
-                <p className="text-odara-dark">{funcionalidades[activeItem].descricao}</p>
-              </div>
-            </div>
-
-            <div className="grid md:grid-cols-2 gap-6">
-              <div className="bg-odara-dropdown border-l-4 border-odara-secondary p-6 rounded-lg shadow-xs">
-                <h3 className="text-lg font-bold text-odara-dropdown-accent mb-4 flex items-center">
-                  <svg className="w-5 h-5 mr-2 text-odara-secondary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                  </svg>
-                  Recursos Principais
-                </h3>
-                <ul className="space-y-3">
-                  {funcionalidades[activeItem].detalhes.map((detalhe, i) => (
-                    <li key={i} className="flex items-start">
-                      <span className="text-odara-secondary mr-2">•</span>
-                      <span className="text-odara-name">{detalhe}</span>
-                    </li>
-                  ))}
-                </ul>
+        {/* Seção de detalhes */}
+        <div ref={detailsRef}>
+          {activeItem !== null && (
+            <section className="bg-white rounded-2xl p-6 sm:p-8 mb-8 animate-fadeIn shadow-lg border border-odara-primary/10">
+              {/* Cabeçalho da seção */}
+              <div className="flex items-start mb-6 sm:mb-8">
+                <span className="text-2xl sm:text-3xl mr-4 text-odara-primary bg-odara-primary/10 p-3 rounded-xl">
+                  {funcionalidades[activeItem].icone}
+                </span>
+                <div className="flex-1">
+                  <h2 className="text-2xl sm:text-3xl font-bold text-odara-accent mb-2">
+                    {funcionalidades[activeItem].nome}
+                  </h2>
+                  <p className="text-lg text-odara-dark/90">
+                    {funcionalidades[activeItem].descricao}
+                  </p>
+                </div>
               </div>
 
-              <div className="bg-odara-white bg-opacity-10 p-6 rounded-lg border-2 border-odara-primary">
-                <h3 className="text-lg font-semibold text-odara-accent mb-4 flex items-center">
-                  <svg className="w-5 h-5 mr-2 text-odara-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                  </svg>
-                  Benefícios
-                </h3>
-                <p className="text-odara-dark">
-                  Esta funcionalidade foi desenvolvida para otimizar o trabalho dos cuidadores e
-                  melhorar a qualidade de vida dos residentes, proporcionando um acompanhamento
-                  mais preciso e personalizado.
-                </p>
-              </div>
-            </div>
+              {/* Grid de informações */}
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 sm:gap-8">
+                {/* Recursos Principais */}
+                <div className="bg-odara-offwhite rounded-xl p-6 shadow-sm border border-odara-primary/10">
+                  <h3 className="text-xl font-bold text-odara-accent mb-4 flex items-center">
+                    <svg className="w-5 h-5 mr-3 text-odara-primary" fill="currentColor" viewBox="0 0 20 20">
+                      <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                    </svg>
+                    Recursos Principais
+                  </h3>
+                  <ul className="space-y-3">
+                    {funcionalidades[activeItem].detalhes.map((detalhe, i) => (
+                      <li key={i} className="flex items-start">
+                        <span className="text-odara-primary mr-3 mt-1 flex-shrink-0">•</span>
+                        <span className="text-odara-dark leading-relaxed">{detalhe}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
 
-            <div className="mt-8 text-center">
-              <button
-                onClick={() => setActiveItem(null)}
-                className="bg-odara-accent hover:bg-odara-secondary/90 text-odara-contorno font-semibold px-4 py-2 rounded-lg transition-all duration-300 transform hover:scale-105 shadow-lg"
-              >
-                Fechar Detalhes
-              </button>
+                {/* Benefícios */}
+                <div className="bg-odara-offwhite rounded-xl p-6 shadow-sm border border-odara-primary/10">
+                  <h3 className="text-xl font-bold text-odara-accent mb-4 flex items-center">
+                    <svg className="w-5 h-5 mr-3 text-odara-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
+                    </svg>
+                    Benefícios
+                  </h3>
+                  <ul className="space-y-3">
+                    {funcionalidades[activeItem].beneficios.map((beneficio, i) => (
+                      <li key={i} className="flex items-start">
+                        <span className="text-odara-primary mr-3 mt-1 flex-shrink-0">✓</span>
+                        <span className="text-odara-dark leading-relaxed font-medium">{beneficio}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              </div>
+
+              {/* Botão de fechar */}
+              <div className="mt-8 text-center">
+                <button
+                  onClick={handleCloseDetails}
+                  className="bg-odara-accent hover:bg-odara-secondary/90 text-odara-contorno font-semibold px-6 py-3 rounded-lg transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-xl"
+                >
+                  Fechar Detalhes
+                </button>
+              </div>
+            </section>
+          )}
+        </div>
+
+        {/* Estado inicial - instrução */}
+        {activeItem === null && (
+          <div className="text-center py-12 sm:py-16 bg-white rounded-2xl shadow-sm border border-odara-primary/10">
+            <div className="max-w-md mx-auto px-4">
+              <svg className="w-16 h-16 mx-auto text-odara-primary/60 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+              </svg>
+              <h3 className="text-xl font-semibold text-odara-accent mb-2">
+                Explore as Funcionalidades
+              </h3>
+              <p className="text-odara-dark/80 leading-relaxed">
+                Selecione uma das funcionalidades acima para conhecer em detalhes 
+                todos os recursos e benefícios disponíveis para sua ILPI.
+              </p>
             </div>
-          </section>
+          </div>
         )}
       </div>
-
-      {/* Informação para ver as descrições */}
-      {activeItem === null && (
-        <div className="text-center py-12">
-          <svg className="w-12 h-12 mx-auto text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M8 9l3 3-3 3m5 0h3M5 20h14a2 2 0 002-2V6a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-          </svg>
-          <h3 className="text-lg font-medium text-gray-500 mt-4">Selecione uma funcionalidade para ver seus detalhes</h3>
-          <p className="text-gray-400 mt-1">Conheça todas as ferramentas disponíveis para gestão de ILPIs</p>
-        </div>
-      )}
     </main>
   );
 };

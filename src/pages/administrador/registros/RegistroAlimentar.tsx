@@ -154,15 +154,13 @@ const RegistroAlimentar = () => {
   const CONTROLES = {
     TODOS: 'todos',
     CONCLUIDO: 'concluido',
-    PENDENTE: 'pendente',
-    ATRASADO: 'atrasado'
+    PENDENTE: 'pendente'
   };
 
   const ROTULOS_CONTROLES = {
     [CONTROLES.TODOS]: "Todos",
     [CONTROLES.CONCLUIDO]: "Concluído",
-    [CONTROLES.PENDENTE]: "Pendente",
-    [CONTROLES.ATRASADO]: "Atrasado"
+    [CONTROLES.PENDENTE]: "Pendente"
   };
 
   // Configurações visuais para controle
@@ -183,14 +181,6 @@ const RegistroAlimentar = () => {
       texto: 'Pendente',
       icone: <FaClock size={10} />
     },
-    [CONTROLES.ATRASADO]: {
-      corBolinha: 'bg-red-500',
-      corCheckbox: 'text-red-500 border-red-500',
-      corTarja: 'bg-red-500 text-white',
-      corFundo: 'bg-red-50',
-      texto: 'Atrasado',
-      icone: <FaTimes size={10} />
-    }
   };
 
   // Estatísticas
@@ -202,8 +192,7 @@ const RegistroAlimentar = () => {
     const registrosDoDia = obterRegistrosDoDia(dia);
     const concluidas = registrosDoDia.filter(r => r.concluido).length;
     const pendentes = registrosDoDia.filter(r => !r.concluido && new Date(r.data) >= new Date()).length;
-    const atrasadas = registrosDoDia.filter(r => !r.concluido && new Date(r.data) < new Date()).length;
-    return { total: registrosDoDia.length, concluidas, pendentes, atrasadas };
+    return { total: registrosDoDia.length, concluidas, pendentes };
   };
 
   // Estatísticas do mês
@@ -217,7 +206,6 @@ const RegistroAlimentar = () => {
     let totalResidentes = new Set();
     let totalRefeicoes = 0;
     let concluidas = 0;
-    let atrasadas = 0;
     let pendentes = 0;
 
     for (let dia = new Date(primeiroDia); dia <= ultimoDia; dia.setDate(dia.getDate() + 1)) {
@@ -229,7 +217,6 @@ const RegistroAlimentar = () => {
 
       totalRefeicoes += estatisticasDia.total;
       concluidas += estatisticasDia.concluidas;
-      atrasadas += estatisticasDia.atrasadas;
       pendentes += estatisticasDia.pendentes;
     }
 
@@ -238,7 +225,6 @@ const RegistroAlimentar = () => {
       totalResidentes: totalResidentes.size,
       totalRefeicoes,
       concluidas,
-      atrasadas,
       pendentes
     };
   };
@@ -259,7 +245,6 @@ const RegistroAlimentar = () => {
   // Função para obter status de controle
   const getStatusControle = (registro) => {
     if (registro.concluido) return CONTROLES.CONCLUIDO;
-    if (estaAtrasado(registro)) return CONTROLES.ATRASADO;
     return CONTROLES.PENDENTE;
   };
 

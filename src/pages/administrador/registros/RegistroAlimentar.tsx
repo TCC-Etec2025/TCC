@@ -550,12 +550,12 @@ const RegistroAlimentar = () => {
                     {/* Data e Hora */}
                     <div className="grid grid-cols-2 gap-4">
                       <div>
-                        <label className="block text-odara-dark font-medium mb-2">
-                          Data *
+                        <label className="block text-sm font-semibold text-odara-dark mb-2">
+                          Data
                         </label>
                         <input
                           type="date"
-                          className="w-full px-4 py-2 border border-odara-primary rounded-lg focus:border-odara-secondary text-odara-secondary"
+                          className="w-full border border-odara-primary/40 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-odara-primary focus:outline-none transition"
                           value={novoRegistro.data}
                           onChange={(e) =>
                             setNovoRegistro({ ...novoRegistro, data: e.target.value })
@@ -564,12 +564,12 @@ const RegistroAlimentar = () => {
                       </div>
 
                       <div>
-                        <label className="block text-odara-dark font-medium mb-2">
-                          Horário *
+                        <label className="bblock text-sm font-semibold text-odara-dark mb-2">
+                          Horário
                         </label>
                         <input
                           type="time"
-                          className="w-full px-4 py-2 border border-odara-primary rounded-lg focus:border-odara-secondary text-odara-secondary"
+                          className="w-full border border-odara-primary/40 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-odara-primary focus:outline-none transition"
                           value={novoRegistro.horario}
                           onChange={(e) =>
                             setNovoRegistro({ ...novoRegistro, horario: e.target.value })
@@ -580,11 +580,11 @@ const RegistroAlimentar = () => {
 
                     {/* Refeição */}
                     <div>
-                      <label className="block text-odara-dark font-medium mb-2">
-                        Refeição *
+                      <label className="block text-sm font-semibold text-odara-dark mb-2">
+                        Refeição
                       </label>
                       <select
-                        className="w-full px-4 py-2 border border-odara-primary rounded-lg focus:border-odara-secondary text-odara-secondary"
+                        className="w-full border border-odara-primary/40 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-odara-primary focus:outline-none transition"
                         value={novoRegistro.refeicao}
                         onChange={(e) =>
                           setNovoRegistro({ ...novoRegistro, refeicao: e.target.value })
@@ -600,12 +600,12 @@ const RegistroAlimentar = () => {
 
                     {/* Alimento */}
                     <div>
-                      <label className="block text-odara-dark font-medium mb-2">
-                        Alimento *
+                      <label className="block text-sm font-semibold text-odara-dark mb-2">
+                        Alimento
                       </label>
                       <input
                         type="text"
-                        className="w-full px-4 py-2 border border-odara-primary rounded-lg focus:border-odara-secondary text-odara-secondary"
+                        className="w-full border border-odara-primary/40 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-odara-primary focus:outline-none transition"
                         value={novoRegistro.alimento}
                         onChange={(e) =>
                           setNovoRegistro({ ...novoRegistro, alimento: e.target.value })
@@ -616,11 +616,11 @@ const RegistroAlimentar = () => {
 
                     {/* Residente - AGORA COMO DROPDOWN */}
                     <div>
-                      <label className="block text-odara-dark font-medium mb-2">
-                        Residente *
+                      <label className="block text-sm font-semibold text-odara-dark mb-2">
+                        Residente
                       </label>
                       <select
-                        className="w-full px-4 py-2 border border-odara-primary rounded-lg focus:border-odara-secondary text-odara-secondary"
+                        className="w-full px-4 py-2 border border-odara-primary rounded-lg bg-white text-odara-secondary focus:ring-2 focus:ring-odara-primary"
                         value={novoRegistro.id_residente}
                         onChange={(e) =>
                           setNovoRegistro({

@@ -619,17 +619,18 @@ const RegistroOcorrencias: React.FC = () => {
 													<strong>Funcionário:</strong> {o.funcionario.nome}
 												</p>
 
-												<div className="flex justify-end gap-2 pt-2">
+												<div className="flex space-x-2">
 													<button
 														onClick={() => abrirModal(o)}
 														className="text-odara-secondary hover:text-odara-dropdown-accent transition-colors duration-200 p-2 rounded-full hover:bg-odara-dropdown"
-													>
+														title="Editar Ocorrência">
 														<FaEdit size={14} />
 													</button>
 													<button
 														onClick={() => handleDelete(o.id)}
 														className="text-odara-alerta hover:text-red-700 transition-colors duration-200 p-2 rounded-full hover:bg-odara-alerta/50"
-													>
+														title="Excluir Ocorrência">
+														
 														<FaTrash size={14} />
 													</button>
 												</div>
@@ -646,8 +647,8 @@ const RegistroOcorrencias: React.FC = () => {
 
 					{/* MODAL */}
 					{modalAberto && (
-						<div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 p-4">
-							<div className="bg-white text-odara-dark border-4 border-odara-primary rounded-lg w-full max-w-lg overflow-hidden">
+						<div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 p-4">
+							<div className="w-full max-w-4xl bg-white rounded-2xl shadow-lg overflow-hidden max-h-[90vh] flex flex-col">
 
 								{/* HEADER */}
 								<div className="bg-odara-primary text-white p-6">

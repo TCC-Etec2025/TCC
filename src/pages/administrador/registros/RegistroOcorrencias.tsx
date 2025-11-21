@@ -2,7 +2,6 @@ import React, { useEffect, useState } from "react";
 import { FaPlus, FaEdit, FaTrash, FaFilter, FaInfoCircle, FaArrowLeft, FaTimes } from "react-icons/fa";
 import { Link } from "react-router-dom";
 import { supabase } from "../../../lib/supabaseClient";
-
 import { useForm } from "react-hook-form";
 import * as yup from "yup";
 import { yupResolver } from "@hookform/resolvers/yup";
@@ -550,9 +549,8 @@ const RegistroOcorrencias: React.FC = () => {
 				</div>
 
 				{/* conteúdo */}
-				 <div className="bg-odara-white rounded-2xl shadow-lg p-4 sm:p-1">
+				<div className="bg-odara-white rounded-2xl border border-l-4 border-odara-primary shadow-lg p-6">
 					{/* lista */}
-					<div className="bg-white border-l-4 border-odara-primary rounded-2xl w-290 shadow-lg p-6">
 						<h2 className="text-2xl lg:text-4xl md:text-4xl font-bold text-odara-dark">{filtroStatus === 'resolvidas' ? "Ocorrências Resolvidas" : filtroStatus === 'pendentes' ? "Ocorrências Pendentes" : "Ocorrências"}</h2>
 
 						<div className="space-y-4 max-h-[600px] overflow-y-auto">
@@ -624,15 +622,15 @@ const RegistroOcorrencias: React.FC = () => {
 												<div className="flex justify-end gap-2 pt-2">
 													<button
 														onClick={() => abrirModal(o)}
-														className="px-1 py-1 text-white bg-blue-200 rounded hover:bg-blue-400"
+														className="text-odara-secondary hover:text-odara-dropdown-accent transition-colors duration-200 p-2 rounded-full hover:bg-odara-dropdown"
 													>
-														<FaEdit />
+														<FaEdit size={14} />
 													</button>
 													<button
 														onClick={() => handleDelete(o.id)}
-														className="px-1 py-1  text-white bg-red-300 rounded hover:bg-red-400"
+														className="text-odara-alerta hover:text-red-700 transition-colors duration-200 p-2 rounded-full hover:bg-odara-alerta/50"
 													>
-														<FaTrash />
+														<FaTrash size={14} />
 													</button>
 												</div>
 											</div>
@@ -646,61 +644,163 @@ const RegistroOcorrencias: React.FC = () => {
 
 
 
-					{/* modal */}
+					{/* MODAL */}
 					{modalAberto && (
 						<div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 p-4">
-							<div className="bg-white text-odara-dark border-4 border-odara-primary rounded-lg py-2 p-6 w-full max-w-lg">
-								<h2 className="text-xl font-bold mb-4">{editando ? "Editar Ocorrência" : "Nova Ocorrência"}</h2>
+							<div className="bg-white text-odara-dark border-4 border-odara-primary rounded-lg w-full max-w-lg overflow-hidden">
 
-								<form onSubmit={handleSubmit(onSubmit)} className="space-y-3">
-									<input type="text" placeholder="Título" className="w-full border-odara-primary border rounded-lg px-3 py-2" {...register("titulo")} />
-									{errors.titulo && <p className="text-red-500 text-sm">{(errors.titulo as any).message}</p>}
+								{/* HEADER */}
+								<div className="bg-odara-primary text-white p-6">
+									<div className="flex justify-between items-center">
+										<h2 className="text-2xl font-bold">
+											{editando ? "Editar Ocorrência" : "Nova Ocorrência"}
+										</h2>
 
-									<textarea placeholder="Descrição" className="w-full border-odara-primary border rounded-lg px-3 py-2" {...register("descricao")} />
-
-									<textarea placeholder="Providências" className="w-full border-odara-primary border rounded-lg px-3 py-2" {...register("providencias")} />
-
-									<div className="flex gap-2">
-										<input type="date" className="border-odara-primary border rounded-lg px-3 py-2 flex-1" {...register("data")} />
-										<input type="time" className="border-odara-primary border rounded-lg px-3 py-2 flex-1" {...register("hora")} />
-									</div>
-									{errors.data && <p className="text-red-500 text-sm">{(errors.data as any).message}</p>}
-
-									<div className="flex flex-col gap-2">
-										<select className="flex-1 border-odara-primary border rounded-lg px-3 py-2" {...register("residente")}>
-											<option value="">Selecionar Residente</option>
-											{residentes.map((r) => <option key={String(r.id)} value={String(r.id)}>{r.nome}</option>)}
-										</select>
-
-										<select className="flex-1 border-odara-primary border rounded-lg px-3 py-2" {...register("funcionario")}>
-											<option value="">Selecionar Funcionário</option>
-											{funcionarios.map((f) => <option key={String(f.id)} value={String(f.id)}>{f.nome}</option>)}
-										</select>
-									</div>
-
-									<select className="w-full border-odara-primary text-odara-dark border rounded-lg px-3 py-2" {...register("categoria")}>
-										<option value="">Selecionar Categoria</option>
-										<option value={'acidente'}>Acidente</option>
-										<option value={'saude'}>Saúde</option>
-										<option value={'estrutural'}>Estrutural</option>
-									</select>
-
-									<label className="flex items-center gap-2">
-										<input type="checkbox" className="w-4 h-4 text-odara-accent border-gray-300 rounded" {...register("resolvido")} />
-										Ocorrência Resolvida
-									</label>
-
-									<div className="mt-4 flex justify-end gap-2">
-										<button type="button" className="px-4 border-odara-primary border py-2 rounded-lg text-odara-primary hover:text-odara-white hover:bg-odara-primary" onClick={() => setModalAberto(false)}>Cancelar</button>
-										<button type="submit" className="px-4 py-2 bg-odara-accent hover:bg-odara-secondary text-odara-white rounded-lg" disabled={isSubmitting || loading}>
-											{isSubmitting || loading ? "Salvando..." : "Salvar"}
+										<button
+											onClick={() => {
+												setModalAberto(false);
+												setEditando(false);
+												setIdEditando(null);
+											}}
+											className="text-white hover:text-odara-offwhite transition-colors duration-200 p-1 rounded-full hover:bg-white/20"
+										>
+											<FaTimes size={20} />
 										</button>
 									</div>
-								</form>
+
+									<p className="text-odara-offwhite/80 mt-1 text-sm">
+										{editando
+											? "Atualize as informações da ocorrência"
+											: "Preencha os dados para registrar uma nova ocorrência"}
+									</p>
+								</div>
+
+								{/* CORPO DO MODAL */}
+								<div className="p-6 bg-odara-offwhite/30 max-h-[70vh] overflow-y-auto">
+
+									{/* FORM */}
+									<form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+
+										{/* TÍTULO */}
+										<div>
+											<input
+												type="text"
+												placeholder="Título"
+												className="w-full border-odara-primary border rounded-lg px-3 py-2"
+												{...register("titulo")}
+											/>
+											{errors.titulo && (
+												<p className="text-red-500 text-sm">
+													{(errors.titulo as any).message}
+												</p>
+											)}
+										</div>
+
+										{/* DESCRIÇÃO */}
+										<textarea
+											placeholder="Descrição"
+											className="w-full border-odara-primary border rounded-lg px-3 py-2"
+											{...register("descricao")}
+										/>
+
+										{/* PROVIDÊNCIAS */}
+										<textarea
+											placeholder="Providências"
+											className="w-full border-odara-primary border rounded-lg px-3 py-2"
+											{...register("providencias")}
+										/>
+
+										{/* DATA + HORA */}
+										<div className="flex gap-2">
+											<input
+												type="date"
+												className="border-odara-primary border rounded-lg px-3 py-2 flex-1"
+												{...register("data")}
+											/>
+											<input
+												type="time"
+												className="border-odara-primary border rounded-lg px-3 py-2 flex-1"
+												{...register("hora")}
+											/>
+										</div>
+										{errors.data && (
+											<p className="text-red-500 text-sm">
+												{(errors.data as any).message}
+											</p>
+										)}
+
+										{/* RESIDENTE + FUNCIONÁRIO */}
+										<div className="flex flex-col gap-3">
+											<select
+												className="border-odara-primary border rounded-lg px-3 py-2"
+												{...register("residente")}
+											>
+												<option value="">Selecionar Residente</option>
+												{residentes.map((r) => (
+													<option key={String(r.id)} value={String(r.id)}>
+														{r.nome}
+													</option>
+												))}
+											</select>
+
+											<select
+												className="border-odara-primary border rounded-lg px-3 py-2"
+												{...register("funcionario")}
+											>
+												<option value="">Selecionar Funcionário</option>
+												{funcionarios.map((f) => (
+													<option key={String(f.id)} value={String(f.id)}>
+														{f.nome}
+													</option>
+												))}
+											</select>
+										</div>
+
+										{/* CATEGORIA */}
+										<select
+											className="w-full border-odara-primary text-odara-dark border rounded-lg px-3 py-2"
+											{...register("categoria")}
+										>
+											<option value="">Selecionar Categoria</option>
+											<option value="acidente">Acidente</option>
+											<option value="saude">Saúde</option>
+											<option value="estrutural">Estrutural</option>
+										</select>
+
+										{/* CHECKBOX */}
+										<label className="flex items-center gap-2">
+											<input
+												type="checkbox"
+												className="w-4 h-4 text-odara-accent border-gray-300 rounded"
+												{...register("resolvido")}
+											/>
+											Ocorrência Resolvida
+										</label>
+
+										{/* BOTÕES */}
+										<div className="mt-4 flex justify-end gap-2">
+											<button
+												type="button"
+												className="px-4 border-odara-primary border py-2 rounded-lg text-odara-primary hover:text-odara-white hover:bg-odara-primary"
+												onClick={() => setModalAberto(false)}
+											>
+												Cancelar
+											</button>
+
+											<button
+												type="submit"
+												className="px-4 py-2 bg-odara-accent hover:bg-odara-secondary text-odara-white rounded-lg"
+												disabled={isSubmitting || loading}
+											>
+												{isSubmitting || loading ? "Salvando..." : "Salvar"}
+											</button>
+										</div>
+									</form>
+								</div>
 							</div>
 						</div>
 					)}
-				</div>
+
 			</main>
 		</div>
 	);

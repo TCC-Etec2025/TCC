@@ -22,51 +22,89 @@ type RegistroAlimentar = {
   funcionario?: string;
 };
 
-const RegistroAlimentar = () => {
-  const [registros, setRegistros] = useState([
-    { id: 1, data: new Date(), horario: "07:30", refeicao: "Café da Manhã", alimento: "Pão, leite, fruta", residentes: "João Santos", concluido: true },
-    { id: 2, data: new Date(), horario: "12:00", refeicao: "Almoço", alimento: "Arroz, feijão, frango", residentes: "Maria Oliveira", concluido: false },
-    { id: 3, data: new Date(), horario: "15:30", refeicao: "Lanche", alimento: "Bolo e suco", residentes: "João Santos", concluido: false },
-  ]);
+type Residente = {
+  id: number;
+  nome: string;
+};
 
+const RegistroAlimentar = () => {
+  const [registros, setRegistros] = useState([]);
+  const [residentes, setResidentes] = useState<Residente[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const fetchRegistros = async () => {
+    const fetchData = async () => {
       try {
-        const { data, error } = await supabase
-          .from('registro')
+        // Buscar residentes
+        const { data: residentesData, error: residentesError } = await supabase
+          .from('residente')
+          .select('id, nome')
+          .order('nome');
+
+        if (residentesError) throw residentesError;
+        setResidentes(residentesData || []);
+
+        // Buscar registros alimentares
+        const { data: registrosData, error: registrosError } = await supabase
+          .from('registro_alimentar')
           .select('*')
-          .order('data_registro', { ascending: false })
+          .order('data', { ascending: false })
           .order('horario', { ascending: false });
 
-        if (error) throw error;
+        if (registrosError) throw registrosError;
 
-        setRegistros(data);
-        for (const registro of data) {
-          const [funcionario, residente] = await Promise.all([
-            supabase
-              .from('residente')
-              .select('nome')
-              .eq('id', registro.id_residente)
-              .single(),
-            supabase
-              .from('funcionario')
-              .select('nome')
-              .eq('id', registro.id_funcionario)
-              .single()
-          ]);
+        if (registrosData) {
+          const registrosComNomes = await Promise.all(
+            registrosData.map(async (registro) => {
+              try {
+                // Buscar nome do residente
+                const { data: residenteData } = await supabase
+                  .from('residente')
+                  .select('nome')
+                  .eq('id', registro.id_residente)
+                  .single();
 
-          registro.residente = residente.data?.nome;
-          registro.funcionario = funcionario.data?.nome;
+                // Buscar nome do funcionário
+                const { data: funcionarioData } = await supabase
+                  .from('funcionario')
+                  .select('nome')
+                  .eq('id', registro.id_funcionario)
+                  .single();
+
+                return {
+                  ...registro,
+                  residente: residenteData?.nome || 'Residente não encontrado',
+                  funcionario: funcionarioData?.nome || 'Funcionário não encontrado',
+                  residentes: residenteData?.nome || 'Residente não encontrado',
+                };
+              } catch (error) {
+                console.error('Erro ao buscar dados relacionados:', error);
+                return {
+                  ...registro,
+                  residente: 'Erro ao carregar',
+                  funcionario: 'Erro ao carregar',
+                  residentes: 'Erro ao carregar',
+                };
+              }
+            })
+          );
+
+          setRegistros(registrosComNomes);
         }
       } catch (error) {
-        console.error('Erro ao buscar registros alimentares:', error);
+        console.error('Erro ao buscar dados:', error);
+        // Em caso de erro, mantemos os dados mockados para demonstração
+        setRegistros([
+          { id: 1, data: new Date(), horario: "07:30", refeicao: "Café da Manhã", alimento: "Pão, leite, fruta", residentes: "João Santos", concluido: true },
+          { id: 2, data: new Date(), horario: "12:00", refeicao: "Almoço", alimento: "Arroz, feijão, frango", residentes: "Maria Oliveira", concluido: false },
+          { id: 3, data: new Date(), horario: "15:30", refeicao: "Lanche", alimento: "Bolo e suco", residentes: "João Santos", concluido: false },
+        ]);
       } finally {
         setLoading(false);
       }
     };
-    fetchRegistros();
+    
+    fetchData();
   }, []);
 
   const [modalAberto, setModalAberto] = useState(false);
@@ -75,7 +113,7 @@ const RegistroAlimentar = () => {
     horario: "",
     refeicao: "Café da Manhã",
     alimento: "",
-    residentes: "",
+    id_residente: "",
   });
   const [editando, setEditando] = useState(false);
   const [idEditando, setIdEditando] = useState(null);
@@ -87,7 +125,9 @@ const RegistroAlimentar = () => {
 
   const REFEICOES = ["Café da Manhã", "Almoço", "Lanche", "Jantar"];
   const STATUS = ["Pendente", "Consumido", "Parcial", "Não Consumido"];
-  const residentesUnicos = [...new Set(registros.map(r => r.residentes))];
+  
+  // Obter residentes únicos dos registros
+  const residentesUnicos = [...new Set(registros.map(r => r.residentes))].filter(Boolean);
 
   // Funções básicas
   const abrirModalAdicionar = () => {
@@ -96,7 +136,7 @@ const RegistroAlimentar = () => {
       horario: "",
       refeicao: "Café da Manhã",
       alimento: "",
-      residentes: "",
+      id_residente: "",
     });
     setEditando(false);
     setIdEditando(null);
@@ -111,7 +151,7 @@ const RegistroAlimentar = () => {
         horario: registro.horario,
         refeicao: registro.refeicao,
         alimento: registro.alimento,
-        residentes: registro.residentes,
+        id_residente: registro.id_residente.toString(),
       });
       setEditando(true);
       setIdEditando(id);
@@ -119,22 +159,86 @@ const RegistroAlimentar = () => {
     }
   };
 
-  const salvarRegistro = () => {
-    if (!novoRegistro.alimento) return;
+  const salvarRegistro = async () => {
+    if (!novoRegistro.alimento || !novoRegistro.id_residente) return;
 
-    const dataObj = new Date(novoRegistro.data);
-    if (editando && idEditando) {
-      setRegistros(prev => prev.map(r => r.id === idEditando ? { ...r, ...novoRegistro, data: dataObj } : r));
-    } else {
-      const novo = { id: Date.now(), ...novoRegistro, data: dataObj, concluido: false };
-      setRegistros(prev => [...prev, novo]);
+    try {
+      const dataObj = new Date(novoRegistro.data);
+      
+      if (editando && idEditando) {
+        // Atualizar registro existente
+        const { error } = await supabase
+          .from('registro_alimentar')
+          .update({
+            data: dataObj.toISOString(),
+            horario: novoRegistro.horario,
+            refeicao: novoRegistro.refeicao,
+            alimento: novoRegistro.alimento,
+            id_residente: parseInt(novoRegistro.id_residente),
+          })
+          .eq('id', idEditando);
+
+        if (error) throw error;
+
+        // Atualizar estado local
+        const residenteSelecionado = residentes.find(r => r.id === parseInt(novoRegistro.id_residente));
+        setRegistros(prev => prev.map(r => r.id === idEditando ? { 
+          ...r, 
+          ...novoRegistro, 
+          data: dataObj,
+          residentes: residenteSelecionado?.nome || 'Residente não encontrado'
+        } : r));
+      } else {
+        // Criar novo registro
+        const { data, error } = await supabase
+          .from('registro_alimentar')
+          .insert([
+            {
+              data: dataObj.toISOString(),
+              horario: novoRegistro.horario,
+              refeicao: novoRegistro.refeicao,
+              alimento: novoRegistro.alimento,
+              id_residente: parseInt(novoRegistro.id_residente),
+              id_funcionario: 1, // Você pode ajustar isso conforme necessário
+              concluido: false
+            }
+          ])
+          .select();
+
+        if (error) throw error;
+
+        if (data && data[0]) {
+          const residenteSelecionado = residentes.find(r => r.id === parseInt(novoRegistro.id_residente));
+          const novoRegistroCompleto = {
+            ...data[0],
+            residentes: residenteSelecionado?.nome || 'Residente não encontrado',
+            data: new Date(data[0].data)
+          };
+          setRegistros(prev => [novoRegistroCompleto, ...prev]);
+        }
+      }
+      setModalAberto(false);
+    } catch (error) {
+      console.error('Erro ao salvar registro:', error);
+      alert('Erro ao salvar registro. Verifique o console para mais detalhes.');
     }
-    setModalAberto(false);
   };
 
-  const excluirRegistro = (id) => {
+  const excluirRegistro = async (id) => {
     if (window.confirm("Tem certeza que deseja excluir este registro?")) {
-      setRegistros(prev => prev.filter(r => r.id !== id));
+      try {
+        const { error } = await supabase
+          .from('registro_alimentar')
+          .delete()
+          .eq('id', id);
+
+        if (error) throw error;
+
+        setRegistros(prev => prev.filter(r => r.id !== id));
+      } catch (error) {
+        console.error('Erro ao excluir registro:', error);
+        alert('Erro ao excluir registro. Verifique o console para mais detalhes.');
+      }
     }
   };
 
@@ -142,10 +246,21 @@ const RegistroAlimentar = () => {
   const registrosFiltrados = registros
     .filter(r => {
       const passaFiltroResidente = !filtroResidente || r.residentes === filtroResidente;
-      const passaFiltroStatus = !filtroStatus || r.concluido === (filtroStatus === 'consumido');
+      const passaFiltroStatus = !filtroStatus || r.concluido === (filtroStatus === 'Consumido');
       return passaFiltroResidente && passaFiltroStatus;
     })
-    .sort((a, b) => a.data - b.data || a.horario.localeCompare(b.horario));
+    .sort((a, b) => new Date(b.data) - new Date(a.data) || a.horario.localeCompare(b.horario));
+
+  if (loading) {
+    return (
+      <div className="flex min-h-screen bg-odara-offwhite items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-odara-accent mx-auto"></div>
+          <p className="mt-4 text-odara-dark">Carregando registros...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="flex min-h-screen bg-odara-offwhite">
@@ -320,7 +435,6 @@ const RegistroAlimentar = () => {
             )}
           </div>
 
-
           <div className="space-y-4 max-h-[600px] overflow-y-auto">
             {registrosFiltrados.length === 0 ? (
               <div className="p-6 rounded-xl bg-odara-name/10 text-center">
@@ -335,9 +449,9 @@ const RegistroAlimentar = () => {
                   <div className="flex items-center justify-between p-3 rounded-t-lg bg-gray-50 border-b border-gray-200">
                     <div className="flex items-center">
                       <p className="text-sm sm:text-base text-odara-dark font-semibold">
-                        {r.data.getDate().toString().padStart(2, '0')}/
-                        {(r.data.getMonth() + 1).toString().padStart(2, '0')}/
-                        {r.data.getFullYear()} - {r.horario}
+                        {new Date(r.data).getDate().toString().padStart(2, '0')}/
+                        {(new Date(r.data).getMonth() + 1).toString().padStart(2, '0')}/
+                        {new Date(r.data).getFullYear()} - {r.horario}
                       </p>
                     </div>
                   </div>
@@ -429,7 +543,7 @@ const RegistroAlimentar = () => {
 
               {/* Corpo do Modal */}
               <div className="flex-1 overflow-y-auto p-6 bg-odara-offwhite/30">
-                <form className="space-y-6">
+                <form className="space-y-6" onSubmit={(e) => e.preventDefault()}>
 
                   <div className="space-y-4">
 
@@ -500,23 +614,28 @@ const RegistroAlimentar = () => {
                       />
                     </div>
 
-                    {/* Residentes */}
+                    {/* Residente - AGORA COMO DROPDOWN */}
                     <div>
                       <label className="block text-odara-dark font-medium mb-2">
-                        Residente
+                        Residente *
                       </label>
-                      <input
-                        type="text"
+                      <select
                         className="w-full px-4 py-2 border border-odara-primary rounded-lg focus:border-odara-secondary text-odara-secondary"
-                        value={novoRegistro.residentes}
+                        value={novoRegistro.id_residente}
                         onChange={(e) =>
                           setNovoRegistro({
                             ...novoRegistro,
-                            residentes: e.target.value,
+                            id_residente: e.target.value,
                           })
                         }
-                        placeholder="Nome do residente"
-                      />
+                      >
+                        <option value="">Selecione um residente</option>
+                        {residentes.map((residente) => (
+                          <option key={residente.id} value={residente.id}>
+                            {residente.nome}
+                          </option>
+                        ))}
+                      </select>
                     </div>
                   </div>
 
@@ -534,7 +653,7 @@ const RegistroAlimentar = () => {
                       type="button"
                       onClick={salvarRegistro}
                       className="px-4 py-2 bg-odara-accent text-odara-white rounded-lg hover:bg-odara-secondary transition-colors duration-200"
-                      disabled={!novoRegistro.alimento || !novoRegistro.horario}
+                      disabled={!novoRegistro.alimento || !novoRegistro.horario || !novoRegistro.id_residente}
                     >
                       {editando ? "Atualizar" : "Salvar"}
                     </button>
@@ -544,11 +663,8 @@ const RegistroAlimentar = () => {
             </div>
           </div>
         )}
-
       </div>
     </div>
-
-
   );
 };
 

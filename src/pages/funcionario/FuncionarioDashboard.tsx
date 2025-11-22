@@ -1,25 +1,9 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import {
-  Pill,
-  Microscope,
-  Stethoscope,
-  Hospital,
-  AlertTriangle,
-  BarChart as BarChartIcon,
-  ClipboardList,
-  Utensils,
-  Star,
-  Edit,
-  FileText,
-  Users,
-  Bell,
-  AlertCircle,
-  Info,
-  Eye,
-  Plus,
-  X
-} from "lucide-react";
+
+import { Pill, Microscope, Stethoscope, Hospital, AlertTriangle, BarChart as BarChartIcon, ClipboardList, Utensils, Star, Calendar, FileText, Users, Bell, Info, Eye, X } from "lucide-react";
+
+import DataFormatada from '../../components/DataFormatada';
 
 const DashboardFuncionario = () => {
   const navigate = useNavigate();
@@ -33,60 +17,67 @@ const DashboardFuncionario = () => {
   };
 
   const funcionalidadesRegistro = [
-    { 
-      id: 1, 
-      nome: "Registro de ocorrências", 
+    {
+      id: 1,
+      nome: "Registro de ocorrências",
       icon: AlertTriangle,
       url: "../admin/registro/ocorrencias"
     },
-    { 
-      id: 2, 
-      nome: "Registro de preferências", 
+
+    {
+      id: 2,
+      nome: "Registro de preferências",
       icon: Star,
       url: "../admin/registro/preferencias"
     },
-    { 
-      id: 3, 
-      nome: "Registro de comportamento", 
+
+    {
+      id: 3,
+      nome: "Registro de comportamento",
       icon: BarChartIcon,
       url: "../admin/registro/comportamento"
     },
-    { 
-      id: 4, 
-      nome: "Registro da saúde corporal", 
+
+    {
+      id: 4,
+      nome: "Registro da saúde corporal",
       icon: Hospital,
       url: "../admin/registro/saudeInicial"
     },
   ];
 
   const funcionalidadesCheck = [
-    { 
-      id: 5, 
-      nome: "Medicamentos", 
+    {
+      id: 5,
+      nome: "Medicamentos",
       icon: Pill,
       url: "/app/funcionario/checklist/medicamentos/check"
     },
-    { 
-      id: 6, 
-      nome: "Exames médicos", 
+
+    {
+      id: 6,
+      nome: "Exames médicos",
       icon: Microscope,
       url: "/app/funcionario/checklist/exames/medicos"
     },
-    { 
-      id: 7, 
-      nome: "Consultas médicas", 
+
+    {
+      id: 7,
+      nome: "Consultas médicas",
       icon: Stethoscope,
       url: "/app/funcionario/checklist/consultas/medicas"
     },
-    { 
-      id: 8, 
-      nome: "Atividades", 
+
+    {
+      id: 8,
+      nome: "Atividades",
       icon: ClipboardList,
       url: "/app/funcionario/checklist/atividades"
     },
-    { 
-      id: 9, 
-      nome: "Alimentação", 
+
+    {
+      id: 9,
+      nome: "Alimentação",
       icon: Utensils,
       url: "/app/funcionario/checklist/alimentacao"
     },
@@ -98,26 +89,27 @@ const DashboardFuncionario = () => {
   ];
 
   const alertas = [
-    { 
-      id: 1, 
-      texto: "Checklist pendente para 3 funcionários", 
-      tipo: "alerta", 
+    {
+      id: 1,
+      texto: "Checklist pendente para 3 funcionários",
+      tipo: "alerta",
       hora: "09:30",
       detalhes: {
         titulo: "Checklists Pendentes - Detalhes",
         descricao: "Existem 3 funcionários com checklists pendentes para hoje:",
         lista: [
           "João Silva - Checklist de segurança",
-          "Maria Santos - Checklist de equipamentos", 
+          "Maria Santos - Checklist de equipamentos",
           "Pedro Oliveira - Checklist de limpeza"
         ],
         acaoRecomendada: "Verificar com a equipe a conclusão dos checklists até o final do expediente."
       }
     },
-    { 
-      id: 3, 
-      texto: "5 novos checklists atribuídos", 
-      tipo: "alerta", 
+
+    {
+      id: 3,
+      texto: "5 novos checklists atribuídos",
+      tipo: "alerta",
       hora: "07:45",
       detalhes: {
         titulo: "Novos Checklists Atribuídos",
@@ -135,27 +127,28 @@ const DashboardFuncionario = () => {
   ];
 
   const notificacoes = [
-    { 
-      id: 2, 
-      texto: "Reunião de equipe às 14:00", 
-      tipo: "info", 
+    {
+      id: 2,
+      texto: "Reunião de equipe às 14:00",
+      tipo: "info",
       hora: "08:15",
       detalhes: {
         titulo: "Reunião de Equipe",
         descricao: "Reunião agendada para hoje às 14:00 na sala de reuniões principal.",
         lista: [
           "Horário: 14:00 - 15:30",
-          "Local: Sala de Reuniões Principal", 
+          "Local: Sala de Reuniões Principal",
           "Pauta: Revisão mensal de métricas",
           "Participantes: Equipe completa"
         ],
         acaoRecomendada: "Confirmar presença e preparar relatórios solicitados."
       }
     },
-    { 
-      id: 4, 
-      texto: "Relatório mensal devido sexta-feira", 
-      tipo: "info", 
+
+    {
+      id: 4,
+      texto: "Relatório mensal devido sexta-feira",
+      tipo: "info",
       hora: "Ontem",
       detalhes: {
         titulo: "Relatório Mensal - Prazo",
@@ -169,17 +162,18 @@ const DashboardFuncionario = () => {
         acaoRecomendada: "Iniciar a compilação dos dados com antecedência."
       }
     },
-    { 
-      id: 5, 
-      texto: "Atualização no sistema de checklist", 
-      tipo: "info", 
+
+    {
+      id: 5,
+      texto: "Atualização no sistema de checklist",
+      tipo: "info",
       hora: "10:00",
       detalhes: {
         titulo: "Atualização do Sistema",
         descricao: "O sistema de checklist foi atualizado com novas funcionalidades:",
         lista: [
           "Nova interface de usuário",
-          "Relatórios em tempo real", 
+          "Relatórios em tempo real",
           "Exportação em PDF",
           "Notificações push"
         ],
@@ -189,7 +183,7 @@ const DashboardFuncionario = () => {
   ];
 
   const IconWrapper = ({ icon: Icon, size = 24, className = "" }) => (
-    <Icon size={size} className={`text-odara-primary ${className}`} />
+    <Icon size={size} className={`${className}`} />
   );
 
   const abrirModal = (item) => {
@@ -205,9 +199,16 @@ const DashboardFuncionario = () => {
   return (
     <div className="flex min-h-screen bg-odara-offwhite">
       <div className="flex-1 p-6 lg:p-8">
-        <header className="mb-8">
-          <h1 className="text-3xl font-bold text-odara-dark">Dashboard do Funcionário</h1>
-          <p className="text-odara-dark/60 text-sm">Controle e monitoramento de atividades</p>
+        <header className="flex justify-between mb-8 items-center">
+          <div>
+            <h1 className="text-3xl font-bold text-odara-dark">Dashboard do Funcionário</h1>
+            <p className="text-odara-dark/60 text-sm">Controle e monitoramento de atividades</p>
+          </div>
+
+          <div className="flex items-center space-x-2 text-sm text-gray-600">
+            <IconWrapper icon={Calendar} size={20} className="text-odara-primary" />
+            <span><DataFormatada /></span>
+          </div>
         </header>
 
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
@@ -223,7 +224,7 @@ const DashboardFuncionario = () => {
                     <p className="text-sm font-medium text-yellow-400">+5 Checklists Pendentes</p>
                   </div>
                   <div className="p-3 rounded-full">
-                    <IconWrapper icon={FileText} size={32} />
+                    <IconWrapper icon={FileText} size={32} className='text-odara-primary'/>
                   </div>
                 </div>
               </div>
@@ -238,29 +239,29 @@ const DashboardFuncionario = () => {
                     <p className="text-sm text-gray-600 mt-1">Total: 12 residentes</p>
                   </div>
                   <div className="p-3 rounded-full">
-                    <IconWrapper icon={Users} size={32} />
+                    <IconWrapper icon={Users} size={32} className='text-odara-primary'/>
                   </div>
                 </div>
               </div>
             </div>
 
-            <div className="bg-white rounded-2xl shadow p-5">
-              <h2 className="text-xl font-semibold text-odara-dark mb-4">CHECKLISTS</h2>
+            <div className="bg-white rounded-2xl shadow p-5 border-l-4 border-odara-primary">
+              <h2 className="text-xl font-semibold text-odara-dark mb-4">Checklists</h2>
               <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
                 {funcionalidadesCheck.map((func) => (
                   <div
                     key={func.id}
-                    className={`border border-gray-200 rounded-md p-4 cursor-pointer hover:shadow-md transition-all duration-200 group ${
-                      funcionalidadeSelecionada?.id === func.id
-                        ? "ring-2 ring-odara-primary shadow-sm"
-                        : "hover:border-odara-primary/50 hover:bg-odara-primary/5"
-                    }`}
+                    className={`border border-gray-200 rounded-md p-4 cursor-pointer hover:shadow-md transition-all duration-200 group ${funcionalidadeSelecionada?.id === func.id
+                      ? "ring-2 ring-odara-primary shadow-sm"
+                      : "hover:border-odara-primary/50 hover:bg-odara-primary/5"
+                      }`}
                     onClick={() => navigate(func.url)}
                   >
                     <div className="flex flex-col items-center text-center gap-2">
                       <div className="p-3 rounded-lg bg-odara-primary/10 group-hover:bg-odara-primary/20 transition-colors">
-                        <IconWrapper icon={func.icon} size={28} />
+                        <IconWrapper icon={func.icon} size={28} className='text-odara-primary'/>
                       </div>
+
                       <span className="text-sm font-medium text-odara-dark">
                         {func.nome}
                       </span>
@@ -273,22 +274,22 @@ const DashboardFuncionario = () => {
               <hr className="border-gray-200 my-6" />
 
               {/* Registros */}
-              <h2 className="text-xl font-semibold text-odara-dark mb-4">REGISTROS</h2>
+              <h2 className="text-xl font-semibold text-odara-dark mb-4">Registros</h2>
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                 {funcionalidadesRegistro.map((func) => (
                   <div
                     key={func.id}
-                    className={`border border-gray-200 rounded-md p-4 cursor-pointer hover:shadow-md transition-all duration-200 group ${
-                      funcionalidadeSelecionada?.id === func.id
-                        ? "ring-2 ring-odara-primary shadow-sm"
-                        : "hover:border-odara-primary/50 hover:bg-odara-primary/5"
-                    }`}
+                    className={`border border-gray-200 rounded-md p-4 cursor-pointer hover:shadow-md transition-all duration-200 group ${funcionalidadeSelecionada?.id === func.id
+                      ? "ring-2 ring-odara-primary shadow-sm"
+                      : "hover:border-odara-primary/50 hover:bg-odara-primary/5"
+                      }`}
                     onClick={() => navigate(func.url)}
                   >
                     <div className="flex flex-col items-center text-center gap-2">
                       <div className="p-3 rounded-lg bg-odara-primary/10 group-hover:bg-odara-primary/20 transition-colors">
-                        <IconWrapper icon={func.icon} size={28} />
+                        <IconWrapper icon={func.icon} size={28} className='text-odara-primary'/>
                       </div>
+
                       <span className="text-sm font-medium text-odara-dark">
                         {func.nome}
                       </span>
@@ -302,22 +303,22 @@ const DashboardFuncionario = () => {
           <div className="lg:col-span-1">
             <div className="bg-white rounded-2xl shadow p-6 h-full">
               <div className="flex items-center gap-2 mb-4">
-                <IconWrapper icon={Bell} />
+                <IconWrapper icon={Bell} className='text-odara-accent'/>
                 <h2 className="text-xl font-semibold text-odara-dark">Alertas e Notificações</h2>
               </div>
-              
+
               <div className="mb-6">
                 <div className="flex justify-between items-center mb-3">
                   <h3 className="font-medium text-odara-dark">Alertas</h3>
-                  <span className="bg-red-100 text-red-800 text-xs px-2 py-1 rounded-full">
+                  <span className="bg-odara-alerta/10 text-odara-alerta text-xs px-2 py-1 rounded-full">
                     {alertas.length}
                   </span>
                 </div>
                 <div className="space-y-3">
                   {alertas.map((alerta) => (
-                    <div key={alerta.id} className="p-3 rounded-lg border-l-4 border-red-500 bg-red-50">
+                    <div key={alerta.id} className="p-3 rounded-lg border-l-2 border-odara-alerta bg-odara-alerta/10">
                       <div className="flex items-start gap-2">
-                        <IconWrapper icon={AlertCircle} size={20} />
+                        <IconWrapper icon={AlertTriangle} size={20} className='text-odara-alerta'/>
                         <div className="flex-1">
                           <p className="text-sm font-medium text-odara-dark">{alerta.texto}</p>
                           <p className="text-xs text-gray-500 mt-1">{alerta.hora}</p>
@@ -327,7 +328,7 @@ const DashboardFuncionario = () => {
                           className="text-gray-400 hover:text-odara-dark transition-colors"
                           title="Ver detalhes"
                         >
-                          <IconWrapper icon={Eye} size={16} />
+                          <IconWrapper icon={Eye} size={16} className='text-odara-accent'/>
                         </button>
                       </div>
                     </div>
@@ -340,15 +341,15 @@ const DashboardFuncionario = () => {
               <div>
                 <div className="flex justify-between items-center mb-3">
                   <h3 className="font-medium text-odara-dark">Notificações</h3>
-                  <span className="bg-blue-100 text-blue-800 text-xs px-2 py-1 rounded-full">
+                  <span className="bg-odara-dropdown/50 text-odara-dropdown-accent text-xs px-2 py-1 rounded-full">
                     {notificacoes.length}
                   </span>
                 </div>
                 <div className="space-y-3">
                   {notificacoes.map((notificacao) => (
-                    <div key={notificacao.id} className="p-3 rounded-lg border-l-4 border-blue-500 bg-blue-50">
+                    <div key={notificacao.id} className="p-3 rounded-lg border-l-2 border-odara-dropdown-accent bg-odara-dropdown/50">
                       <div className="flex items-start gap-2">
-                        <IconWrapper icon={Info} size={20} />
+                        <IconWrapper icon={Info} size={20} className='text-odara-dropdown-accent'/>
                         <div className="flex-1">
                           <p className="text-sm font-medium text-odara-dark">{notificacao.texto}</p>
                           <p className="text-xs text-gray-500 mt-1">{notificacao.hora}</p>
@@ -358,7 +359,7 @@ const DashboardFuncionario = () => {
                           className="text-gray-400 hover:text-odara-dark transition-colors"
                           title="Ver detalhes"
                         >
-                          <IconWrapper icon={Eye} size={16} />
+                          <IconWrapper icon={Eye} size={16} className='text-odara-accent'/>
                         </button>
                       </div>
                     </div>
@@ -371,28 +372,29 @@ const DashboardFuncionario = () => {
       </div>
 
       {modalAberto && itemSelecionado && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+        <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 p-4">
           <div className="bg-white rounded-2xl shadow-xl max-w-md w-full max-h-[90vh] overflow-y-auto">
-            <div className="flex items-center justify-between p-6 border-b">
+            <div className="flex items-center justify-between p-6 border-b  border-gray-200">
               <h3 className="text-xl font-semibold text-odara-dark">
                 {itemSelecionado.detalhes.titulo}
               </h3>
+
               <button
                 onClick={fecharModal}
                 className="text-gray-400 hover:text-gray-600 transition-colors"
               >
-                <IconWrapper icon={X} size={24} />
+                <IconWrapper icon={X} size={24} className='text-odara-accent'/>
               </button>
             </div>
-            
+
             <div className="p-6">
               <div className="flex items-start gap-3 mb-4">
-                <div className={`p-2 rounded-full ${
-                  itemSelecionado.tipo === 'alerta' ? 'bg-red-100' : 'bg-blue-100'
-                }`}>
-                  <IconWrapper 
-                    icon={itemSelecionado.tipo === 'alerta' ? AlertCircle : Info} 
-                    size={20} 
+                <div className={`p-2 rounded-full ${itemSelecionado.tipo === 'alerta' ? 'bg-red-100' : 'bg-blue-100'
+                  }`}>
+                  <IconWrapper
+                    className={itemSelecionado.tipo === 'alerta' ? 'text-odara-alerta' : 'text-odara-dropdown-accent'}
+                    icon={itemSelecionado.tipo === 'alerta' ? AlertTriangle : Info}
+                    size={20}
                   />
                 </div>
                 <div>
@@ -405,48 +407,38 @@ const DashboardFuncionario = () => {
                 <ul className="space-y-2">
                   {itemSelecionado.detalhes.lista.map((item, index) => (
                     <li key={index} className="flex items-start gap-2">
-                      <div className={`w-1.5 h-1.5 rounded-full mt-2 ${
-                        itemSelecionado.tipo === 'alerta' ? 'bg-red-500' : 'bg-blue-500'
-                      }`}></div>
+                      <div className={`w-1.5 h-1.5 rounded-full mt-2 ${itemSelecionado.tipo === 'alerta' ? 'bg-odara-alerta' : 'bg-odara-dropdown-accent'}`}></div>
                       <span className="text-sm text-gray-700">{item}</span>
                     </li>
                   ))}
                 </ul>
               </div>
 
-              <div className={`p-3 rounded-lg ${
-                itemSelecionado.tipo === 'alerta' ? 'bg-red-50 border border-red-200' : 'bg-blue-50 border border-blue-200'
-              }`}>
-                <h4 className={`font-medium text-sm mb-1 ${
-                  itemSelecionado.tipo === 'alerta' ? 'text-red-800' : 'text-blue-800'
-                }`}>
+              <div className={`p-3 rounded-lg ${itemSelecionado.tipo === 'alerta' ? 'bg-odara-alerta/10 border border-odara-alerta' : 'bg-odara-dropdown/50 border border-odara-dropdown-accent'}`}>
+                <h4 className={`font-medium text-sm mb-1 ${itemSelecionado.tipo === 'alerta' ? 'text-odara-alerta' : 'text-odara-dropdown-accent'}`}>
                   Ação Recomendada:
                 </h4>
-                <p className={`text-sm ${
-                  itemSelecionado.tipo === 'alerta' ? 'text-red-700' : 'text-blue-700'
-                }`}>
+                <p className={`text-sm ${itemSelecionado.tipo === 'alerta' ? 'text-odara-dark' : 'text-odara-name'}`}>
                   {itemSelecionado.detalhes.acaoRecomendada}
                 </p>
               </div>
             </div>
 
-            <div className="flex justify-end gap-3 p-6 border-t">
+            <div className="flex justify-end gap-3 p-6 border-t  border-gray-200">
               <button
                 onClick={fecharModal}
                 className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors"
               >
                 Fechar
               </button>
+
               <button
                 onClick={() => {
                   console.log(`Ação tomada para: ${itemSelecionado.texto}`);
                   fecharModal();
                 }}
-                className={`px-4 py-2 text-sm font-medium text-white rounded-lg transition-colors ${
-                  itemSelecionado.tipo === 'alerta' 
-                    ? 'bg-red-500 hover:bg-red-600' 
-                    : 'bg-blue-500 hover:bg-blue-600'
-                }`}
+
+                className={'px-4 py-2 text-sm font-medium text-white rounded-lg transition-colors bg-odara-accent hover:bg-odara-secondary'}
               >
                 Marcar como Lida
               </button>

@@ -157,7 +157,7 @@ export default function CadastroResidente({ residente }: Props) {
         plano_saude: data.plano_saude,
         numero_carteirinha: data.numero_carteirinha,
         observacoes: data.observacoes,
-        foto_perfil: fotoUrl,
+        foto: fotoUrl,
       };
 
       if (residente) {

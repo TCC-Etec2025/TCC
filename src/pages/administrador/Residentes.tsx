@@ -1,72 +1,218 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Search, Plus, Edit, Trash2, User, Loader2 } from 'lucide-react';
+import { Search, Plus, Edit, Trash2, User, Phone, Mail, AlertTriangle, Loader2 } from 'lucide-react';
 import { supabase } from '../../lib/supabaseClient';
 import { type Residente } from '../../Modelos';
 import { differenceInYears } from 'date-fns';
+import toast, { Toaster } from 'react-hot-toast';
+
+type ResidenteComResponsavel = Residente & {
+  responsavel?: {
+    nome: string;
+    telefone_principal: string;
+    email: string;
+  };
+};
 
 const Residentes: React.FC = () => {
   const navigate = useNavigate();
-  const [searchTerm, setSearchTerm] = useState<string>('');
-  const [residentes, setResidentes] = useState<Residente[]>([]);
-  const [loading, setLoading] = useState<boolean>(true);
-  const [deletingId, setDeletingId] = useState<number | null>(null);
 
-  useEffect(() => {
-    const fetchResidentes = async () => {
-      try {
-        setLoading(true);
-        const { data, error } = await supabase
-          .from('residente')
-          .select('*')
-          .order('nome', { ascending: true });
+  // Estados do componente
+  const [termoBusca, setTermoBusca] = useState<string>('');
+  const [listaResidentes, setListaResidentes] = useState<ResidenteComResponsavel[]>([]);
+  const [carregando, setCarregando] = useState<boolean>(true);
+  const [modalExclusaoAberto, setModalExclusaoAberto] = useState<boolean>(false);
+  const [residenteParaExcluir, setResidenteParaExcluir] = useState<number | null>(null);
+  const [atualizandoStatus, setAtualizandoStatus] = useState<number | null>(null);
 
-        if (error) throw error;
-        if (data) setResidentes(data);
-      } catch (error) {
-        console.error('Erro ao buscar residentes:', error);
-        alert('Erro ao carregar residentes');
-      } finally {
-        setLoading(false);
-      }
-    };
+  // Busca todos os residentes do banco de dados com seus responsáveis
+  const buscarResidentes = async () => {
+    try {
+      setCarregando(true);
 
-    fetchResidentes();
-  }, []);
+      // 1. Buscar todos os residentes
+      const { data: residentesData, error: residentesError } = await supabase
+        .from('residente')
+        .select('*')
+        .order('nome', { ascending: true });
 
-  const handleDelete = async (id: number): Promise<void> => {
-    if (window.confirm('Tem certeza que deseja excluir este residente?')) {
-      try {
-        setDeletingId(id);
-        const { error } = await supabase
-          .from('idosos')
-          .delete()
-          .eq('id', id);
+      if (residentesError) throw residentesError;
 
-        if (error) throw error;
+      // 2. Buscar todos os responsáveis para vincular
+      const { data: responsaveisData, error: responsaveisError } = await supabase
+        .from('responsavel')
+        .select('id, nome, telefone_principal, email');
 
-        setResidentes(residentes.filter(residente => residente.id !== id));
-      } catch (error) {
-        console.error('Erro ao excluir residente:', error);
-        alert('Erro ao excluir residente');
-      } finally {
-        setDeletingId(null);
-      }
+      if (responsaveisError) throw responsaveisError;
+
+      // 3. Combinar os dados
+      const residentesComResponsaveis = residentesData.map(residente => {
+        const responsavelDoResidente = responsaveisData?.find(
+          responsavel => responsavel.id === residente.id_responsavel
+        );
+
+        return {
+          ...residente,
+          responsavel: responsavelDoResidente
+        };
+      });
+
+      setListaResidentes(residentesComResponsaveis);
+
+    } catch (erro: any) {
+      console.error('Erro ao buscar residentes:', erro);
+      toast.error('Erro ao buscar residentes: ' + (erro?.message ?? String(erro)));
+    } finally {
+      setCarregando(false);
     }
   };
 
-  const filteredResidentes = residentes.filter(residente => {
+  // Efeito para carregar residentes quando o componente montar
+  useEffect(() => {
+    buscarResidentes();
+  }, []);
+
+  // Filtra residentes baseado no termo de busca
+  const residentesFiltrados = listaResidentes.filter(residente => {
     if (!residente) return false;
 
-    const searchLower = searchTerm.toLowerCase();
+    const termoBuscaLower = termoBusca.toLowerCase();
 
-    const nomeMatch = residente.nome?.toLowerCase().includes(searchLower) || false;
-    const quartoMatch = residente.quarto?.toLowerCase().includes(searchLower) || false;
-
-    return nomeMatch || quartoMatch;
+    return (
+      (residente.nome?.toLowerCase() || '').includes(termoBuscaLower) ||
+      (residente.quarto?.toLowerCase() || '').includes(termoBuscaLower) ||
+      // Buscar também no nome do responsável vinculado
+      (residente.responsavel?.nome?.toLowerCase() || '').includes(termoBuscaLower)
+    );
   });
 
-  if (loading) {
+  // Alterna o status do residente
+  const alternarStatus = async (id: number, statusAtual: boolean) => {
+    try {
+      setAtualizandoStatus(id);
+      const novoStatus = !statusAtual;
+
+      const { error } = await supabase
+        .from('residente')
+        .update({ status: novoStatus })
+        .eq('id', id);
+
+      if (error) throw error;
+
+      // Atualiza a lista localmente
+      setListaResidentes(listaResidentes.map(residente =>
+        residente.id === id ? { ...residente, status: novoStatus } : residente
+      ));
+
+      toast.success(`Residente ${novoStatus ? 'ativado' : 'inativado'} com sucesso!`);
+    } catch (erro: any) {
+      console.error('Erro ao alterar status:', erro);
+      toast.error('Erro ao alterar status: ' + (erro?.message ?? String(erro)));
+    } finally {
+      setAtualizandoStatus(null);
+    }
+  };
+
+  // Retorna as classes CSS para o status do residente (!ADICIONAR! "FALECIDO" como 3° status futuramente)
+  const obterCorStatus = (status: boolean) => {
+    return status
+      ? 'bg-green-50 text-green-500 hover:bg-green-100'
+      : 'bg-gray-100 text-gray-400 hover:bg-gray-200';
+  };
+
+  // Retorna as classes CSS para o nível de dependência
+  const obterCorDependencia = (dependencia: string | undefined) => {
+    switch (dependencia?.toLowerCase()) {
+      case 'grau iii': return 'bg-odara-alerta/10 text-odara-alerta';
+      case 'grau ii': return 'bg-yellow-50 text-yellow-500';
+      case 'grau i': return 'bg-green-50 text-green-500';
+      default: return 'bg-gray-100 text-gray-400';
+    }
+  };
+
+  // Formata número de telefone para exibição
+  const formatarTelefone = (telefone: string) => {
+    if (!telefone) return '';
+    return `(${telefone.slice(0, 2)}) ${telefone.slice(2, 7)}-${telefone.slice(7)}`;
+  };
+
+  // Abre o modal de confirmação para exclusão
+  const abrirModalExclusao = (id: number) => {
+    setResidenteParaExcluir(id);
+    setModalExclusaoAberto(true);
+  };
+
+  // Fecha o modal de exclusão
+  const fecharModalExclusao = () => {
+    setModalExclusaoAberto(false);
+    setResidenteParaExcluir(null);
+  };
+
+  // Executa a exclusão do residente após confirmação
+  const executarExclusao = async () => {
+    if (!residenteParaExcluir) return;
+
+    try {
+      const { error } = await supabase
+        .from('residente')
+        .delete()
+        .eq('id', residenteParaExcluir);
+
+      if (error) throw error;
+
+      // Atualiza a lista localmente
+      setListaResidentes(listaResidentes.filter(residente => residente.id !== residenteParaExcluir));
+      toast.success('Residente excluído com sucesso!');
+    } catch (erro: any) {
+      console.error('Erro ao excluir residente:', erro);
+      toast.error('Erro ao excluir residente: ' + (erro?.message ?? String(erro)));
+    } finally {
+      fecharModalExclusao();
+    }
+  };
+
+  // Componente do Modal de Confirmação de Exclusão
+  const ModalConfirmacaoExclusao = () => {
+    if (!modalExclusaoAberto) return null;
+
+    return (
+      <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-[100] p-4">
+        <div className="bg-white rounded-2xl shadow-lg p-6 max-w-md w-full">
+          <div className="text-center">
+            {/* Ícone de alerta */}
+            <div className="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-red-100 mb-4">
+              <AlertTriangle className="h-6 w-6 text-red-600" />
+            </div>
+
+            {/* Textos do modal */}
+            <h3 className="text-lg font-bold text-odara-dark mb-2">Confirmar exclusão</h3>
+            <p className="text-odara-name mb-6">
+              Tem certeza que deseja excluir este residente? Esta ação não pode ser desfeita.
+            </p>
+
+            {/* Botões de ação */}
+            <div className="flex gap-3 justify-center">
+              <button
+                onClick={fecharModalExclusao}
+                className="px-4 py-2 border border-gray-300 text-odara-dark rounded-lg hover:bg-gray-50 transition-colors"
+              >
+                Cancelar
+              </button>
+              <button
+                onClick={executarExclusao}
+                className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
+              >
+                Excluir
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  };
+
+  // Estado de carregamento
+  if (carregando) {
     return (
       <div className="min-h-screen bg-odara-offwhite flex items-center justify-center">
         <div className="flex flex-col items-center">
@@ -79,113 +225,175 @@ const Residentes: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-odara-offwhite">
+      <Toaster />
+
+      {/* Modal de Confirmação */}
+      <ModalConfirmacaoExclusao />
+
       <div className="container mx-auto p-6 lg:p-8">
-        {/* Header */}
+        {/* Cabeçalho */}
         <div className="flex flex-col sm:flex-row justify-between items-start lg:items-center gap-4 mb-6">
+          {/* Título */}
           <div className="flex-1 min-w-0">
             <h1 className="text-2xl lg:text-3xl font-bold text-odara-dark">Residentes</h1>
             <p className="text-sm text-odara-dark/70 mt-1">Gestão de moradores da instituição</p>
           </div>
+
+          {/* Botão Cadastrar Residente */}
           <div className="flex-shrink-0">
-            <button className="bg-odara-accent hover:bg-odara-secondary text-white font-medium py-3 px-6 rounded-lg flex items-center justify-center transition-colors shadow-md hover:shadow-lg w-full lg:w-auto"
-              onClick={() => navigate('/app/admin/residente/formulario')}>
-              <Plus className="mr-2 h-5 w-5" />
+            <button
+              className="bg-odara-accent hover:bg-odara-secondary text-white font-medium py-2 px-4 rounded-lg flex items-center justify-center transition-colors w-full lg:w-auto"
+              onClick={() => navigate('/app/admin/residente/formulario')}
+            >
+              <Plus className="mr-2 h-4 w-4" />
               Cadastrar Residente
             </button>
           </div>
         </div>
 
-        {/* Search */}
+        {/* Barra de Busca */}
         <div className="bg-white rounded-xl shadow-sm p-3 mb-6">
           <div className="flex items-center">
-            <Search className="text-gray-400 mr-3 h-4 w-4 flex-shrink-0" />
+            <Search className="text-odara-primary mr-3 h-4 w-4 flex-shrink-0" />
+
             <input
               type="text"
-              placeholder="Buscar por nome ou quarto..."
-              className="w-full p-2 outline-none bg-transparent"
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
+              placeholder="Buscar por nome, quarto ou nome do responsável..."
+              className="w-full p-2 outline-none bg-transparent text-odara-dark placeholder:text-gray-400"
+              value={termoBusca}
+              onChange={(e) => setTermoBusca(e.target.value)}
             />
           </div>
         </div>
 
-        {/* Tabela */}
-        <div className="bg-white rounded-xl shadow-sm overflow-hidden">
+        {/* Tabela de Residentes */}
+        <div className="bg-white rounded-xl shadow-sm overflow-hidden border-l-4 border-odara-primary">
           <div className="overflow-x-auto">
-            <table className="w-full">
-              <thead className="bg-odara-primary text-odara-contorno">
+            <table className="w-full text-sm">
+              <thead className="border-b-1 border-odara-primary bg-odara-primary/10 text-odara-primary">
                 <tr>
-                  <th className="p-4 text-center font-medium">Nome</th>
-                  <th className="p-4 text-center font-medium">Sexo</th>
-                  <th className="p-4 text-center font-medium">Quarto</th>
-                  <th className="p-4 text-center font-medium">Idade</th>
-                  <th className="p-4 text-center font-medium">Dependência</th>
-                  <th className="p-4 text-center font-medium">Status</th>
-                  <th className="p-4 text-center font-medium">Entrada</th>
-                  <th className="p-4 text-center font-medium">Ações</th>
+                  <th className="p-4 text-left font-semibold align-middle">Residente</th>
+                  <th className="p-4 text-left font-semibold align-middle">Sexo</th>
+                  <th className="p-4 text-left font-semibold align-middle">Quarto</th>
+                  <th className="p-4 text-left font-semibold align-middle">Idade</th>
+                  <th className="p-4 text-left font-semibold align-middle">Dependência</th>
+                  <th className="p-4 text-left font-semibold align-middle">Responsável Vinculado</th>
+                  <th className="p-4 text-left font-semibold align-middle">Status</th>
+                  <th className="p-4 text-left font-semibold align-middle">Entrada</th>
+                  <th className="p-4 text-left font-semibold align-middle">Ações</th>
                 </tr>
               </thead>
+
               <tbody className="divide-y divide-gray-100">
-                {filteredResidentes.map((residente) => (
+                {residentesFiltrados.map((residente) => (
                   <tr key={residente.id} className="hover:bg-odara-offwhite/40 transition-colors">
+                    {/* Coluna Residente */}
                     <td className="p-4">
                       <div className="flex items-center gap-3 min-w-[200px]">
+                        {/* Ícone */}
                         <div className="bg-odara-primary/20 rounded-full p-2 flex-shrink-0">
                           <User className="h-4 w-4 text-odara-primary" />
                         </div>
-                        <span className="font-medium text-odara-dark truncate">
-                          {residente.nome}
-                        </span>
+
+                        {/* Nome */}
+                        <div>
+                          <p className="font-medium text-odara-dark">{residente.nome}</p>
+                          <p className="text-xs text-gray-400">{residente.cpf}</p>
+                        </div>
                       </div>
                     </td>
+
+                    {/* Coluna Sexo */}
                     <td className="p-4">
                       <span className="px-2 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-700 capitalize">
-                        {residente.sexo.toLowerCase()}
+                        {residente.sexo?.toLowerCase()}
                       </span>
                     </td>
-                    <td className="p-4 font-medium">{residente.quarto}</td>
-                    <td className="p-4">{differenceInYears(new Date(), new Date(residente.data_nascimento))} anos</td>
+
+                    {/* Coluna Quarto */}
+                    <td className="p-4 font-medium text-odara-dark">
+                      {residente.quarto}
+                    </td>
+
+                    {/* Coluna Idade */}
+                    <td className="p-4 text-odara-dark">
+                      {differenceInYears(new Date(), new Date(residente.data_nascimento))} anos
+                    </td>
+
+                    {/* Coluna Dependência */}
                     <td className="p-4">
-                      <span className={`px-2 py-1 rounded-full text-xs font-medium
-                        ${residente.dependencia === 'Alta'
-                          ? 'bg-red-100 text-red-700'
-                          : residente.dependencia === 'Média'
-                            ? 'bg-yellow-100 text-yellow-700'
-                            : 'bg-green-100 text-green-700'}
-                      `}>
-                        {residente.dependencia ? residente.dependencia:'Não informado'}
+                      <span className={`px-2 py-1 rounded-full text-xs font-medium ${obterCorDependencia(residente.dependencia)}`}>
+                        {residente.dependencia || 'Não informado'}
                       </span>
                     </td>
+
+                    {/* Coluna Responsável Vinculado */}
                     <td className="p-4">
-                      <span className={"px-3 py-1 rounded-full text-xs font-medium"}>
-                        {residente.status
-                          ? <span className='bg-green-100 text-green-700'>Ativo</span>
-                          : <span className='bg-gray-200 text-gray-700'>Inativo</span>}
-                      </span>
+                      {residente.responsavel ? (
+                        <div className="space-y-1">
+                          <div className="flex items-center gap-2">
+                            <User className="h-4 w-4 text-odara-primary" />
+                            <span className="text-sm font-medium text-odara-dark">
+                              {residente.responsavel.nome}
+                            </span>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <Phone className="h-3 w-3 text-odara-primary" />
+                            <span className="text-sm text-gray-600">
+                              {formatarTelefone(residente.responsavel.telefone_principal)}
+                            </span>
+                          </div>
+                          {residente.responsavel.email && (
+                            <div className="flex items-center gap-2">
+                              <Mail className="h-3 w-3 text-odara-primary" />
+                              <span className="text-sm text-gray-600 truncate">
+                                {residente.responsavel.email}
+                              </span>
+                            </div>
+                          )}
+                        </div>
+                      ) : (
+                        <span className="text-sm text-gray-500">Nenhum responsável vinculado</span>
+                      )}
                     </td>
-                    <td className="p-4 whitespace-nowrap">
+
+                    {/* Coluna Status */}
+                    <td className="p-4">
+                      <button
+                        onClick={() => alternarStatus(residente.id, residente.status)}
+                        disabled={atualizandoStatus === residente.id}
+                        className={`px-3 py-1 rounded-full text-xs font-medium transition-colors ${obterCorStatus(residente.status)} ${atualizandoStatus === residente.id ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'
+                          }`}
+                        title={`Clique para ${residente.status ? 'inativar' : 'ativar'}`}
+                      >
+                        {atualizandoStatus === residente.id ? 'Alterando...' : (residente.status ? 'Ativo' : 'Inativo')}
+                      </button>
+                    </td>
+
+                    {/* Coluna Data de Entrada */}
+                    <td className="p-4 whitespace-nowrap text-odara-dark">
                       {new Date(residente.data_admissao).toLocaleDateString('pt-BR')}
                     </td>
+
+                    {/* Coluna Ações */}
                     <td className="p-4">
                       <div className="flex space-x-2">
+                        {/* Botão Editar */}
                         <button
-                          className="p-1 text-blue-500 hover:text-blue-700 transition hover:bg-blue-50 rounded"
+                          className="p-1 text-odara-dropdown-accent transition hover:text-odara-secondary rounded"
                           title="Editar residente"
                           onClick={() => navigate('/app/admin/residente/formulario', { state: { residente } })}
                         >
                           <Edit className="h-4 w-4" />
                         </button>
+
+                        {/* Botão Excluir */}
                         <button
-                          className="p-1 text-red-500 hover:text-red-700 transition hover:bg-red-50 rounded"
-                          onClick={() => handleDelete(residente.id)}
+                          className="p-1 text-odara-alerta transition hover:text-red-700 rounded"
+                          onClick={() => abrirModalExclusao(residente.id)}
                           title="Excluir residente"
-                          disabled={deletingId === residente.id}
                         >
-                          {deletingId === residente.id ? (
-                            <Loader2 className="h-4 w-4 animate-spin" />
-                          ) : (
-                            <Trash2 className="h-4 w-4" />
-                          )}
+                          <Trash2 className="h-4 w-4" />
                         </button>
                       </div>
                     </td>
@@ -194,23 +402,24 @@ const Residentes: React.FC = () => {
               </tbody>
             </table>
 
-            {filteredResidentes.length === 0 && (
+            {/* Resultado vazio */}
+            {residentesFiltrados.length === 0 && (
               <div className="text-center py-12">
                 <User className="h-12 w-12 text-gray-300 mx-auto mb-4" />
-                <p className="text-gray-500">
-                  {searchTerm ? 'Nenhum residente encontrado' : 'Nenhum residente cadastrado'}
+                <p className="text-gray-400">
+                  {termoBusca ? 'Nenhum residente encontrado' : 'Nenhum residente cadastrado'}
                 </p>
                 <p className="text-sm text-gray-400 mt-1">
-                  {searchTerm ? 'Tente ajustar sua busca' : 'Cadastre o primeiro residente'}
+                  {termoBusca ? 'Tente ajustar sua busca' : 'Cadastre o primeiro residente'}
                 </p>
               </div>
             )}
           </div>
         </div>
 
-        {/* Contagem de residentes */}
-        <div className="mt-4 text-sm text-odara-dark/70">
-          Total de {filteredResidentes.length} residente(s) encontrado(s) de {residentes.length}
+        {/* Contador de resultados */}
+        <div className="mt-4 text-sm text-gray-400">
+          Total de {residentesFiltrados.length} residente(s) encontrado(s) de {listaResidentes.length}
         </div>
       </div>
     </div>

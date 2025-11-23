@@ -1,8 +1,9 @@
 import React, { useEffect, useState } from 'react';
-import { Search, Plus, Edit, Trash2, User, Phone, Mail } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import { Search, Plus, Edit, Trash2, User, Phone, Mail, AlertTriangle } from 'lucide-react';
 import { supabase } from '../../lib/supabaseClient';
-import type { Responsavel } from '../../Modelos'
+import type { Responsavel } from '../../Modelos';
+import toast, { Toaster } from 'react-hot-toast';
 
 type ResponsavelComResidente = Responsavel & {
   residentes: {
@@ -12,109 +13,215 @@ type ResponsavelComResidente = Responsavel & {
   }[];
 };
 
+// Tipos de status disponíveis para responsáveis
+type StatusResponsavel = 'ativo' | 'inativo';
+
 const Responsaveis: React.FC = () => {
   const navigate = useNavigate();
-  const [searchTerm, setSearchTerm] = useState<string>('');
-  const [responsaveis, setResponsaveis] = useState<ResponsavelComResidente[]>([]);
-  const [loading, setLoading] = useState<boolean>(true);
 
+  // Estados do componente
+  const [termoBusca, setTermoBusca] = useState<string>('');
+  const [listaResponsaveis, setListaResponsaveis] = useState<ResponsavelComResidente[]>([]);
+  const [carregando, setCarregando] = useState<boolean>(true);
+  const [modalExclusaoAberto, setModalExclusaoAberto] = useState<boolean>(false);
+  const [responsavelParaExcluir, setResponsavelParaExcluir] = useState<number | null>(null);
+  const [atualizandoStatus, setAtualizandoStatus] = useState<number | null>(null);
+
+  // Busca todos os responsáveis do banco de dados
+  const buscarResponsaveis = async () => {
+    try {
+      setCarregando(true);
+
+      // 1. Buscar todos os responsáveis
+      const { data: responsaveisData, error: responsaveisError } = await supabase
+        .from('responsavel')
+        .select('*')
+        .order('nome', { ascending: true });
+
+      if (responsaveisError) throw responsaveisError;
+
+      // 2. Buscar todos os residentes com seus responsáveis
+      const { data: residentesData, error: residentesError } = await supabase
+        .from('residente')
+        .select('id, nome, id_responsavel, responsavel_parentesco')
+        .not('id_responsavel', 'is', null);
+
+      if (residentesError) throw residentesError;
+
+      // 3. Combinar os dados
+      const responsaveisComResidentes = responsaveisData.map(responsavel => {
+        const residentesDoResponsavel = residentesData
+          .filter(residente => residente.id_responsavel === responsavel.id)
+          .map(residente => ({
+            id: residente.id,
+            nome: residente.nome,
+            parentesco: residente.responsavel_parentesco
+          }));
+
+        return {
+          ...responsavel,
+          residentes: residentesDoResponsavel
+        };
+      });
+
+      setListaResponsaveis(responsaveisComResidentes);
+
+    } catch (erro: any) {
+      console.error('Erro ao buscar responsáveis:', erro);
+      toast.error('Erro ao buscar responsáveis: ' + (erro?.message ?? String(erro)));
+    } finally {
+      setCarregando(false);
+    }
+  };
+
+  // Efeito para carregar responsáveis quando o componente montar
   useEffect(() => {
-    const fetchResponsaveis = async () => {
-      try {
-        setLoading(true);
-
-        // 1. Buscar todos os responsáveis
-        const { data: responsaveisData, error: responsaveisError } = await supabase
-          .from('responsavel')
-          .select('*')
-          .order('nome', { ascending: true });
-
-        if (responsaveisError) throw responsaveisError;
-
-        // 2. Buscar todos os residentes com seus responsáveis
-        const { data: residentesData, error: residentesError } = await supabase
-          .from('residente')
-          .select('id, nome, id_responsavel, responsavel_parentesco')
-          .not('id_responsavel', 'is', null);
-
-        if (residentesError) throw residentesError;
-
-        // 3. Combinar os dados
-        const responsaveisComIdosos = responsaveisData.map(responsavel => {
-          const idososDoResponsavel = residentesData
-            .filter(idoso => idoso.id_responsavel === responsavel.id)
-            .map(idoso => ({
-              id: idoso.id,
-              nome: idoso.nome,
-              parentesco: idoso.responsavel_parentesco
-            }));
-
-          return {
-            ...responsavel,
-            idosos: idososDoResponsavel
-          };
-        });
-
-        setResponsaveis(responsaveisComIdosos);
-
-      } catch (error) {
-        console.error('Erro ao buscar responsáveis:', error);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchResponsaveis();
+    buscarResponsaveis();
   }, []);
 
-  const filteredResponsaveis = responsaveis.filter(responsavel => {
+  // Filtra responsáveis baseado no termo de busca
+  const responsaveisFiltrados = listaResponsaveis.filter(responsavel => {
     if (!responsavel) return false;
 
-    const searchLower = searchTerm.toLowerCase();
+    const termoBuscaLower = termoBusca.toLowerCase();
 
     return (
-      (responsavel.nome?.toLowerCase() || '').includes(searchLower) ||
-      (responsavel.telefone_principal?.toLowerCase() || '').includes(searchLower) ||
-      (responsavel.email?.toLowerCase() || '').includes(searchLower) ||
+      (responsavel.nome?.toLowerCase() || '').includes(termoBuscaLower) ||
+      (responsavel.telefone_principal?.toLowerCase() || '').includes(termoBuscaLower) ||
+      (responsavel.email?.toLowerCase() || '').includes(termoBuscaLower) ||
       // Buscar também nos nomes dos residentes vinculados
       responsavel.residentes?.some(residente =>
-        residente.nome?.toLowerCase().includes(searchLower)
+        residente.nome?.toLowerCase().includes(termoBuscaLower)
       )
     );
   });
 
+  // Formata número de telefone para exibição
   const formatarTelefone = (telefone: string) => {
+    if (!telefone) return '';
     return `(${telefone.slice(0, 2)}) ${telefone.slice(2, 7)}-${telefone.slice(7)}`;
   };
 
-  const handleDelete = async (id: number): Promise<void> => {
-    if (window.confirm('Tem certeza que deseja excluir este responsável?')) {
-      try {
-        // Primeiro, remover o vínculo dos idosos com este responsável
-        const { error: updateError } = await supabase
-          .from('idosos')
-          .update({ id_responsavel: null })
-          .eq('id_responsavel', id);
+  // Alterna o status do responsável
+  const alternarStatus = async (id: number, statusAtual: boolean) => {
+    try {
+      setAtualizandoStatus(id);
+      const novoStatus = !statusAtual;
 
-        if (updateError) throw updateError;
+      const { error } = await supabase
+        .from('responsavel')
+        .update({ status: novoStatus })
+        .eq('id', id);
 
-        // Depois, excluir o responsável
-        const { error: deleteError } = await supabase
-          .from('responsaveis')
-          .delete()
-          .eq('id', id);
+      if (error) throw error;
 
-        if (deleteError) throw deleteError;
+      // Atualiza a lista localmente
+      setListaResponsaveis(listaResponsaveis.map(responsavel =>
+        responsavel.id === id ? { ...responsavel, status: novoStatus } : responsavel
+      ));
 
-        setResponsaveis(responsaveis.filter(responsavel => responsavel.id !== id));
-      } catch (error) {
-        console.error('Erro ao excluir responsável:', error);
-        alert('Erro ao excluir responsável');
-      }
+      toast.success(`Responsável ${novoStatus ? 'ativado' : 'inativado'} com sucesso!`);
+    } catch (erro: any) {
+      console.error('Erro ao alterar status:', erro);
+      toast.error('Erro ao alterar status: ' + (erro?.message ?? String(erro)));
+    } finally {
+      setAtualizandoStatus(null);
     }
   };
 
-  if (loading) {
+  // Retorna as classes CSS para o status do responsável
+  const obterCorStatus = (status: boolean) => {
+    return status 
+      ? 'bg-green-50 text-green-500 hover:bg-green-100' 
+      : 'bg-gray-200 text-gray-500 hover:bg-gray-300';
+  };
+
+  // Abre o modal de confirmação para exclusão
+  const abrirModalExclusao = (id: number) => {
+    setResponsavelParaExcluir(id);
+    setModalExclusaoAberto(true);
+  };
+
+  // Fecha o modal de exclusão
+  const fecharModalExclusao = () => {
+    setModalExclusaoAberto(false);
+    setResponsavelParaExcluir(null);
+  };
+
+  // Executa a exclusão do responsável após confirmação
+  const executarExclusao = async () => {
+    if (!responsavelParaExcluir) return;
+
+    try {
+      // Primeiro, remover o vínculo dos residentes com este responsável
+      const { error: updateError } = await supabase
+        .from('residente')
+        .update({ id_responsavel: null })
+        .eq('id_responsavel', responsavelParaExcluir);
+
+      if (updateError) throw updateError;
+
+      // Depois, excluir o responsável
+      const { error: deleteError } = await supabase
+        .from('responsavel')
+        .delete()
+        .eq('id', responsavelParaExcluir);
+
+      if (deleteError) throw deleteError;
+
+      // Atualiza a lista localmente
+      setListaResponsaveis(listaResponsaveis.filter(responsavel => responsavel.id !== responsavelParaExcluir));
+      toast.success('Responsável excluído com sucesso!');
+    } catch (erro: any) {
+      console.error('Erro ao excluir responsável:', erro);
+      toast.error('Erro ao excluir responsável: ' + (erro?.message ?? String(erro)));
+    } finally {
+      fecharModalExclusao();
+    }
+  };
+
+  // Componente do Modal de Confirmação de Exclusão
+  const ModalConfirmacaoExclusao = () => {
+    if (!modalExclusaoAberto) return null;
+
+    return (
+      <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-[100] p-4">
+        <div className="bg-white rounded-2xl shadow-lg p-6 max-w-md w-full">
+          <div className="text-center">
+            {/* Ícone de alerta */}
+            <div className="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-red-100 mb-4">
+              <AlertTriangle className="h-6 w-6 text-red-600" />
+            </div>
+
+            {/* Textos do modal */}
+            <h3 className="text-lg font-bold text-odara-dark mb-2">Confirmar exclusão</h3>
+            <p className="text-odara-name mb-6">
+              Tem certeza que deseja excluir este responsável? Esta ação não pode ser desfeita.
+            </p>
+
+            {/* Botões de ação */}
+            <div className="flex gap-3 justify-center">
+              <button
+                onClick={fecharModalExclusao}
+                className="px-4 py-2 border border-gray-300 text-odara-dark rounded-lg hover:bg-gray-50 transition-colors"
+              >
+                Cancelar
+              </button>
+              <button
+                onClick={executarExclusao}
+                className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
+              >
+                Excluir
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  };
+
+  // Estado de carregamento
+  if (carregando) {
     return (
       <div className="flex min-h-screen bg-odara-offwhite items-center justify-center">
         <div className="text-odara-dark">Carregando responsáveis...</div>
@@ -124,92 +231,119 @@ const Responsaveis: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-odara-offwhite">
+      <Toaster />
+
+      {/* Modal de Confirmação */}
+      <ModalConfirmacaoExclusao />
+
       <div className="container mx-auto p-6 lg:p-8">
-        {/* Header */}
+        {/* Cabeçalho */}
         <div className="flex flex-col sm:flex-row justify-between items-start lg:items-center gap-4 mb-6">
+          {/* Título */}
           <div className="flex-1 min-w-0">
             <h1 className="text-2xl lg:text-3xl font-bold text-odara-dark">Responsáveis</h1>
             <p className="text-sm text-odara-dark/70 mt-1">Gestão de responsáveis pelos residentes</p>
           </div>
+          
+          {/* Botão Cadastrar Responsável */}
           <div className="flex-shrink-0">
-            <button className="bg-odara-accent hover:bg-odara-secondary text-white font-medium py-3 px-6 rounded-lg flex items-center justify-center transition-colors shadow-md hover:shadow-lg w-full lg:w-auto"
-              onClick={() => navigate('/app/admin/responsavel/formulario')}>
-              <Plus className="mr-2 h-5 w-5" />
+            <button
+              className="bg-odara-accent hover:bg-odara-secondary text-white font-medium py-2 px-4 rounded-lg flex items-center justify-center transition-colors w-full lg:w-auto"
+              onClick={() => navigate('/app/admin/responsavel/formulario')}
+            >
+              <Plus className="mr-2 h-4 w-4" />
               Cadastrar Responsável
             </button>
           </div>
         </div>
 
-        {/* Search */}
+        {/* Barra de Busca */}
         <div className="bg-white rounded-xl shadow-sm p-3 mb-6">
           <div className="flex items-center">
-            <Search className="text-gray-400 mr-3 h-4 w-4 flex-shrink-0" />
+            <Search className="text-odara-primary mr-3 h-4 w-4 flex-shrink-0" />
+
             <input
               type="text"
               placeholder="Buscar por nome, telefone, email ou nome do residente..."
-              className="w-full p-2 outline-none bg-transparent"
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
+              className="w-full p-2 outline-none bg-transparent text-odara-dark placeholder:text-gray-400"
+              value={termoBusca}
+              onChange={(e) => setTermoBusca(e.target.value)}
             />
           </div>
         </div>
 
-        {/* Tabela */}
-        <div className="bg-white rounded-xl shadow-sm overflow-hidden">
+        {/* Tabela de Responsáveis */}
+        <div className="bg-white rounded-xl shadow-sm overflow-hidden border-l-4 border-odara-primary">
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
-              <thead className="bg-odara-primary text-odara-contorno">
+              <thead className="border-b-1 border-odara-primary bg-odara-primary/10 text-odara-primary">
                 <tr>
-                  <th className="p-4 text-left font-medium">Responsável</th>
-                  <th className="p-4 text-left font-medium">Contato</th>
-                  <th className="p-4 text-left font-medium">Residentes Vinculados</th>
-                  <th className="p-4 text-left font-medium">Status</th>
-                  <th className="p-4 text-left font-medium">Cadastro</th>
-                  <th className="p-4 text-left font-medium">Ações</th>
+                  <th className="p-4 text-left font-semibold align-middle">Responsável</th>
+                  <th className="p-4 text-left font-semibold align-middle">Contato</th>
+                  <th className="p-4 text-left font-semibold align-middle">Residentes Vinculados</th>
+                  <th className="p-4 text-left font-semibold align-middle">Status</th>
+                  <th className="p-4 text-left font-semibold align-middle">Cadastro</th>
+                  <th className="p-4 text-left font-semibold align-middle">Ações</th>
                 </tr>
               </thead>
+
               <tbody className="divide-y divide-gray-100">
-                {filteredResponsaveis.map((responsavel) => (
+                {responsaveisFiltrados.map((responsavel) => (
                   <tr key={responsavel.id} className="hover:bg-odara-offwhite/40 transition-colors">
+                    {/* Coluna Responsável */}
                     <td className="p-4">
                       <div className="flex items-center gap-3 min-w-[200px]">
+                        {/* Ícone */}
                         <div className="bg-odara-primary/20 rounded-full p-2 flex-shrink-0">
                           <User className="h-4 w-4 text-odara-primary" />
                         </div>
+
+                        {/* Nome e CPF */}
                         <div>
                           <p className="font-medium text-odara-dark">{responsavel.nome}</p>
-                          <p className="text-xs text-gray-500">{responsavel.cpf}</p>
+                          <p className="text-xs text-gray-400">{responsavel.cpf}</p>
                         </div>
                       </div>
                     </td>
+
+                    {/* Coluna Contato */}
                     <td className="p-4">
-                      <div className="space-y-1">
+                      <div className="space-y-1 text-odara-dark">
+                        {/* Telefone Principal */}
                         <div className="flex items-center gap-2">
-                          <Phone className="h-3 w-3 text-gray-500" />
+                          <Phone className="h-3 w-3 text-odara-primary" />
                           <span className="text-sm">{formatarTelefone(responsavel.telefone_principal)}</span>
                         </div>
+
+                        {/* Telefone Secundário */}
                         {responsavel.telefone_secundario && (
                           <div className="flex items-center gap-2">
-                            <Phone className="h-3 w-3 text-gray-500" />
-                            <span className="text-sm">{formatarTelefone(responsavel.telefone_secundario)}</span>
+                            <Phone className="h-3 w-3 text-odara-primary" />
+                            <span className="text-sm text-gray-400">{formatarTelefone(responsavel.telefone_secundario)}</span>
                           </div>
                         )}
-                        <div className="flex items-center gap-2">
-                          <Mail className="h-3 w-3 text-gray-500" />
-                          <span className="text-sm truncate">{responsavel.email}</span>
-                        </div>
+
+                        {/* E-mail */}
+                        {responsavel.email && (
+                          <div className="flex items-center gap-2">
+                            <Mail className="h-3 w-3 text-odara-primary" />
+                            <span className="text-sm truncate">{responsavel.email}</span>
+                          </div>
+                        )}
                       </div>
                     </td>
+
+                    {/* Coluna Residentes Vinculados */}
                     <td className="p-4">
                       <div className="space-y-2">
                         {responsavel.residentes?.map((residente) => (
                           <div key={residente.id} className="flex items-center gap-2">
-                            <User className="h-3 w-3 text-gray-400" />
+                            <User className="h-4 w-4 text-odara-primary" />
                             <span className="text-sm font-medium text-odara-dark">
                               {residente.nome}
                             </span>
-                            <span className="text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded">
-                              {residente.parentesco}
+                            <span className={` ${residente.parentesco ? 'text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded capitalize' : ''}`}>
+                              {residente.parentesco ? residente.parentesco : ''}
                             </span>
                           </div>
                         ))}
@@ -218,28 +352,42 @@ const Responsaveis: React.FC = () => {
                         )}
                       </div>
                     </td>
+
+                    {/* Coluna Status */}
                     <td className="p-4">
-                      <span className={"px-3 py-1 rounded-full text-xs font-medium"}>
-                        {responsavel.status
-                          ? <span className='bg-green-100 text-green-700'>Ativo</span>
-                          : <span className='bg-gray-200 text-gray-700'>Inativo</span>}
-                      </span>
+                      <button
+                        onClick={() => alternarStatus(responsavel.id, responsavel.status)}
+                        disabled={atualizandoStatus === responsavel.id}
+                        className={`px-3 py-1 rounded-full text-xs font-medium transition-colors ${obterCorStatus(responsavel.status)} ${
+                          atualizandoStatus === responsavel.id ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'
+                        }`}
+                        title={`Clique para ${responsavel.status ? 'inativar' : 'ativar'}`}
+                      >
+                        {atualizandoStatus === responsavel.id ? 'Alterando...' : (responsavel.status ? 'Ativo' : 'Inativo')}
+                      </button>
                     </td>
-                    <td className="p-4 whitespace-nowrap">
+
+                    {/* Coluna Data de Cadastro */}
+                    <td className="p-4 whitespace-nowrap text-odara-dark">
                       {responsavel.criado_em ? new Date(responsavel.criado_em).toLocaleDateString('pt-BR') : 'Não informado'}
                     </td>
+
+                    {/* Coluna Ações */}
                     <td className="p-4">
                       <div className="flex space-x-2">
+                        {/* Botão Editar */}
                         <button
-                          className="p-1 text-blue-500 hover:text-blue-700 transition hover:bg-blue-50 rounded"
+                          className="p-1 text-odara-dropdown-accent transition hover:text-odara-secondary rounded"
                           title="Editar responsável"
-                          onClick={() => navigate('/app/admin/responsavel/formulario', {state: { responsavel }})}
+                          onClick={() => navigate('/app/admin/responsavel/formulario', { state: { responsavel } })}
                         >
                           <Edit className="h-4 w-4" />
                         </button>
+
+                        {/* Botão Excluir */}
                         <button
-                          className="p-1 text-red-500 hover:text-red-700 transition hover:bg-red-50 rounded"
-                          onClick={() => handleDelete(responsavel.id)}
+                          className="p-1 text-odara-alerta transition hover:text-red-700 rounded"
+                          onClick={() => abrirModalExclusao(responsavel.id)}
                           title="Excluir responsável"
                         >
                           <Trash2 className="h-4 w-4" />
@@ -251,23 +399,24 @@ const Responsaveis: React.FC = () => {
               </tbody>
             </table>
 
-            {filteredResponsaveis.length === 0 && (
+            {/* Resultado vazio */}
+            {responsaveisFiltrados.length === 0 && (
               <div className="text-center py-12">
                 <User className="h-12 w-12 text-gray-300 mx-auto mb-4" />
-                <p className="text-gray-500">
-                  {searchTerm ? 'Nenhum responsável encontrado' : 'Nenhum responsável cadastrado'}
+                <p className="text-gray-400">
+                  {termoBusca ? 'Nenhum responsável encontrado' : 'Nenhum responsável cadastrado'}
                 </p>
                 <p className="text-sm text-gray-400 mt-1">
-                  {searchTerm ? 'Tente ajustar sua busca' : 'Cadastre o primeiro responsável'}
+                  {termoBusca ? 'Tente ajustar sua busca' : 'Cadastre o primeiro responsável'}
                 </p>
               </div>
             )}
           </div>
         </div>
 
-        {/* Contagem */}
-        <div className="mt-4 text-sm text-odara-dark/70">
-          Total de {filteredResponsaveis.length} responsável(eis) encontrado(s) de {responsaveis.length}
+        {/* Contador de resultados */}
+        <div className="mt-4 text-sm text-gray-400">
+          Total de {responsaveisFiltrados.length} responsável(eis) encontrado(s) de {listaResponsaveis.length}
         </div>
       </div>
     </div>

@@ -252,18 +252,18 @@ const Residentes: React.FC = () => {
         </div>
 
         {/* Barra de Busca */}
-        <div className="bg-white rounded-xl shadow-sm p-3 mb-6">
-          <div className="flex items-center">
-            <Search className="text-odara-primary mr-3 h-4 w-4 flex-shrink-0" />
-
-            <input
-              type="text"
-              placeholder="Buscar por nome, quarto ou nome do responsável..."
-              className="w-full p-2 outline-none bg-transparent text-odara-dark placeholder:text-gray-400"
-              value={termoBusca}
-              onChange={(e) => setTermoBusca(e.target.value)}
-            />
+        <div className="flex-1 relative mb-8">
+          <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+            <Search className="text-odara-primary mr-3 h-4 w-4 flex-shrink-" />
           </div>
+
+          <input
+            type="text"
+            placeholder="Buscar por nome, cargo, vínculo ou registro..."
+            className="w-full pl-10 pr-4 py-3 bg-white rounded-xl border border-gray-200 text-odara-dark placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-odara-primary focus:border-transparent"
+            value={termoBusca}
+            onChange={(e) => setTermoBusca(e.target.value)}
+          />
         </div>
 
         {/* Tabela de Residentes */}

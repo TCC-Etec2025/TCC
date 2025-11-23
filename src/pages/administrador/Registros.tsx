@@ -1,100 +1,78 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
-import { FaFilter, FaSearch } from "react-icons/fa";
+import { FaFilter } from "react-icons/fa";
+import { Filter, Search, HeartPulse, Pill, Stethoscope, ClipboardPlus, Star, Palette, Apple, Siren, UserRoundSearch } from 'lucide-react';
 
 const Registros = () => {
   const [filtroAberto, setFiltroAberto] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
 
+  // Wrapper para ícones com configurações padrão
+  const WrapperIcone = ({
+    icone: Icone,
+    tamanho = 24,
+    className = ""
+  }: {
+    icone: React.ComponentType<any>;
+    tamanho?: number;
+    className?: string;
+  }) => (
+    <Icone size={tamanho} className={className} />
+  );
+
   const registrosItems = [
     {
       path: "/app/admin/registro/medicamentos",
       label: "Registro de Medicamentos",
-      icon: (
-        <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h14a2 2 0 012 2v14a2 2 0 01-2 2zM12 7v10m-5-5h10" />
-        </svg>
-      ),
+      icon: Pill,
       descricao: "Controle de administração e estoque de medicamentos",
     },
     {
       path: "/app/admin/registro/consultas",
       label: "Registro de Consultas",
-      icon: (
-        <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-        </svg>
-      ),
+      icon: ClipboardPlus,
       descricao: "Agendamento e histórico de consultas médicas",
     },
     {
       path: "/app/admin/registro/saudeInicial",
-      label: "Registro de Saúde Corporal",
-      icon: (
-        <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
-        </svg>
-      ),
+      label: "Registro de Saúde",
+      icon: HeartPulse,
       descricao: "Acompanhamento de condições de saúde e sinais vitais",
     },
     {
       path: "/app/admin/registro/exames",
       label: "Registro de Exames",
-      icon: (
-        <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-        </svg>
-      ),
+      icon: Stethoscope,
       descricao: "Controle de exames médicos e resultados",
     },
     {
       path: "/app/admin/registro/preferencias",
       label: "Registro de Preferências",
-      icon: (
-        <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
-        </svg>
-      ),
+      icon: Star,
       descricao: "Preferências pessoais e hábitos dos residentes",
     },
     {
       path: "/app/admin/registro/atividades",
       label: "Registro de Atividades",
-      icon: (
-        <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14.828 14.828a4 4 0 01-5.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-        </svg>
-      ),
+      icon: Palette,
       descricao: "Programação e acompanhamento de atividades",
     },
     {
       path: "/app/admin/registro/alimentar",
       label: "Registro Alimentar",
-      icon: (
-        <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-        </svg>
-      ),
+      icon: Apple,
       descricao: "Controle de dieta e alimentação dos residentes",
     },
     {
       path: "/app/admin/registro/ocorrencias",
       label: "Registro de Ocorrências",
-      icon: (
-        <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-        </svg>
-      ),
+      icon: Siren,
       descricao: "Registro de incidentes e situações especiais",
     },
     {
       path: "/app/admin/registro/comportamento",
       label: "Registro de Comportamento",
-      icon: (
-        <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-        </svg>
-      ),
+      icon: UserRoundSearch,
       descricao: "Avaliação comportamental e acompanhamento psicológico",
     },
   ];
@@ -118,24 +96,25 @@ const Registros = () => {
       <div className="flex flex-col md:flex-row gap-4 mb-8">
         <div className="flex-1 relative">
           <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-            <FaSearch className="text-gray-400" />
+            <Search className="text-odara-primary mr-3 h-4 w-4 flex-shrink-" />
           </div>
+
           <input
             type="text"
             placeholder="Buscar registros..."
-            className="w-full pl-10 pr-4 py-3 bg-white rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-odara-primary focus:border-transparent"
+            className="w-full pl-10 pr-4 py-3 bg-white rounded-xl border border-gray-200 text-odara-dark placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-odara-primary focus:border-transparent"
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
           />
         </div>
-        
+
         <div className="relative">
           <button
             className="flex items-center gap-2 bg-white rounded-xl px-4 py-3 border border-gray-200 text-odara-dark font-medium hover:bg-odara-primary/10 transition min-w-48 justify-between"
             onClick={() => setFiltroAberto(!filtroAberto)}
           >
             <span>Ordenar por</span>
-            <FaFilter className="text-odara-accent" />
+            <WrapperIcone icone={Filter} tamanho={20} className="text-odara-accent"/>
           </button>
 
           {filtroAberto && (
@@ -157,16 +136,6 @@ const Registros = () => {
         </div>
       </div>
 
-      {/* Contador de resultados */}
-      <div className="mb-6">
-        <p className="text-sm text-odara-dark/60">
-          {registrosFiltrados.length} de {registrosItems.length} registros encontrados
-          {searchTerm && (
-            <span> para "{searchTerm}"</span>
-          )}
-        </p>
-      </div>
-
       {/* Grid de registros */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {registrosFiltrados.map((item, index) => (
@@ -177,7 +146,7 @@ const Registros = () => {
           >
             <div className="flex items-start gap-4 mb-4">
               <div className={`p-3 rounded-xl text-odara-primary group-hover:scale-110 transition-transform`}>
-                {item.icon}
+                <WrapperIcone icone={item.icon} tamanho={24} />
               </div>
               <div className="flex-1">
                 <h3 className="text-lg font-semibold text-odara-dark group-hover:text-odara-primary transition">
@@ -188,7 +157,7 @@ const Registros = () => {
                 </p>
               </div>
             </div>
-            
+
             <div className="flex justify-end mt-auto pt-4 border-t border-gray-100">
               <span className="text-odara-primary font-medium flex items-center gap-2 group-hover:gap-3 transition-all">
                 Acessar
@@ -201,18 +170,23 @@ const Registros = () => {
         ))}
       </div>
 
+      {/* Contador de resultados */}
+      <div className="mt-4 text-sm text-gray-400">
+        Total de {registrosFiltrados.length} de {registrosItems.length} registros encontrados {searchTerm && (<span> para "{searchTerm}"</span>)}
+      </div>
+
       {/* Mensagem quando não há registros quando mexer no filtro */}
       {registrosFiltrados.length === 0 && (
         <div className="text-center py-12 bg-white rounded-2xl shadow-sm">
           <div className="p-4 bg-odara-offwhite rounded-full w-16 h-16 mx-auto mb-4 flex items-center justify-center">
-            <FaSearch className="text-odara-dark/40 text-2xl" />
+            <Search className="text-odara-dark/40 text-2xl" />
           </div>
           <h3 className="text-lg font-medium text-odara-dark mb-2">
             Nenhum registro encontrado
           </h3>
           <p className="text-odara-dark/60">
-            {searchTerm 
-              ? "Tente ajustar os termos da busca" 
+            {searchTerm
+              ? "Tente ajustar os termos da busca"
               : "Não há registros disponíveis no momento"
             }
           </p>

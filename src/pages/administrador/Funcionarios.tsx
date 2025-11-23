@@ -54,7 +54,7 @@ const Funcionarios: React.FC = () => {
   const alternarStatus = async (id: number, statusAtual: string) => {
     try {
       setAtualizandoStatus(id);
-      
+
       // Define a ordem dos status para ciclagem
       const statusOrdem: StatusFuncionario[] = ['ativo', 'licença', 'afastado', 'inativo'];
       const statusIndex = statusOrdem.indexOf(statusAtual as StatusFuncionario);
@@ -191,7 +191,7 @@ const Funcionarios: React.FC = () => {
             <h1 className="text-2xl lg:text-3xl font-bold text-odara-dark">Funcionários</h1>
             <p className="text-sm text-odara-dark/70 mt-1">Gestão de equipe e profissionais</p>
           </div>
-          
+
           {/* Botão Cadastrar Funcionário */}
           <div className="flex-shrink-0">
             <button
@@ -205,18 +205,18 @@ const Funcionarios: React.FC = () => {
         </div>
 
         {/* Barra de Busca */}
-        <div className="bg-white rounded-xl shadow-sm p-3 mb-6">
-          <div className="flex items-center">
-            <Search className="text-odara-primary mr-3 h-4 w-4 flex-shrink-0" />
-
-            <input
-              type="text"
-              placeholder="Buscar por nome, cargo, vínculo ou registro..."
-              className="w-full p-2 outline-none bg-transparent text-odara-dark placeholder:text-gray-400"
-              value={termoBusca}
-              onChange={(e) => setTermoBusca(e.target.value)}
-            />
+        <div className="flex-1 relative mb-8">
+          <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+            <Search className="text-odara-primary mr-3 h-4 w-4 flex-shrink-" />
           </div>
+
+          <input
+            type="text"
+            placeholder="Buscar por nome, cargo, vínculo ou registro..."
+            className="w-full pl-10 pr-4 py-3 bg-white rounded-xl border border-gray-200 text-odara-dark placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-odara-primary focus:border-transparent"
+            value={termoBusca}
+            onChange={(e) => setTermoBusca(e.target.value)}
+          />
         </div>
 
         {/* Tabela de Funcionários */}
@@ -298,9 +298,8 @@ const Funcionarios: React.FC = () => {
                       <button
                         onClick={() => alternarStatus(funcionario.id, funcionario.status)}
                         disabled={atualizandoStatus === funcionario.id}
-                        className={`px-3 py-1 rounded-full text-xs font-medium transition-colors ${obterCorStatus(funcionario.status)} ${
-                          atualizandoStatus === funcionario.id ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'
-                        }`}
+                        className={`px-3 py-1 rounded-full text-xs font-medium transition-colors ${obterCorStatus(funcionario.status)} ${atualizandoStatus === funcionario.id ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'
+                          }`}
                         title="Clique para alterar o status"
                       >
                         {atualizandoStatus === funcionario.id ? 'Alterando...' : funcionario.status}

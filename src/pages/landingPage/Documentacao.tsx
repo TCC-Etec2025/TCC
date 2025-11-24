@@ -9,56 +9,47 @@ const Documentacao = () => {
   const funcionalidades = [
     {
       nome: 'Registro de Medicamentos',
-      descricao: 'Controle completo da medicação dos residentes',
+      descricao: 'Controle de administração e estoque de medicamentos',
       icone: <Pill size={24} />,
       detalhes: [
-        'Cadastro completo de medicamentos com dosagens e horários',
-        'Sistema de alertas para próximas doses',
+        'Cadastro de medicamentos com dosagens e horários',
         'Histórico detalhado de administração',
-        'Controle de estoque e validade',
-        'Relatórios de adherencia ao tratamento'
+        'Monitoramento contínuo do uso de cada medicação'
       ],
       beneficios: [
         'Redução de erros na medicação',
         'Otimização do tempo da equipe',
-        'Maior segurança para os residentes',
-        'Documentação completa para auditorias'
+        'Maior segurança para os residentes'
       ]
     },
     {
       nome: 'Registro de Exames Médicos',
-      descricao: 'Organização de exames médicos',
+      descricao: 'Controle e organização de exames médicos',
       icone: <Microscope size={24} />,
       detalhes: [
-        'Armazenamento digital de resultados',
         'Agendamento de exames futuros',
         'Alertas para exames pendentes',
-        'Histórico evolutivo completo',
-        'Acesso rápido a laudos médicos'
+        'Histórico completo dos exames'
       ],
       beneficios: [
-        'Organização centralizada de documentos',
-        'Acesso rápido em emergências',
+        'Organização centralizada',
         'Monitoramento contínuo da saúde',
-        'Facilidade no compartilhamento com especialistas'
+        'Acesso rápido às informações'
       ]
     },
     {
       nome: 'Registro de Consultas Médicas',
-      descricao: 'Controle de consultas e acompanhamento médico',
+      descricao: 'Agendamento e histórico de consultas médicas',
       icone: <Stethoscope size={24} />,
       detalhes: [
         'Agendamento e controle de consultas',
-        'Registro de evolução clínica',
         'Prescrições e orientações médicas',
-        'Encaminhamentos especializados',
         'Histórico de atendimentos'
       ],
       beneficios: [
-        'Continuidade do cuidado médico',
-        'Comunicação eficiente entre profissionais',
-        'Documentação legal completa',
-        'Acompanhamento personalizado'
+        'Maior organização do histórico clínico',
+        'Acesso rápido a prescrições antigas',
+        'Melhor preparo antes de cada consulta'
       ]
     },
     {
@@ -66,32 +57,26 @@ const Documentacao = () => {
       descricao: 'Monitoramento do estado de saúde dos residentes',
       icone: <Hospital size={24} />,
       detalhes: [
-        'Template anatômico interativo',
         'Registro de ferimentos e lesões',
-        'Avaliação física inicial e periódica',
         'Monitoramento de sinais vitais',
         'Controle de curativos e tratamentos'
       ],
       beneficios: [
         'Detecção precoce de problemas',
         'Acompanhamento visual da evolução',
-        'Melhor comunicação entre equipes',
-        'Documentação precisa do estado físico'
+        'Documentação do estado físico'
       ]
     },
     {
       nome: 'Registro de Ocorrências',
-      descricao: 'Documentação de incidentes',
+      descricao: 'Registro de incidentes e situações especiais',
       icone: <AlertTriangle size={24} />,
       detalhes: [
         'Categorização de incidentes',
-        'Registro fotográfico opcional',
         'Fluxo de notificação automática',
-        'Acompanhamento de resolução',
-        'Relatórios estatísticos'
+        'Acompanhamento de resolução'
       ],
       beneficios: [
-        'Resposta rápida a incidentes',
         'Transparência com familiares',
         'Prevenção de recorrências',
         'Base legal para eventuais situações'
@@ -99,18 +84,15 @@ const Documentacao = () => {
     },
     {
       nome: 'Registro de Comportamento',
-      descricao: 'Registros comportamentais',
+      descricao: 'Avaliação comportamental e acompanhamento psicológico',
       icone: <BarChart size={24} />,
       detalhes: [
-        'Escalas comportamentais validadas',
         'Registro de padrões diários',
         'Identificação de gatilhos',
-        'Evolução temporal gráfica',
-        'Alertas para mudanças significativas'
+        'Diário comportamental personalizável'
       ],
       beneficios: [
         'Cuidado personalizado',
-        'Intervenções precoces',
         'Melhora na qualidade de vida',
         'Suporte a diagnósticos médicos'
       ]
@@ -120,35 +102,29 @@ const Documentacao = () => {
       descricao: 'Organização das atividades dos residentes',
       icone: <ClipboardList size={24} />,
       detalhes: [
-        'Programação de atividades recreativas',
         'Controle de participação',
-        'Avaliação de engajamento',
-        'Customização por perfil',
-        'Relatórios de frequência'
+        'Customização por residente',
+        'Organização de eventos regulares'
       ],
       beneficios: [
         'Estímulo cognitivo constante',
         'Socialização monitorada',
-        'Rotina organizada e previsível',
-        'Identificação de preferências'
+        'Rotina organizada e previsível'
       ]
     },
     {
       nome: 'Registro de Alimentação',
-      descricao: 'Gestão de acompanhamento alimentar',
+      descricao: 'Controle de dieta e alimentação dos residentes',
       icone: <Utensils size={24} />,
       detalhes: [
         'Controle de dietas especiais',
-        'Registro de aceitação alimentar',
-        'Monitoramento hídrico',
-        'Avaliação nutricional',
+        'Monitoramento nutricuional',
         'Cardápios personalizados'
       ],
       beneficios: [
         'Adequação nutricional',
         'Prevenção de desidratação',
-        'Identificação de dificuldades',
-        'Satisfação do residente'
+        'Identificação de dificuldades'
       ]
     },
     {
@@ -157,16 +133,13 @@ const Documentacao = () => {
       icone: <Star size={24} />,
       detalhes: [
         'Perfil completo de preferências',
-        'Histórico de hábitos pessoais',
-        'Rotinas individuais',
         'Gostos alimentares específicos',
         'Atividades de preferência'
       ],
       beneficios: [
         'Cuidado humanizado',
         'Respeito à individualidade',
-        'Maior conforto do residente',
-        'Fortalecimento da autonomia'
+        'Maior conforto do residente'
       ]
     },
   ];

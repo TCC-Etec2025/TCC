@@ -52,7 +52,7 @@ const PaginaChecklist = () => {
     },
     {
       id: 4,
-      path: "medicamentos/check",
+      path: "medicamentos",
       label: "Medicamentos",
       icon: (
         <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">

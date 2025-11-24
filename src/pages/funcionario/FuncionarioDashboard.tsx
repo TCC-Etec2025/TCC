@@ -164,7 +164,7 @@ const FuncionarioDashboard = () => {
         id: 1,
         nome: "Medicamentos",
         icone: Pill,
-        acao: () => navigate("/app/funcionario/checklist/medicamentos/check")
+        acao: () => navigate("/app/funcionario/checklist/medicamentos")
       },
       {
         id: 2,

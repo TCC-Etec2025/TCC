@@ -211,7 +211,7 @@ const AdminDashboard = () => {
         id: 6,
         nome: "Medicamentos",
         icone: Pill,
-        acao: () => navegar("/app/funcionario/checklist/medicamentos/check")
+        acao: () => navegar("/app/funcionario/checklist/medicamentos")
       },
       {
         id: 7,

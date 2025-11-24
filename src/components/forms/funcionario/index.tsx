@@ -147,14 +147,14 @@ export default function CadastroFuncionario({ funcionario }: Props) {
         actions: [
           {
             label: "Voltar à lista",
-            className: "bg-blue-500 text-white hover:bg-blue-600",
+            className: "bg-odara-secondary text-white hover:bg-blue-600",
             onClick: () => navigate("/app/admin/funcionarios"),
           },
           ...(!funcionario
             ? [
               {
                 label: "Cadastrar outro",
-                className: "bg-gray-200 text-gray-700 hover:bg-gray-300",
+                className: "bg-gray-200 text-odara-dark hover:bg-gray-300",
                 onClick: () => {
                   reset();
                   setModalOpen(false);
@@ -164,7 +164,7 @@ export default function CadastroFuncionario({ funcionario }: Props) {
             : []),
           {
             label: "Dashboard",
-            className: "bg-gray-200 text-gray-700 hover:bg-gray-300",
+            className: "bg-gray-200 text-odara-dark hover:bg-gray-300",
             onClick: () => navigate("/app/admin"),
           },
         ],
@@ -192,7 +192,7 @@ export default function CadastroFuncionario({ funcionario }: Props) {
   };
 
   return (
-    <div className="p-8 bg-slate-50 rounded-2xl shadow-xl max-w-4xl mx-auto my-12">
+    <div className="p-8 bg-odara-white rounded-2xl shadow-xl max-w-4xl mx-auto my-12">
       <Modal
         open={modalOpen}
         onClose={() => setModalOpen(false)}
@@ -201,15 +201,15 @@ export default function CadastroFuncionario({ funcionario }: Props) {
         actions={modalConfig.actions}
       />
 
-      <div className="flex items-center justify-center space-x-4 mb-8">
-        <UserPlus size={48} className="text-blue-500" />
-        <h1 className="text-3xl font-bold text-gray-800">
+      <div className="flex items-center justify-center space-x-4 mb-2">
+        <UserPlus size={48} className="text-odara-primary" />
+        <h1 className="text-3xl font-bold text-odara-accent">
           {funcionario
             ? `Edição de ${funcionario.nome}`
             : "Cadastro de Funcionário"}
         </h1>
       </div>
-      <p className="text-center mb-8 text-gray-600">
+      <p className="text-center mb-8 text-odara-dark/60">
         Preencha os dados do funcionário.
       </p>
 
@@ -217,21 +217,21 @@ export default function CadastroFuncionario({ funcionario }: Props) {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           {/* Dados Pessoais */}
           <div className="md:col-span-2">
-            <h3 className="text-xl font-semibold text-gray-800 mb-4">
+            <h3 className="text-xl font-semibold text-odara-primary">
               Dados Pessoais
             </h3>
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Tipo de Vínculo *
+            <label className="block text-sm font-medium text-odara-secondary mb-2">
+              Tipo de Vínculo <span className="text-odara-accent font-bold">*</span>
             </label>
             <select
               {...register("vinculo")}
-              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors bg-white"
+              className="w-full px-4 py-3 bg-white rounded-xl border border-gray-200 text-odara-dark placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-odara-secondary focus:border-transparent bg-white"
             >
               <option value="">Selecione o tipo de vínculo</option>
-              <option value="CLT">CLT</option>
+              <option className="hover:bg-odara-primary/10" value="CLT">CLT</option>
               <option value="PJ">PJ</option>
               <option value="Estagiário">Estagiário</option>
               <option value="Voluntário">Voluntário</option>
@@ -245,12 +245,12 @@ export default function CadastroFuncionario({ funcionario }: Props) {
           </div>
 
           <div className="md:col-span-2">
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Nome Completo *
+            <label className="block text-sm font-medium text-odara-secondary mb-2">
+              Nome Completo <span className="text-odara-accent font-bold">*</span>
             </label>
             <input
               {...register("nome")}
-              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+              className="w-full px-4 py-3 bg-white rounded-xl border border-gray-200 text-odara-dark placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-odara-secondary focus:border-transparent"
               placeholder="Digite o nome completo"
             />
             {errors.nome && (
@@ -261,12 +261,12 @@ export default function CadastroFuncionario({ funcionario }: Props) {
           </div>
 
           <div className="md:col-span-2">
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Email *
+            <label className="block text-sm font-medium text-odara-secondary mb-2">
+              Email <span className="text-odara-accent font-bold">*</span>
             </label>
             <input
               {...register("email")}
-              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+              className="w-full px-4 py-3 bg-white rounded-xl border border-gray-200 text-odara-dark placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-odara-secondary focus:border-transparent"
               placeholder="Digite o nome completo"
             />
             {errors.email && (
@@ -277,12 +277,12 @@ export default function CadastroFuncionario({ funcionario }: Props) {
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              CPF *
+            <label className="block text-sm font-medium text-odara-secondary mb-2">
+              CPF <span className="text-odara-accent font-bold">*</span>
             </label>
             <input
               {...register("cpf")}
-              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+              className="w-full px-4 py-3 bg-white rounded-xl border border-gray-200 text-odara-dark placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-odara-secondary focus:border-transparent"
               placeholder="000.000.000-00"
               maxLength={14}
               onChange={(e) => {
@@ -314,13 +314,13 @@ export default function CadastroFuncionario({ funcionario }: Props) {
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
+            <label className="block text-sm font-medium text-odara-secondary mb-2">
               Data de Nascimento
             </label>
             <input
               type="date"
               {...register("data_nascimento")}
-              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+              className="w-full px-4 py-3 bg-white rounded-xl border border-gray-200 text-odara-dark placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-odara-secondary focus:border-transparent"
               max={(() => {
                 const hoje = new Date();
                 hoje.setFullYear(hoje.getFullYear() - 18);
@@ -330,12 +330,12 @@ export default function CadastroFuncionario({ funcionario }: Props) {
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Telefone *
+            <label className="block text-sm font-medium text-odara-secondary mb-2">
+              Telefone <span className="text-odara-accent font-bold">*</span>
             </label>
             <input
               {...register("telefone_principal")}
-              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+              className="w-full px-4 py-3 bg-white rounded-xl border border-gray-200 text-odara-dark placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-odara-secondary focus:border-transparent"
               placeholder="(11) 99999-9999"
               maxLength={15}
               onChange={(e) => {
@@ -358,12 +358,12 @@ export default function CadastroFuncionario({ funcionario }: Props) {
                 {errors.telefone_principal.message}
               </p>
             )}
-            <label className="block text-sm font-medium text-gray-700 mb-2 mt-4">
+            <label className="block text-sm font-medium text-odara-secondary mb-2 mt-4">
               Telefone Secundário
             </label>
             <input
               {...register("telefone_secundario")}
-              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+              className="w-full px-4 py-3 bg-white rounded-xl border border-gray-200 text-odara-dark placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-odara-secondary focus:border-transparent"
               placeholder="(11) 99999-9999"
               maxLength={15}
               onChange={(e) => {
@@ -390,18 +390,18 @@ export default function CadastroFuncionario({ funcionario }: Props) {
 
           {/* Dados Profissionais */}
           <div className="md:col-span-2">
-            <h3 className="text-xl font-semibold text-gray-800 mb-4 mt-6">
+            <h3 className="text-xl font-semibold text-odara-primary mt-6">
               Dados Profissionais
             </h3>
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Cargo *
+            <label className="block text-sm font-medium text-odara-secondary mb-2">
+              Cargo <span className="text-odara-accent font-bold">*</span>
             </label>
             <input
               {...register("cargo")}
-              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+              className="w-full px-4 py-3 bg-white rounded-xl border border-gray-200 text-odara-dark placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-odara-secondary focus:border-transparent"
               placeholder="Cargo/função"
             />
             {errors.cargo && (
@@ -412,12 +412,12 @@ export default function CadastroFuncionario({ funcionario }: Props) {
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Papel *
+            <label className="block text-sm font-medium text-odara-secondary mb-2">
+              Papel <span className="text-odara-accent font-bold">*</span>
             </label>
             <select
               //{...register("papel")}
-              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors bg-white"
+              className="w-full px-4 py-3 bg-white rounded-xl border border-gray-200 text-odara-dark placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-odara-secondary focus:border-transparent bg-white"
             >
               <option value="funcionario" selected>
                 Funcionário
@@ -426,24 +426,24 @@ export default function CadastroFuncionario({ funcionario }: Props) {
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
+            <label className="block text-sm font-medium text-odara-secondary mb-2">
               Registro Profissional
             </label>
             <input
               {...register("registro_profissional")}
-              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+              className="w-full px-4 py-3 bg-white rounded-xl border border-gray-200 text-odara-dark placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-odara-secondary focus:border-transparent"
               placeholder="CRM, COREN, etc."
             />
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Data de Admissão *
+            <label className="block text-sm font-medium text-odara-secondary mb-2">
+              Data de Admissão <span className="text-odara-accent font-bold">*</span>
             </label>
             <input
               type="date"
               {...register("data_admissao")}
-              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+              className="w-full px-4 py-3 bg-white rounded-xl border border-gray-200 text-odara-dark placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-odara-secondary focus:border-transparent"
             />
             {errors.data_admissao && (
               <p className="text-red-500 text-sm mt-2 font-medium">
@@ -454,18 +454,18 @@ export default function CadastroFuncionario({ funcionario }: Props) {
 
           {/* Endereço */}
           <div className="md:col-span-2">
-            <h3 className="text-xl font-semibold text-gray-800 mb-4 mt-6">
+            <h3 className="text-xl font-semibold text-odara-primary mt-6">
               Endereço
             </h3>
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-                CEP *
+            <label className="block text-sm font-medium text-odara-secondary mb-2">
+                CEP <span className="text-odara-accent font-bold">*</span>
               </label>
               <input
                 {...register("cep")}
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+                className="w-full px-4 py-3 bg-white rounded-xl border border-gray-200 text-odara-dark placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-odara-secondary focus:border-transparent"
                 placeholder="00000-000"
                 maxLength={9}
                 onChange={(e) => {
@@ -491,13 +491,13 @@ export default function CadastroFuncionario({ funcionario }: Props) {
           )}
 
           <div className="md:col-span-2">
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Logradouro *
+            <label className="block text-sm font-medium text-odara-secondary mb-2">
+              Logradouro <span className="text-odara-accent font-bold">*</span>
             </label>
             <input
               {...register("logradouro")}
               disabled={isCepAutoFilled}
-              className={`w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors ${isCepAutoFilled
+              className={`w-full px-4 py-3 bg-white rounded-xl border border-gray-200 text-odara-dark placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-odara-secondary focus:border-transparent ${isCepAutoFilled
                   ? "bg-gray-200 text-dark-600 cursor-not-allowed"
                   : ""
                 }`}
@@ -511,12 +511,12 @@ export default function CadastroFuncionario({ funcionario }: Props) {
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Número *
+            <label className="block text-sm font-medium text-odara-secondary mb-2">
+              Número <span className="text-odara-accent font-bold">*</span>
             </label>
             <input
               {...register("numero")}
-              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+              className="w-full px-4 py-3 bg-white rounded-xl border border-gray-200 text-odara-dark placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-odara-secondary focus:border-transparent"
               placeholder="123"
               type="number"
             />
@@ -528,24 +528,24 @@ export default function CadastroFuncionario({ funcionario }: Props) {
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
+            <label className="block text-sm font-medium text-odara-secondary mb-2">
               Complemento
             </label>
             <input
               {...register("complemento")}
-              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+              className="w-full px-4 py-3 bg-white rounded-xl border border-gray-200 text-odara-dark placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-odara-secondary focus:border-transparent"
               placeholder="Apartamento, bloco, etc."
             />
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Bairro *
+            <label className="block text-sm font-medium text-odara-secondary mb-2">
+              Bairro <span className="text-odara-accent font-bold">*</span>
             </label>
             <input
               {...register("bairro")}
               disabled={isCepAutoFilled}
-              className={`w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors ${isCepAutoFilled
+              className={`w-full px-4 py-3 bg-white rounded-xl border border-gray-200 text-odara-dark placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-odara-secondary focus:border-transparent ${isCepAutoFilled
                   ? "bg-gray-200 text-dark-600 cursor-not-allowed"
                   : ""
                 }`}
@@ -559,13 +559,13 @@ export default function CadastroFuncionario({ funcionario }: Props) {
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Cidade *
+            <label className="block text-sm font-medium text-odara-secondary mb-2">
+              Cidade <span className="text-odara-accent font-bold">*</span>
             </label>
             <input
               {...register("cidade")}
               disabled={isCepAutoFilled}
-              className={`w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors ${isCepAutoFilled
+              className={`w-full px-4 py-3 bg-white rounded-xl border border-gray-200 text-odara-dark placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-odara-secondary focus:border-transparent ${isCepAutoFilled
                   ? "bg-gray-200 text-dark-600 cursor-not-allowed"
                   : ""
                 }`}
@@ -579,13 +579,13 @@ export default function CadastroFuncionario({ funcionario }: Props) {
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Estado *
+            <label className="block text-sm font-medium text-odara-secondary mb-2">
+              Estado <span className="text-odara-accent font-bold">*</span>
             </label>
             <input
               {...register("estado")}
               disabled={isCepAutoFilled}
-              className={`w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors ${isCepAutoFilled
+              className={`w-full px-4 py-3 bg-white rounded-xl border border-gray-200 text-odara-dark placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-odara-secondary focus:border-transparent ${isCepAutoFilled
                   ? "bg-gray-200 text-dark-600 cursor-not-allowed"
                   : ""
                 }`}
@@ -601,29 +601,29 @@ export default function CadastroFuncionario({ funcionario }: Props) {
 
           {/* Contato de Emergência */}
           <div className="md:col-span-2">
-            <h3 className="text-xl font-semibold text-gray-800 mb-4 mt-6">
+            <h3 className="text-xl font-semibold text-odara-primary mt-6">
               Contato de Emergência
             </h3>
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
+            <label className="block text-sm font-medium text-odara-secondary mb-2">
               Nome do Contato
             </label>
             <input
               {...register("contato_emergencia_nome")}
-              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+              className="w-full px-4 py-3 bg-white rounded-xl border border-gray-200 text-odara-dark placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-odara-secondary focus:border-transparent"
               placeholder="Nome do contato de emergência"
             />
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
+            <label className="block text-sm font-medium text-odara-secondary mb-2">
               Telefone do Contato
             </label>
             <input
               {...register("contato_emergencia_telefone")}
-              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+              className="w-full px-4 py-3 bg-white rounded-xl border border-gray-200 text-odara-dark placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-odara-secondary focus:border-transparent"
               placeholder="(11) 99999-9999"
               maxLength={15}
               onChange={(e) => {
@@ -644,11 +644,11 @@ export default function CadastroFuncionario({ funcionario }: Props) {
           </div>
         </div>
 
-        <div className="flex justify-end pt-6 border-t border-gray-200">
+        <div className="flex justify-end pt-6 ">
           <button
             type="submit"
             disabled={isLoading}
-            className="flex items-center px-6 py-3 bg-blue-500 text-white rounded-lg hover:bg-blue-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors font-medium"
+            className="flex items-center px-6 py-3 bg-odara-accent hover:bg-odara-secondary text-white rounded-lg hover:bg-blue-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors font-medium"
           >
             {isLoading ? (
               <>

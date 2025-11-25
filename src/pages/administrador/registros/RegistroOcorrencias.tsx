@@ -195,7 +195,7 @@ const RegistroOcorrencias: React.FC = () => {
 							onClick={e => { e.preventDefault(); setOcorrenciaSelecionada(null); setModalAberto(true); }}
 							className="bg-odara-accent hover:bg-odara-secondary text-odara-white font-semibold py-2 px-4 rounded-lg flex items-center transition text-sm h-10"
 						>
-							<FaPlus className="mr-2" /> Nova
+							<FaPlus className="mr-2" /> Novo Registro
 						</button>
 						<div className="sm:w-40">
 							<div className="h-10 w-full inline-flex items-center justify-center px-4 bg-odara-dark text-white rounded hover:bg-odara-darkgreen transition text-sm font-medium select-none">

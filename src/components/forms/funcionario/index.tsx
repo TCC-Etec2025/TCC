@@ -5,7 +5,7 @@ import { supabase } from "../../../lib/supabaseClient";
 import Modal from "../../Modal";
 import { useCadastroForm } from "./form";
 import { type FormValues } from "./types";
-import { Loader2, UserPlus } from "lucide-react";
+import { Loader2, UserPlus, LockKeyholeOpen } from "lucide-react";
 import { type PerfilUsuario } from "../../../context/UserContext";
 import { formatDateNumeric, removeFormatting } from "../../../utils";
 
@@ -15,23 +15,26 @@ type Props = {
 
 export default function CadastroFuncionario({ funcionario }: Props) {
   const navigate = useNavigate();
-  const [isLoading, setIsLoading] = useState(false);
-  const [isCepAutoFilled, setIsCepAutoFilled] = useState(false);
-  const [modalOpen, setModalOpen] = useState(false);
-  const [modalConfig, setModalConfig] = useState<{
-    title: string;
-    description: string;
-    actions: Array<{
-      label: string;
-      onClick: () => void;
+
+  // Estados do componente
+  const [carregando, setCarregando] = useState(false);
+  const [cepPreenchidoAutomaticamente, setCepPreenchidoAutomaticamente] = useState(false);
+  const [modalAberto, setModalAberto] = useState(false);
+  const [configuracaoModal, setConfiguracaoModal] = useState<{
+    titulo: string;
+    descricao: string;
+    acoes: Array<{
+      rotulo: string;
+      aoClicar: () => void;
       className: string;
     }>;
   }>({
-    title: "",
-    description: "",
-    actions: [],
+    titulo: "",
+    descricao: "",
+    acoes: [],
   });
 
+  // Hook do formulário
   const {
     register,
     handleSubmit,
@@ -41,166 +44,243 @@ export default function CadastroFuncionario({ funcionario }: Props) {
     setValue,
   } = useCadastroForm(funcionario);
 
-  const cepValue = watch("cep");
+  const valorCep = watch("cep");
 
+  // Efeito para buscar endereço via CEP
   useEffect(() => {
-    const controller = new AbortController();
+    const controlador = new AbortController();
 
-    const fetchEndereco = async () => {
-      if (!cepValue) {
-        setIsCepAutoFilled(false);
+    const buscarEndereco = async () => {
+      if (!valorCep) {
+        setCepPreenchidoAutomaticamente(false);
         return;
       }
 
-      const cepLimpo = String(cepValue).replace(/\D/g, "");
+      const cepLimpo = String(valorCep).replace(/\D/g, "");
       if (cepLimpo.length !== 8) {
-        setIsCepAutoFilled(false);
+        setCepPreenchidoAutomaticamente(false);
         return;
       }
 
       try {
-        const response = await fetch(
+        const resposta = await fetch(
           `https://viacep.com.br/ws/${cepLimpo}/json/`,
-          { signal: controller.signal }
+          { signal: controlador.signal }
         );
-        if (!response.ok) {
-          setIsCepAutoFilled(false);
+
+        if (!resposta.ok) {
+          setCepPreenchidoAutomaticamente(false);
           return;
         }
-        const data = await response.json();
-        if (data && !data.erro) {
-          setValue("logradouro", data.logradouro || "");
-          setValue("bairro", data.bairro || "");
-          setValue("cidade", data.localidade || "");
-          setValue("estado", data.uf || "");
-          setIsCepAutoFilled(true);
+
+        const dados = await resposta.json();
+
+        if (dados && !dados.erro) {
+          setValue("logradouro", dados.logradouro || "");
+          setValue("bairro", dados.bairro || "");
+          setValue("cidade", dados.localidade || "");
+          setValue("estado", dados.uf || "");
+          setCepPreenchidoAutomaticamente(true);
         } else {
-          setIsCepAutoFilled(false);
+          setCepPreenchidoAutomaticamente(false);
         }
-      } catch (err) {
-        const error = err as unknown as { name?: string };
+      } catch (erro) {
+        const error = erro as unknown as { name?: string };
         if (error.name === "AbortError") return;
-        console.log("Erro ao buscar CEP:", err);
-        setIsCepAutoFilled(false);
+        console.log("Erro ao buscar CEP:", erro);
+        setCepPreenchidoAutomaticamente(false);
       }
     };
 
-    fetchEndereco();
+    buscarEndereco();
 
-    return () => controller.abort();
-  }, [cepValue, setValue]);
+    return () => controlador.abort();
+  }, [valorCep, setValue]);
 
-  const onSubmit: SubmitHandler<FormValues> = async (data) => {
-    setIsLoading(true);
+  // Funções auxiliares para formatação
+  const formatarCPF = (valor: string): string => {
+    let valorFormatado = valor.replace(/\D/g, "");
+    if (valorFormatado.length > 3) {
+      valorFormatado = valorFormatado.replace(/^(\d{3})(\d{1,3})/, "$1.$2");
+    }
+    if (valorFormatado.length > 6) {
+      valorFormatado = valorFormatado.replace(
+        /^(\d{3})\.(\d{3})(\d{1,3})/,
+        "$1.$2.$3"
+      );
+    }
+    if (valorFormatado.length > 9) {
+      valorFormatado = valorFormatado.replace(
+        /^(\d{3})\.(\d{3})\.(\d{3})(\d{1,2})/,
+        "$1.$2.$3-$4"
+      );
+    }
+    return valorFormatado;
+  };
+
+  const formatarTelefone = (valor: string): string => {
+    let valorFormatado = valor.replace(/\D/g, "");
+    if (valorFormatado.length > 2) {
+      valorFormatado = valorFormatado.replace(/^(\d{2})(\d)/, "($1) $2");
+    }
+    if (valorFormatado.length > 7) {
+      valorFormatado = valorFormatado.replace(
+        /^(\(\d{2}\)\s)(\d{5})(\d{1,4})/,
+        "$1$2-$3"
+      );
+    }
+    return valorFormatado;
+  };
+
+  const formatarCEP = (valor: string): string => {
+    let valorFormatado = valor.replace(/\D/g, "");
+    if (valorFormatado.length > 5) {
+      valorFormatado = valorFormatado.replace(/^(\d{5})(\d{1,3})/, "$1-$2");
+    }
+    return valorFormatado;
+  };
+
+  // Handler para submissão do formulário
+  const aoSubmeter: SubmitHandler<FormValues> = async (dados) => {
+    setCarregando(true);
 
     try {
-      const params = {
+      const parametros = {
         // Dados do usuário
-        p_email: data.email,
-        p_papel: data.papel || "funcionario",
+        p_email: dados.email,
+        p_papel: dados.papel || "funcionario",
 
         // Endereço
-        p_cep: removeFormatting(data.cep),
-        p_logradouro: data.logradouro,
-        p_numero: data.numero,
-        p_complemento: data.complemento || null,
-        p_bairro: data.bairro,
-        p_cidade: data.cidade,
-        p_estado: data.estado,
+        p_cep: removeFormatting(dados.cep),
+        p_logradouro: dados.logradouro,
+        p_numero: dados.numero,
+        p_complemento: dados.complemento || null,
+        p_bairro: dados.bairro,
+        p_cidade: dados.cidade,
+        p_estado: dados.estado,
 
         // Dados do funcionário
-        p_vinculo: data.vinculo,
-        p_nome: data.nome,
-        p_cpf: removeFormatting(data.cpf),
-        p_data_nascimento: data.data_nascimento,
-        p_cargo: data.cargo,
-        p_registro_profissional: data.registro_profissional || null,
-        p_data_admissao: data.data_admissao,
-        p_telefone_principal: removeFormatting(data.telefone_principal),
-        p_telefone_secundario: removeFormatting(data.telefone_secundario || "") || null,
-        p_contato_emergencia_nome: data.contato_emergencia_nome || null,
-        p_contato_emergencia_telefone: removeFormatting(data.contato_emergencia_telefone || "") || null,
+        p_vinculo: dados.vinculo,
+        p_nome: dados.nome,
+        p_cpf: removeFormatting(dados.cpf),
+        p_data_nascimento: dados.data_nascimento,
+        p_cargo: dados.cargo,
+        p_registro_profissional: dados.registro_profissional || null,
+        p_data_admissao: dados.data_admissao,
+        p_telefone_principal: removeFormatting(dados.telefone_principal),
+        p_telefone_secundario: removeFormatting(dados.telefone_secundario || "") || null,
+        p_contato_emergencia_nome: dados.contato_emergencia_nome || null,
+        p_contato_emergencia_telefone: removeFormatting(dados.contato_emergencia_telefone || "") || null,
       };
 
-      let rpcResult;
+      let resultadoRPC;
 
       if (funcionario) {
-        rpcResult = await supabase.rpc("editar_funcionario_com_usuario", {
+        resultadoRPC = await supabase.rpc("editar_funcionario_com_usuario", {
           p_id_funcionario: funcionario.id,
-          ...params,
+          ...parametros,
         });
       } else {
-        rpcResult = await supabase.rpc(
+        resultadoRPC = await supabase.rpc(
           "cadastrar_funcionario_com_usuario",
-          params
+          parametros
         );
       }
 
-      if (rpcResult.error) {
-        throw rpcResult.error;
+      if (resultadoRPC.error) {
+        throw resultadoRPC.error;
       }
 
-      setModalConfig({
-        title: "Sucesso!",
-        description: `Funcionário ${data.nome} ${funcionario ? "atualizado" : "cadastrado"
+      // Configurar modal de sucesso
+      setConfiguracaoModal({
+        titulo: "Sucesso!",
+        descricao: `Funcionário ${dados.nome} ${funcionario ? "atualizado" : "cadastrado"
           } com sucesso!`,
-        actions: [
+        acoes: [
           {
-            label: "Voltar à lista",
-            className: "bg-odara-secondary text-white hover:bg-blue-600",
-            onClick: () => navigate("/app/admin/funcionarios"),
+            rotulo: "Acessar Lista",
+            className: "bg-odara-white text-odara-primary hover:bg-odara-primary hover:text-white border border-odara-primary",
+            aoClicar: () => navigate("/app/admin/funcionarios"),
+          },
+          {
+            rotulo: "Acessar Dashboard",
+            className: "bg-odara-white text-odara-primary hover:bg-odara-primary hover:text-white border border-odara-primary",
+            aoClicar: () => navigate("/app/admin"),
           },
           ...(!funcionario
             ? [
               {
-                label: "Cadastrar outro",
-                className: "bg-gray-200 text-odara-dark hover:bg-gray-300",
-                onClick: () => {
+                rotulo: "Novo Cadastro",
+                className: "bg-odara-accent text-odara-contorno hover:bg-odara-secondary",
+                aoClicar: () => {
                   reset();
-                  setModalOpen(false);
-                },
+                  setModalAberto(false);
+                }
               },
             ]
-            : []),
-          {
-            label: "Dashboard",
-            className: "bg-gray-200 text-odara-dark hover:bg-gray-300",
-            onClick: () => navigate("/app/admin"),
-          },
+            : [
+              {
+                rotulo: "Continuar Editando",
+                className: "bg-odara-accent text-odara-contorno hover:bg-odara-secondary",
+                aoClicar: () => {
+                  setModalAberto(false);
+                }
+              }
+            ]
+          ),
         ],
       });
-      setModalOpen(true);
+      setModalAberto(true);
 
       if (!funcionario) reset();
-    } catch (error) {
-      setModalConfig({
-        title: "Erro!",
-        description: `Erro ao ${funcionario ? "editar" : "cadastrar"
-          } funcionário: ${error.message} `,
-        actions: [
+    } catch (erro) {
+      // Extrair mensagem de erro de forma segura
+      const mensagemErro = erro instanceof Error
+        ? erro.message
+        : typeof erro === 'string'
+          ? erro
+          : 'Erro desconhecido';
+
+      // Configurar modal de erro
+      setConfiguracaoModal({
+        titulo: "Erro!",
+        descricao: `Erro ao ${funcionario ? "editar" : "cadastrar"} funcionário: ${mensagemErro}`,
+        acoes: [
           {
-            label: "Fechar",
-            className: "bg-red-500 text-white hover:bg-red-600",
-            onClick: () => setModalOpen(false),
+            rotulo: "Fechar",
+            className: "bg-odara-alerta text-white hover:bg-red-600",
+            aoClicar: () => setModalAberto(false),
           },
         ],
       });
-      setModalOpen(true);
+      setModalAberto(true);
     } finally {
-      setIsLoading(false);
+      setCarregando(false);
     }
+  };
+
+  // Calcular data máxima para nascimento (18 anos atrás)
+  const calcularDataMaximaNascimento = (): string => {
+    const hoje = new Date();
+    hoje.setFullYear(hoje.getFullYear() - 18);
+    return formatDateNumeric(hoje);
   };
 
   return (
     <div className="p-8 bg-odara-white rounded-2xl shadow-xl max-w-4xl mx-auto my-12">
       <Modal
-        open={modalOpen}
-        onClose={() => setModalOpen(false)}
-        title={modalConfig.title}
-        description={modalConfig.description}
-        actions={modalConfig.actions}
+        open={modalAberto}
+        onClose={() => setModalAberto(false)}
+        title={configuracaoModal.titulo}
+        description={configuracaoModal.descricao}
+        actions={configuracaoModal.acoes.map(acao => ({
+          label: acao.rotulo,
+          onClick: acao.aoClicar,
+          className: acao.className
+        }))}
       />
 
+      {/* Cabeçalho */}
       <div className="flex items-center justify-center space-x-4 mb-2">
         <UserPlus size={48} className="text-odara-primary" />
         <h1 className="text-3xl font-bold text-odara-accent">
@@ -213,9 +293,10 @@ export default function CadastroFuncionario({ funcionario }: Props) {
         Preencha os dados do funcionário.
       </p>
 
-      <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+      <form onSubmit={handleSubmit(aoSubmeter)} className="space-y-6">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          {/* Dados Pessoais */}
+
+          {/* Seção: Dados Pessoais */}
           <div className="md:col-span-2">
             <h3 className="text-xl font-semibold text-odara-primary">
               Dados Pessoais
@@ -238,7 +319,7 @@ export default function CadastroFuncionario({ funcionario }: Props) {
               <option value="Outro">Outro</option>
             </select>
             {errors.vinculo && (
-              <p className="text-red-500 text-sm mt-2 font-medium">
+              <p className="text-odara-alerta text-sm mt-2 font-medium">
                 {errors.vinculo.message}
               </p>
             )}
@@ -254,7 +335,7 @@ export default function CadastroFuncionario({ funcionario }: Props) {
               placeholder="Digite o nome completo"
             />
             {errors.nome && (
-              <p className="text-red-500 text-sm mt-2 font-medium">
+              <p className="text-odara-alerta text-sm mt-2 font-medium">
                 {errors.nome.message}
               </p>
             )}
@@ -267,10 +348,10 @@ export default function CadastroFuncionario({ funcionario }: Props) {
             <input
               {...register("email")}
               className="w-full px-4 py-3 bg-white rounded-xl border border-gray-200 text-odara-dark placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-odara-secondary focus:border-transparent"
-              placeholder="Digite o nome completo"
+              placeholder="Digite o email"
             />
             {errors.email && (
-              <p className="text-red-500 text-sm mt-2 font-medium">
+              <p className="text-odara-alerta text-sm mt-2 font-medium">
                 {errors.email.message}
               </p>
             )}
@@ -286,28 +367,13 @@ export default function CadastroFuncionario({ funcionario }: Props) {
               placeholder="000.000.000-00"
               maxLength={14}
               onChange={(e) => {
-                let value = e.target.value.replace(/\D/g, "");
-                if (value.length > 3) {
-                  value = value.replace(/^(\d{3})(\d{1,3})/, "$1.$2");
-                }
-                if (value.length > 6) {
-                  value = value.replace(
-                    /^(\d{3})\.(\d{3})(\d{1,3})/,
-                    "$1.$2.$3"
-                  );
-                }
-                if (value.length > 9) {
-                  value = value.replace(
-                    /^(\d{3})\.(\d{3})\.(\d{3})(\d{1,2})/,
-                    "$1.$2.$3-$4"
-                  );
-                }
-                e.target.value = value;
-                setValue("cpf", value);
+                const valorFormatado = formatarCPF(e.target.value);
+                e.target.value = valorFormatado;
+                setValue("cpf", valorFormatado);
               }}
             />
             {errors.cpf && (
-              <p className="text-red-500 text-sm mt-2 font-medium">
+              <p className="text-odara-alerta text-sm mt-2 font-medium">
                 {errors.cpf.message}
               </p>
             )}
@@ -321,11 +387,7 @@ export default function CadastroFuncionario({ funcionario }: Props) {
               type="date"
               {...register("data_nascimento")}
               className="w-full px-4 py-3 bg-white rounded-xl border border-gray-200 text-odara-dark placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-odara-secondary focus:border-transparent"
-              max={(() => {
-                const hoje = new Date();
-                hoje.setFullYear(hoje.getFullYear() - 18);
-                return formatDateNumeric(hoje);
-              })()}
+              max={calcularDataMaximaNascimento()}
             />
           </div>
 
@@ -339,25 +401,17 @@ export default function CadastroFuncionario({ funcionario }: Props) {
               placeholder="(11) 99999-9999"
               maxLength={15}
               onChange={(e) => {
-                let value = e.target.value.replace(/\D/g, "");
-                if (value.length > 2) {
-                  value = value.replace(/^(\d{2})(\d)/, "($1) $2");
-                }
-                if (value.length > 7) {
-                  value = value.replace(
-                    /^(\(\d{2}\)\s)(\d{5})(\d{1,4})/,
-                    "$1$2-$3"
-                  );
-                }
-                e.target.value = value;
-                setValue("telefone_principal", value);
+                const valorFormatado = formatarTelefone(e.target.value);
+                e.target.value = valorFormatado;
+                setValue("telefone_principal", valorFormatado);
               }}
             />
             {errors.telefone_principal && (
-              <p className="text-red-500 text-sm mt-2 font-medium">
+              <p className="text-odara-alerta text-sm mt-2 font-medium">
                 {errors.telefone_principal.message}
               </p>
             )}
+
             <label className="block text-sm font-medium text-odara-secondary mb-2 mt-4">
               Telefone Secundário
             </label>
@@ -367,28 +421,19 @@ export default function CadastroFuncionario({ funcionario }: Props) {
               placeholder="(11) 99999-9999"
               maxLength={15}
               onChange={(e) => {
-                let value = e.target.value.replace(/\D/g, "");
-                if (value.length > 2) {
-                  value = value.replace(/^(\d{2})(\d)/, "($1) $2");
-                }
-                if (value.length > 7) {
-                  value = value.replace(
-                    /^(\(\d{2}\)\s)(\d{5})(\d{1,4})/,
-                    "$1$2-$3"
-                  );
-                }
-                e.target.value = value;
-                setValue("telefone_secundario", value);
+                const valorFormatado = formatarTelefone(e.target.value);
+                e.target.value = valorFormatado;
+                setValue("telefone_secundario", valorFormatado);
               }}
             />
             {errors.telefone_secundario && (
-              <p className="text-red-500 text-sm mt-2 font-medium">
+              <p className="text-odara-alerta text-sm mt-2 font-medium">
                 {errors.telefone_secundario.message}
               </p>
             )}
           </div>
 
-          {/* Dados Profissionais */}
+          {/* Seção: Dados Profissionais */}
           <div className="md:col-span-2">
             <h3 className="text-xl font-semibold text-odara-primary mt-6">
               Dados Profissionais
@@ -405,7 +450,7 @@ export default function CadastroFuncionario({ funcionario }: Props) {
               placeholder="Cargo/função"
             />
             {errors.cargo && (
-              <p className="text-red-500 text-sm mt-2 font-medium">
+              <p className="text-odara-alerta text-sm mt-2 font-medium">
                 {errors.cargo.message}
               </p>
             )}
@@ -416,7 +461,6 @@ export default function CadastroFuncionario({ funcionario }: Props) {
               Papel <span className="text-odara-accent font-bold">*</span>
             </label>
             <select
-              //{...register("papel")}
               className="w-full px-4 py-3 bg-white rounded-xl border border-gray-200 text-odara-dark placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-odara-secondary focus:border-transparent bg-white"
             >
               <option value="funcionario" selected>
@@ -446,13 +490,13 @@ export default function CadastroFuncionario({ funcionario }: Props) {
               className="w-full px-4 py-3 bg-white rounded-xl border border-gray-200 text-odara-dark placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-odara-secondary focus:border-transparent"
             />
             {errors.data_admissao && (
-              <p className="text-red-500 text-sm mt-2 font-medium">
+              <p className="text-odara-alerta text-sm mt-2 font-medium">
                 {errors.data_admissao.message}
               </p>
             )}
           </div>
 
-          {/* Endereço */}
+          {/* Seção: Endereço */}
           <div className="md:col-span-2">
             <h3 className="text-xl font-semibold text-odara-primary mt-6">
               Endereço
@@ -461,34 +505,37 @@ export default function CadastroFuncionario({ funcionario }: Props) {
 
           <div>
             <label className="block text-sm font-medium text-odara-secondary mb-2">
-                CEP <span className="text-odara-accent font-bold">*</span>
-              </label>
-              <input
-                {...register("cep")}
-                className="w-full px-4 py-3 bg-white rounded-xl border border-gray-200 text-odara-dark placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-odara-secondary focus:border-transparent"
-                placeholder="00000-000"
-                maxLength={9}
-                onChange={(e) => {
-                  let value = e.target.value.replace(/\D/g, "");
-                  if (value.length > 5) {
-                    value = value.replace(/^(\d{5})(\d{1,3})/, "$1-$2");
-                  }
-                  e.target.value = value;
-                  setValue("cep", value);
-                }}
-              />
-          </div>
-          {isCepAutoFilled && (
-            <div className="md:col-span-3 flex items-center justify-center">
-              <button
-                type="button"
-                onClick={() => setIsCepAutoFilled(false)}
-                className="px-4 py-2 text-sm font-medium text-blue-600 bg-blue-50 border border-blue-200 rounded-lg hover:bg-blue-100 transition-colors"
-              >
-                🔓 Editar endereço manualmente
-              </button>
+              CEP <span className="text-odara-accent font-bold">*</span>
+            </label>
+            <div className="flex gap-3 items-start">
+              <div className="flex-1">
+                <input
+                  {...register("cep")}
+                  className="w-full px-4 py-3 bg-white rounded-xl border border-gray-200 text-odara-dark placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-odara-secondary focus:border-transparent"
+                  placeholder="00000-000"
+                  maxLength={9}
+                  onChange={(e) => {
+                    const valorFormatado = formatarCEP(e.target.value);
+                    e.target.value = valorFormatado;
+                    setValue("cep", valorFormatado);
+                  }}
+                />
+              </div>
+
+              {cepPreenchidoAutomaticamente && (
+                <div className="flex-shrink-0">
+                  <button
+                    type="button"
+                    onClick={() => setCepPreenchidoAutomaticamente(false)}
+                    className="flex items-center gap-2 px-4 py-3 text-sm font-medium text-odara-dropdown-accent bg-odara-dropdown border border-odara-dropdown-accent rounded-lg hover:bg-odara-dropdown-accent hover:text-odara-dropdown transition-colors whitespace-nowrap"
+                  >
+                    <LockKeyholeOpen size={15} className="text-odara-secondary" />
+                    Editar manualmente
+                  </button>
+                </div>
+              )}
             </div>
-          )}
+          </div>
 
           <div className="md:col-span-2">
             <label className="block text-sm font-medium text-odara-secondary mb-2">
@@ -496,15 +543,15 @@ export default function CadastroFuncionario({ funcionario }: Props) {
             </label>
             <input
               {...register("logradouro")}
-              disabled={isCepAutoFilled}
-              className={`w-full px-4 py-3 bg-white rounded-xl border border-gray-200 text-odara-dark placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-odara-secondary focus:border-transparent ${isCepAutoFilled
-                  ? "bg-gray-200 text-dark-600 cursor-not-allowed"
-                  : ""
+              disabled={cepPreenchidoAutomaticamente}
+              className={`w-full px-4 py-3 bg-white rounded-xl border border-gray-200 text-odara-dark placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-odara-secondary focus:border-transparent ${cepPreenchidoAutomaticamente
+                ? "bg-gray-200 text-dark-600 cursor-not-allowed"
+                : ""
                 }`}
               placeholder="Rua, Avenida, etc."
             />
             {errors.logradouro && (
-              <p className="text-red-500 text-sm mt-2 font-medium">
+              <p className="text-odara-alerta text-sm mt-2 font-medium">
                 {errors.logradouro.message}
               </p>
             )}
@@ -521,7 +568,7 @@ export default function CadastroFuncionario({ funcionario }: Props) {
               type="number"
             />
             {errors.numero && (
-              <p className="text-red-500 text-sm mt-2 font-medium">
+              <p className="text-odara-alerta text-sm mt-2 font-medium">
                 {errors.numero.message}
               </p>
             )}
@@ -544,15 +591,15 @@ export default function CadastroFuncionario({ funcionario }: Props) {
             </label>
             <input
               {...register("bairro")}
-              disabled={isCepAutoFilled}
-              className={`w-full px-4 py-3 bg-white rounded-xl border border-gray-200 text-odara-dark placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-odara-secondary focus:border-transparent ${isCepAutoFilled
-                  ? "bg-gray-200 text-dark-600 cursor-not-allowed"
-                  : ""
+              disabled={cepPreenchidoAutomaticamente}
+              className={`w-full px-4 py-3 bg-white rounded-xl border border-gray-200 text-odara-dark placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-odara-secondary focus:border-transparent ${cepPreenchidoAutomaticamente
+                ? "bg-gray-200 text-dark-600 cursor-not-allowed"
+                : ""
                 }`}
               placeholder="Bairro"
             />
             {errors.bairro && (
-              <p className="text-red-500 text-sm mt-2 font-medium">
+              <p className="text-odara-alerta text-sm mt-2 font-medium">
                 {errors.bairro.message}
               </p>
             )}
@@ -564,15 +611,15 @@ export default function CadastroFuncionario({ funcionario }: Props) {
             </label>
             <input
               {...register("cidade")}
-              disabled={isCepAutoFilled}
-              className={`w-full px-4 py-3 bg-white rounded-xl border border-gray-200 text-odara-dark placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-odara-secondary focus:border-transparent ${isCepAutoFilled
-                  ? "bg-gray-200 text-dark-600 cursor-not-allowed"
-                  : ""
+              disabled={cepPreenchidoAutomaticamente}
+              className={`w-full px-4 py-3 bg-white rounded-xl border border-gray-200 text-odara-dark placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-odara-secondary focus:border-transparent ${cepPreenchidoAutomaticamente
+                ? "bg-gray-200 text-dark-600 cursor-not-allowed"
+                : ""
                 }`}
               placeholder="Cidade"
             />
             {errors.cidade && (
-              <p className="text-red-500 text-sm mt-2 font-medium">
+              <p className="text-odara-alerta text-sm mt-2 font-medium">
                 {errors.cidade.message}
               </p>
             )}
@@ -584,22 +631,22 @@ export default function CadastroFuncionario({ funcionario }: Props) {
             </label>
             <input
               {...register("estado")}
-              disabled={isCepAutoFilled}
-              className={`w-full px-4 py-3 bg-white rounded-xl border border-gray-200 text-odara-dark placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-odara-secondary focus:border-transparent ${isCepAutoFilled
-                  ? "bg-gray-200 text-dark-600 cursor-not-allowed"
-                  : ""
+              disabled={cepPreenchidoAutomaticamente}
+              className={`w-full px-4 py-3 bg-white rounded-xl border border-gray-200 text-odara-dark placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-odara-secondary focus:border-transparent ${cepPreenchidoAutomaticamente
+                ? "bg-gray-200 text-dark-600 cursor-not-allowed"
+                : ""
                 }`}
               placeholder="SP"
               maxLength={2}
             />
             {errors.estado && (
-              <p className="text-red-500 text-sm mt-2 font-medium">
+              <p className="text-odara-alerta text-sm mt-2 font-medium">
                 {errors.estado.message}
               </p>
             )}
           </div>
 
-          {/* Contato de Emergência */}
+          {/* Seção: Contato de Emergência */}
           <div className="md:col-span-2">
             <h3 className="text-xl font-semibold text-odara-primary mt-6">
               Contato de Emergência
@@ -627,30 +674,22 @@ export default function CadastroFuncionario({ funcionario }: Props) {
               placeholder="(11) 99999-9999"
               maxLength={15}
               onChange={(e) => {
-                let value = e.target.value.replace(/\D/g, "");
-                if (value.length > 2) {
-                  value = value.replace(/^(\d{2})(\d)/, "($1) $2");
-                }
-                if (value.length > 7) {
-                  value = value.replace(
-                    /^(\(\d{2}\)\s)(\d{5})(\d{1,4})/,
-                    "$1$2-$3"
-                  );
-                }
-                e.target.value = value;
-                setValue("contato_emergencia_telefone", value);
+                const valorFormatado = formatarTelefone(e.target.value);
+                e.target.value = valorFormatado;
+                setValue("contato_emergencia_telefone", valorFormatado);
               }}
             />
           </div>
         </div>
 
+        {/* Botão de Submissão */}
         <div className="flex justify-end pt-6 ">
           <button
             type="submit"
-            disabled={isLoading}
+            disabled={carregando}
             className="flex items-center px-6 py-3 bg-odara-accent hover:bg-odara-secondary text-white rounded-lg hover:bg-blue-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors font-medium"
           >
-            {isLoading ? (
+            {carregando ? (
               <>
                 <Loader2 size={18} className="animate-spin mr-2" />
                 {funcionario ? "Salvando" : "Cadastrando"}...

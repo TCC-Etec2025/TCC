@@ -213,7 +213,7 @@ export default function Login() {
 
               <div className="text-center">
                 <a
-                  href="#"
+                  href="/senha"
                   className="text-sm text-odara-primary hover:text-odara-dark underline-offset-4 hover:underline"
                 >
                   Esqueceu a sua senha?

@@ -1,1101 +1,556 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { FaArrowLeft, FaChevronLeft, FaChevronRight, FaCheck, FaTimes, FaArrowUp, FaFilter } from 'react-icons/fa';
-import { Link } from 'react-router-dom';
-import Calendar from 'react-calendar';
-import 'react-calendar/dist/Calendar.css';
+import { useState, useEffect, useMemo } from 'react';
+import { 
+  FaCheck, FaTimes, FaFilter, FaMapMarkerAlt,
+  FaInfoCircle, FaCheckDouble, FaBan,
+  FaChevronDown, FaChevronRight, FaExclamationCircle 
+} from 'react-icons/fa';
+import { supabase } from '../../../lib/supabaseClient';
+import { useConclusaoAtividadeModal } from '../../../hooks/useConclusaoAtividadeModal';
+import type { ResidenteInput } from '../../../hooks/useConclusaoAtividadeModal';
+import { useObservacaoModal } from '../../../hooks/useObservacaoModal';
+
+type ResidenteBase = {
+  id: number;
+  nome: string;
+};
+
+type ResidenteNaAtividade = ResidenteBase & {
+  statusIndividual: string;
+};
+
+type Atividade = {
+  id: number;
+  residentes: ResidenteNaAtividade[];
+  nome: string;
+  categoria: string;
+  data: string;
+  horario_inicio: string;
+  horario_fim: string;
+  local: string;
+  observacao: string;
+  status: string;
+};
+
+type AtividadeResidente = {
+  id_atividade: number;
+  id_residente: number;
+  status: string;
+  observacao: string;
+};
+
+const getTodayString = () => {
+  const date = new Date();
+  const y = date.getFullYear();
+  const m = String(date.getMonth() + 1).padStart(2, '0');
+  const d = String(date.getDate()).padStart(2, '0');
+  return `${y}-${m}-${d}`;
+};
 
 const Atividades = () => {
-  // ===== ESTADOS DO COMPONENTE =====
+  const [atividades, setAtividades] = useState<Atividade[]>([]);
+  const [residentesList, setResidentesList] = useState<ResidenteBase[]>([]);
+  
+  const [datesExpanded, setDatesExpanded] = useState<Record<string, boolean>>({});
+  const [dateError, setDateError] = useState<string | null>(null);
 
-  // Estado para dados de exemplo
-  const [atividades, setAtividades] = useState([
-    // Atividades com datas dependentes da data atual (para fins de demonstração)
-    {
-      id: 1,
-      residente: "João Santos",
-      nomeAtividade: "Fisioterapia",
-      tipo: "Física",
-      horario: "09:00",
-      duracao: "45 minutos",
-      observacoes: "Exercícios de fortalecimento muscular",
-      local: "Sala de Fisioterapia",
-      periodo: "manha",
-      status: "pendente",
-      dataAtividade: new Date() // Hoje
-    },
+  const { openModalObservacoes, ObservacoesAtividade } = useConclusaoAtividadeModal();
+  const { openModal, ObservacaoModal } = useObservacaoModal();
 
-    {
-      id: 2,
-      residente: "Maria Oliveira",
-      nomeAtividade: "Hidroginástica",
-      tipo: "Física",
-      horario: "10:30",
-      duracao: "1 hora",
-      observacoes: "Piscina aquecida",
-      local: "Piscina",
-      periodo: "manha",
-      status: "pendente",
-      dataAtividade: new Date() // Hoje
-    },
+  const [filtros, setFiltros] = useState({
+    residente: null as number | null,
+    status: 'pendente' as string | null,
+    categoria: null as string | null,
+    startDate: getTodayString() as string | null,
+    endDate: getTodayString() as string | null,
+  });
 
-    {
-      id: 3,
-      residente: "Ana Fagundes",
-      nomeAtividade: "Oficina de Artes",
-      tipo: "Criativa",
-      horario: "14:00",
-      duracao: "1 hora",
-      observacoes: "Pintura em tela",
-      local: "Sala de Artes",
-      periodo: "tarde",
-      status: "concluido",
-      dataAtividade: new Date() // Hoje
-    },
+  useEffect(() => {
+    const fetchAtividades = async () => {
+      try {
+        const { data: atividadesData, error: atvError } = await supabase.from('atividade').select('*');
+        if (atvError) throw atvError;
 
-    {
-      id: 4,
-      residente: "Felipe Silva",
-      nomeAtividade: "Jogos de Memória",
-      tipo: "Cognitiva",
-      horario: "15:30",
-      duracao: "30 minutos",
-      observacoes: "Cartas e quebra-cabeças",
-      local: "Sala de Jogos",
-      periodo: "tarde",
-      status: "pendente",
-      dataAtividade: new Date() // Hoje
-    },
+        const { data: joinsData, error: joinError } = await supabase.from('atividade_residente').select('*');
+        if (joinError) throw joinError;
 
-    {
-      id: 5,
-      residente: "Roberta Costa",
-      nomeAtividade: "Musicoterapia",
-      tipo: "Musical",
-      horario: "16:00",
-      duracao: "45 minutos",
-      observacoes: "Instrumentos musicais",
-      local: "Sala de Música",
-      periodo: "tarde",
-      status: "pendente",
-      dataAtividade: new Date() // Hoje
-    },
+        const { data: resData, error: resError } = await supabase.from('residente').select('id, nome');
+        if (resError) throw resError;
 
-    {
-      id: 6,
-      residente: "Carlos Mendes",
-      nomeAtividade: "Cinema",
-      tipo: "Recreativa",
-      horario: "19:30",
-      duracao: "2 horas",
-      observacoes: "Sessão de filme semanal",
-      local: "Auditório",
-      periodo: "noite",
-      status: "pendente",
-      dataAtividade: new Date() // Hoje
-    },
+        const allResidentes = (resData || []) as ResidenteBase[];
+        const joins = (joinsData || []) as AtividadeResidente[];
+        const baseAtividades = (atividadesData || []) as Atividade[];
 
-    {
-      id: 7,
-      residente: "Beatriz Hishimoto",
-      nomeAtividade: "Yoga",
-      tipo: "Física",
-      horario: "08:00",
-      duracao: "1 hora",
-      observacoes: "Alongamento e relaxamento",
-      local: "Sala de Yoga",
-      periodo: "manha",
-      status: "pendente",
-      dataAtividade: new Date(new Date().setDate(new Date().getDate() - 3)) // 3 dias atrás (exemplo de data passada - dias)
-    },
+        const atividadesCompletas: Atividade[] = baseAtividades.map(atv => {
+          const relacoes = joins.filter(j => j.id_atividade === atv.id);
+          const residentesMapeados: ResidenteNaAtividade[] = relacoes.map(j => {
+            const dadosResidente = allResidentes.find(r => r.id === j.id_residente);
+            return dadosResidente ? {
+              ...dadosResidente,
+              statusIndividual: j.status || 'pendente'
+            } : null;
+          }).filter((r): r is ResidenteNaAtividade => !!r);
 
-    {
-      id: 8,
-      residente: "Ricardo Almeida",
-      nomeAtividade: "Bingo",
-      tipo: "Social",
-      horario: "17:00",
-      duracao: "1 hora",
-      observacoes: "Prêmios para os vencedores",
-      local: "Salão Principal",
-      periodo: "tarde",
-      status: "pendente",
-      dataAtividade: new Date(new Date().setDate(new Date().getDate() + 5)) // 5 dias depois (exemplo de data futura - dias)
-    }
-  ]);
+          return { ...atv, residentes: residentesMapeados };
+        });
 
-  // Estados para filtros
-  const [filtroStatus, setFiltroStatus] = useState('todos');
-  const [filtroResidente, setFiltroResidente] = useState('todos');
-  const [filtroData, setFiltroData] = useState(new Date());
-  const [filtroPeriodo, setFiltroPeriodo] = useState('todos');
-  const [filtroTipo, setFiltroTipo] = useState('todos');
-
-  // Estados para controle de interface
-  const [calendarioAberto, setCalendarioAberto] = useState(false);
-  const [filtroResidenteAberto, setFiltroResidenteAberto] = useState(false);
-  const [filtroStatusAberto, setFiltroStatusAberto] = useState(false);
-  const [filtroPeriodoAberto, setFiltroPeriodoAberto] = useState(false);
-  const [filtroTipoAberto, setFiltroTipoAberto] = useState(false);
-  const [mostrarScrollTop, setMostrarScrollTop] = useState(false);
-
-  // ===== CONSTANTES E CONFIGURAÇÕES =====
-
-  // Refs para os dropdowns
-  const statusRef = useRef(null);
-  const residenteRef = useRef(null);
-  const dataRef = useRef(null);
-  const periodoRef = useRef(null);
-  const tipoRef = useRef(null);
-
-  // Opções de status
-  const STATUS = {
-    TODOS: 'todos',
-    PENDENTE: 'pendente',
-    ATRASADO: 'atrasado',
-    CONCLUIDO: 'concluido'
-  };
-
-  // Rótulos para exibição do Título de acordo com o status
-  const ROTULOS_STATUS = {
-    [STATUS.TODOS]: "Todas as Atividades",
-    [STATUS.PENDENTE]: "Atividades Pendentes",
-    [STATUS.ATRASADO]: "Atividades em Atraso",
-    [STATUS.CONCLUIDO]: "Atividades Concluídas"
-  };
-
-  // Rótulos simplificados para as opções de filtros
-  const ROTULOS_FILTRO_STATUS = {
-    [STATUS.TODOS]: "Todos",
-    [STATUS.PENDENTE]: "Pendentes",
-    [STATUS.ATRASADO]: "Atrasados",
-    [STATUS.CONCLUIDO]: "Concluídos"
-  };
-
-  // Opções de período
-  const PERIODOS = {
-    TODOS: 'todos',
-    MANHA: 'manha',
-    TARDE: 'tarde',
-    NOITE: 'noite'
-  };
-
-  // Rótulos para exibição dos períodos
-  const ROTULOS_PERIODOS = {
-    [PERIODOS.TODOS]: "Todos",
-    [PERIODOS.MANHA]: "Manhã",
-    [PERIODOS.TARDE]: "Tarde",
-    [PERIODOS.NOITE]: "Noite"
-  };
-
-  // Opções de tipo de atividade
-  const TIPOS_ATIVIDADE = {
-    TODOS: 'todos',
-    ATIVIDADE_FISICA: 'fisica',
-    ATIVIDADE_COGNITIVA: 'cognitiva',
-    ATIVIDADE_CRIATIVA: 'criativa',
-    ATIVIDADE_MUSICAL: 'musical',
-    ATIVIDADE_SOCIAL: 'social',
-    ATIVIDADE_RECREATIVA: 'recreativa'
-  };
-
-  // Rótulos para exibição dos tipos
-  const ROTULOS_TIPOS = {
-    [TIPOS_ATIVIDADE.TODOS]: "Todos",
-    [TIPOS_ATIVIDADE.ATIVIDADE_FISICA]: "Física",
-    [TIPOS_ATIVIDADE.ATIVIDADE_COGNITIVA]: "Cognitiva",
-    [TIPOS_ATIVIDADE.ATIVIDADE_CRIATIVA]: "Criativa",
-    [TIPOS_ATIVIDADE.ATIVIDADE_MUSICAL]: "Musical",
-    [TIPOS_ATIVIDADE.ATIVIDADE_SOCIAL]: "Social",
-    [TIPOS_ATIVIDADE.ATIVIDADE_RECREATIVA]: "Recreativa"
-  };
-
-  // ===== FUNÇÕES AUXILIARES =====
-
-  // Função para obter lista única de residentes
-  const obterResidentes = () => {
-    return [...new Set(atividades.map(atv => atv.residente))];
-  };
-
-  // Função para obter lista única de tipos
-  const obterTipos = () => {
-    return [...new Set(atividades.map(atv => atv.tipo))];
-  };
-
-  // Função para formatar data para exibição
-  const formatarData = (data) => {
-    return data.toLocaleDateString('pt-BR', {
-      day: '2-digit',
-      month: '2-digit',
-      year: 'numeric'
-    });
-  };
-
-  // Função para extrair hora do horário (para ordenação)
-  const extrairHora = (horario) => {
-    const [hora, minuto] = horario.split(':').map(Number);
-    return hora * 60 + minuto; // Converter para minutos totais para facilitar ordenação
-  };
-
-  // Função para determinar o período baseado no horário
-  const obterPeriodoDoHorario = (horario) => {
-    const hora = parseInt(horario.split(':')[0]);
-    if (hora >= 6 && hora < 12) return PERIODOS.MANHA;
-    if (hora >= 12 && hora < 18) return PERIODOS.TARDE;
-    return PERIODOS.NOITE;
-  };
-
-  // Função para verificar se o horário já passou (considerando 10 minutos de tolerância)
-  const verificarHorarioPassou = (horario, duracao, dataAtividade) => {
-    const agora = new Date();
-    const [hora, minuto] = horario.split(':').map(Number);
-
-    // Criar objeto de data para o horário da atividade na data específica
-    const horarioAtividade = new Date(dataAtividade);
-    horarioAtividade.setHours(hora, minuto, 0, 0);
-
-    // Converter duração string para milissegundos
-    const duracaoEmMs = converterDuracaoParaMs(duracao);
-
-    // Calcular horário final (início + duração + 10min tolerância)
-    const horarioFinal = new Date(horarioAtividade.getTime() + duracaoEmMs + 10 * 60 * 1000);
-
-    return agora > horarioFinal;
-  };
-
-  // Função auxiliar para converter string de duração para milissegundos
-  const converterDuracaoParaMs = (duracao) => {
-    if (!duracao) return 0;
-    const duracaoLower = duracao.toLowerCase();
-
-    // Extrair números da string
-    const numeros = duracaoLower.match(/\d+/g);
-    if (!numeros || numeros.length === 0) return 0;
-
-    const valor = parseInt(numeros[0]);
-
-    // Verificar unidades de tempo
-    if (duracaoLower.includes('hora') || duracaoLower.includes('hr') || duracaoLower.includes('h')) {
-      return valor * 60 * 60 * 1000; // horas para ms
-    } 
-    
-    else if (duracaoLower.includes('minuto') || duracaoLower.includes('min') || duracaoLower.includes('m')) {
-      return valor * 60 * 1000; // minutos para ms
-    } 
-    
-    else if (duracaoLower.includes('segundo') || duracaoLower.includes('seg') || duracaoLower.includes('s')) {
-      return valor * 1000; // segundos para ms
-    }
-
-    // Se não reconhecer a unidade, assume que são minutos
-    return valor * 60 * 1000;
-  };
-
-  // Função para verificar se a atividade é para a data selecionada
-  const ehParaDataSelecionada = (dataAtividade) => {
-    const dataSelecionada = new Date(filtroData);
-    dataSelecionada.setHours(0, 0, 0, 0);
-
-    const dataAtv = new Date(dataAtividade);
-    dataAtv.setHours(0, 0, 0, 0);
-
-    return dataAtv.getTime() === dataSelecionada.getTime();
-  };
-
-  // Função para determinar o status dinâmico da atividade
-  const obterStatusDinamico = (atividade) => {
-    // Se já foi concluída manualmente, mantém o status
-    if (atividade.status === 'concluido') {
-      return 'concluido';
-    }
-
-    // Verificar se a atividade é para a data selecionada
-    if (ehParaDataSelecionada(atividade.dataAtividade)) {
-      // Se é para hoje e o horário já passou, marca como atrasado
-      if (verificarHorarioPassou(atividade.horario, atividade.duracao, atividade.dataAtividade)) {
-        return 'atrasado';
+        setAtividades(atividadesCompletas);
+        setResidentesList(allResidentes);
+      } catch (err) {
+        console.error('Erro ao buscar atividades:', err);
       }
-      // Se é para hoje mas o horário ainda não passou, mantém como pendente
-      return 'pendente';
-    }
-
-    // Se não é para a data selecionada, verifica se é uma data passada
-    const dataSelecionada = new Date(filtroData);
-    dataSelecionada.setHours(0, 0, 0, 0);
-
-    const dataAtv = new Date(atividade.dataAtividade);
-    dataAtv.setHours(0, 0, 0, 0);
-
-    if (dataAtv < dataSelecionada) {
-      // Se é para uma data passada e não foi concluída, marca como atrasado
-      return 'atrasado';
-    }
-
-    // Se é para uma data futura, mantém como pendente
-    return 'pendente';
-  };
-
-  // ===== FUNÇÕES DE FILTRAGEM E ORDENAÇÃO =====
-
-  // Função principal para filtrar atividades
-  const obterAtividadesFiltradas = () => {
-    return atividades
-      .filter(atividade => {
-        // Verificar se a atividade é para a data selecionada
-        const passaData = ehParaDataSelecionada(atividade.dataAtividade);
-        if (!passaData) return false;
-
-        // Aplicar status dinâmico para atividades não concluídas
-        const statusFinal = obterStatusDinamico(atividade);
-
-        // Filtro por status (agora usando statusFinal)
-        const passaStatus = filtroStatus === STATUS.TODOS || statusFinal === filtroStatus;
-
-        // Filtro por residente
-        const passaResidente = filtroResidente === 'todos' || atividade.residente === filtroResidente;
-
-        // Filtro por período
-        let passaPeriodo = true;
-        if (filtroPeriodo !== PERIODOS.TODOS) {
-          const periodoAtividade = obterPeriodoDoHorario(atividade.horario);
-          passaPeriodo = periodoAtividade === filtroPeriodo;
-        }
-
-        // Filtro por tipo
-        const passatipo = filtroTipo === TIPOS_ATIVIDADE.TODOS || atividade.tipo === filtroTipo;
-
-        return passaStatus && passaResidente && passaPeriodo && passatipo;
-      })
-
-      .map(atividade => {
-        // Adicionar statusFinal à atividade para uso na renderização
-        const statusFinal = obterStatusDinamico(atividade);
-        return {
-          ...atividade,
-          statusFinal: statusFinal
-        };
-      })
-
-      .sort((a, b) => {
-        // Ordenar primariamente por horário (mais cedo primeiro)
-        const horaA = extrairHora(a.horario);
-        const horaB = extrairHora(b.horario);
-        if (horaA !== horaB) return horaA - horaB;
-
-        // Secundariamente por nome do residente (ordem alfabética)
-        return a.residente.localeCompare(b.residente);
-      });
-  };
-
-  // Função para agrupar atividades por período
-  const agruparPorPeriodo = (atividades) => {
-    const grupos = {
-      [PERIODOS.MANHA]: [],
-      [PERIODOS.TARDE]: [],
-      [PERIODOS.NOITE]: []
     };
 
-    atividades.forEach(atividade => {
-      const periodo = obterPeriodoDoHorario(atividade.horario);
-      grupos[periodo].push(atividade);
+    fetchAtividades();
+  }, []);
+
+  const gruposAtividades = useMemo(() => {
+    const { residente, status, categoria, startDate, endDate } = filtros;
+
+    const filtradas = atividades.filter(atv => {
+      if (residente && !(atv.residentes || []).some(r => r.id === residente)) return false;
+      if (status && status !== '' && atv.status !== status) return false;
+      if (categoria && atv.categoria !== categoria) return false;
+      
+      if (startDate && endDate) {
+        if (atv.data < startDate || atv.data > endDate) return false;
+      } else if (startDate) {
+        if (atv.data < startDate) return false;
+      } else if (endDate) {
+        if (atv.data > endDate) return false;
+      }
+      return true;
     });
 
-    return grupos;
-  };
+    filtradas.sort((a, b) => {
+      if (a.data !== b.data) return a.data.localeCompare(b.data);
+      return a.horario_inicio.localeCompare(b.horario_inicio);
+    });
 
-  // ===== FUNÇÕES DE CONTROLE DE DATA =====
+    const grupos: Record<string, Atividade[]> = {};
+    filtradas.forEach(atv => {
+      const dataKey = atv.data || 'Sem Data';
+      if (!grupos[dataKey]) grupos[dataKey] = [];
+      grupos[dataKey].push(atv);
+    });
 
-  // Ir para o dia anterior
-  const irParaOntem = () => {
-    const ontem = new Date(filtroData);
-    ontem.setDate(ontem.getDate() - 1);
-    setFiltroData(ontem);
-  };
+    const listaGrupos = Object.keys(grupos).sort().map(dataKey => ({
+      data: dataKey,
+      dataFormatada: dataKey.split('-').reverse().join('/'),
+      itens: grupos[dataKey],
+      isExpandido: datesExpanded[dataKey] !== false 
+    }));
 
-  // Voltar para hoje
-  const irParaHoje = () => {
-    setFiltroData(new Date());
-  };
+    return listaGrupos;
+  }, [atividades, filtros, datesExpanded]);
 
-  // Ir para o dia seguinte
-  const irParaAmanha = () => {
-    const amanha = new Date(filtroData);
-    amanha.setDate(amanha.getDate() + 1);
-    setFiltroData(amanha);
-  };
-
-  // ===== FUNÇÕES DE CONTROLE DE SCROLL =====
-
-  // Verificar se deve mostrar botão de scroll para topo
-  const verificarScroll = () => {
-    const container = document.getElementById('checklist-container');
-
-    // Verificar scroll da página OU do container
-    const scrollPagina = window.scrollY > 100;
-    const scrollContainer = container ? container.scrollTop > 100 : false;
-
-    setMostrarScrollTop(scrollPagina || scrollContainer);
-  };
-
-  // Scroll para o topo da página e do container
-  const scrollParaTopo = () => {
-    // Rolar a página inteira para o topo
-    window.scrollTo({ top: 0, behavior: 'smooth' });
-
-    // Rolar o container para o topo
-    const container = document.getElementById('checklist-container');
-    if (container) {
-      container.scrollTo({ top: 0, behavior: 'smooth' });
-    }
-  };
-
-  // ===== FUNÇÕES DE CONTROLE DE CONCLUSÃO =====
-
-  // Alternar status de conclusão da atividade
-  const toggleConclusao = (id) => {
-    setAtividades(anterior => anterior.map(atv => {
-      if (atv.id === id) {
-        // Se está como concluído, volta para pendente
-        // Se não está como concluído, marca como concluído
-        const novoStatus = atv.status === 'concluido' ? 'pendente' : 'concluido';
-        return { ...atv, status: novoStatus };
-      }
-
-      return atv;
+  const totalAtividades = gruposAtividades.reduce((acc, grupo) => acc + grupo.itens.length, 0);
+  
+  const toggleDate = (dataKey: string) => {
+    setDatesExpanded(prev => ({
+      ...prev,
+      [dataKey]: !(prev[dataKey] !== false)
     }));
   };
+  
+  const toggleStatusResidente = async (idAtividade: number, idResidente: number, statusAtual: string) => {
+    const novoStatus = statusAtual === 'participou' ? 'nao-participou' : 'participou';
+    try {
+      const obs = await openModal();
+      if (obs && novoStatus === 'nao-participou') return;
+      const { error } = await supabase
+        .from('atividade_residente')
+        .update({ status: novoStatus, observacao: obs || '' })
+        .match({ id_atividade: idAtividade, id_residente: idResidente });
 
-  // ===== RENDERIZAÇÃO DOS COMPONENTES =====
+      if (error) throw error;
 
-  // Renderizar header do card baseado no status
-  const renderizarHeaderCard = (atividade) => {
-    // Usar statusFinal que combina status manual e dinâmico
-    const status = atividade.statusFinal;
-
-    const configs = {
-      [STATUS.CONCLUIDO]: {
-        corBolinha: 'bg-green-500',
-        corCheckbox: 'text-green-500 border-green-500',
-        corTarja: 'bg-green-500 text-white',
-        corFundo: 'bg-green-50 border-b border-green-200',
-        texto: 'Concluído',
-        icone: <FaCheck size={10} />
-      },
-
-      [STATUS.PENDENTE]: {
-        corBolinha: 'bg-yellow-500',
-        corCheckbox: 'text-yellow-500 border-yellow-500',
-        corTarja: 'bg-yellow-500 text-white',
-        corFundo: 'bg-yellow-50 border-b border-yellow-200',
-        texto: 'Pendente',
-        icone: <FaTimes size={10} />
-      },
-
-      [STATUS.ATRASADO]: {
-        corBolinha: 'bg-red-500',
-        corCheckbox: 'text-red-500 border-red-500',
-        corTarja: 'bg-red-500 text-white',
-        corFundo: 'bg-red-50 border-b border-red-200',
-        texto: 'Atrasado',
-        icone: <FaTimes size={10} />
-      }
-    };
-
-    const config = configs[status];
-
-    return (
-      <div className={`flex items-center justify-between p-3 rounded-t-lg ${config.corFundo}`}>
-        {/* Lado esquerdo: bolinha e horário */}
-        <div className="flex items-center">
-          <div className={`w-3 h-3 rounded-full ${config.corBolinha} mr-3`}></div>
-          <span className="font-semibold">{atividade.horario}</span>
-        </div>
-
-        {/* Lado direito: checkbox e tarja de status */}
-        <div className="flex items-center gap-2">
-          <button
-            onClick={() => toggleConclusao(atividade.id)}
-            className={`w-6 h-6 border-2 rounded flex items-center justify-center ${config.corCheckbox} hover:opacity-80 transition-opacity`}
-          >
-            {config.icone}
-          </button>
-
-          <span className={`text-xs px-2 py-1 rounded-full ${config.corTarja}`}>
-            {config.texto}
-          </span>
-        </div>
-      </div>
-    );
-  };
-
-  // Renderizar linha divisória entre períodos
-  const renderizarDivisorPeriodo = (periodo) => {
-    const rotulos = {
-      [PERIODOS.MANHA]: "Período da Manhã",
-      [PERIODOS.TARDE]: "Período da Tarde",
-      [PERIODOS.NOITE]: "Período da Noite"
-    };
-
-    return (
-      <div className="flex items-center my-4">
-        <div className="flex-1 border-t border-gray-300"></div>
-        <span className="mx-4 text-sm font-medium text-gray-600">
-          {rotulos[periodo]}
-        </span>
-        <div className="flex-1 border-t border-gray-300"></div>
-      </div>
-    );
-  };
-
-  // ===== EFEITOS ===== 
-
-  // Configurar listeners de scroll
-  useEffect(() => {
-    const container = document.getElementById('checklist-container');
-
-    // Listener para scroll da página
-    window.addEventListener('scroll', verificarScroll);
-
-    // Listener para scroll do container
-    if (container) {
-      container.addEventListener('scroll', verificarScroll);
+      setAtividades(prev => prev.map(atv => {
+        if (atv.id !== idAtividade) return atv;
+        const novosResidentes = atv.residentes.map(r =>
+          r.id === idResidente ? { ...r, statusIndividual: novoStatus } : r
+        );
+        return { ...atv, residentes: novosResidentes };
+      }));
+    } catch {
+      // cancelado
     }
+  };
 
-    return () => {
-      window.removeEventListener('scroll', verificarScroll);
-      if (container) {
-        container.removeEventListener('scroll', verificarScroll);
+const handleConcluirAtividade = async (atividade: Atividade) => {
+    const residentesParaModal: ResidenteInput[] = atividade.residentes.map(r => ({
+      id: r.id,
+      nome: r.nome,
+      status: r.statusIndividual,
+      observacao: ''
+    }));
+    residentesParaModal.sort((a, b) => a.nome.localeCompare(b.nome));
+
+    const resultado = await openModalObservacoes(atividade.observacao, residentesParaModal);
+
+    if (!resultado) return;
+
+    try {
+      const { error: errorAtv } = await supabase
+        .from('atividade')
+        .update({ 
+            status: 'concluido',
+            observacao: resultado.observacaoGeral 
+        })
+        .eq('id', atividade.id);
+
+      if (errorAtv) throw errorAtv;
+
+      const updates = resultado.residentesAtualizados.map(async (res) => {
+        return supabase
+          .from('atividade_residente')
+          .update({ 
+            status: res.status,
+            observacao: res.observacao 
+          })
+          .match({ id_atividade: atividade.id, id_residente: res.id });
+      });
+
+      await Promise.all(updates);
+
+      setAtividades(prev => prev.map(a => {
+        if (a.id !== atividade.id) return a;
+        
+        return {
+          ...a,
+          status: 'concluido',
+          observacao: resultado.observacaoGeral,
+          residentes: a.residentes.map(r => {
+             const atualizado = resultado.residentesAtualizados.find(x => x.id === r.id);
+             return atualizado ? { ...r, statusIndividual: atualizado.status } : r;
+          })
+        };
+      }));
+
+    } catch {
+      // cancelado
+    }
+  };
+
+  const handleCancelarAtividade = async (atividade: Atividade) => {
+      const residentesIds = atividades.find(a => a.id === atividade.id)?.residentes.map(r => r.id) || [];
+      try {
+        const obs = await openModal();
+        if (obs) {
+          const { error } = await supabase
+            .from('atividade')
+            .update({ status: 'cancelado' })
+            .eq('id', atividade.id);
+  
+          if (error) throw error;
+  
+        const updates = residentesIds.map(async (idResidente) => {
+          return supabase
+            .from('atividade_residente')
+            .update({ 
+              status: 'cancelado',
+              observacao: obs 
+            })
+            .match({ id_atividade: atividade.id, id_residente: idResidente });
+        });
+  
+        await Promise.all(updates);
+  
+        setAtividades(prev => prev.map(a => {
+          if (a.id !== atividade.id) return a;
+          return { ...a, status: 'cancelado' };
+        }));
       }
+    } catch {
+        // cancelado
+    }
     };
-  }, []);
-
-  // Efeito para atualizar status dinamicamente a cada minuto
-  useEffect(() => {
-    const interval = setInterval(() => {
-      // Forçar re-render para atualizar status dinâmicos
-      setAtividades(anterior => [...anterior]);
-    }, 60000); // Atualizar a cada minuto
-
-    return () => clearInterval(interval);
-  }, []);
-
-  // Efeito para fechar dropdowns ao clicar fora
-  useEffect(() => {
-    const handleClickOutside = (event) => {
-      if (statusRef.current && !statusRef.current.contains(event.target)) {
-        setFiltroStatusAberto(false);
-      }
-      if (residenteRef.current && !residenteRef.current.contains(event.target)) {
-        setFiltroResidenteAberto(false);
-      }
-      if (dataRef.current && !dataRef.current.contains(event.target)) {
-        setCalendarioAberto(false);
-      }
-      if (periodoRef.current && !periodoRef.current.contains(event.target)) {
-        setFiltroPeriodoAberto(false);
-      }
-      if (tipoRef.current && !tipoRef.current.contains(event.target)) {
-        setFiltroTipoAberto(false);
-      }
-    };
-
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
-    };
-  }, []);
-
-  // ===== DADOS COMPUTADOS =====
-
-  const atividadesFiltradas = obterAtividadesFiltradas();
-  const atividadesAgrupadas = agruparPorPeriodo(atividadesFiltradas);
-  const residentes = obterResidentes();
-  const tipos = obterTipos();
-  const totalAtividades = atividadesFiltradas.length;
 
   return (
     <div className="flex min-h-screen bg-odara-offwhite">
       <div className="flex-1 flex flex-col items-center px-4 py-6 lg:px-10 lg:py-10">
 
-        {/* ===== CABEÇALHO DA PÁGINA ===== */}
         <div className="w-full max-w-6xl mb-6">
-          <div className="flex items-center justify-center">
-            {/* Título da página */}
-            <div className="flex items-center">
-              {/* Título da página */}
-              <h1 className="text-2xl lg:text-3xl font-bold text-odara-dark">
-                Checklist de Atividades
-              </h1>
-            </div>
+          <div className="flex items-center">
+            <h1 className="text-2xl lg:text-3xl font-bold text-odara-dark">
+              Checklist de Atividades
+            </h1>
           </div>
         </div>
 
-        {/* ===== BARRA DE FILTROS ===== */}
-        <div className="w-full max-w-6xl flex flex-wrap justify-center gap-2 mb-6">
-          {/* Filtro de Status */}
-          <div className="relative" ref={statusRef}>
-            <button
-              className={`flex items-center bg-white rounded-full px-3 py-2 shadow-sm border-2 font-medium hover:border-odara-primary transition text-sm
-                ${filtroStatusAberto
-                  ? 'border-odara-primary text-gray-700'
-                  : 'border-odara-primary/40 text-gray-700'
-                } 
-              `}
-
-              onClick={() => {
-                setFiltroStatusAberto(!filtroStatusAberto);
-                setFiltroResidenteAberto(false);
-                setFiltroPeriodoAberto(false);
-                setFiltroTipoAberto(false);
-                setCalendarioAberto(false);
-              }}
-            >
-              <FaFilter className="text-odara-accent mr-2" />
-              Status
-            </button>
-
-            {filtroStatusAberto && (
-              <div className="absolute mt-2 w-23 bg-white rounded-lg shadow-lg !border-2 !border-odara-primary z-10">
-                {Object.entries(ROTULOS_FILTRO_STATUS).map(([valor, rotulo]) => (
-                  <button
-                    key={valor}
-                    onClick={() => {
-                      setFiltroStatus(valor);
-                      setFiltroStatusAberto(false);
-                    }}
-
-                    className={`block w-full text-left px-2 py-2 text-sm hover:!bg-odara-primary/20 
-                      ${filtroStatus === valor
-                        ? '!bg-odara-accent/20 font-semibold'
-                        : '!border-1 !border-odara-contorno !rounded'
-                      }
-                    `}
-                  >
-                    {rotulo}
-                  </button>
-                ))}
-              </div>
-            )}
+        <div className="w-full max-w-6xl mb-4">
+          <div className="mt-1 text-md text-gray-700">
+            {filtros.startDate && filtros.endDate
+              ? filtros.startDate === filtros.endDate
+                ? `Atividades de ${filtros.startDate.split('-').reverse().join('/')}`
+                : `Atividades de ${filtros.startDate.split('-').reverse().join('/')} até ${filtros.endDate.split('-').reverse().join('/')}`
+              : "Todas as atividades"}
           </div>
-
-          {/* Filtro de Residentes */}
-          <div className="relative" ref={residenteRef}>
-            <button
-              className={`flex items-center bg-white rounded-full px-3 py-2 shadow-sm border-2 font-medium hover:border-odara-primary transition text-sm
-                ${filtroResidenteAberto
-                  ? 'border-odara-primary text-gray-700'
-                  : 'border-odara-primary/40 text-gray-700'
-                } 
-              `}
-
-              onClick={() => {
-                setFiltroResidenteAberto(!filtroResidenteAberto);
-                setFiltroStatusAberto(false);
-                setFiltroPeriodoAberto(false);
-                setFiltroTipoAberto(false);
-                setCalendarioAberto(false);
-              }}
-            >
-              <FaFilter className="text-odara-accent mr-2" />
-              Residentes
-            </button>
-
-            {filtroResidenteAberto && (
-              <div className="absolute mt-2 w-33 bg-white rounded-lg shadow-lg !border-2 !border-odara-primary z-10 max-h-60 overflow-y-auto">
-                <button
-                  onClick={() => {
-                    setFiltroResidente('todos');
-                    setFiltroResidenteAberto(false);
-                  }}
-
-                  className={`block w-full text-left px-2 py-2 text-sm hover:!bg-odara-primary/20 
-                    ${filtroResidente === 'todos'
-                      ? '!bg-odara-accent/20 font-semibold'
-                      : '!border-1 !border-odara-contorno !rounded'
-                    }
-                  `}
-                >
-                  Todos
-                </button>
-
-                <button
-                  onClick={() => {
-                    setFiltroResidente('meus');
-                    setFiltroResidenteAberto(false);
-                  }}
-
-                  className={`block w-full text-left px-2 py-2 text-sm hover:!bg-odara-primary/20 
-                    ${filtroResidente === 'meus'
-                      ? '!bg-odara-accent/20 font-semibold'
-                      : '!border-1 !border-odara-contorno'
-                    }
-                  `}
-                >
-                  Meus
-                </button>
-
-                {residentes.map(residente => (
-                  <button
-                    key={residente}
-                    onClick={() => {
-                      setFiltroResidente(residente);
-                      setFiltroResidenteAberto(false);
-                    }}
-
-                    className={`block w-full text-left px-2 py-2 text-sm hover:!bg-odara-primary/20 
-                      ${filtroResidente === residente
-                        ? '!bg-odara-accent/20 font-semibold'
-                        : '!border-1 !border-odara-contorno !rounded'
-                      }
-                    `}
-                  >
-                    {residente}
-                  </button>
-                ))}
-              </div>
-            )}
-          </div>
-
-          {/* Filtro de Data */}
-          <div className="relative" ref={dataRef}>
-            <button
-              className={`flex items-center bg-white rounded-full px-3 py-2 shadow-sm border-2 font-medium hover:border-odara-primary transition text-sm 
-                ${calendarioAberto
-                  ? 'border-odara-primary text-gray-700'
-                  : 'border-odara-primary/40 text-gray-700'
-                }
-              `}
-
-              onClick={() => {
-                setCalendarioAberto(!calendarioAberto);
-                setFiltroStatusAberto(false);
-                setFiltroResidenteAberto(false);
-                setFiltroPeriodoAberto(false);
-                setFiltroTipoAberto(false);
-              }}
-            >
-              <FaFilter className="text-odara-accent mr-2" />
-              Data
-            </button>
-
-            {calendarioAberto && (
-              <div className="absolute mt-2 bg-white !rounded-lg shadow-lg border-2 p-2 !border-odara-primary z-10">
-                <Calendar
-                  value={filtroData}
-                  onChange={(data) => {
-                    setFiltroData(data);
-                    setCalendarioAberto(false);
-                  }}
-
-                  locale="pt-BR"
-                  tileClassName={({ date, view }) => {
-                    if (view === 'month') {
-                      // Criar datas normalizadas (apenas ano, mês, dia)
-                      const hoje = new Date();
-                      const hojeNormalizado = new Date(hoje.getFullYear(), hoje.getMonth(), hoje.getDate());
-                      const dataSelecionadaNormalizada = new Date(filtroData.getFullYear(), filtroData.getMonth(), filtroData.getDate());
-                      const dataTileNormalizada = new Date(date.getFullYear(), date.getMonth(), date.getDate());
-
-                      // Verificar se é a data selecionada (filtrada)
-                      if (dataTileNormalizada.getTime() === dataSelecionadaNormalizada.getTime()) {
-                        return '!rounded !bg-odara-accent/20 !text-odara-accent !font-bold';
-                      }
-
-                      // Verificar se é hoje
-                      if (dataTileNormalizada.getTime() === hojeNormalizado.getTime()) {
-                        return '!rounded !bg-odara-primary/20 !text-odara-primary !font-bold';
-                      }
-                    }
-
-                    return '!border-1 !border-odara-contorno hover:!bg-odara-white hover:!border-odara-primary !rounded hover:!border-1';
-                  }}
-                />
-              </div>
-            )}
-          </div>
-
-          {/* Filtro de Período */}
-          <div className="relative" ref={periodoRef}>
-            <button
-              className={`flex items-center bg-white rounded-full px-3 py-2 shadow-sm border-2 font-medium hover:border-odara-primary transition text-sm
-                ${filtroPeriodoAberto
-                  ? 'border-odara-primary text-gray-700'
-                  : 'border-odara-primary/40 text-gray-700'
-                }
-              `}
-
-              onClick={() => {
-                setFiltroPeriodoAberto(!filtroPeriodoAberto);
-                setFiltroStatusAberto(false);
-                setFiltroResidenteAberto(false);
-                setFiltroTipoAberto(false);
-                setCalendarioAberto(false);
-              }}
-            >
-              <FaFilter className="text-odara-accent mr-2" />
-              Período
-            </button>
-            {filtroPeriodoAberto && (
-              <div className="absolute mt-2 w-25 bg-white rounded-lg shadow-lg !border-2 !border-odara-primary z-10">
-                {Object.entries(ROTULOS_PERIODOS).map(([valor, rotulo]) => (
-                  <button
-                    key={valor}
-                    onClick={() => {
-                      setFiltroPeriodo(valor);
-                      setFiltroPeriodoAberto(false);
-                    }}
-
-                    className={`block w-full text-left px-2 py-2 text-sm hover:!bg-odara-primary/20 
-                      ${filtroPeriodo === valor
-                        ? '!bg-odara-accent/20 font-semibold'
-                        : '!border-1 !border-odara-contorno !rounded'
-                      }
-                    `}
-                  >
-                    {rotulo}
-                  </button>
-                ))}
-              </div>
-            )}
-          </div>
-
-          {/* Filtro de Tipo */}
-          <div className="relative" ref={tipoRef}>
-            <button
-              className={`flex items-center bg-white rounded-full px-3 py-2 shadow-sm border-2 font-medium hover:border-odara-primary transition text-sm
-                ${filtroTipoAberto
-                  ? 'border-odara-primary text-gray-700'
-                  : 'border-odara-primary/40 text-gray-700'
-                }
-              `}
-
-              onClick={() => {
-                setFiltroTipoAberto(!filtroTipoAberto);
-                setFiltroStatusAberto(false);
-                setFiltroResidenteAberto(false);
-                setFiltroPeriodoAberto(false);
-                setCalendarioAberto(false);
-              }}
-            >
-              <FaFilter className="text-odara-accent mr-2" />
-              Tipo
-            </button>
-            {filtroTipoAberto && (
-              <div className="absolute mt-2 w-25 bg-white rounded-lg shadow-lg !border-2 !border-odara-primary z-10 max-h-60 overflow-y-auto">
-                <button
-                  onClick={() => {
-                    setFiltroTipo(TIPOS_ATIVIDADE.TODOS);
-                    setFiltroTipoAberto(false);
-                  }}
-
-                  className={`block w-full text-left px-2 py-2 text-sm hover:!bg-odara-primary/20 
-                    ${filtroTipo === TIPOS_ATIVIDADE.TODOS
-                      ? '!bg-odara-accent/20 font-semibold'
-                      : '!border-1 !border-odara-contorno !rounded'
-                    }
-                  `}
-                >
-                  Todos
-                </button>
-
-                {tipos.map(tipo => (
-                  <button
-                    key={tipo}
-                    onClick={() => {
-                      setFiltroTipo(tipo);
-                      setFiltroTipoAberto(false);
-                    }}
-
-                    className={`block w-full text-left px-2 py-2 text-sm hover:!bg-odara-primary/20 
-                      ${filtroTipo === tipo
-                        ? '!bg-odara-accent/20 font-semibold'
-                        : '!border-1 !border-odara-contorno !rounded'
-                      }
-                    `}
-                  >
-                    {tipo}
-                  </button>
-                ))}
-              </div>
-            )}
-          </div>
-
-          {/* Botão Limpar Todos os Filtros */}
-          {(filtroData.toDateString() !== new Date().toDateString() || filtroResidente !== 'todos' || filtroStatus !== 'todos' || filtroPeriodo !== 'todos' || filtroTipo !== 'todos') && (
-            <button
-              onClick={() => {
-                setFiltroStatus('todos');
-                setFiltroResidente('todos');
-                setFiltroData(new Date());
-                setFiltroPeriodo('todos');
-                setFiltroTipo('todos');
-              }}
-
-              className="flex items-center bg-odara-accent text-odara-white rounded-full px-3 py-2 shadow-sm font-medium hover:bg-odara-secondary transition text-sm"
-            >
-              <FaTimes className="mr-1" /> Limpar Filtros
-            </button>
-          )}
         </div>
 
-        {/* ===== CONTAINER PRINCIPAL DO CHECKLIST ===== */}
-        <div className="w-full bg-white border-l-4 border-odara-primary rounded-2xl shadow-lg p-4 lg:p-6 relative mx-2 md:mx-4 lg:mx-6">
+        {/* --- FILTROS --- */}
+        <details className="mb-6 w-full max-w-6xl">
+          <summary className="inline-flex items-center px-4 py-2 bg-odara-dark text-white rounded cursor-pointer text-sm font-medium select-none w-full lg:w-auto justify-center hover:bg-opacity-90 transition-opacity">
+            <FaFilter className="mr-2" /> Filtrar Lista
+          </summary>
 
-          {/* ===== CONTROLES DE DATA E TÍTULO ===== */}
-          <div className="flex flex-col items-center mb-4">
-            {/* Controles de navegação de data - Centralizado */}
-            <div className="flex items-center gap-2 mb-4">
-              <button
-                onClick={irParaOntem}
-                className="p-2 text-odara-accent hover:text-odara-secondary transition-colors"
-                title="Dia anterior"
-              >
-                <FaChevronLeft />
-              </button>
+          <form
+            className="mt-3 bg-white p-4 rounded shadow-sm border"
+            onSubmit={e => {
+              e.preventDefault();
+              const form = new FormData(e.target as HTMLFormElement);
 
-              <button
-                onClick={irParaHoje}
-                className="bg-odara-accent hover:bg-odara-secondary text-white font-medium py-2 px-4 rounded-lg transition-colors text-sm lg:text-base"
-              >
-                Ir para Hoje
-              </button>
+              const startStr = form.get("startDate") as string;
+              const endStr = form.get("endDate") as string;
 
-              <button
-                onClick={irParaAmanha}
-                className="p-2 text-odara-accent hover:text-odara-secondary transition-colors"
-                title="Próximo dia"
-              >
-                <FaChevronRight />
-              </button>
-            </div>
+              if (startStr && endStr && startStr > endStr) {
+                setDateError("A data final não pode ser antes que a inicial.");
+                return;
+              }
 
-            {/* ===== TÍTULO E CONTADOR ===== */}
-            <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4 my-4 text-center sm:text-left">
-              {/* Título */}
-              <h2 className="text-2xl lg:text-4xl md:text-4xl font-bold text-odara-dark">
-                {ROTULOS_STATUS[filtroStatus]}
-              </h2>
-
-              {/* Contador */}
-              <span className="bg-gray-200 text-gray-700 px-3 py-1 rounded-full text-sm font-medium">
-                Total: {totalAtividades}
-              </span>
-            </div>
-
-            {/* ===== TARJAS DE FILTROS ATIVOS ===== */}
-            <div className="flex flex-wrap justify-center gap-2 mb-4">
-              {/* Tarja de Status (apenas quando filtrado) */}
-              {filtroStatus !== STATUS.TODOS && (
-                <span className="bg-odara-dropdown-accent/20 text-odara-dropdown-accent font-bold px-3 py-1 rounded-full text-sm">
-                  Status: {ROTULOS_FILTRO_STATUS[filtroStatus]}
-                </span>
-              )}
-
-              {/* Tarja de Residentes (apenas quando filtrado) */}
-              {filtroResidente !== 'todos' && (
-                <span className="bg-odara-primary/20 text-odara-primary font-bold px-3 py-1 rounded-full text-sm">
-                  Residente: {filtroResidente === 'meus' ? 'Meus' : filtroResidente}
-                </span>
-              )}
-
-              {/* Tarja de Data (SEMPRE visível) */}
-              <span className="bg-odara-accent/20 text-odara-accent font-bold px-3 py-1 rounded-full text-sm">
-                Data: {formatarData(filtroData)}
-              </span>
-
-              {/* Tarja de Período (apenas quando filtrado) */}
-              {filtroPeriodo !== PERIODOS.TODOS && (
-                <span className="bg-odara-secondary/20 text-odara-secondary font-bold px-3 py-1 rounded-full text-sm">
-                  Período: {ROTULOS_PERIODOS[filtroPeriodo]}
-                </span>
-              )}
-
-              {/* Tarja de Tipos (apenas quando filtrado) */}
-              {filtroTipo !== TIPOS_ATIVIDADE.TODOS && (
-                <span className="bg-odara-secondary/20 text-odara-secondary font-bold px-3 py-1 rounded-full text-sm">
-                  Tipo: {ROTULOS_TIPOS[filtroTipo]}
-                </span>
-              )}
-            </div>
-          </div>
-
-          {/* ===== LISTA DE ATIVIDADES ===== */}
-          <div
-            id="checklist-container"
-            className="w-full flex-1 overflow-y-auto mx-auto"
+              setDateError(null);
+              setFiltros({
+                residente: form.get("residente") ? Number(form.get("residente")) : null,
+                status: (form.get("status") as string) || null,
+                categoria: (form.get("categoria") as string) || null,
+                startDate: startStr || null,
+                endDate: endStr || null,
+              });
+              setDatesExpanded({}); 
+            }}
           >
-            {totalAtividades === 0 ? (
-              <div className="text-center py-8">
-                {/* Se não houver nenhuma atividade para o filtro/dia */}
-                <p className="text-gray-500">Nenhuma atividade encontrada para os filtros selecionados.</p>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3">
+              
+              <div>
+                <label className="block text-xs font-bold text-gray-600 uppercase mb-1">Residente</label>
+                <select name="residente" className="w-full border rounded px-2 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-odara-primary">
+                  <option value="">Todos</option>
+                  {residentesList.map(r => (
+                    <option key={r.id} value={r.id}>{r.nome}</option>
+                  ))}
+                </select>
               </div>
-            ) : (
-              <div className="space-y-4">
-                {Object.entries(atividadesAgrupadas).map(([periodo, atividadesPeriodo]) => (
-                  atividadesPeriodo.length > 0 && (
-                    <div key={periodo}>
-                      {/* Divisor por Período */}
-                      {renderizarDivisorPeriodo(periodo)}
 
-                      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-                        {atividadesPeriodo.map(atividade => (
-                          <div
-                            key={atividade.id}
-                            className="bg-white rounded-lg shadow-md border border-gray-200"
-                          >
-                            {/* Header do card com status */}
-                            {renderizarHeaderCard(atividade)}
-
-                            {/* Corpo do card */}
-                            <div className="p-4">
-                              <p className="mb-2">
-                                <strong>{atividade.nomeAtividade}</strong>
-                              </p>
-
-                              <p className="mb-2">
-                                <strong>Tipo:</strong> {atividade.tipo}
-                              </p>
-
-                              <p className="mb-2">
-                                <strong>Duração:</strong> {atividade.duracao}
-                              </p>
-
-                              {atividade.observacoes && (
-                                <p className="mb-2">
-                                  <strong>Observações:</strong> {atividade.observacoes}
-                                </p>
-                              )}
-                            </div>
-
-                            {/* Footer do card */}
-                            <div className="px-4 py-3 bg-gray-50 border-t border-gray-200 rounded-b-lg text-odara-dark text-sm">
-                              <span className="bg-odara-accent text-white px-3 py-1 rounded-full">
-                                {atividade.residente}
-                              </span>
-                              <span className="mx-2">•</span>
-                              <span className="text-odara-name">{atividade.local}</span>
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  )
-                ))}
+              <div>
+                <label className="block text-xs font-bold text-gray-600 uppercase mb-1">Status</label>
+                <select name="status" className="w-full border rounded px-2 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-odara-primary" defaultValue="pendente">
+                  <option value="">Todos</option>
+                  <option value="pendente">Pendente</option>
+                  <option value="concluido">Concluído</option>
+                  <option value="cancelado">Cancelado</option>
+                </select>
               </div>
-            )}
+
+              <div>
+                <label className="block text-xs font-bold text-gray-600 uppercase mb-1">Categoria</label>
+                <select name="categoria" className="w-full border rounded px-2 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-odara-primary">
+                    <option value="">Todas</option>
+                    <option value="fisica">Física</option>
+                    <option value="cognitiva">Cognitiva</option>
+                    <option value="social">Social</option>
+                    <option value="lazer">Lazer</option>
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold text-gray-600 uppercase mb-1">Intervalo</label>
+                <div className="flex gap-2">
+                  <input
+                    type="date"
+                    name="startDate"
+                    className={`w-1/2 border rounded px-1 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-odara-primary ${dateError ? 'border-red-500 bg-red-50' : 'border-gray-300'}`}
+                    defaultValue={getTodayString()}
+                    onChange={() => setDateError(null)}
+                  />
+                  <input
+                    type="date"
+                    name="endDate"
+                    className={`w-1/2 border rounded px-1 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-odara-primary ${dateError ? 'border-red-500 bg-red-50' : 'border-gray-300'}`}
+                    defaultValue={getTodayString()}
+                    onChange={() => setDateError(null)}
+                  />
+                </div>
+                {dateError && (
+                  <div className="flex items-center mt-1 text-red-600 text-xs">
+                    <FaExclamationCircle className="mr-1" />
+                    {dateError}
+                  </div>
+                )}
+              </div>
+            </div>
+
+            <div className="mt-4 flex gap-2">
+              <button type="submit" className="flex-1 px-4 py-2 bg-odara-dark text-white rounded text-sm font-bold hover:opacity-90 transition-opacity">Aplicar</button>
+              <button
+                type="button"
+                className="px-4 py-2 bg-gray-200 rounded text-sm font-medium hover:bg-gray-300 transition-colors"
+                onClick={() => {
+                  setFiltros({ residente: null, status: null, categoria: null, startDate: null, endDate: null });
+                  setDateError(null);
+                  (document.querySelector("form") as HTMLFormElement)?.reset();
+                }}
+              >
+                Limpar
+              </button>
+            </div>
+          </form>
+        </details>
+
+        <div className="w-full max-w-6xl bg-white rounded-lg shadow-md p-4 lg:p-6 border-l-4 border-odara-primary">
+          
+          <div className="mb-6 flex items-center justify-between">
+            <h2 className="text-xl font-bold text-gray-800">Lista Diária</h2>
+            <span className="bg-gray-100 text-gray-600 px-3 py-1 rounded-full text-xs font-semibold">
+                Total: {totalAtividades}
+            </span>
           </div>
 
-          {/* ===== BOTÃO SCROLL TO TOP ===== */}
-          {mostrarScrollTop && (
-            <button
-              onClick={scrollParaTopo}
-              className="fixed bottom-6 right-6 w-12 h-12 bg-odara-accent text-white rounded-full shadow-lg hover:bg-odara-secondary transition-colors flex items-center justify-center z-50"
-            >
-              <FaArrowUp size={18} />
-            </button>
-          )}
+          <div className="space-y-6">
+            {gruposAtividades.length === 0 ? (
+                <p className="text-center text-gray-500 py-10">Nenhuma atividade encontrada para os filtros selecionados.</p>
+            ) : (
+                gruposAtividades.map(grupo => (
+                    <div key={grupo.data} className="border rounded-lg overflow-hidden border-gray-200">
+                        
+                        <div 
+                            onClick={() => toggleDate(grupo.data)}
+                            className="bg-gray-50 hover:bg-gray-100 cursor-pointer p-4 flex items-center justify-between border-b border-gray-200 transition-colors select-none"
+                        >
+                            <div className="flex items-center gap-3">
+                                {grupo.isExpandido ? <FaChevronDown className="text-gray-500" /> : <FaChevronRight className="text-gray-500" />}
+                                <h3 className="font-bold text-lg text-gray-800">
+                                    {grupo.dataFormatada}
+                                </h3>
+                                <span className="text-xs bg-white border border-gray-300 px-2 py-0.5 rounded-full text-gray-600">
+                                    {grupo.itens.length} {grupo.itens.length === 1 ? 'atividade' : 'atividades'}
+                                </span>
+                            </div>
+                        </div>
+
+                        {grupo.isExpandido && (
+                            <div className="p-4 space-y-6 bg-white">
+                                {grupo.itens.map(atv => {
+                                    const isCancelado = atv.status === 'cancelado';
+                                    const isConcluido = atv.status === 'concluido';
+
+                                    return (
+                                        <div key={atv.id} className={`w-full bg-white relative group ${isCancelado ? 'opacity-60 grayscale-[30%]' : ''}`}>
+                                            
+                                            <div className="flex flex-wrap items-start mb-4 gap-3 sm:gap-4">
+                                                <div className="flex flex-col items-start min-w-[70px]">
+                                                    <span className="text-2xl font-bold text-gray-900 leading-none">
+                                                        {atv.horario_inicio.slice(0, 5)}
+                                                    </span>
+                                                    {atv.horario_fim && (
+                                                        <span className="text-xs text-gray-400 mt-0.5">até {atv.horario_fim.slice(0, 5)}</span>
+                                                    )}
+                                                </div>
+
+                                                <span className="text-gray-300 text-2xl hidden sm:inline font-light">•</span>
+
+                                                <div className="flex-1 pt-1">
+                                                    <div className="flex items-center flex-wrap gap-2">
+                                                        <h3 className="text-xl font-bold text-odara-dark">
+                                                            {atv.nome}
+                                                        </h3>
+                                                        {atv.categoria && (
+                                                            <span className="px-2 py-0.5 rounded text-xs font-medium bg-blue-50 text-blue-600 border border-blue-100 uppercase tracking-wide">
+                                                                {atv.categoria}
+                                                            </span>
+                                                        )}
+                                                    </div>
+                                                    
+                                                    <div className="mt-2">
+                                                        {isCancelado && <span className="px-2 py-0.5 rounded text-xs font-bold bg-red-100 text-red-600 border border-red-200 uppercase">[CANCELADA]</span>}
+                                                        {isConcluido && <span className="px-2 py-0.5 rounded text-xs font-bold bg-green-100 text-green-600 border border-green-200 uppercase">[CONCLUÍDA]</span>}
+                                                    </div>
+                                                </div>
+                                            </div>
+
+                                            <div className={`grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-y-3 gap-x-4 mb-6 ${isCancelado ? 'pointer-events-none' : ''}`}>
+                                                {atv.residentes.map(res => {
+                                                    const participou = res.statusIndividual === 'participou';
+                                                    return (
+                                                        <button
+                                                            key={res.id}
+                                                            onClick={() => toggleStatusResidente(atv.id, res.id, res.statusIndividual)}
+                                                            className="flex items-center group/res focus:outline-none text-left"
+                                                            title={participou ? "Presente" : "Marcar presença"}
+                                                            disabled={isCancelado}
+                                                        >
+                                                            <div className={`
+                                                                flex items-center justify-center w-5 h-5 mr-2 rounded text-[10px] transition-colors duration-200 border
+                                                                ${participou 
+                                                                    ? 'bg-green-100 border-green-200 text-green-600' 
+                                                                    : 'bg-white border-gray-300 text-gray-300 group-hover/res:border-red-300 group-hover/res:text-red-300'}
+                                                            `}>
+                                                                {participou ? <FaCheck /> : <FaTimes />}
+                                                            </div>
+                                                            <span className={`text-sm ${participou ? 'text-gray-800 font-medium' : 'text-gray-500'}`}>
+                                                                {res.nome}
+                                                            </span>
+                                                        </button>
+                                                    )
+                                                })}
+                                                {atv.residentes.length === 0 && (
+                                                    <span className="text-gray-400 text-sm italic col-span-2">Nenhum residente vinculado.</span>
+                                                )}
+                                            </div>
+
+                                            <div className="bg-gray-50 rounded-lg p-3 text-sm text-gray-600 border border-gray-100">
+                                                <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+                                                    
+                                                    <div className="space-y-1 flex-1">
+                                                        <div className="flex items-center gap-2">
+                                                            <FaMapMarkerAlt className="text-odara-accent opacity-70" size={12} />
+                                                            <span className="font-semibold text-gray-700">Local:</span> 
+                                                            <span>{atv.local || 'Não informado'}</span>
+                                                        </div>
+                                                        {atv.observacao && (
+                                                            <div className="flex items-start gap-2">
+                                                                <FaInfoCircle className="text-odara-accent opacity-70 mt-1" size={12} />
+                                                                <div>
+                                                                    <span className="font-semibold text-gray-700">Obs:</span> 
+                                                                    <span className="ml-1 italic">{atv.observacao}</span>
+                                                                </div>
+                                                            </div>
+                                                        )}
+                                                    </div>
+
+                                                    <div className="md:border-l md:pl-4 border-gray-200 flex flex-col justify-center min-w-[200px]">
+                                                            <div className="flex items-center gap-2">
+                                                                <button 
+                                                                    onClick={() => handleConcluirAtividade(atv)}
+                                                                    className="flex-1 flex items-center justify-center gap-1 bg-green-50 text-green-700 border border-green-200 hover:bg-green-100 px-3 py-2 rounded transition-colors text-xs font-bold uppercase"
+                                                                >
+                                                                    <FaCheckDouble /> Concluir
+                                                                </button>
+                                                                <button 
+                                                                    onClick={() => handleCancelarAtividade(atv)}
+                                                                    className="flex-1 flex items-center justify-center gap-1 bg-white text-red-400 border border-red-100 hover:bg-red-50 hover:text-red-600 px-3 py-2 rounded transition-colors text-xs font-medium uppercase"
+                                                                >
+                                                                    <FaBan /> Cancelar
+                                                                </button>
+                                                            </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+
+                                            <div className="w-full h-px bg-gray-200 mt-6 mb-2 last:hidden"></div>
+
+                                        </div>
+                                    );
+                                })}
+                            </div>
+                        )}
+                    </div>
+                ))
+            )}
+          </div>
         </div>
+        {ObservacoesAtividade}
+        {ObservacaoModal}
       </div>
-    </div >
+    </div>
   );
 };
 

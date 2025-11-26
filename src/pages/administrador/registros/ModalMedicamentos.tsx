@@ -398,7 +398,7 @@ const ModalMedicamentos = ({
                                         <input
                                             type="number"
                                             min="1"
-                                            {...register('intervalo')}
+                                            {...register('intervalo', { valueAsNumber: true })}
                                             disabled={!watch('recorrencia') || watch('recorrencia') === 'unico'}
                                             className={`w-full rounded-xl border-2 border-gray-200 p-3 focus:border-odara-primary transition-colors duration-200 pr-24 ${(!watch('recorrencia') || watch('recorrencia') === 'unico') ? 'opacity-50 cursor-not-allowed' : ''
                                                 }`}

@@ -31,6 +31,7 @@ type RegistroAlimentar = {
   id_funcionario: number;
   residente?: Residente;
   funcionario?: Funcionario;
+  observacao?: string;
 };
 
 type Residente = { id: number; nome: string };

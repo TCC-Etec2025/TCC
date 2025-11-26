@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Pill, Microscope, Stethoscope, AlertTriangle, ClipboardList, Calendar, Utensils, FileText, Users, Bell, Info, Eye, Plus, X } from "lucide-react";
+import { Pill, Microscope, ClipboardPlus, AlertTriangle, Palette, Calendar, Apple, FileText, UsersRound, Bell, Info, Eye, UserRoundPlus, PackagePlus, UserRoundCog, X } from "lucide-react";
 import toast, { Toaster } from 'react-hot-toast';
 
 import { supabase } from '../../lib/supabaseClient';
@@ -159,7 +159,7 @@ const AdminDashboard = () => {
               <p className="text-sm text-gray-600 mt-1">3 online</p>
             </div>
             <div className="p-3 rounded-full">
-              <WrapperIcone icone={Users} tamanho={32} className='text-odara-primary' />
+              <WrapperIcone icone={UsersRound} tamanho={32} className='text-odara-primary' />
             </div>
           </div>
         </div>
@@ -176,31 +176,31 @@ const AdminDashboard = () => {
       {
         id: 1,
         nome: "Cadastrar Residente",
-        icone: Plus,
+        icone: UserRoundPlus,
         acao: () => navegar('/app/admin/residente/formulario')
       },
       {
         id: 2,
         nome: "Cadastrar Responsável",
-        icone: Plus,
+        icone: UserRoundPlus,
         acao: () => navegar('/app/admin/responsavel/formulario')
       },
       {
         id: 3,
         nome: "Cadastrar Funcionário",
-        icone: Plus,
+        icone: UserRoundPlus,
         acao: () => navegar('/app/admin/funcionario/formulario')
       },
       {
         id: 4,
         nome: "Cadastrar Pertences",
-        icone: Plus,
+        icone: PackagePlus,
         acao: () => navegar('/app/admin/pertence/formulario')
       },
       {
         id: 5,
         nome: "Gerenciar Usuário",
-        icone: Plus,
+        icone: UserRoundCog,
         acao: () => navegar('/app/admin/usuarios')
       },
     ];
@@ -215,26 +215,26 @@ const AdminDashboard = () => {
       },
       {
         id: 7,
-        nome: "Exames médicos",
+        nome: "Exames Médicos",
         icone: Microscope,
         acao: () => navegar("/app/funcionario/checklist/exames/medicos")
       },
       {
         id: 8,
-        nome: "Consultas médicas",
-        icone: Stethoscope,
+        nome: "Consultas Médicas",
+        icone: ClipboardPlus,
         acao: () => navegar("/app/funcionario/checklist/consultas/medicas")
       },
       {
         id: 9,
         nome: "Atividades",
-        icone: ClipboardList,
+        icone: Palette,
         acao: () => navegar("/app/funcionario/checklist/atividades")
       },
       {
         id: 10,
         nome: "Alimentação",
-        icone: Utensils,
+        icone: Apple,
         acao: () => navegar("/app/funcionario/checklist/alimentacao")
       },
     ];

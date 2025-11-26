@@ -13,6 +13,7 @@ import Documentacao from './pages/landingPage/Documentacao.tsx'
 
 /* ------------------- Página de Perfil e Login */
 import Login from './pages/Login'
+import Senha from './pages/senha'
 import Perfil from './pages/Perfil'
 
 /* ------------------- Páginas de Formulário (Cadastro/Edição) */
@@ -84,6 +85,7 @@ export default function App() {
 
         {/* Login */}
         <Route path="/login" element={<Login />} />
+        <Route path="/senha" element={<Senha />} />
 
         <Route 
           path="/app"

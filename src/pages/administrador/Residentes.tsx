@@ -305,14 +305,16 @@ const Residentes: React.FC = () => {
 
                     {/* Coluna Sexo */}
                     <td className="p-4">
-                      <span className="px-2 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-700 capitalize">
+                      <span className="px-2 py-1 text-xs font-medium text-odara-dark capitalize">
                         {residente.sexo?.toLowerCase()}
                       </span>
                     </td>
 
                     {/* Coluna Quarto */}
-                    <td className="p-4 font-medium text-odara-dark">
-                      {residente.quarto}
+                    <td className="p-4">
+                      <span className={`px-2 py-1 rounded-full text-xs font-medium ${residente.quarto ? '' : 'bg-gray-100 text-gray-400'}`}>
+                        {residente.quarto || 'Não informado'}
+                      </span>
                     </td>
 
                     {/* Coluna Idade */}

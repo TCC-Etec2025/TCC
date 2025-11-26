@@ -1,7 +1,6 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
-import { FaFilter } from "react-icons/fa";
-import { Filter, Search, HeartPulse, Pill, Stethoscope, ClipboardPlus, Star, Palette, Apple, Siren, UserRoundSearch } from 'lucide-react';
+import { Filter, Search, HeartPulse, Pill, Microscope, ClipboardPlus, Star, Palette, Apple, Siren, UserRoundSearch } from 'lucide-react';
 
 const Registros = () => {
   const [filtroAberto, setFiltroAberto] = useState(false);
@@ -42,7 +41,7 @@ const Registros = () => {
     {
       path: "/app/admin/registro/exames",
       label: "Registro de Exames",
-      icon: Stethoscope,
+      icon: Microscope,
       descricao: "Controle e organização de exames médicos",
     },
     {

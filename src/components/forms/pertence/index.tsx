@@ -5,7 +5,7 @@ import { supabase } from "../../../lib/supabaseClient";
 import Modal from "../../Modal";
 import { useCadastroForm } from "./form";
 import { type FormValues } from "./types";
-import { Loader2, UserPlus } from "lucide-react";
+import { Loader2, Package } from "lucide-react";
 import type { Pertence } from "../../../Modelos";
 
 type Props = {
@@ -20,23 +20,26 @@ type Residente = {
 
 export default function CadastroPertence({ pertence }: Props) {
   const navigate = useNavigate();
-  const [isLoading, setIsLoading] = useState(false);
+
+  // Estados do componente
+  const [carregando, setCarregando] = useState(false);
   const [residentes, setResidentes] = useState<Residente[]>([]);
-  const [modalOpen, setModalOpen] = useState(false);
-  const [modalConfig, setModalConfig] = useState<{
-    title: string;
-    description: string;
-    actions: Array<{
-      label: string;
-      onClick: () => void;
+  const [modalAberto, setModalAberto] = useState(false);
+  const [configuracaoModal, setConfiguracaoModal] = useState<{
+    titulo: string;
+    descricao: string;
+    acoes: Array<{
+      rotulo: string;
+      aoClicar: () => void;
       className: string;
     }>;
   }>({
-    title: "",
-    description: "",
-    actions: [],
+    titulo: "",
+    descricao: "",
+    acoes: [],
   });
 
+  // Hook do formulário
   const {
     register,
     handleSubmit,
@@ -44,148 +47,172 @@ export default function CadastroPertence({ pertence }: Props) {
     reset,
   } = useCadastroForm(pertence);
 
+  // Buscar residentes disponíveis
   useEffect(() => {
-    const fetchResidentes = async () => {
+    const buscarResidentes = async () => {
       try {
         const { data, error } = await supabase
           .from("residente")
           .select("id, nome, foto_url")
           .order("nome", { ascending: true });
 
-        if (error) throw error;
+        if (error) {
+          throw error;
+        }
 
-        setResidentes(data);
-      } catch (error) {
-        console.error("Erro ao buscar residentes:", error);
+        setResidentes(data || []);
+      } catch (erro) {
+        console.error("Erro ao buscar residentes:", erro);
       }
     };
 
-    fetchResidentes();
+    buscarResidentes();
   }, []);
 
-  const onSubmit: SubmitHandler<FormValues> = async (data) => {
-    setIsLoading(true);
+  // Handler para submissão do formulário
+  const aoSubmeter: SubmitHandler<FormValues> = async (dados) => {
+    setCarregando(true);
 
     try {
+      const dadosParaInserir = {
+        id_residente: dados.id_residente,
+        nome: dados.nome,
+        descricao: dados.descricao,
+        estado: dados.estado,
+        data_registro: dados.data_registro,
+        status: dados.status,
+        data_baixa: dados.data_baixa,
+        observacoes: dados.observacoes,
+      };
+
+      let resultado;
+
       if (pertence) {
-        const { error } = await supabase
+        resultado = await supabase
           .from("pertence")
-          .update({
-            nome: data.nome,
-            descricao: data.descricao,
-            estado: data.estado,
-            data_registro: data.data_registro,
-            status: data.status,
-            data_baixa: data.data_baixa,
-            observacoes: data.observacoes,
-          })
+          .update(dadosParaInserir)
           .eq("id", pertence.id);
-
-        if (error) throw error;
       } else {
-        const { error } = await supabase.from("pertence").insert({
-          nome: data.nome,
-          descricao: data.descricao,
-          estado: data.estado,
-          data_registro: data.data_registro,
-          status: data.status,
-          data_baixa: data.data_baixa,
-          observacoes: data.observacoes,
-        });
-
-        if (error) throw error;
+        resultado = await supabase
+          .from("pertence")
+          .insert(dadosParaInserir);
       }
 
-      setModalConfig({
-        title: "Sucesso!",
-        description: `Pertence ${data.nome} ${
-          pertence ? "atualizado" : "cadastrado"
-        } com sucesso!`,
-        actions: [
+      if (resultado.error) {
+        throw resultado.error;
+      }
+
+      // Configurar modal de sucesso
+      setConfiguracaoModal({
+        titulo: "Sucesso!",
+        descricao: `Pertence ${dados.nome} ${pertence ? "atualizado" : "cadastrado"} com sucesso!`,
+        acoes: [
           {
-            label: "Voltar à lista",
-            className: "bg-blue-500 text-white hover:bg-blue-600",
-            onClick: () => navigate("/app/admin/perteces"),
+            rotulo: "Acessar Lista",
+            className: "bg-odara-white text-odara-primary hover:bg-odara-primary hover:text-white border border-odara-primary",
+            aoClicar: () => navigate("/app/admin/pertences"),
+          },
+          {
+            rotulo: "Acessar Dashboard",
+            className: "bg-odara-white text-odara-primary hover:bg-odara-primary hover:text-white border border-odara-primary",
+            aoClicar: () => navigate("/app/admin"),
           },
           ...(!pertence
             ? [
                 {
-                  label: "Cadastrar outro",
-                  className: "bg-gray-200 text-gray-700 hover:bg-gray-300",
-                  onClick: () => {
+                  rotulo: "Novo Cadastro",
+                  className: "bg-odara-accent text-odara-contorno hover:bg-odara-secondary",
+                  aoClicar: () => {
                     reset();
-                    setModalOpen(false);
-                  },
+                    setModalAberto(false);
+                  }
                 },
               ]
-            : []),
-          {
-            label: "Dashboard",
-            className: "bg-gray-200 text-gray-700 hover:bg-gray-300",
-            onClick: () => navigate("/app/admin"),
-          },
+            : [
+                {
+                  rotulo: "Continuar Editando",
+                  className: "bg-odara-accent text-odara-contorno hover:bg-odara-secondary",
+                  aoClicar: () => {
+                    setModalAberto(false);
+                  }
+                }
+              ]
+          ),
         ],
       });
-      setModalOpen(true);
+      setModalAberto(true);
 
       if (!pertence) reset();
-    } catch {
-      setModalConfig({
-        title: "Erro!",
-        description: `Erro ao ${
-          pertence ? "editar" : "cadastrar"
-        } pertence.`,
-        actions: [
+    } catch (erro) {
+      // Extrair mensagem de erro de forma segura
+      const mensagemErro = erro instanceof Error
+        ? erro.message
+        : typeof erro === 'string'
+          ? erro
+          : 'Erro desconhecido';
+
+      // Configurar modal de erro
+      setConfiguracaoModal({
+        titulo: "Erro!",
+        descricao: `Erro ao ${pertence ? "editar" : "cadastrar"} pertence: ${mensagemErro}`,
+        acoes: [
           {
-            label: "Fechar",
-            className: "bg-red-500 text-white hover:bg-red-600",
-            onClick: () => setModalOpen(false),
+            rotulo: "Fechar",
+            className: "bg-odara-alerta text-white hover:bg-red-600",
+            aoClicar: () => setModalAberto(false),
           },
         ],
       });
-      setModalOpen(true);
+      setModalAberto(true);
     } finally {
-      setIsLoading(false);
+      setCarregando(false);
     }
   };
 
   return (
-    <div className="p-8 bg-slate-50 rounded-2xl shadow-xl max-w-4xl mx-auto my-12">
+    <div className="p-8 bg-odara-white rounded-2xl shadow-xl max-w-4xl mx-auto my-12">
       <Modal
-        open={modalOpen}
-        onClose={() => setModalOpen(false)}
-        title={modalConfig.title}
-        description={modalConfig.description}
-        actions={modalConfig.actions}
+        open={modalAberto}
+        onClose={() => setModalAberto(false)}
+        title={configuracaoModal.titulo}
+        description={configuracaoModal.descricao}
+        actions={configuracaoModal.acoes.map(acao => ({
+          label: acao.rotulo,
+          onClick: acao.aoClicar,
+          className: acao.className
+        }))}
       />
 
-      <div className="flex items-center justify-center space-x-4 mb-8">
-        <UserPlus size={48} className="text-blue-500" />
-        <h1 className="text-3xl font-bold text-gray-800">
+      {/* Cabeçalho */}
+      <div className="flex items-center justify-center space-x-4 mb-2">
+        <Package size={48} className="text-odara-primary" />
+        <h1 className="text-3xl font-bold text-odara-accent">
           {pertence
             ? `Edição de ${pertence.nome}`
-            : "Cadastro de Responsável"}
+            : "Cadastro de Pertence"}
         </h1>
       </div>
-      <p className="text-center mb-8 text-gray-600">
+      <p className="text-center mb-8 text-odara-dark/60">
         Preencha os dados do pertence.
       </p>
 
-      <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+      <form onSubmit={handleSubmit(aoSubmeter)} className="space-y-6">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+
+          {/* Seção: Dados do Pertence */}
           <div className="md:col-span-2">
-            <h3 className="text-xl font-semibold text-gray-800 mb-4">
-              Dados
+            <h3 className="text-xl font-semibold text-odara-primary">
+              Dados do Pertence
             </h3>
           </div>
 
           <div className="md:col-span-2">
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Residente *
+            <label className="block text-sm font-medium text-odara-secondary mb-2">
+              Residente <span className="text-odara-accent font-bold">*</span>
             </label>
             <select
               {...register("id_residente")}
-              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+              className="w-full px-4 py-3 bg-white rounded-xl border border-gray-200 text-odara-dark placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-odara-secondary focus:border-transparent"
             >
               <option value="">Selecione um residente</option>
               {residentes.map((residente) => (
@@ -195,124 +222,156 @@ export default function CadastroPertence({ pertence }: Props) {
               ))}
             </select>
             {errors.id_residente && (
-              <p className="text-red-500 text-sm mt-2 font-medium">
+              <p className="text-odara-alerta text-sm mt-2 font-medium">
                 {errors.id_residente.message}
               </p>
             )}
           </div>
 
           <div className="md:col-span-2">
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Nome *
+            <label className="block text-sm font-medium text-odara-secondary mb-2">
+              Nome do Pertence <span className="text-odara-accent font-bold">*</span>
             </label>
             <input
               {...register("nome")}
-              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
-              placeholder="Digite o nome"
+              className="w-full px-4 py-3 bg-white rounded-xl border border-gray-200 text-odara-dark placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-odara-secondary focus:border-transparent"
+              placeholder="Digite o nome do pertence"
             />
             {errors.nome && (
-              <p className="text-red-500 text-sm mt-2 font-medium">
+              <p className="text-odara-alerta text-sm mt-2 font-medium">
                 {errors.nome.message}
               </p>
             )}
           </div>
 
           <div className="md:col-span-2">
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Email *
+            <label className="block text-sm font-medium text-odara-secondary mb-2">
+              Descrição <span className="text-odara-accent font-bold">*</span>
             </label>
-            <input
+            <textarea
               {...register("descricao")}
-              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
-              placeholder="Digite a descrição"
+              rows={3}
+              className="w-full px-4 py-3 bg-white rounded-xl border border-gray-200 text-odara-dark placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-odara-secondary focus:border-transparent"
+              placeholder="Descreva o pertence em detalhes..."
             />
             {errors.descricao && (
-              <p className="text-red-500 text-sm mt-2 font-medium">
+              <p className="text-odara-alerta text-sm mt-2 font-medium">
                 {errors.descricao.message}
               </p>
             )}
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Estado *
+            <label className="block text-sm font-medium text-odara-secondary mb-2">
+              Estado de Conservação <span className="text-odara-accent font-bold">*</span>
             </label>
-            <input
+            <select
               {...register("estado")}
-              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
-              placeholder="Digite o estado"
-            />
+              className="w-full px-4 py-3 bg-white rounded-xl border border-gray-200 text-odara-dark placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-odara-secondary focus:border-transparent"
+            >
+              <option value="">Selecione o estado...</option>
+              <option value="Novo">Novo</option>
+              <option value="Bom">Bom</option>
+              <option value="Regular">Regular</option>
+              <option value="Ruim">Ruim</option>
+              <option value="Precisa de Reparo">Precisa de Reparo</option>
+            </select>
             {errors.estado && (
-              <p className="text-red-500 text-sm mt-2 font-medium">
+              <p className="text-odara-alerta text-sm mt-2 font-medium">
                 {errors.estado.message}
               </p>
             )}
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Data de Registro *
+            <label className="block text-sm font-medium text-odara-secondary mb-2">
+              Data de Registro <span className="text-odara-accent font-bold">*</span>
             </label>
             <input
               type="date"
               {...register("data_registro")}
-              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+              className="w-full px-4 py-3 bg-white rounded-xl border border-gray-200 text-odara-dark placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-odara-secondary focus:border-transparent"
             />
+            {errors.data_registro && (
+              <p className="text-odara-alerta text-sm mt-2 font-medium">
+                {errors.data_registro.message}
+              </p>
+            )}
+          </div>
+
+          {/* Seção: Status e Controle */}
+          <div className="md:col-span-2">
+            <h3 className="text-xl font-semibold text-odara-primary mt-6">
+              Status e Controle
+            </h3>
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Status *
+            <label className="block text-sm font-medium text-odara-secondary mb-2">
+              Status <span className="text-odara-accent font-bold">*</span>
             </label>
-            <input
+            <select
               {...register("status")}
-              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
-              placeholder="Digite o status"
-            />
+              className="w-full px-4 py-3 bg-white rounded-xl border border-gray-200 text-odara-dark placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-odara-secondary focus:border-transparent"
+            >
+              <option value="">Selecione o status...</option>
+              <option value="Ativo">Ativo</option>
+              <option value="Inativo">Inativo</option>
+              <option value="Em Manutenção">Em Manutenção</option>
+              <option value="Descartado">Descartado</option>
+              <option value="Extraviado">Extraviado</option>
+            </select>
             {errors.status && (
-              <p className="text-red-500 text-sm mt-2 font-medium">
+              <p className="text-odara-alerta text-sm mt-2 font-medium">
                 {errors.status.message}
               </p>
             )}
-            <label className="block text-sm font-medium text-gray-700 mb-2 mt-4">
-              Data de Baixa *
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-odara-secondary mb-2">
+              Data de Baixa
             </label>
             <input
+              type="date"
               {...register("data_baixa")}
-              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
-              placeholder="Digite a data de baixa"
+              className="w-full px-4 py-3 bg-white rounded-xl border border-gray-200 text-odara-dark placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-odara-secondary focus:border-transparent"
             />
             {errors.data_baixa && (
-              <p className="text-red-500 text-sm mt-2 font-medium">
+              <p className="text-odara-alerta text-sm mt-2 font-medium">
                 {errors.data_baixa.message}
               </p>
             )}
           </div>
 
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
+          {/* Seção: Observações */}
+          <div className="md:col-span-2">
+            <h3 className="text-xl font-semibold text-odara-primary mt-6">
               Observações
+            </h3>
+          </div>
+
+          <div className="md:col-span-2">
+            <label className="block text-sm font-medium text-odara-secondary mb-2">
+              Observações Adicionais
             </label>
-            <input
+            <textarea
               {...register("observacoes")}
-              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
-              placeholder="Digite suas observações"
+              rows={3}
+              className="w-full px-4 py-3 bg-white rounded-xl border border-gray-200 text-odara-dark placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-odara-secondary focus:border-transparent"
+              placeholder="Observações adicionais sobre o pertence..."
             />
-            {errors.observacoes && (
-              <p className="text-red-500 text-sm mt-2 font-medium">
-                {errors.observacoes.message}
-              </p>
-            )}
           </div>
         </div>
 
-        <div className="flex justify-end pt-6 border-t border-gray-200">
+        {/* Botão de Submissão */}
+        <div className="flex justify-end pt-6">
           <button
             type="submit"
-            disabled={isLoading}
-            className="flex items-center px-6 py-3 bg-blue-500 text-white rounded-lg hover:bg-blue-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors font-medium"
+            disabled={carregando}
+            className="flex items-center px-6 py-3 bg-odara-accent hover:bg-odara-secondary text-white rounded-lg disabled:opacity-50 disabled:cursor-not-allowed transition-colors font-medium"
           >
-            {isLoading ? (
+            {carregando ? (
               <>
                 <Loader2 size={18} className="animate-spin mr-2" />
                 {pertence ? "Salvando" : "Cadastrando"}...

@@ -6,7 +6,7 @@ import { LayoutProvider } from "../context/LayoutContext"
 export default function AppLayout() {
   return (
     <LayoutProvider>
-      <div className="flex h-screen bg-odara-primary bg-opacity-10 relative">
+      <div className="flex h-screen bg-odara-offwhite bg-opacity-10 relative">
         <Sidebar />
         
         <main className="flex-1 flex flex-col overflow-auto ">

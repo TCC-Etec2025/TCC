@@ -4,21 +4,21 @@ import { useState } from "react"
 import { useUser, type PerfilUsuario } from "../context/UserContext"
 import { useLayout } from "../context/LayoutContext"
 import { useNavigate } from "react-router-dom"
-import { Home, Users, ClipboardList, CheckSquare, Briefcase, Stethoscope, LogOut } from "lucide-react"
+import { Home, Users, ClipboardList, CheckSquare, Briefcase, RockingChair, LogOut } from "lucide-react"
 
 const COM_SIDEBAR = ["administrador", "funcionario"]
 
 const menuItems = {
   administrador: [
     { id: "dashboard", label: "Dashboard", icon: Home, path: "/app/admin" },
-    { id: "pacientes", label: "Residentes", icon: Stethoscope, path: "/app/admin/residentes" },
+    { id: "pacientes", label: "Residentes", icon: RockingChair, path: "/app/admin/residentes" },
     { id: "responsaveis", label: "Responsáveis", icon: Users, path: "/app/admin/responsaveis" },
     { id: "funcionarios", label: "Funcionários", icon: Briefcase, path: "/app/admin/funcionarios" },
     { id: "registros", label: "Registros", icon: ClipboardList, path: "/app/admin/registros" },
   ],
   funcionario: [
     { id: "dashboard", label: "Dashboard", icon: Home, path: "/app/funcionario" },
-    { id: "residentes", label: "Residentes", icon: Stethoscope, path: "/app/funcionario/residentes/funcionario" },
+    { id: "residentes", label: "Residentes", icon: RockingChair, path: "/app/funcionario/residentes/funcionario" },
     { id: "checklist", label: "Checklists", icon: CheckSquare, path: "/app/funcionario/checklist" },
     // { id: "relatorios", label: "Relatórios", icon: BarChart3, path: "/app/funcionario/relatorios" },
   ],
@@ -54,7 +54,7 @@ export default function Sidebar() {
             />
           </div>
           {expanded && (
-            <span className="text-lg">Odara Gestão</span>
+            <span className="text-lg text-odara-white">Odara <span className=" text-odara-name">Gestão</span></span>
           )}
         </div>
       </div>
@@ -81,10 +81,10 @@ export default function Sidebar() {
       <div className="p-2 border-t border-odara-contorno/20">
         <button
           onClick={logout}
-          className={`flex items-center gap-3 w-full p-3 rounded-lg text-red-400 hover:bg-red-400/10 hover:text-red-300 transition-all ${expanded ? "" : "justify-center"}`}
+          className={`flex items-center gap-3 w-full p-3 rounded-lg  transform hover:scale-105 font-semibold text-odara-accent hover:bg-odara-contorno/10 hover:text-odara-secondary transition-all ${expanded ? "" : "justify-center"}`}
         >
           <LogOut className="w-5 h-5 flex-shrink-0" />
-          {expanded && <span>Sair</span>}
+          {expanded && <span>Fazer logoff</span>}
         </button>
       </div>
     </div>

@@ -5,7 +5,7 @@ import { supabase } from "../../../lib/supabaseClient";
 import Modal from "../../Modal";
 import { useCadastroForm } from "./form";
 import { type FormValues } from "./types";
-import { Loader2, UserPlus, X, Upload, User, Info } from "lucide-react";
+import { Loader2, UserRoundPlus, X, Upload, User, Info } from "lucide-react";
 import { type Residente } from "../../../Modelos";
 import { formatDateNumeric } from "../../../utils/date";
 import { formatCPF, removeFormatting } from "../../../utils";
@@ -299,7 +299,7 @@ export default function CadastroResidente({ residente }: Props) {
 
       {/* Cabeçalho */}
       <div className="flex items-center justify-center space-x-4 mb-2">
-        <UserPlus size={48} className="text-odara-primary" />
+        <UserRoundPlus size={48} className="text-odara-primary" />
         <h1 className="text-3xl font-bold text-odara-accent">
           {residente
             ? `Edição de ${residente.nome}`

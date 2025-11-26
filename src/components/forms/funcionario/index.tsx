@@ -5,7 +5,7 @@ import { supabase } from "../../../lib/supabaseClient";
 import Modal from "../../Modal";
 import { useCadastroForm } from "./form";
 import { type FormValues } from "./types";
-import { Loader2, UserPlus, LockKeyholeOpen } from "lucide-react";
+import { Loader2, UserRoundPlus, LockKeyholeOpen } from "lucide-react";
 import { type PerfilUsuario } from "../../../context/UserContext";
 import { formatDateNumeric, removeFormatting } from "../../../utils";
 
@@ -282,7 +282,7 @@ export default function CadastroFuncionario({ funcionario }: Props) {
 
       {/* Cabeçalho */}
       <div className="flex items-center justify-center space-x-4 mb-2">
-        <UserPlus size={48} className="text-odara-primary" />
+        <UserRoundPlus size={48} className="text-odara-primary" />
         <h1 className="text-3xl font-bold text-odara-accent">
           {funcionario
             ? `Edição de ${funcionario.nome}`

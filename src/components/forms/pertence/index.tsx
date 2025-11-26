@@ -5,7 +5,7 @@ import { supabase } from "../../../lib/supabaseClient";
 import Modal from "../../Modal";
 import { useCadastroForm } from "./form";
 import { type FormValues } from "./types";
-import { Loader2, Package } from "lucide-react";
+import { Loader2, PackagePlus } from "lucide-react";
 import type { Pertence } from "../../../Modelos";
 
 type Props = {
@@ -185,7 +185,7 @@ export default function CadastroPertence({ pertence }: Props) {
 
       {/* Cabeçalho */}
       <div className="flex items-center justify-center space-x-4 mb-2">
-        <Package size={48} className="text-odara-primary" />
+        <PackagePlus size={48} className="text-odara-primary" />
         <h1 className="text-3xl font-bold text-odara-accent">
           {pertence
             ? `Edição de ${pertence.nome}`

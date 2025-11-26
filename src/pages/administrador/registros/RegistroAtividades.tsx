@@ -126,7 +126,10 @@ const RegistroAtividades = () => {
       }
       return true;
     })
-    .sort((a, b) => new Date(a.data).getTime() - new Date(b.data).getTime());
+    .sort((a, b) => {
+      if (a.data!== b.data) return a.data.localeCompare(b.data);
+      return a.horario_inicio.localeCompare(b.horario_inicio);
+    });
 
   return (
     <div className="flex min-h-screen bg-odara-offwhite">

@@ -11,20 +11,19 @@ type Residente = {
     nome: string;
 };
 
-export type Consulta = {
-    id?: number;
-    id_residente: number;
-    data_consulta: string;
-    horario: string;
-    medico: string;
-    motivo_consulta: string;
-    numero_prontuario: string;
-    historico_clinico?: string | null;
-    tratamento_indicado?: string | null;
-    exames_solicitados?: string | null;
-    receitas_medicas?: string | null;
-    anexos_medicos?: string | null;
-    residente?: Residente;
+type Consulta = {
+  id: number;
+  id_residente: number;
+  data_consulta: string;
+  horario: string;
+  medico: string;
+  motivo_consulta: string | null;
+  tratamento_indicado: string | null;
+  status: string;
+  observacao: string | null;
+  criado_em?: string;
+  atualizado_em?: string;
+  residente?: Residente;
 };
 
 type ModalConsultaProps = {
@@ -36,18 +35,14 @@ type ModalConsultaProps = {
 const schema = yup.object({
     id: yup.number().nullable(),
     id_residente: yup.number().required('Residente é obrigatório').min(1, 'Selecione um residente'),
-    numero_prontuario: yup.string().required('Nº prontuário é obrigatório'),
     data_consulta: yup.string().required('Data é obrigatória'),
     horario: yup.string()
         .required('Horário é obrigatório')
         .matches(/^\d{2}:\d{2}$/, 'Formato HH:MM'),
     medico: yup.string().required('Médico é obrigatório'),
     motivo_consulta: yup.string().required('Motivo é obrigatório'),
-    historico_clinico: yup.string().nullable(),
     tratamento_indicado: yup.string().nullable(),
-    exames_solicitados: yup.string().nullable(),
-    receitas_medicas: yup.string().nullable(),
-    anexos_medicos: yup.string().nullable()
+    observacao: yup.string().nullable()
 }).required();
 
 type FormValues = yup.InferType<typeof schema>;
@@ -65,16 +60,12 @@ const ModalConsultas: React.FC<ModalConsultaProps> = ({ consulta, isOpen, onClos
         defaultValues: {
             id: null,
             id_residente: 0,
-            numero_prontuario: '',
             data_consulta: new Date().toISOString().split('T')[0],
             horario: '',
             medico: '',
             motivo_consulta: '',
-            historico_clinico: '',
             tratamento_indicado: '',
-            exames_solicitados: '',
-            receitas_medicas: '',
-            anexos_medicos: ''
+            observacao: ''
         }
     });
 
@@ -95,18 +86,14 @@ const ModalConsultas: React.FC<ModalConsultaProps> = ({ consulta, isOpen, onClos
         reset({
             id: consulta ? consulta.id ?? null : null,
             id_residente: consulta ? consulta.id_residente : 0,
-            numero_prontuario: consulta ? consulta.numero_prontuario : '',
             data_consulta: consulta
-                ? (consulta.data_consulta || new Date().toISOString().split('T')[0])
+                ? consulta.data_consulta
                 : new Date().toISOString().split('T')[0],
             horario: consulta ? consulta.horario : '',
             medico: consulta ? consulta.medico : '',
-            motivo_consulta: consulta ? consulta.motivo_consulta : '',
-            historico_clinico: consulta?.historico_clinico || '',
+            motivo_consulta: consulta ? consulta.motivo_consulta ?? '' : '',
             tratamento_indicado: consulta?.tratamento_indicado || '',
-            exames_solicitados: consulta?.exames_solicitados || '',
-            receitas_medicas: consulta?.receitas_medicas || '',
-            anexos_medicos: consulta?.anexos_medicos || ''
+            observacao: consulta?.observacao || ''
         });
     }, [consulta, reset, isOpen]);
 
@@ -114,16 +101,12 @@ const ModalConsultas: React.FC<ModalConsultaProps> = ({ consulta, isOpen, onClos
         try {
             const payload = {
                 id_residente: values.id_residente,
-                numero_prontuario: values.numero_prontuario,
                 data_consulta: values.data_consulta,
                 horario: values.horario,
                 medico: values.medico,
                 motivo_consulta: values.motivo_consulta,
-                historico_clinico: values.historico_clinico || null,
                 tratamento_indicado: values.tratamento_indicado || null,
-                exames_solicitados: values.exames_solicitados || null,
-                receitas_medicas: values.receitas_medicas || null,
-                anexos_medicos: values.anexos_medicos || null
+                observacao: values.observacao || null
             };
 
             if (values.id) {
@@ -183,15 +166,6 @@ const ModalConsultas: React.FC<ModalConsultaProps> = ({ consulta, isOpen, onClos
                             </select>
                             {errors.id_residente && <p className="text-sm text-red-600 mt-1 flex items-center gap-1"><FaExclamationCircle /> {errors.id_residente.message}</p>}
                         </div>
-
-                        <div>
-                            <label className="block text-odara-dark font-medium mb-2">Nº Prontuário *</label>
-                            <input
-                                {...register('numero_prontuario')}
-                                className="w-full px-4 py-2 border border-odara-primary rounded-lg focus:border-odara-secondary text-odara-secondary"
-                            />
-                            {errors.numero_prontuario && <p className="text-sm text-red-600 mt-1 flex items-center gap-1"><FaExclamationCircle /> {errors.numero_prontuario.message}</p>}
-                        </div>
                     </div>
 
                     {/* Linha 2 */}
@@ -236,15 +210,6 @@ const ModalConsultas: React.FC<ModalConsultaProps> = ({ consulta, isOpen, onClos
                     </div>
 
                     <div>
-                        <label className="block text-odara-dark font-medium mb-2">Histórico e Evolução Clínica</label>
-                        <textarea
-                            {...register('historico_clinico')}
-                            rows={3}
-                            className="w-full px-4 py-2 border border-odara-primary rounded-lg focus:border-odara-secondary text-odara-secondary"
-                        />
-                    </div>
-
-                    <div>
                         <label className="block text-odara-dark font-medium mb-2">Tratamento Indicado</label>
                         <textarea
                             {...register('tratamento_indicado')}
@@ -254,29 +219,12 @@ const ModalConsultas: React.FC<ModalConsultaProps> = ({ consulta, isOpen, onClos
                     </div>
 
                     <div>
-                        <label className="block text-odara-dark font-medium mb-2">Exames Solicitados</label>
+                        <label className="block text-odara-dark font-medium mb-2">Observações</label>
                         <textarea
-                            {...register('exames_solicitados')}
+                            {...register('observacao')}
                             rows={2}
                             className="w-full px-4 py-2 border border-odara-primary rounded-lg focus:border-odara-secondary text-odara-secondary"
-                        />
-                    </div>
-
-                    <div>
-                        <label className="block text-odara-dark font-medium mb-2">Receitas Médicas</label>
-                        <textarea
-                            {...register('receitas_medicas')}
-                            rows={2}
-                            className="w-full px-4 py-2 border border-odara-primary rounded-lg focus:border-odara-secondary text-odara-secondary"
-                        />
-                    </div>
-
-                    <div>
-                        <label className="block text-odara-dark font-medium mb-2">Anexos Médicos (descrição)</label>
-                        <input
-                            {...register('anexos_medicos')}
-                            className="w-full px-4 py-2 border border-odara-primary rounded-lg focus:border-odara-secondary text-odara-secondary"
-                            placeholder="Ex: link ou breve descrição"
+                            placeholder="Observações adicionais..."
                         />
                     </div>
 

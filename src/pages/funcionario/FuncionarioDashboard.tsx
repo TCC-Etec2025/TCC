@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Pill, Microscope, Stethoscope, Hospital, AlertTriangle, BarChart as BarChartIcon, ClipboardList, Utensils, Star, Calendar, FileText, Users, Bell, Info, Eye, X } from 'lucide-react';
+import { Pill, Microscope, ClipboardPlus, HeartPulse, AlertTriangle, Siren, UserRoundSearch, Palette, Apple, Star, Calendar, FileText, UsersRound, Bell, Info, Eye, X } from 'lucide-react';
 import toast, { Toaster } from 'react-hot-toast';
 
 import DataFormatada from '../../components/DataFormatada';
@@ -125,11 +125,11 @@ const FuncionarioDashboard = () => {
         <div className="bg-white rounded-2xl shadow p-6 cursor-pointer hover:shadow-md transition">
           <div className="flex items-center justify-between">
             <div>
-              <h3 className="text-sm font-medium text-gray-500">Checklists do Dia</h3>
+              <h3 className="text-sm font-medium text-odara-dark">Checklists do Dia</h3>
               <p className="text-3xl font-bold text-odara-dark mt-2">
                 {checklistDia}
               </p>
-              <p className="text-sm font-medium text-yellow-400">+5 Checklists Pendentes</p>
+              <p className="text-sm font-medium text-gray-400">+5 Checklists Pendentes</p>
             </div>
             <div className="p-3 rounded-full">
               <WrapperIcone icone={FileText} tamanho={32} className='text-odara-primary' />
@@ -141,14 +141,14 @@ const FuncionarioDashboard = () => {
         <div className="bg-white rounded-2xl shadow p-6 cursor-pointer hover:shadow-md transition">
           <div className="flex items-center justify-between">
             <div>
-              <h3 className="text-sm font-medium text-gray-500">Residentes Atribuídos</h3>
+              <h3 className="text-sm font-medium text-odara-dark">Residentes Atribuídos</h3>
               <p className="text-3xl font-bold text-odara-dark mt-2">
                 {residentesAtribuidos}
               </p>
-              <p className="text-sm text-gray-600 mt-1">Total: 12 residentes</p>
+              <p className="text-sm text-gray-400 mt-1">Total: 12 residentes</p>
             </div>
             <div className="p-3 rounded-full">
-              <WrapperIcone icone={Users} tamanho={32} className='text-odara-primary' />
+              <WrapperIcone icone={UsersRound} tamanho={32} className='text-odara-primary' />
             </div>
           </div>
         </div>
@@ -168,26 +168,26 @@ const FuncionarioDashboard = () => {
       },
       {
         id: 2,
-        nome: "Exames médicos",
+        nome: "Exames Médicos",
         icone: Microscope,
         acao: () => navigate("/app/funcionario/checklist/exames/medicos")
       },
       {
         id: 3,
-        nome: "Consultas médicas",
-        icone: Stethoscope,
+        nome: "Consultas Médicas",
+        icone: ClipboardPlus,
         acao: () => navigate("/app/funcionario/checklist/consultas/medicas")
       },
       {
         id: 4,
         nome: "Atividades",
-        icone: ClipboardList,
+        icone: Palette,
         acao: () => navigate("/app/funcionario/checklist/atividades")
       },
       {
         id: 5,
         nome: "Alimentação",
-        icone: Utensils,
+        icone: Apple,
         acao: () => navigate("/app/funcionario/checklist/alimentacao")
       },
     ];
@@ -196,26 +196,26 @@ const FuncionarioDashboard = () => {
     const botoesRegistros: BotaoAcao[] = [
       {
         id: 6,
-        nome: "Registro de ocorrências",
-        icone: AlertTriangle,
+        nome: "Ocorrências",
+        icone: Siren,
         acao: () => navigate("../admin/registro/ocorrencias")
       },
       {
         id: 7,
-        nome: "Registro de preferências",
+        nome: "Preferências",
         icone: Star,
         acao: () => navigate("../admin/registro/preferencias")
       },
       {
         id: 8,
-        nome: "Registro de comportamento",
-        icone: BarChartIcon,
+        nome: "Comportamento",
+        icone: UserRoundSearch,
         acao: () => navigate("../admin/registro/comportamento")
       },
       {
         id: 9,
-        nome: "Registro da saúde corporal",
-        icone: Hospital,
+        nome: "Saúde",
+        icone: HeartPulse,
         acao: () => navigate("../admin/registro/saudeInicial")
       },
     ];

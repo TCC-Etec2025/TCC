@@ -174,18 +174,12 @@ const FuncionarioDashboard = () => {
       },
       {
         id: 3,
-        nome: "Consultas Médicas",
-        icone: ClipboardPlus,
-        acao: () => navigate("/app/funcionario/checklist/consultas/medicas")
-      },
-      {
-        id: 4,
         nome: "Atividades",
         icone: Palette,
         acao: () => navigate("/app/funcionario/checklist/atividades")
       },
       {
-        id: 5,
+        id: 4,
         nome: "Alimentação",
         icone: Apple,
         acao: () => navigate("/app/funcionario/checklist/alimentacao")
@@ -195,28 +189,34 @@ const FuncionarioDashboard = () => {
     // Botões para registros
     const botoesRegistros: BotaoAcao[] = [
       {
-        id: 6,
+        id: 5,
         nome: "Ocorrências",
         icone: Siren,
         acao: () => navigate("../admin/registro/ocorrencias")
       },
       {
-        id: 7,
+        id: 6,
         nome: "Preferências",
         icone: Star,
         acao: () => navigate("../admin/registro/preferencias")
       },
       {
-        id: 8,
+        id: 7,
         nome: "Comportamento",
         icone: UserRoundSearch,
         acao: () => navigate("../admin/registro/comportamento")
       },
       {
-        id: 9,
+        id: 8,
         nome: "Saúde",
         icone: HeartPulse,
         acao: () => navigate("../admin/registro/saudeInicial")
+      },
+      {
+        id: 9,
+        nome: "Consultas Médicas",
+        icone: ClipboardPlus,
+        acao: () => navigate("../admin/registro/consultas")
       },
     ];
 
@@ -230,7 +230,7 @@ const FuncionarioDashboard = () => {
       <div className="bg-white rounded-2xl shadow p-5 border-l-4 border-odara-primary">
         {/* Seção de Checklists */}
         <h2 className="text-xl font-semibold text-odara-dark mb-4">Checklists</h2>
-        <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
           {botoesChecklists.map((checklist) => (
             <div
               key={checklist.id}
@@ -258,7 +258,7 @@ const FuncionarioDashboard = () => {
 
         {/* Seção de Registros */}
         <h2 className="text-xl font-semibold text-odara-dark mb-4">Registros</h2>
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+        <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
           {botoesRegistros.map((registro) => (
             <div
               key={registro.id}

@@ -5,6 +5,7 @@ import { Filter, Search, HeartPulse, Pill, Microscope, ClipboardPlus, Star, Pale
 const Registros = () => {
   const [filtroAberto, setFiltroAberto] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
+  const [categoriaFiltro, setCategoriaFiltro] = useState<string | null>(null);
 
   // Wrapper para ícones com configurações padrão
   const WrapperIcone = ({
@@ -25,62 +26,100 @@ const Registros = () => {
       label: "Registro de Medicamentos",
       icon: Pill,
       descricao: "Controle de administração e estoque de medicamentos",
+      categoria: "saude",
     },
     {
       path: "/app/admin/registro/consultas",
       label: "Registro de Consultas",
       icon: ClipboardPlus,
       descricao: "Agendamento e histórico de consultas médicas",
+      categoria: "saude",
     },
     {
       path: "/app/admin/registro/saudeInicial",
       label: "Registro de Saúde",
       icon: HeartPulse,
       descricao: "Monitoramento do estado de saúde dos residentes",
+      categoria: "saude",
     },
     {
       path: "/app/admin/registro/exames",
       label: "Registro de Exames",
       icon: Microscope,
       descricao: "Controle e organização de exames médicos",
+      categoria: "saude",
     },
     {
       path: "/app/admin/registro/preferencias",
       label: "Registro de Preferências",
       icon: Star,
       descricao: "Registro das preferências individuais dos residente",
+      categoria: "rotina",
     },
     {
       path: "/app/admin/registro/atividades",
       label: "Registro de Atividades",
       icon: Palette,
       descricao: "Organização das atividades dos residentes",
+      categoria: "rotina",
     },
     {
       path: "/app/admin/registro/alimentar",
       label: "Registro Alimentar",
       icon: Apple,
       descricao: "Controle de dieta e alimentação dos residentes",
+      categoria: "rotina",
     },
     {
       path: "/app/admin/registro/ocorrencias",
       label: "Registro de Ocorrências",
       icon: Siren,
       descricao: "Registro de incidentes e situações especiais",
+      categoria: "incidente",
     },
     {
       path: "/app/admin/registro/comportamento",
       label: "Registro de Comportamento",
       icon: UserRoundSearch,
       descricao: "Avaliação comportamental e acompanhamento psicológico",
+      categoria: "incidente",
     },
   ];
 
-  // Filtrar registros por busca
-  const registrosFiltrados = registrosItems.filter(item =>
-    item.label.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    item.descricao.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+    const opcoesFiltro = [
+    {
+      id: null,
+      label: "Todas",
+      icone: Filter,
+    },
+    {
+      id: "saude",
+      label: "Saúde",
+      icone: HeartPulse,
+    },
+    {
+      id: "incidente",
+      label: "Incidentes",
+      icone: Siren,
+    },
+    {
+      id: "rotina",
+      label: "Rotina",
+      icone: Palette,
+    },
+  ];
+
+    // Filtrar registros por busca
+    const registrosFiltrados = registrosItems.filter(item => {
+    const correspondeBusca =
+      item.label.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      item.descricao.toLowerCase().includes(searchTerm.toLowerCase());
+
+    const correspondeCategoria =
+      !categoriaFiltro || item.categoria === categoriaFiltro;
+
+    return correspondeBusca && correspondeCategoria;
+  });
 
   return (
     <div className="min-h-screen bg-odara-offwhite p-6 lg:p-8">
@@ -116,22 +155,36 @@ const Registros = () => {
             <WrapperIcone icone={Filter} tamanho={20} className="text-odara-accent"/>
           </button>
 
-          {filtroAberto && (
-            <div className="absolute top-full right-0 mt-2 bg-white rounded-xl shadow-lg border border-gray-200 z-10 overflow-hidden min-w-48">
+        {filtroAberto && (
+          <div className="absolute top-full right-0 mt-2 bg-white rounded-xl shadow-lg border border-gray-200 z-10 overflow-hidden min-w-48">
+            {opcoesFiltro.map((filtro) => (
               <button
-                onClick={() => setFiltroAberto(false)}
-                className="block w-full text-left px-4 py-3 text-sm hover:bg-odara-primary/10 transition text-gray-700 border-b border-gray-100"
+                key={filtro.id ?? "todas"}
+                onClick={() => {
+                  setCategoriaFiltro(filtro.id);
+                  setFiltroAberto(false);
+                }}
+                className={`flex items-center gap-3 w-full text-left px-4 py-3 text-sm hover:bg-odara-primary/10 transition
+                  ${
+                    categoriaFiltro === filtro.id
+                      ? "bg-odara-primary/20 text-odara-primary font-semibold"
+                      : "text-gray-700"
+                  }`}
               >
-                Nome (A-Z)
+                <WrapperIcone
+                  icone={filtro.icone}
+                  tamanho={16}
+                  className={
+                    categoriaFiltro === filtro.id
+                      ? "text-odara-primary"
+                      : "text-odara-accent"
+                  }
+                />
+                <span>{filtro.label}</span>
               </button>
-              <button
-                onClick={() => setFiltroAberto(false)}
-                className="block w-full text-left px-4 py-3 text-sm hover:bg-odara-primary/10 transition text-gray-700"
-              >
-                Mais recentes
-              </button>
-            </div>
-          )}
+            ))}
+          </div>
+        )}
         </div>
       </div>
 

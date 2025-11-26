@@ -99,7 +99,7 @@ export default function RecuperarSenha() {
           </button>
         </div>
 
-        <div className="p-9 space-y-6 text-center">
+        <div className="p-4 space-y-6 text-center">
           <h1 className="text-3xl font-bold text-odara-accent">
             Recuperar Senha
           </h1>

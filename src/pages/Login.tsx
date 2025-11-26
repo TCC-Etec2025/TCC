@@ -169,7 +169,7 @@ export default function Login() {
                 id="senha"
                 type={showSenha ? "text" : "password"}
                 placeholder="Digite a sua senha"
-                className="w-full h-10 px-3 pr-10 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-odara-secondary focus:border-transparent"
+                className="appearance w-full h-10 px-3 pr-10 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-odara-secondary focus:border-transparent"
                 {...register("senha")}
               />
               <button

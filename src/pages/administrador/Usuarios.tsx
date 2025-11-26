@@ -1,89 +1,335 @@
 import React, { useEffect, useState } from 'react';
-import { Search, Plus, Edit, Trash2, User, ShieldCheck, CheckCircle, Ban } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+import { Search, Plus, Edit, Trash2, User, AlertTriangle, Mail, Phone } from 'lucide-react';
 import { supabase } from '../../lib/supabaseClient';
+import toast, { Toaster } from 'react-hot-toast';
+
+// Interfaces para tipagem
+interface Papel {
+  id: number;
+  nome: string;
+  descricao?: string;
+}
+
+interface FuncionarioUsuario {
+  id: number;
+  nome: string;
+  cpf: string;
+  cargo: string;
+  status: string;
+  telefone_principal: string;
+}
+
+interface ResponsavelUsuario {
+  id: number;
+  nome: string;
+  cpf: string;
+  status: boolean;
+  telefone_principal: string;
+  parentesco?: string;
+}
+
+interface Usuario {
+  id: number;
+  email: string;
+  senha: string;
+  id_papel: number;
+  status: boolean;
+  criado_em: string;
+  atualizado_em: string;
+  papel?: Papel;
+  funcionario?: FuncionarioUsuario;
+  responsavel?: ResponsavelUsuario;
+}
 
 const Usuarios: React.FC = () => {
-  const [searchTerm, setSearchTerm] = useState<string>('');
-  const [usuarios, setUsuarios] = useState<any[]>([]);
-  const [loading, setLoading] = useState<boolean>(true);
+  const navigate = useNavigate();
 
-  useEffect(() => {
-    const fetchUsuarios = async () => {
-      try {
-        setLoading(true);
+  // Estados do componente
+  const [termoBusca, setTermoBusca] = useState<string>('');
+  const [listaUsuarios, setListaUsuarios] = useState<Usuario[]>([]);
+  const [carregando, setCarregando] = useState<boolean>(true);
+  const [modalExclusaoAberto, setModalExclusaoAberto] = useState<boolean>(false);
+  const [usuarioParaExcluir, setUsuarioParaExcluir] = useState<number | null>(null);
+  const [atualizandoStatus, setAtualizandoStatus] = useState<number | null>(null);
 
-        const { data, error } = await supabase
-          .from("usuario")
-          .select(`
-          id,
-          email,
-          status,
-          criado_em,
-          atualizado_em,
-          funcionario (nome, cpf),
-          responsavel (nome, cpf),
-          papel (nome)
-        `);
+  // Busca todos os usuários do banco de dados com consultas separadas
+  const buscarUsuarios = async () => {
+    try {
+      setCarregando(true);
 
-        if (error) {
-          throw new Error("Erro ao buscar usuários: " + error.message);
-        } else {
-          setUsuarios(data);
-        }
-      } catch (error) {
-        console.error("Erro ao buscar usuários:", error);
-      } finally {
-        setLoading(false);
+      // 1. Buscar usuários básicos
+      const { data: usuariosData, error: usuariosError } = await supabase
+        .from('usuario')
+        .select('*')
+        .order('criado_em', { ascending: false });
+
+      if (usuariosError) throw usuariosError;
+
+      if (!usuariosData || usuariosData.length === 0) {
+        setListaUsuarios([]);
+        return;
       }
-    };
 
-    fetchUsuarios();
+      // 2. Buscar papéis
+      const { data: papeisData, error: papeisError } = await supabase
+        .from('papel')
+        .select('*');
+
+      if (papeisError) throw papeisError;
+
+      // 3. Buscar funcionários vinculados aos usuários
+      const usuarioIds = usuariosData.map(u => u.id);
+      const { data: funcionariosData, error: funcionariosError } = await supabase
+        .from('funcionario')
+        .select('id, id_usuario, nome, cpf, cargo, status, telefone_principal')
+        .in('id_usuario', usuarioIds);
+
+      if (funcionariosError) throw funcionariosError;
+
+      // 4. Buscar responsáveis vinculados aos usuários
+      const { data: responsaveisData, error: responsaveisError } = await supabase
+        .from('responsavel')
+        .select('id, id_usuario, nome, cpf, status, telefone_principal')
+        .in('id_usuario', usuarioIds);
+
+      if (responsaveisError) throw responsaveisError;
+
+      // 5. Buscar parentesco dos responsáveis na tabela residente
+      const responsavelIds = responsaveisData?.map(r => r.id) || [];
+      let parentescos: { [key: number]: string } = {};
+
+      if (responsavelIds.length > 0) {
+        const { data: residentesData, error: residentesError } = await supabase
+          .from('residente')
+          .select('id_responsavel, responsavel_parentesco')
+          .in('id_responsavel', responsavelIds);
+
+        if (!residentesError && residentesData) {
+          // Criar mapa de parentesco por responsável
+          residentesData.forEach(residente => {
+            if (residente.id_responsavel && residente.responsavel_parentesco) {
+              parentescos[residente.id_responsavel] = residente.responsavel_parentesco;
+            }
+          });
+        }
+      }
+
+      // Combinar todos os dados
+      const usuariosCompletos = usuariosData.map(usuario => {
+        const papel = papeisData?.find(p => p.id === usuario.id_papel);
+        const funcionario = funcionariosData?.find(f => f.id_usuario === usuario.id);
+        const responsavel = responsaveisData?.find(r => r.id_usuario === usuario.id);
+
+        return {
+          ...usuario,
+          papel: papel || undefined,
+          funcionario: funcionario ? {
+            id: funcionario.id,
+            nome: funcionario.nome,
+            cpf: funcionario.cpf,
+            cargo: funcionario.cargo,
+            status: funcionario.status,
+            telefone_principal: funcionario.telefone_principal
+          } : undefined,
+          responsavel: responsavel ? {
+            ...responsavel,
+            telefone_principal: responsavel.telefone_principal
+          } : undefined
+        };
+      });
+
+      setListaUsuarios(usuariosCompletos);
+
+    } catch (erro: any) {
+      console.error('Erro ao buscar usuários:', erro);
+      toast.error('Erro ao buscar usuários: ' + (erro?.message ?? String(erro)));
+    } finally {
+      setCarregando(false);
+    }
+  };
+
+  // Efeito para carregar usuários quando o componente montar
+  useEffect(() => {
+    buscarUsuarios();
   }, []);
 
-  const handleDelete = async (id: number): Promise<void> => {
-    if (window.confirm('Tem certeza que deseja excluir este usuário? Esta ação é irreversível.')) {
-      try {
-        const { error } = await supabase
-          .from('usuario_sistema')
-          .delete()
-          .eq('id', id);
+  // Filtra usuários baseado no termo de busca
+  const usuariosFiltrados = listaUsuarios.filter(usuario => {
+    const termoLower = termoBusca.toLowerCase();
 
-        if (error) throw error;
-
-        setUsuarios(usuarios.filter(usuario => usuario.id !== id));
-      } catch (error) {
-        console.error('Erro ao excluir usuário:', error);
-        alert('Erro ao excluir usuário');
-      }
-    }
-  };
-
-  const getStatusColor = (status: boolean) => {
-    return status ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700';
-  };
-
-  const getRoleColor = (role: string) => {
-    switch (role?.toLowerCase()) {
-      case 'administrador': return 'bg-purple-100 text-purple-700';
-      case 'colaborador': return 'bg-blue-100 text-blue-700';
-      case 'responsavel': return 'bg-yellow-100 text-yellow-700';
-      default: return 'bg-gray-100 text-gray-700';
-    }
-  };
-
-  const filteredUsuarios = usuarios.filter((usuario) => {
-    const searchLower = searchTerm.toLowerCase();
     return (
-      usuario.email.toLowerCase().includes(searchLower) ||
-      (usuario.funcionario && usuario.funcionario.nome.toLowerCase().includes(searchLower)) ||
-      (usuario.funcionario && usuario.funcionario.cpf.includes(searchLower)) ||
-      (usuario.responsavel && usuario.responsavel.nome.toLowerCase().includes(searchLower)) ||
-      (usuario.responsavel && usuario.responsavel.cpf.includes(searchLower)) ||
-      (usuario.papel && usuario.papel.nome.toLowerCase().includes(searchLower))
+      usuario.email.toLowerCase().includes(termoLower) ||
+      (usuario.papel?.nome?.toLowerCase() || '').includes(termoLower) ||
+      (usuario.funcionario?.nome?.toLowerCase() || '').includes(termoLower) ||
+      (usuario.funcionario?.cpf || '').includes(termoLower) ||
+      (usuario.funcionario?.cargo?.toLowerCase() || '').includes(termoLower) ||
+      (usuario.funcionario?.telefone_principal || '').includes(termoLower) ||
+      (usuario.responsavel?.nome?.toLowerCase() || '').includes(termoLower) ||
+      (usuario.responsavel?.cpf || '').includes(termoLower) ||
+      (usuario.responsavel?.parentesco?.toLowerCase() || '').includes(termoLower) ||
+      (usuario.responsavel?.telefone_principal || '').includes(termoLower)
     );
   });
 
-  if (loading) {
+  // Formata número de telefone para exibição - CORRIGIDA
+  const formatarTelefone = (telefone: string) => {
+    if (!telefone) return '';
+    
+    // Remove caracteres não numéricos
+    const numeros = telefone.replace(/\D/g, '');
+    
+    // Formata baseado no tamanho
+    if (numeros.length === 10) {
+      return `(${numeros.slice(0, 2)}) ${numeros.slice(2, 6)}-${numeros.slice(6)}`;
+    } else if (numeros.length === 11) {
+      return `(${numeros.slice(0, 2)}) ${numeros.slice(2, 7)}-${numeros.slice(7)}`;
+    }
+    
+    // Retorna o original se não conseguir formatar
+    return telefone;
+  };
+
+  // Alterna o status do usuário
+  const alternarStatus = async (id: number, statusAtual: boolean) => {
+    try {
+      setAtualizandoStatus(id);
+      const novoStatus = !statusAtual;
+
+      const { error } = await supabase
+        .from('usuario')
+        .update({
+          status: novoStatus,
+          atualizado_em: new Date().toISOString()
+        })
+        .eq('id', id);
+
+      if (error) throw error;
+
+      // Atualiza a lista localmente
+      setListaUsuarios(listaUsuarios.map(usuario =>
+        usuario.id === id ? { ...usuario, status: novoStatus } : usuario
+      ));
+
+      toast.success(`Usuário ${novoStatus ? 'ativado' : 'inativado'} com sucesso!`);
+    } catch (erro: any) {
+      console.error('Erro ao alterar status:', erro);
+      toast.error('Erro ao alterar status: ' + (erro?.message ?? String(erro)));
+    } finally {
+      setAtualizandoStatus(null);
+    }
+  };
+
+  // Retorna as classes CSS para o status do usuário
+  const obterCorStatus = (status: boolean) => {
+    return status
+      ? 'bg-green-50 text-green-500 hover:bg-green-100'
+      : 'bg-gray-100 text-gray-400 hover:bg-gray-200';
+  };
+
+  // Retorna as classes CSS para o papel do usuário
+  const obterPapelAcento = (papel: string | undefined) => {
+    switch (papel?.toLowerCase()) {
+      case 'administrador': return 'Administrador';
+      case 'funcionario': return 'Funcionário';
+      case 'responsavel': return 'Responsável';
+      default: return 'Não informado';
+    }
+  };
+
+  // Obtém o nome do usuário (funcionário ou responsável)
+  const obterNomeUsuario = (usuario: Usuario): string => {
+    return usuario.funcionario?.nome || usuario.responsavel?.nome || 'Nome não informado';
+  };
+
+  // Obtém informações adicionais do usuário - CORRIGIDA
+  const obterInfoUsuario = (usuario: Usuario): string => {
+    if (usuario.funcionario) {
+      return `${usuario.funcionario.cpf} • ${usuario.funcionario.cargo}`;
+    }
+    if (usuario.responsavel) {
+      return `${usuario.responsavel.cpf}${usuario.responsavel.parentesco ? ' • ' + usuario.responsavel.parentesco : ''}`;
+    }
+    return 'Usuário do sistema';
+  };
+
+  // Abre o modal de confirmação para exclusão
+  const abrirModalExclusao = (id: number) => {
+    setUsuarioParaExcluir(id);
+    setModalExclusaoAberto(true);
+  };
+
+  // Fecha o modal de exclusão
+  const fecharModalExclusao = () => {
+    setModalExclusaoAberto(false);
+    setUsuarioParaExcluir(null);
+  };
+
+  // Executa a exclusão do usuário após confirmação
+  const executarExclusao = async () => {
+    if (!usuarioParaExcluir) return;
+
+    try {
+      const { error } = await supabase
+        .from('usuario')
+        .delete()
+        .eq('id', usuarioParaExcluir);
+
+      if (error) throw error;
+
+      // Atualiza a lista localmente
+      setListaUsuarios(listaUsuarios.filter(usuario => usuario.id !== usuarioParaExcluir));
+      toast.success('Usuário excluído com sucesso!');
+    } catch (erro: any) {
+      console.error('Erro ao excluir usuário:', erro);
+      toast.error('Erro ao excluir usuário: ' + (erro?.message ?? String(erro)));
+    } finally {
+      fecharModalExclusao();
+    }
+  };
+
+  // Componente do Modal de Confirmação de Exclusão
+  const ModalConfirmacaoExclusao = () => {
+    if (!modalExclusaoAberto) return null;
+
+    return (
+      <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-[100] p-4">
+        <div className="bg-white rounded-2xl shadow-lg p-6 max-w-md w-full">
+          <div className="text-center">
+            {/* Ícone de alerta */}
+            <div className="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-red-100 mb-4">
+              <AlertTriangle className="h-6 w-6 text-red-600" />
+            </div>
+
+            {/* Textos do modal */}
+            <h3 className="text-lg font-bold text-odara-dark mb-2">Confirmar exclusão</h3>
+            <p className="text-odara-name mb-6">
+              Tem certeza que deseja excluir este usuário? Esta ação não pode ser desfeita.
+            </p>
+
+            {/* Botões de ação */}
+            <div className="flex gap-3 justify-center">
+              <button
+                onClick={fecharModalExclusao}
+                className="px-4 py-2 border border-gray-300 text-odara-dark rounded-lg hover:bg-gray-50 transition-colors"
+              >
+                Cancelar
+              </button>
+              <button
+                onClick={executarExclusao}
+                className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
+              >
+                Excluir
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  };
+
+  // Estado de carregamento
+  if (carregando) {
     return (
       <div className="flex min-h-screen bg-odara-offwhite items-center justify-center">
         <div className="text-odara-dark">Carregando usuários...</div>
@@ -93,125 +339,171 @@ const Usuarios: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-odara-offwhite">
+      <Toaster />
+
+      {/* Modal de Confirmação */}
+      <ModalConfirmacaoExclusao />
+
       <div className="container mx-auto p-6 lg:p-8">
-        {/* Header */}
+        {/* Cabeçalho */}
         <div className="flex flex-col sm:flex-row justify-between items-start lg:items-center gap-4 mb-6">
+          {/* Título */}
           <div className="flex-1 min-w-0">
             <h1 className="text-2xl lg:text-3xl font-bold text-odara-dark">Usuários do Sistema</h1>
             <p className="text-sm text-odara-dark/70 mt-1">Gerenciamento de acessos e permissões</p>
           </div>
+
+          {/* Botão Cadastrar Usuário */}
           <div className="flex-shrink-0">
-            <button className="bg-odara-accent hover:bg-odara-secondary text-white font-medium py-2 px-4 rounded-lg flex items-center justify-center transition-colors w-full lg:w-auto">
+            <button
+              className="bg-odara-accent hover:bg-odara-secondary text-white font-medium py-2 px-4 rounded-lg flex items-center justify-center transition-colors w-full lg:w-auto"
+              onClick={() => navigate('/app/admin/usuario/formulario')}
+            >
               <Plus className="mr-2 h-4 w-4" />
               Cadastrar Usuário
             </button>
           </div>
         </div>
 
-        {/* Search */}
-        <div className="bg-white rounded-xl shadow-sm p-3 mb-6">
-          <div className="flex items-center">
-            <Search className="text-gray-400 mr-3 h-4 w-4 flex-shrink-0" />
-            <input
-              type="text"
-              placeholder="Buscar por nome, e-mail, CPF ou papel..."
-              className="w-full p-2 outline-none bg-transparent"
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-            />
+        {/* Barra de Busca */}
+        <div className="flex-1 relative mb-8">
+          <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+            <Search className="text-odara-primary mr-3 h-4 w-4 flex-shrink-0" />
           </div>
+
+          <input
+            type="text"
+            placeholder="Buscar por e-mail, telefone, nome, CPF, cargo, papel ou parentesco..."
+            className="w-full pl-10 pr-4 py-3 bg-white rounded-xl border border-gray-200 text-odara-dark placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-odara-primary focus:border-transparent"
+            value={termoBusca}
+            onChange={(e) => setTermoBusca(e.target.value)}
+          />
         </div>
 
-        {/* Tabela */}
-        <div className="bg-white rounded-xl shadow-sm overflow-hidden">
+        {/* Tabela de Usuários */}
+        <div className="bg-white rounded-xl shadow-sm overflow-hidden border-l-4 border-odara-primary">
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
-              <thead className="bg-odara-primary text-odara-contorno">
+              <thead className="border-b-1 border-odara-primary bg-odara-primary/10 text-odara-primary">
                 <tr>
-                  <th className="p-4 text-left font-medium">Usuário</th>
-                  <th className="p-4 text-left font-medium">Papel</th>
-                  <th className="p-4 text-left font-medium">Status</th>
-                  <th className="p-4 text-left font-medium">Ações</th>
+                  <th className="p-4 text-left font-semibold align-middle">Usuário</th>
+                  <th className="p-4 text-left font-semibold align-middle">Contato</th>
+                  <th className="p-4 text-left font-semibold align-middle">Papel</th>
+                  <th className="p-4 text-left font-semibold align-middle">Status</th>
+                  <th className="p-4 text-left font-semibold align-middle">Cadastro</th>
+                  <th className="p-4 text-left font-semibold align-middle">Ações</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-gray-100">
-                {filteredUsuarios.map((usuario) => {
-                  const roleNome = usuario.papel?.nome;
-                  const nomeFuncionario = usuario.funcionario?.nome;
-                  const cpfFuncionario = usuario.funcionario?.cpf;
-                  const nomeResponsavel = usuario.responsavel?.nome;
-                  const cpfResponsavel = usuario.responsavel?.cpf;
 
-                  return (
-                    <tr key={usuario.id} className="hover:bg-odara-offwhite/40 transition-colors">
-                      <td className="p-4">
-                        <div className="flex items-center gap-3 min-w-[200px]">
-                          <div className="bg-odara-primary/20 rounded-full p-2 flex-shrink-0">
-                            <User className="h-4 w-4 text-odara-primary" />
-                          </div>
-                          <div>
-                            <p className="font-medium text-odara-dark">{nomeFuncionario || nomeResponsavel}</p>
-                            <p className="text-xs text-gray-500">{usuario.email}</p>
-                            <p className="text-xs text-gray-500 mt-1">{cpfFuncionario || cpfResponsavel}</p>
-                          </div>
+              <tbody className="divide-y divide-gray-100">
+                {usuariosFiltrados.map((usuario) => (
+                  <tr key={usuario.id} className="hover:bg-odara-offwhite/40 transition-colors">
+                    {/* Coluna Usuário */}
+                    <td className="p-4">
+                      <div className="flex items-center gap-3 min-w-[200px]">
+                        {/* Ícone */}
+                        <div className="bg-odara-primary/20 rounded-full p-2 flex-shrink-0">
+                          <User className="h-4 w-4 text-odara-primary" />
                         </div>
-                      </td>
-                      <td className="p-4">
-                        <span className={`px-2 py-1 rounded-full text-xs font-medium capitalize ${getRoleColor(roleNome)}`}>
-                          <div className="flex items-center gap-1">
-                            <ShieldCheck className="h-3 w-3" />
-                            <span>{roleNome}</span>
-                          </div>
-                        </span>
-                      </td>
-                      <td className="p-4">
-                        <span className={`px-3 py-1 rounded-full text-xs font-medium ${getStatusColor(usuario.status)}`}>
-                          <div className="flex items-center gap-1">
-                            {usuario.status ? <CheckCircle className="h-3 w-3" /> : <Ban className="h-3 w-3" />}
-                            <span>{usuario.status ? 'Ativo' : 'Inativo'}</span>
-                          </div>
-                        </span>
-                      </td>
-                      <td className="p-4">
-                        <div className="flex space-x-2">
-                          <button
-                            className="p-1 text-blue-500 hover:text-blue-700 transition hover:bg-blue-50 rounded"
-                            title="Editar usuário"
-                          >
-                            <Edit className="h-4 w-4" />
-                          </button>
-                          <button
-                            className="p-1 text-red-500 hover:text-red-700 transition hover:bg-red-50 rounded"
-                            onClick={() => handleDelete(usuario.id)}
-                            title="Excluir usuário"
-                          >
-                            <Trash2 className="h-4 w-4" />
-                          </button>
+
+                        {/* Nome e informações */}
+                        <div>
+                          <p className="font-medium text-odara-dark">{obterNomeUsuario(usuario)}</p>
+                          <p className="text-xs text-gray-400">{obterInfoUsuario(usuario)}</p>
                         </div>
-                      </td>
-                    </tr>
-                  );
-                })}
+                      </div>
+                    </td>
+
+                    {/* Coluna Contato */}
+                    <td className="p-4">
+                      <div className="space-y-1 text-odara-dark">
+                        <div className="flex items-center gap-2">
+                          <Mail className="h-3 w-3 text-odara-primary" />
+                          <span className="text-sm truncate">{usuario.email}</span>
+                        </div>
+                        {(usuario.funcionario?.telefone_principal || usuario.responsavel?.telefone_principal) && (
+                          <div className="flex items-center gap-2">
+                            <Phone className="h-3 w-3 text-odara-primary" />
+                            <span className="text-sm truncate">
+                              {formatarTelefone(usuario.funcionario?.telefone_principal || usuario.responsavel?.telefone_principal || '')}
+                            </span>
+                          </div>
+                        )}
+                      </div>
+                    </td>
+
+                    {/* Coluna Papel */}
+                    <td className="p-4">
+                      <span className={`text-xs text-odara-dark font-medium capitalize ${usuario.papel?.nome ? '' : 'px-2 py-1 rounded-full bg-gray-100 text-gray-400'}`}>
+                        <div className="flex items-center gap-1">
+                          <span>{obterPapelAcento(usuario.papel?.nome)}</span>
+                        </div>
+                      </span>
+                    </td>
+
+                    {/* Coluna Status */}
+                    <td className="p-4">
+                      <button
+                        onClick={() => alternarStatus(usuario.id, usuario.status)}
+                        disabled={atualizandoStatus === usuario.id}
+                        className={`px-3 py-1 rounded-full text-xs font-medium transition-colors ${obterCorStatus(usuario.status)} ${atualizandoStatus === usuario.id ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'
+                          }`}
+                        title="Clique para alterar o status"
+                      >
+                        {atualizandoStatus === usuario.id ? 'Alterando...' : (usuario.status ? 'Ativo' : 'Inativo')}
+                      </button>
+                    </td>
+
+                    {/* Coluna Data de Cadastro */}
+                    <td className="p-4 whitespace-nowrap text-odara-dark">
+                      {new Date(usuario.criado_em).toLocaleDateString('pt-BR')}
+                    </td>
+
+                    {/* Coluna Ações */}
+                    <td className="p-4">
+                      <div className="flex space-x-2">
+                        {/* Botão Editar */}
+                        <button
+                          className="p-1 text-odara-dropdown-accent transition hover:text-odara-secondary rounded"
+                          title="Editar usuário"
+                          onClick={() => navigate('/app/admin/usuario/formulario', { state: { usuario } })}
+                        >
+                          <Edit className="h-4 w-4" />
+                        </button>
+
+                        {/* Botão Excluir */}
+                        <button
+                          className="p-1 text-odara-alerta transition hover:text-red-700 rounded"
+                          onClick={() => abrirModalExclusao(usuario.id)}
+                          title="Excluir usuário"
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
               </tbody>
             </table>
 
-            {filteredUsuarios.length === 0 && (
+            {/* Resultado vazio */}
+            {usuariosFiltrados.length === 0 && (
               <div className="text-center py-12">
                 <User className="h-12 w-12 text-gray-300 mx-auto mb-4" />
-                <p className="text-gray-500">
-                  {searchTerm ? 'Nenhum usuário encontrado' : 'Nenhum usuário cadastrado'}
+                <p className="text-gray-400">
+                  {termoBusca ? 'Nenhum usuário encontrado' : 'Nenhum usuário cadastrado'}
                 </p>
                 <p className="text-sm text-gray-400 mt-1">
-                  {searchTerm ? 'Tente ajustar sua busca' : 'Cadastre o primeiro usuário do sistema'}
+                  {termoBusca ? 'Tente ajustar sua busca' : 'Cadastre o primeiro usuário'}
                 </p>
               </div>
             )}
           </div>
         </div>
 
-        {/* Contagem */}
-        <div className="mt-4 text-sm text-odara-dark/70">
-          Total de {filteredUsuarios.length} usuário(s) encontrado(s)
+        {/* Contador de resultados */}
+        <div className="mt-4 text-sm text-gray-400">
+          Total de {usuariosFiltrados.length} usuário(s) encontrado(s) de {listaUsuarios.length}
         </div>
       </div>
     </div>

@@ -18,7 +18,7 @@ const menuItems = {
   ],
   funcionario: [
     { id: "dashboard", label: "Dashboard", icon: Home, path: "/app/funcionario" },
-    { id: "residentes", label: "Residentes", icon: RockingChair, path: "/app/funcionario/residentes/funcionario" },
+    { id: "residentes", label: "Residentes", icon: RockingChair, path: "/app/admin/residentes" },
     { id: "checklist", label: "Checklists", icon: CheckSquare, path: "/app/funcionario/checklist" },
     // { id: "relatorios", label: "Relatórios", icon: BarChart3, path: "/app/funcionario/relatorios" },
   ],

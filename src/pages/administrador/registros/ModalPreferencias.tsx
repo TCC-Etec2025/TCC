@@ -17,12 +17,14 @@ type Preferencia = {
     residente?: {
         id: number;
         nome: string;
+        quarto?: string | null;
     } | null;
 };
 
 type Residente = {
     id: number;
     nome: string;
+    quarto?: string | null;
 };
 
 type ModalPreferenciasProps = {
@@ -33,13 +35,13 @@ type ModalPreferenciasProps = {
 
 const categorias = {
     "alimentar": "Alimentar",
-    "atividades": "Atividades",
+    "atividades": "Atividades", 
     "cuidador": "Cuidador"
 };
 
 const schema = yup.object({
     id: yup.number().nullable(),
-    id_residente: yup.number().required('Residente é obrigatório'),
+    id_residente: yup.number().required('Residente é obrigatório').min(1, 'Selecione um residente'),
     tipo_preferencia: yup.string().required('Categoria é obrigatória'),
     titulo: yup.string().required('Título é obrigatório'),
     descricao: yup.string().required('Descrição é obrigatória'),
@@ -74,11 +76,12 @@ const ModalPreferencias = ({ preferencia, isOpen, onClose }: ModalPreferenciasPr
         const carregarResidentes = async () => {
             const { data, error } = await supabase
                 .from('residente')
-                .select('id, nome')
+                .select('id, nome, quarto')
                 .order('nome', { ascending: true });
 
             if (error) {
                 console.error('Erro ao carregar residentes:', error);
+                toast.error('Erro ao carregar residentes.');
                 return;
             }
             setResidentes(data || []);
@@ -136,31 +139,33 @@ const ModalPreferencias = ({ preferencia, isOpen, onClose }: ModalPreferenciasPr
             <Toaster
                 position="top-center"
                 toastOptions={{
-                    duration: 3500,
+                    duration: 4000,
                     style: {
-                        background: '#e4edfd',
+                        background: '#e4edfdff',
                         color: '#52323a',
-                        border: '1px solid #0036ca',
+                        border: '1px solid #0036caff',
                         borderRadius: '12px',
                         fontSize: '14px',
-                        fontWeight: '500'
+                        fontWeight: '500',
                     },
                     success: {
                         style: {
                             background: '#f0fdf4',
-                            border: '1px solid #00c950'
-                        }
+                            color: '#52323a',
+                            border: '1px solid #00c950',
+                        },
                     },
                     error: {
                         style: {
-                            background: '#fce7e7',
-                            border: '1px solid #c90d00'
-                        }
-                    }
+                            background: '#fce7e7ff',
+                            color: '#52323a',
+                            border: '1px solid #c90d00ff',
+                        },
+                    },
                 }}
             />
-            <div className="w-full max-w-2xl bg-white rounded-2xl shadow-lg overflow-hidden max-h-[90vh] flex flex-col">
-                {/* Header */}
+            <div className="w-full max-w-4xl bg-white rounded-2xl shadow-lg overflow-hidden max-h-[90vh] flex flex-col">
+                {/* Header do Modal */}
                 <div className="bg-odara-primary text-white p-6">
                     <div className="flex justify-between items-center">
                         <h2 className="text-2xl font-bold">
@@ -180,53 +185,54 @@ const ModalPreferencias = ({ preferencia, isOpen, onClose }: ModalPreferenciasPr
                     </p>
                 </div>
 
-                {/* Body */}
+                {/* Corpo do Modal */}
                 <div className="flex-1 overflow-y-auto p-6 bg-odara-offwhite/30">
-                    <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
+                    <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
                         <input type="hidden" {...register('id')} />
 
-                        {/* Residente */}
-                        <div>
-                            <label className="block text-sm font-semibold text-odara-dark mb-2">
-                                Residente *
-                            </label>
-                            <select
-                                {...register('id_residente')}
-                                className="w-full rounded-xl border-2 border-gray-200 p-3 focus:border-odara-primary focus:ring-2 focus:ring-odara-primary/20 transition-colors duration-200"
-                            >
-                                <option value="">Selecione um residente</option>
-                                {residentes.map(r => (
-                                    <option key={r.id} value={r.id}>
-                                        {r.nome}
-                                    </option>
-                                ))}
-                            </select>
-                            {errors.id_residente && (
-                                <p className="text-sm text-red-600 mt-2 flex items-center gap-1">
-                                    <FaExclamationCircle /> {errors.id_residente.message}
-                                </p>
-                            )}
-                        </div>
+                        {/* Linha 1 - Residente e Categoria */}
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div>
+                                <label className="block text-sm font-semibold text-odara-dark mb-2">
+                                    Residente *
+                                </label>
+                                <select
+                                    {...register('id_residente')}
+                                    className="w-full rounded-xl border-2 border-gray-200 p-3 focus:border-odara-primary focus:ring-2 focus:ring-odara-primary/20 transition-colors duration-200"
+                                >
+                                    <option value="">Selecione um residente</option>
+                                    {residentes.map(r => (
+                                        <option key={r.id} value={r.id}>
+                                            {r.nome} {r.quarto ? `(Q ${r.quarto})` : ''}
+                                        </option>
+                                    ))}
+                                </select>
+                                {errors.id_residente && (
+                                    <p className="text-sm text-red-600 mt-2 flex items-center gap-1">
+                                        <FaExclamationCircle /> {errors.id_residente.message}
+                                    </p>
+                                )}
+                            </div>
 
-                        {/* Categoria */}
-                        <div>
-                            <label className="block text-sm font-semibold text-odara-dark mb-2">
-                                Categoria *
-                            </label>
-                            <select
-                                {...register('tipo_preferencia')}
-                                className="w-full rounded-xl border-2 border-gray-200 p-3 focus:border-odara-primary"
-                            >
-                                <option value="">Selecione a categoria</option>
-                                {Object.entries(categorias).map(([value, label]) => (
-                                    <option key={value} value={value}>{label}</option>
-                                ))}
-                            </select>
-                            {errors.tipo_preferencia && (
-                                <p className="text-sm text-red-600 mt-2 flex items-center gap-1">
-                                    <FaExclamationCircle /> {errors.tipo_preferencia.message}
-                                </p>
-                            )}
+                            <div>
+                                <label className="block text-sm font-semibold text-odara-dark mb-2">
+                                    Categoria *
+                                </label>
+                                <select
+                                    {...register('tipo_preferencia')}
+                                    className="w-full rounded-xl border-2 border-gray-200 p-3 focus:border-odara-primary focus:ring-2 focus:ring-odara-primary/20 transition-colors duration-200"
+                                >
+                                    <option value="">Selecione a categoria</option>
+                                    {Object.entries(categorias).map(([value, label]) => (
+                                        <option key={value} value={value}>{label}</option>
+                                    ))}
+                                </select>
+                                {errors.tipo_preferencia && (
+                                    <p className="text-sm text-red-600 mt-2 flex items-center gap-1">
+                                        <FaExclamationCircle /> {errors.tipo_preferencia.message}
+                                    </p>
+                                )}
+                            </div>
                         </div>
 
                         {/* Título */}
@@ -237,7 +243,7 @@ const ModalPreferencias = ({ preferencia, isOpen, onClose }: ModalPreferenciasPr
                             <input
                                 {...register('titulo')}
                                 className="w-full rounded-xl border-2 border-gray-200 p-3 focus:border-odara-primary focus:ring-2 focus:ring-odara-primary/20 transition-colors duration-200"
-                                placeholder="Ex: Prefere refeições leves"
+                                placeholder="Ex: Prefere refeições leves, Gosta de música clássica, etc."
                             />
                             {errors.titulo && (
                                 <p className="text-sm text-red-600 mt-2 flex items-center gap-1">
@@ -255,7 +261,7 @@ const ModalPreferencias = ({ preferencia, isOpen, onClose }: ModalPreferenciasPr
                                 {...register('descricao')}
                                 rows={4}
                                 className="w-full rounded-xl border-2 border-gray-200 p-3 focus:border-odara-primary focus:ring-2 focus:ring-odara-primary/20 transition-colors duration-200"
-                                placeholder="Detalhe a preferência..."
+                                placeholder="Descreva detalhadamente a preferência, hábito ou necessidade específica..."
                             />
                             {errors.descricao && (
                                 <p className="text-sm text-red-600 mt-2 flex items-center gap-1">
@@ -267,7 +273,7 @@ const ModalPreferencias = ({ preferencia, isOpen, onClose }: ModalPreferenciasPr
                         {/* Foto */}
                         <div>
                             <label className="block text-sm font-semibold text-odara-dark mb-2">
-                                Foto (URL no Storage)
+                                Foto (URL do Storage)
                             </label>
                             <input
                                 {...register('foto_url')}
@@ -275,7 +281,7 @@ const ModalPreferencias = ({ preferencia, isOpen, onClose }: ModalPreferenciasPr
                                 placeholder="public/preferencias/exemplo.jpg"
                             />
                             <p className="text-xs text-odara-name mt-1">
-                                Opcional. Caminho da imagem no storage.
+                                Opcional. Caminho no storage onde a foto está salva
                             </p>
                         </div>
 

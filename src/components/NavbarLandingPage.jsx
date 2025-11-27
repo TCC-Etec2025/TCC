@@ -282,19 +282,18 @@ const Navbar = () => {
       {/* Sidebar Navigation*/}
       {isHomePage && (
         <div className="fixed right-3 top-1/3 transform -translate-y-1/2 z-30">
-          <div className="bg-odara-primary/90 backdrop-blur-lg rounded-xl shadow-2xl border border-odara-secondary/40 p-2">
+          <div className="bg-odara-primary/90 backdrop-blur-lg rounded-xl shadow-2xl border border-odara-offwhite p-2">
             <div className="flex flex-col space-y-2">
               {homeNavigationItems.map((item) => (
                 <button
                   key={item.id}
                   onClick={() => scrollToSection(item.id)}
-                  className="flex items-center justify-center w-10 h-10 text-odara-white hover:bg-odara-secondary/60 hover:scale-110 transition-all duration-300 rounded-lg relative group"
-                  title={item.label}
+                  className="flex items-center justify-center w-10 h-10 text-odara-white hover:bg-odara-secondary hover:scale-110 transition-all duration-300 rounded-lg relative group"
                 >
                   <span className="text-odara-white group-hover:text-odara-contorno">
                     {item.icon}
                   </span>
-                  <span className="absolute right-full mr-2 px-2 py-1 bg-odara-dark/95 text-odara-white text-xs rounded-md opacity-0 group-hover:opacity-100 transition-all duration-300 whitespace-nowrap shadow-lg">
+                  <span className="absolute right-full mr-2 px-2 py-1 bg-odara-dark text-odara-white text-xs rounded-md opacity-0 group-hover:opacity-100 transition-all duration-300 whitespace-nowrap shadow-lg">
                     {item.label}
                     <div className="absolute top-1/2 left-full -mt-1 border-3 border-transparent border-l-odara-dark/95"></div>
                   </span>

@@ -221,18 +221,12 @@ const AdminDashboard = () => {
       },
       {
         id: 8,
-        nome: "Consultas Médicas",
-        icone: ClipboardPlus,
-        acao: () => navegar("/app/funcionario/checklist/consultas/medicas")
-      },
-      {
-        id: 9,
         nome: "Atividades",
         icone: Palette,
         acao: () => navegar("/app/funcionario/checklist/atividades")
       },
       {
-        id: 10,
+        id: 9,
         nome: "Alimentação",
         icone: Apple,
         acao: () => navegar("/app/funcionario/checklist/alimentacao")
@@ -277,7 +271,7 @@ const AdminDashboard = () => {
 
         {/* Seção de Checklists */}
         <h2 className="text-xl font-semibold text-odara-dark mb-4">Checklists</h2>
-        <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
           {botoesChecklists.map((checklist) => (
             <div
               key={checklist.id}

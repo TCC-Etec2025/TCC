@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect } from 'react';
 import { useUser, type PerfilUsuario } from "../context/UserContext"
 import { useLayout } from "../context/LayoutContext"
-import { User, Settings, LogOut } from 'lucide-react';
+import { User, LogOut } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 
 type DropdownItem = {
@@ -51,20 +51,38 @@ export default function Topbar() {
         }
     ];
 
+    // Verificar se é responsável (não tem sidebar)
+    const isResponsavel = usuario && usuario.papel === "responsavel";
+
     return (
-        <div className="h-14 bg-white border-b border-gray-200 px-6 flex items-center justify-end">
-            {/* Header 
-            <button onClick={toggleSidebar} className="text-gray-600 hover:text-black">
-                ☰
-            </button>
-            */}
+        <div className={`h-14 border-b border-odara-contorno/20 px-6 flex items-center ${isResponsavel ? 'justify-between bg-odara-primary' : 'justify-end bg-white'}`}>
+            
+            {/* Logo e Nome - Apenas para responsável */}
+            {isResponsavel && (
+                <div className="flex items-center gap-2 text-odara-contorno font-bold">
+                    <div className="w-8 h-8 bg-white rounded-full flex items-center justify-center overflow-hidden border-2 border-odara-contorno shadow-lg">
+                        <img
+                            src="/images/logo.png"
+                            alt="Logo Odara Gestão"
+                            className="w-full h-full object-cover"
+                        />
+                    </div>
+                    <span className="text-lg text-odara-white">Odara <span className="text-odara-name">Gestão</span></span>
+                </div>
+            )}
+
+            {/* Área do usuário */}
             <div className="flex items-center gap-4">
                 <div
                     className="relative cursor-pointer"
                     onClick={() => setDropdownOpen(!dropdownOpen)}
                     ref={dropdownRef}
                 >
-                    <div className="w-11 h-11 rounded-full bg-green-200 flex items-center justify-center overflow-hidden border-1 border-white shadow-sm">
+                    <div className={`w-11 h-11 rounded-full flex items-center justify-center overflow-hidden border-1 shadow-sm ${
+                        isResponsavel 
+                            ? 'bg-odara-secondary border-odara-contorno' 
+                            : 'bg-green-200 border-white'
+                    }`}>
                         {!imageError ? (
                             <img
                                 src="/images/user/owner.jpg"
@@ -73,7 +91,9 @@ export default function Topbar() {
                                 onError={() => setImageError(true)}
                             />
                         ) : (
-                            <span className="text-sm font-medium text-gray-600">
+                            <span className={`text-sm font-medium ${
+                                isResponsavel ? 'text-odara-contorno' : 'text-gray-600'
+                            }`}>
                                 {getInitials(usuario.nome)}
                             </span>
                         )}

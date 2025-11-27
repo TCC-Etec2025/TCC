@@ -289,7 +289,6 @@ const Navbar = () => {
                   key={item.id}
                   onClick={() => scrollToSection(item.id)}
                   className="flex items-center justify-center w-10 h-10 text-odara-white hover:bg-odara-secondary hover:scale-110 transition-all duration-300 rounded-lg relative group"
-                  title={item.label}
                 >
                   <span className="text-odara-white group-hover:text-odara-contorno">
                     {item.icon}

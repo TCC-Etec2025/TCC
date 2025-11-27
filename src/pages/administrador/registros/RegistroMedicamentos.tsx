@@ -1,4 +1,3 @@
-// src/components/RegistroMedicamentos.tsx
 import { useEffect, useState, useRef } from 'react';
 import { FaPlus, FaEdit, FaTrash, FaFilter, FaInfoCircle } from 'react-icons/fa';
 import toast, { Toaster } from 'react-hot-toast';

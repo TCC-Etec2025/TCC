@@ -46,3 +46,17 @@ body {
   font-weight: bold;
   color: var(--color-odara-name);
 }
+
+input::-ms-reveal,
+input::-ms-clear {
+  display: none !important;
+}
+
+input[type="password"]::-webkit-textfield-decoration-container {
+  display: none !important;
+}
+
+input[type="password"]::-webkit-credentials-auto-fill-button {
+  visibility: hidden !important;
+  display: none !important;
+}

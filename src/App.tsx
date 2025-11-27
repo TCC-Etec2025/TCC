@@ -70,9 +70,6 @@ import Atividades from './pages/funcionario/Checklist/Atividades'
 /* Lucas */
 import ExamesMedicos from './pages/funcionario/Checklist/ExamesMedicos'
 
-/* Nicole */
-import ConsultasMedicas from './pages/funcionario/Checklist/ConsultasMedicas'
-
 export default function App() {
   return (
     <>
@@ -139,7 +136,6 @@ export default function App() {
           <Route path="funcionario/checklist/alimentacao" element={<Alimentacao />} />
           <Route path="funcionario/checklist/medicamentos" element={<Medicamentos />} />
           <Route path="funcionario/checklist/atividades" element={<Atividades />} />
-          <Route path="funcionario/checklist/consultas/medicas" element={<ConsultasMedicas />} />
           <Route path="funcionario/checklist/exames/medicos" element={<ExamesMedicos />} />
         </Route>
       </Routes>

@@ -7,6 +7,7 @@ import { supabase } from "../lib/supabaseClient";
 import CryptoJS from 'crypto-js';
 import { Eye, EyeOff, AlertTriangle, } from "lucide-react";
 import { useUser } from "../context/UserContext";
+import { usePermission } from "../context/PermissionContext";
 
 type UsuarioLogin = {
   id: number;
@@ -38,6 +39,7 @@ export default function Login() {
   });
 
   const { setUsuario } = useUser();
+  const { setPermissao } = usePermission();
 
   const handleLogin = async (data: FormData) => {
     setIsLoading(true);
@@ -98,11 +100,23 @@ export default function Login() {
           papel: papel,
           ...data,
         });
+        const { data: permissionsData, error: permError } = await supabase
+          .from("permissao")
+          .select("chave")
+          .eq("id_usuario", userData.id);
+        if (permError) {
+          console.error("Erro ao buscar permissões:", permError);
+        }
+        if (permissionsData) {
+          const permissions = permissionsData.map(p => p.chave);
+          setPermissao(permissions);
+        }
       }
 
       navigate("/app", { replace: true });
       setIsLoading(false);
-    } catch (err) {
+    } catch (error) {
+      console.error("Erro no login:", error);
       setServerError("Erro interno. Tente novamente.");
       setIsLoading(false);
     }

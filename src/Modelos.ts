@@ -51,8 +51,8 @@ export interface Funcionario {
   telefone_principal: string;
   telefone_secundario?: string;
   id_endereco: number;
-  contato_emergencia_nome?: string;
-  contato_emergencia_telefone?: string;
+  contato_emergencia_nome: string | null;
+  contato_emergencia_telefone: string | null;
   foto?: string;
   status: string;
   criado_em: string;
@@ -70,8 +70,8 @@ export interface Responsavel {
   id_endereco: number;
   id_usuario: number;
   status: boolean;
-  contato_emergencia_nome?: string;
-  contato_emergencia_telefone?: string;
+  contato_emergencia_nome: string | null;
+  contato_emergencia_telefone: string | null;
   observacoes?: string;
   criado_em: string;
   atualizado_em: string;

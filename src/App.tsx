@@ -69,6 +69,8 @@ import Atividades from './pages/funcionario/Checklist/Atividades'
 
 /* Lucas */
 import ExamesMedicos from './pages/funcionario/Checklist/ExamesMedicos'
+import { ResidenteProntuario } from './pages/ResidenteProntuario.tsx'
+import PermissoesFuncionario from './pages/PermissoesFuncionario.tsx'
 
 /* Nicole */
 import ConsultasMedicas from './pages/funcionario/Checklist/ConsultasMedicas'
@@ -108,6 +110,7 @@ export default function App() {
           <Route path="admin/responsavel/formulario" element={<FormularioResponsavel />} />
           <Route path="admin/funcionario/formulario" element={<FormularioFuncionario />} />
           <Route path="admin/pertence/formulario" element={<FormularioPertence />} />
+          <Route path="admin/funcionario/permissoes" element={<PermissoesFuncionario />} />
 
           {/* Listagens */}
           <Route path="admin/residentes" element={<Residentes />} />
@@ -129,6 +132,7 @@ export default function App() {
           <Route path="admin/registro/preferencias" element={<RegistroPreferencias />} />
           <Route path="admin/registro/consultas" element={<RegistroConsultas />} />
           <Route path="admin/registro/exames" element={<RegistroExames />} />
+          <Route path="admin/residente/visualizar" element={<ResidenteProntuario />} />
 
           {/* Funcionário */}
           <Route path="funcionario/residentes/funcionario" element={<ResidentesFuncionario />} />

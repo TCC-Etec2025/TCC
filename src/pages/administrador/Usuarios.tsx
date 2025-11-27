@@ -463,13 +463,15 @@ const Usuarios: React.FC = () => {
                     <td className="p-4">
                       <div className="flex space-x-2">
                         {/* Botão Editar */}
+                        {usuario.papel?.nome?.toLowerCase() === 'funcionario' && (
                         <button
                           className="p-1 text-odara-dropdown-accent transition hover:text-odara-secondary rounded"
                           title="Editar usuário"
-                          onClick={() => navigate('/app/admin/usuario/formulario', { state: { usuario } })}
+                          onClick={() => navigate('/app/admin/funcionario/permissoes', { state: { idFuncionario: usuario.id, nomeFuncionario: obterNomeUsuario(usuario) } })}
                         >
                           <Edit className="h-4 w-4" />
                         </button>
+                        )}
 
                         {/* Botão Excluir */}
                         <button

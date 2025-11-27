@@ -2,7 +2,7 @@ import * as yup from 'yup';
 
 export const usuarioSchema = yup.object().shape({
     nome: yup.string()
-        .required("Nome é obrigatório").min(2, "Nome deve ter pelo menos 2 caracteres"),
+        .required("Nome é obrigatório"),
     email: yup.string().email("Email deve ser válido")
         .required("Email é obrigatório"),
     cpf: yup.string()

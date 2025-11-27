@@ -8,7 +8,7 @@ export type PerfilUsuario = { papel: string; } & (Funcionario | Responsavel) & {
 type UserContextType = {
   usuario: PerfilUsuario | null;
   setUsuario: (user: PerfilUsuario | null) => void;
-  atualizarUsuario: () => Promise<void>;
+  atualizarUsuario: (id?: number) => Promise<void>;
   logout: () => void;
 };
 
@@ -42,12 +42,11 @@ export function UserProvider({ children }: { children: ReactNode }) {
   }, [usuario]);
 
   // 3. Função para recarregar dados do usuário do banco
-  const atualizarUsuario = async () => {
-    if (!usuario?.id_usuario) return;
+  const atualizarUsuario = async (id?: number) => {
 
     try {
       const { data, error } = await supabase.rpc('obter_perfil_usuario', {
-        p_id_usuario: usuario.id_usuario
+        p_id_usuario: id || usuario?.id_usuario,
       });
 
       if (error) {

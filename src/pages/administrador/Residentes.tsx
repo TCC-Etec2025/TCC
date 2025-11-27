@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Search, Plus, Edit, Trash2, User, Phone, Mail, AlertTriangle, Loader2 } from 'lucide-react';
+import { Search, Plus, Edit, Trash2, User, Phone, Mail, AlertTriangle, Loader2, Eye } from 'lucide-react';
 import { supabase } from '../../lib/supabaseClient';
 import { type Residente } from '../../Modelos';
 import { differenceInYears } from 'date-fns';
@@ -387,6 +387,14 @@ const Residentes: React.FC = () => {
                           onClick={() => navigate('/app/admin/residente/formulario', { state: { residente } })}
                         >
                           <Edit className="h-4 w-4" />
+                        </button>
+
+                        <button
+                          className="p-1 text-odara-dropdown-accent transition hover:text-odara-secondary rounded"
+                          title="Visualizar residente"
+                          onClick={() => navigate('/app/admin/residente/visualizar', { state: { id: residente.id } })}
+                        >
+                          <Eye className="h-4 w-4" />
                         </button>
 
                         {/* Botão Excluir */}

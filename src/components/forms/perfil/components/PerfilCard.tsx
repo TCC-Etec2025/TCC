@@ -23,11 +23,11 @@ export default function PerfilCard({ usuario }: Props) {
 
             <div className="space-y-4">
                 <div className="flex items-center gap-3 text-sm text-gray-600">
-                    <Mail className="h-4 w-4 text-gray-400 flex-shrink-0" />
+                    <Mail className="h-4 w-4 text-gray-400 shrink-0" />
                     <span className="break-all">{usuario.email}</span>
                 </div>
                 <div className="flex items-center gap-3 text-sm text-gray-600">
-                    <Phone className="h-4 w-4 text-gray-400 flex-shrink-0" />
+                    <Phone className="h-4 w-4 text-gray-400 shrink-0" />
                     <span>
                         {formatTelefone(usuario.telefone_principal)}
                         {usuario.telefone_secundario && (
@@ -36,15 +36,15 @@ export default function PerfilCard({ usuario }: Props) {
                     </span>
                 </div>
                 <div className="flex items-center gap-3 text-sm text-gray-600">
-                    <MapPin className="h-4 w-4 text-gray-400 flex-shrink-0" />
+                    <MapPin className="h-4 w-4 text-gray-400 shrink-0" />
                     <div className="flex flex-col">
-                        <span className="break-words">{usuario.endereco.logradouro}, {usuario.endereco.numero} - {usuario.endereco.bairro}</span>
-                        <span className="break-words">{usuario.endereco.cidade} - {usuario.endereco.estado}</span>
+                        <span className="wrap-break-words">{usuario.endereco.logradouro}, {usuario.endereco.numero} - {usuario.endereco.bairro}</span>
+                        <span className="wrap-break-words">{usuario.endereco.cidade} - {usuario.endereco.estado}</span>
                     </div>
                 </div>
                 {usuario.papel.toLowerCase() !== "responsavel" && (usuario as Funcionario).data_admissao && (
                     <div className="flex items-center gap-3 text-sm text-gray-600">
-                        <Calendar className="h-4 w-4 text-gray-400 flex-shrink-0" />
+                        <Calendar className="h-4 w-4 text-gray-400 shrink-0" />
                         <span>Desde {formatDate((usuario as Funcionario).data_admissao)}</span>
                     </div>
                 )}

@@ -45,11 +45,11 @@ export default function UsuarioForm({ usuario, isEditing }: Props) {
       if (error) {
         setMessage({ type: 'error', text: 'Erro ao atualizar informações pessoais' });
         console.error("Erro ao atualizar usuário:", error.message);
+        alert(`Erro ao atualizar usuário: ${error.message}`);
       } else {
         setMessage({ type: 'success', text: 'Informações pessoais atualizadas com sucesso!' });
         console.log("Usuário atualizado com sucesso:", data);
         
-        // Atualiza o contexto com os dados mais recentes
         await atualizarUsuario();
       }
     } catch (err) {
@@ -169,54 +169,6 @@ export default function UsuarioForm({ usuario, isEditing }: Props) {
             </p>
           )}
         </div>
-
-        <div className="space-y-2">
-          <label
-            htmlFor="contato_emergencia_nome"
-            className="block text-sm font-medium text-gray-700"
-          >
-            Contato de Emergência - Nome
-          </label>
-          <input
-            id="contato_emergencia_nome"
-            type="text"
-            {...register("contato_emergencia_nome")}
-            disabled={!isEditing}
-            className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 disabled:bg-gray-50"
-          />
-        </div>
-
-        <div className="space-y-2">
-          <label
-            htmlFor="contato_emergencia_telefone"
-            className="block text-sm font-medium text-gray-700"
-          >
-            Contato de Emergência - Telefone
-          </label>
-          <input
-            id="contato_emergencia_telefone"
-            type="text"
-            {...register("contato_emergencia_telefone")}
-            disabled={!isEditing}
-            className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 disabled:bg-gray-50"
-            placeholder={isEditing ? `(11) 99999-9999` : ''}
-            maxLength={15}
-            onChange={(e) => {
-              let value = e.target.value.replace(/\D/g, "");
-              if (value.length > 2) {
-                value = value.replace(/^(\d{2})(\d)/, "($1) $2");
-              }
-              if (value.length > 7) {
-                value = value.replace(
-                  /^(\(\d{2}\)\s)(\d{5})(\d{1,4})/,
-                  "$1$2-$3"
-                );
-              }
-              e.target.value = value;
-              setValue("telefone_principal", value);
-            }}
-          />
-        </div>
         <div className="space-y-2">
           <label
             htmlFor="telefone_principal"
@@ -281,7 +233,55 @@ export default function UsuarioForm({ usuario, isEditing }: Props) {
                 );
               }
               e.target.value = value;
-              setValue("telefone_principal", value);
+              setValue("telefone_secundario", value);
+            }}
+          />
+        </div>
+
+        <div className="space-y-2">
+          <label
+            htmlFor="contato_emergencia_nome"
+            className="block text-sm font-medium text-gray-700"
+          >
+            Contato de Emergência - Nome
+          </label>
+          <input
+            id="contato_emergencia_nome"
+            type="text"
+            {...register("contato_emergencia_nome")}
+            disabled={!isEditing}
+            className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 disabled:bg-gray-50"
+          />
+        </div>
+
+        <div className="space-y-2">
+          <label
+            htmlFor="contato_emergencia_telefone"
+            className="block text-sm font-medium text-gray-700"
+          >
+            Contato de Emergência - Telefone
+          </label>
+          <input
+            id="contato_emergencia_telefone"
+            type="text"
+            {...register("contato_emergencia_telefone")}
+            disabled={!isEditing}
+            className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 disabled:bg-gray-50"
+            placeholder={isEditing ? `(11) 99999-9999` : ''}
+            maxLength={15}
+            onChange={(e) => {
+              let value = e.target.value.replace(/\D/g, "");
+              if (value.length > 2) {
+                value = value.replace(/^(\d{2})(\d)/, "($1) $2");
+              }
+              if (value.length > 7) {
+                value = value.replace(
+                  /^(\(\d{2}\)\s)(\d{5})(\d{1,4})/,
+                  "$1$2-$3"
+                );
+              }
+              e.target.value = value;
+              setValue("contato_emergencia_telefone", value);
             }}
           />
         </div>

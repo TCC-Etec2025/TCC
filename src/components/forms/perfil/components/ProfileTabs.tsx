@@ -12,8 +12,6 @@ const tabs: Tab[] = [
     { id: "personal", label: "Pessoal" },
     { id: "address", label: "Endereço" },
     { id: "security", label: "Segurança" },
-    { id: "notifications", label: "Notificações" },
-    { id: "privacy", label: "Privacidade" },
 ];
 
 export default function ProfileTabs({ currentTab, onTabChange }: Props) {
@@ -25,7 +23,7 @@ export default function ProfileTabs({ currentTab, onTabChange }: Props) {
                         <button
                             key={tab.id}
                             onClick={() => onTabChange(tab.id)}
-                            className={`flex-shrink-0 px-3 py-2 font-medium text-sm rounded-md transition-colors ${
+                            className={`shrink-0 px-3 py-2 font-medium text-sm rounded-md transition-colors ${
                                 currentTab === tab.id 
                                     ? "bg-gray-100 text-gray-900" 
                                     : "text-gray-500 hover:text-gray-700"

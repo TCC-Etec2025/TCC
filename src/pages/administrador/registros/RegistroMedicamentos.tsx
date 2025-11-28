@@ -67,8 +67,6 @@ const RegistroMedicamentos: React.FC = () => {
   const [filtroResidenteAberto, setFiltroResidenteAberto] = useState(false);
   const [filtroStatusAberto, setFiltroStatusAberto] = useState(false);
   const [filtrosAberto, setFiltrosAberto] = useState(false);
-
-  const dropdownRef = useRef<HTMLDivElement>(null);
   const filtroResidenteRef = useRef<HTMLDivElement>(null);
   const filtroStatusRef = useRef<HTMLDivElement>(null);
 
@@ -280,7 +278,7 @@ const RegistroMedicamentos: React.FC = () => {
             ></div>
 
             {/* MENU DROPDOWN (Com Z-Index maior que a camada invisível) */}
-            <div className="absolute top-full right-0 mt-1 w-48 bg-white rounded-lg shadow-lg border border-gray-200 z-20 py-1">
+            <div className="absolute top-full right-0 mt-2 w-48 bg-white rounded-lg shadow-lg border border-gray-200 z-20 overflow-hidden">
               {STATUS_OPTIONS.map((option) => {
                 const OptionIcon = obterIconeStatus(option.value);
                 return (

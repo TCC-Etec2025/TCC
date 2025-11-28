@@ -109,9 +109,9 @@ const AdminDashboard = () => {
   // Componente de Cabeçalho
   const CabecalhoDashboard = () => {
     return (
-      <div className="flex justify-between mb-8">
+      <div className="flex flex-col sm:flex-row justify-between mb-6 sm:mb-8 gap-4">
         <div>
-          <h1 className="text-3xl font-bold text-odara-dark">Dashboard Administrativo</h1>
+          <h1 className="text-2xl sm:text-3xl font-bold text-odara-dark">Dashboard Administrativo</h1>
           <p className="text-odara-dark/60 text-sm">Visão geral e controle do sistema ILPI</p>
         </div>
 
@@ -132,34 +132,34 @@ const AdminDashboard = () => {
     numeroColaboradores: number;
   }) => {
     return (
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
         {/* Cartão de Residentes */}
-        <div className="bg-white rounded-2xl shadow p-6 cursor-pointer hover:shadow-md transition">
+        <div className="bg-white rounded-xl sm:rounded-2xl shadow p-4 sm:p-6 cursor-pointer hover:shadow-md transition">
           <div className="flex items-center justify-between">
             <div>
               <h3 className="text-sm font-medium text-gray-500">Residentes Ativos</h3>
-              <p className="text-3xl font-bold text-odara-dark mt-2">
+              <p className="text-2xl sm:text-3xl font-bold text-odara-dark mt-1 sm:mt-2">
                 {numeroIdosos}
               </p>
             </div>
-            <div className="p-3 rounded-full">
-              <WrapperIcone icone={FileText} tamanho={32} className='text-odara-primary' />
+            <div className="p-2 sm:p-3 rounded-full">
+              <WrapperIcone icone={FileText} tamanho={28} className='text-odara-primary' />
             </div>
           </div>
         </div>
 
         {/* Cartão de Funcionários */}
-        <div className="bg-white rounded-2xl shadow p-6 cursor-pointer hover:shadow-md transition">
+        <div className="bg-white rounded-xl sm:rounded-2xl shadow p-4 sm:p-6 cursor-pointer hover:shadow-md transition">
           <div className="flex items-center justify-between">
             <div>
               <h3 className="text-sm font-medium text-gray-500">Funcionários Ativos</h3>
-              <p className="text-3xl font-bold text-odara-dark mt-2">
+              <p className="text-2xl sm:text-3xl font-bold text-odara-dark mt-1 sm:mt-2">
                 {numeroColaboradores}
               </p>
               <p className="text-sm text-gray-600 mt-1">3 online</p>
             </div>
-            <div className="p-3 rounded-full">
-              <WrapperIcone icone={UsersRound} tamanho={32} className='text-odara-primary' />
+            <div className="p-2 sm:p-3 rounded-full">
+              <WrapperIcone icone={UsersRound} tamanho={28} className='text-odara-primary' />
             </div>
           </div>
         </div>
@@ -240,25 +240,25 @@ const AdminDashboard = () => {
     };
 
     return (
-      <div className="bg-white rounded-2xl shadow p-5 border-l-4 border-odara-primary">
+      <div className="bg-white rounded-xl sm:rounded-2xl shadow p-4 sm:p-5 border-l-4 border-odara-primary">
         {/* Seção de Cadastros */}
-        <h2 className="text-xl font-semibold text-odara-dark mb-4">Cadastros</h2>
-        <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
+        <h2 className="text-lg sm:text-xl font-semibold text-odara-dark mb-3 sm:mb-4">Cadastros</h2>
+        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-3 sm:gap-4">
           {botoesCadastros.map((cadastro) => (
             <div
               key={cadastro.id}
               onClick={() => lidarComClique(cadastro)}
-              className={`border border-gray-200 rounded-md p-4 cursor-pointer hover:shadow-md transition-all duration-200 group 
+              className={`border border-gray-200 rounded-md p-3 sm:p-4 cursor-pointer hover:shadow-md transition-all duration-200 group 
                 ${acaoSelecionada?.id === cadastro.id
                   ? "ring-2 ring-odara-primary shadow-sm"
                   : "hover:border-odara-primary/50 hover:bg-odara-primary/5"
                 }`}
             >
               <div className="flex flex-col items-center text-center gap-2">
-                <div className="p-3 rounded-lg bg-odara-primary/10 group-hover:bg-odara-primary/20 transition-colors">
-                  <WrapperIcone icone={cadastro.icone} tamanho={28} className='text-odara-primary' />
+                <div className="p-2 sm:p-3 rounded-lg bg-odara-primary/10 group-hover:bg-odara-primary/20 transition-colors">
+                  <WrapperIcone icone={cadastro.icone} tamanho={24} className='text-odara-primary' />
                 </div>
-                <span className="text-sm font-medium text-odara-dark">
+                <span className="text-xs sm:text-sm font-medium text-odara-dark leading-tight">
                   {cadastro.nome}
                 </span>
               </div>
@@ -267,26 +267,26 @@ const AdminDashboard = () => {
         </div>
 
         {/* Separador */}
-        <hr className="border-gray-200 my-6" />
+        <hr className="border-gray-200 my-4 sm:my-6" />
 
         {/* Seção de Checklists */}
-        <h2 className="text-xl font-semibold text-odara-dark mb-4">Checklists</h2>
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+        <h2 className="text-lg sm:text-xl font-semibold text-odara-dark mb-3 sm:mb-4">Checklists</h2>
+        <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4">
           {botoesChecklists.map((checklist) => (
             <div
               key={checklist.id}
               onClick={() => lidarComClique(checklist)}
-              className={`border border-gray-200 rounded-md p-4 cursor-pointer hover:shadow-md transition-all duration-200 group 
+              className={`border border-gray-200 rounded-md p-3 sm:p-4 cursor-pointer hover:shadow-md transition-all duration-200 group 
                 ${acaoSelecionada?.id === checklist.id
                   ? "ring-2 ring-odara-primary shadow-sm"
                   : "hover:border-odara-primary/50 hover:bg-odara-primary/5"
                 }`}
             >
               <div className="flex flex-col items-center text-center gap-2">
-                <div className="p-3 rounded-lg bg-odara-primary/10 group-hover:bg-odara-primary/20 transition-colors">
-                  <WrapperIcone icone={checklist.icone} tamanho={28} className='text-odara-primary' />
+                <div className="p-2 sm:p-3 rounded-lg bg-odara-primary/10 group-hover:bg-odara-primary/20 transition-colors">
+                  <WrapperIcone icone={checklist.icone} tamanho={24} className='text-odara-primary' />
                 </div>
-                <span className="text-sm font-medium text-odara-dark">
+                <span className="text-xs sm:text-sm font-medium text-odara-dark">
                   {checklist.nome}
                 </span>
               </div>
@@ -393,32 +393,32 @@ const AdminDashboard = () => {
     ];
 
     return (
-      <div className="bg-white rounded-2xl shadow p-6 h-full">
-        <div className="flex items-center gap-2 mb-4">
+      <div className="bg-white rounded-xl sm:rounded-2xl shadow p-4 sm:p-6 h-full">
+        <div className="flex items-center gap-2 mb-3 sm:mb-4">
           <WrapperIcone icone={Bell} className='text-odara-accent' />
-          <h2 className="text-xl font-semibold text-odara-dark">Alertas e Notificações</h2>
+          <h2 className="text-lg sm:text-xl font-semibold text-odara-dark">Alertas e Notificações</h2>
         </div>
 
         {/* Seção de Alertas */}
-        <div className="mb-6">
-          <div className="flex justify-between items-center mb-3">
-            <h3 className="font-medium text-odara-dark">Alertas</h3>
+        <div className="mb-4 sm:mb-6">
+          <div className="flex justify-between items-center mb-2 sm:mb-3">
+            <h3 className="font-medium text-odara-dark text-sm sm:text-base">Alertas</h3>
             <span className="bg-odara-alerta/10 text-odara-alerta text-xs px-2 py-1 rounded-full">
               {alertas.length}
             </span>
           </div>
-          <div className="space-y-3">
+          <div className="space-y-2 sm:space-y-3">
             {alertas.map((alerta) => (
-              <div key={alerta.id} className="p-3 rounded-lg border-l-2 border-odara-alerta bg-odara-alerta/10">
+              <div key={alerta.id} className="p-2 sm:p-3 rounded-lg border-l-2 border-odara-alerta bg-odara-alerta/10">
                 <div className="flex items-start gap-2">
-                  <WrapperIcone icone={AlertTriangle} tamanho={20} className='text-odara-alerta' />
-                  <div className="flex-1">
-                    <p className="text-sm font-medium text-odara-dark">{alerta.texto}</p>
+                  <WrapperIcone icone={AlertTriangle} tamanho={18} className='text-odara-alerta mt-0.5' />
+                  <div className="flex-1 min-w-0">
+                    <p className="text-xs sm:text-sm font-medium text-odara-dark leading-tight">{alerta.texto}</p>
                     <p className="text-xs text-gray-500 mt-1">{alerta.hora}</p>
                   </div>
                   <button
                     onClick={() => abrirModal(alerta)}
-                    className="text-gray-400 hover:text-odara-dark transition-colors"
+                    className="text-gray-400 hover:text-odara-dark transition-colors flex-shrink-0"
                     title="Ver detalhes"
                   >
                     <WrapperIcone icone={Eye} tamanho={16} className='text-odara-accent' />
@@ -429,28 +429,28 @@ const AdminDashboard = () => {
           </div>
         </div>
 
-        <div className="border-t border-gray-200 my-4"></div>
+        <div className="border-t border-gray-200 my-3 sm:my-4"></div>
 
         {/* Seção de Notificações */}
         <div>
-          <div className="flex justify-between items-center mb-3">
-            <h3 className="font-medium text-odara-dark">Notificações</h3>
+          <div className="flex justify-between items-center mb-2 sm:mb-3">
+            <h3 className="font-medium text-odara-dark text-sm sm:text-base">Notificações</h3>
             <span className="bg-odara-dropdown/50 text-odara-dropdown-accent text-xs px-2 py-1 rounded-full">
               {notificacoes.length}
             </span>
           </div>
-          <div className="space-y-3">
+          <div className="space-y-2 sm:space-y-3">
             {notificacoes.map((notificacao) => (
-              <div key={notificacao.id} className="p-3 rounded-lg border-l-2 border-odara-dropdown-accent bg-odara-dropdown/50">
+              <div key={notificacao.id} className="p-2 sm:p-3 rounded-lg border-l-2 border-odara-dropdown-accent bg-odara-dropdown/50">
                 <div className="flex items-start gap-2">
-                  <WrapperIcone icone={Info} tamanho={20} className='text-odara-dropdown-accent' />
-                  <div className="flex-1">
-                    <p className="text-sm font-medium text-odara-dark">{notificacao.texto}</p>
+                  <WrapperIcone icone={Info} tamanho={18} className='text-odara-dropdown-accent mt-0.5' />
+                  <div className="flex-1 min-w-0">
+                    <p className="text-xs sm:text-sm font-medium text-odara-dark leading-tight">{notificacao.texto}</p>
                     <p className="text-xs text-gray-500 mt-1">{notificacao.hora}</p>
                   </div>
                   <button
                     onClick={() => abrirModal(notificacao)}
-                    className="text-gray-400 hover:text-odara-dark transition-colors"
+                    className="text-gray-400 hover:text-odara-dark transition-colors flex-shrink-0"
                     title="Ver detalhes"
                   >
                     <WrapperIcone icone={Eye} tamanho={16} className='text-odara-secondary' />
@@ -470,22 +470,22 @@ const AdminDashboard = () => {
 
     return (
       <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 p-4">
-        <div className="bg-white rounded-2xl shadow-xl max-w-md w-full max-h-[90vh] overflow-y-auto">
+        <div className="bg-white rounded-xl sm:rounded-2xl shadow-xl max-w-md w-full max-h-[90vh] overflow-y-auto">
           {/* Cabeçalho do Modal */}
-          <div className="flex items-center justify-between p-6 border-b border-gray-200">
-            <h3 className="text-xl font-semibold text-odara-dark">
+          <div className="flex items-center justify-between p-4 sm:p-6 border-b border-gray-200">
+            <h3 className="text-lg sm:text-xl font-semibold text-odara-dark">
               {itemSelecionado.detalhes.titulo}
             </h3>
             <button
               onClick={fecharModal}
               className="transition-colors"
             >
-              <WrapperIcone icone={X} tamanho={24} className='text-odara-accent hover:text-odara-secondary' />
+              <WrapperIcone icone={X} tamanho={20} className='text-odara-accent hover:text-odara-secondary' />
             </button>
           </div>
 
           {/* Corpo do Modal */}
-          <div className="p-6">
+          <div className="p-4 sm:p-6">
             <div className="flex items-center gap-3 mb-4">
               <div className={`p-2 rounded-full ${itemSelecionado.tipo === 'alerta' ? 'bg-odara-alerta/10' : 'bg-odara-dropdown/50'}`}>
                 <WrapperIcone
@@ -522,16 +522,16 @@ const AdminDashboard = () => {
           </div>
 
           {/* Rodapé do Modal */}
-          <div className="flex justify-end gap-3 p-6 border-t border-gray-200">
+          <div className="flex flex-col sm:flex-row justify-end gap-2 sm:gap-3 p-4 sm:p-6 border-t border-gray-200">
             <button
               onClick={fecharModal}
-              className="px-4 py-2 text-sm font-medium text-odara-primary bg-odara-white border-2 border-odara-primary rounded-lg hover:bg-odara-primary hover:text-odara-white transition-colors"
+              className="px-4 py-2 text-sm font-medium text-odara-primary bg-odara-white border-2 border-odara-primary rounded-lg hover:bg-odara-primary hover:text-odara-white transition-colors order-2 sm:order-1"
             >
               Fechar
             </button>
             <button
               onClick={marcarComoLido}
-              className={'px-4 py-2 text-sm font-medium text-white rounded-lg transition-colors bg-odara-accent hover:bg-odara-secondary'}
+              className={'px-4 py-2 text-sm font-medium text-white rounded-lg transition-colors bg-odara-accent hover:bg-odara-secondary order-1 sm:order-2'}
             >
               Marcar como Lida
             </button>
@@ -570,11 +570,11 @@ const AdminDashboard = () => {
         }}
       />
 
-      <div className="flex-1 p-6 lg:p-8">
+      <div className="flex-1 p-4 sm:p-6 lg:p-8">
         <CabecalhoDashboard />
 
-        <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
-          <div className="lg:col-span-3 space-y-6">
+        <div className="grid grid-cols-1 xl:grid-cols-4 gap-4 sm:gap-6">
+          <div className="xl:col-span-3 space-y-4 sm:space-y-6">
             <CartoesEstatisticas
               numeroIdosos={numeroIdosos}
               numeroColaboradores={numeroColaboradores}
@@ -583,7 +583,7 @@ const AdminDashboard = () => {
             <AcoesAdministrativas />
           </div>
 
-          <div className="lg:col-span-1">
+          <div className="xl:col-span-1">
             <AlertasNotificacoes />
           </div>
         </div>

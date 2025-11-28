@@ -1,6 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { FaPlus, FaEdit, FaTrash, FaFilter, FaInfoCircle, FaTimes, FaCalendarAlt } from 'react-icons/fa';
-import Calendar from 'react-calendar';
+import { FaPlus, FaEdit, FaTrash, FaFilter, FaInfoCircle, FaTimes} from 'react-icons/fa';
 import { supabase } from '../../../lib/supabaseClient';
 import ModalConsultas from './ModalConsultas';
 import toast, { Toaster } from 'react-hot-toast';
@@ -31,7 +30,6 @@ const corStatus: Record<string, { bola: string; bg: string; text: string; border
   agendada: { bola: 'bg-blue-500', bg: 'bg-blue-50', text: 'text-odara-dark font-semibold', border: 'border-b border-blue-200' },
   realizada: { bola: 'bg-green-500', bg: 'bg-green-50', text: 'text-odara-dark font-semibold', border: 'border-b border-green-200' },
   cancelada: { bola: 'bg-red-500', bg: 'bg-red-50', text: 'text-odara-dark font-semibold', border: 'border-b border-red-200' },
-  remarcada: { bola: 'bg-yellow-500', bg: 'bg-yellow-50', text: 'text-odara-dark font-semibold', border: 'border-b border-yellow-200' }
 };
 
 const RegistroConsultas = () => {
@@ -40,7 +38,6 @@ const RegistroConsultas = () => {
   const [consultaSelecionada, setConsultaSelecionada] = useState<Consulta | null>(null);
   const [residentes, setResidentes] = useState<Residente[]>([]);
   const [infoVisivel, setInfoVisivel] = useState(false);
-  const [calendarioVisivel, setCalendarioVisivel] = useState(false);
   const [dataSelecionada, setDataSelecionada] = useState<Date | null>(null);
 
   // Busca sempre visível
@@ -319,7 +316,6 @@ const RegistroConsultas = () => {
                   <option value="agendada">Agendada</option>
                   <option value="realizada">Realizada</option>
                   <option value="cancelada">Cancelada</option>
-                  <option value="remarcada">Remarcada</option>
                 </select>
               </div>
 
@@ -422,7 +418,6 @@ const RegistroConsultas = () => {
                       <option value="agendada">Agendada</option>
                       <option value="realizada">Realizada</option>
                       <option value="cancelada">Cancelada</option>
-                      <option value="remarcada">Remarcada</option>
                     </select>
                   </div>
 

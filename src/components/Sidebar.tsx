@@ -39,7 +39,11 @@ export default function Sidebar() {
 
   return (
     <div
-      className={`flex flex-col h-screen bg-odara-primary border-r border-odara-contorno/20 shadow-lg transition-all duration-300 ${expanded ? "w-64" : "w-16"} group`}
+      className={`flex flex-col h-screen bg-odara-primary border-r border-odara-contorno/20 shadow-lg transition-all duration-300 ${
+        expanded 
+          ? "w-56 md:w-64"  // 224px no mobile, 256px no desktop quando expandido
+          : "w-14 md:w-16"   // 56px no mobile, 64px no desktop quando recolhido
+      } group`}
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
     >

@@ -15,9 +15,9 @@ import { supabase } from "../../../lib/supabaseClient";
 import { useForm } from "react-hook-form";
 import * as yup from "yup";
 import { yupResolver } from "@hookform/resolvers/yup";
+import ModalComportamento from "./ModalComportamento"; // Importando o modal separado
 
 // ================= CONFIG =================
-// Troque o nome do bucket aqui se for outro no seu Supabase
 const STORAGE_BUCKET = "comportamento_fotos";
 
 // ===== CONSTANTES =====
@@ -68,39 +68,6 @@ type Comportamento = {
   foto?: string | null;
 };
 
-type FormValues = {
-  id?: number;
-  titulo: string;
-  descricao?: string;
-  data: string;
-  horario: string;
-  residente: number | string;
-  funcionario: number | string;
-  categoria: string;
-  resolvido?: boolean;
-  foto?: FileList;
-};
-
-// ===== VALIDAÇÃO YUP =====
-const schema = yup
-  .object({
-    titulo: yup.string().required("Título é obrigatório"),
-    data: yup.string().required("Data é obrigatória"),
-    horario: yup.string().required("Horário é obrigatório"),
-    descricao: yup.string().nullable(),
-    residente: yup
-      .mixed()
-      .test("is-number", "Residente é obrigatório", (val) => val !== "" && val !== 0 && val !== "0")
-      .required(),
-    funcionario: yup
-      .mixed()
-      .test("is-number", "Funcionário é obrigatório", (val) => val !== "" && val !== 0 && val !== "0")
-      .required(),
-    categoria: yup.string().required("Categoria é obrigatória"),
-    resolvido: yup.boolean(),
-  })
-  .required();
-
 // ===== COMPONENTE =====
 const RegistroComportamento: React.FC = () => {
   // estados
@@ -127,31 +94,8 @@ const RegistroComportamento: React.FC = () => {
   const formFiltrosRef = useRef<HTMLFormElement>(null);
 
   const [modalAberto, setModalAberto] = useState(false);
-  const [editando, setEditando] = useState(false);
+  const [comportamentoEditando, setComportamentoEditando] = useState<Comportamento | null>(null);
   const [infoVisivel, setInfoVisivel] = useState(false);
-
-  // react-hook-form
-  const {
-    register,
-    handleSubmit,
-    reset,
-    watch,
-    setValue,
-    formState: { errors, isSubmitting },
-  } = useForm<FormValues>({
-    resolver: yupResolver(schema),
-    defaultValues: {
-      titulo: "",
-      descricao: "",
-      data: new Date().toISOString().split("T")[0],
-      horario: new Date().toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" }),
-      residente: 0,
-      funcionario: 0,
-      categoria: CATEGORIAS.POSITIVO,
-      resolvido: false,
-      foto: undefined,
-    },
-  });
 
   // carregar dados iniciais
   useEffect(() => {
@@ -258,109 +202,21 @@ const RegistroComportamento: React.FC = () => {
 
   // abrir modal novo
   const abrirModalNovo = () => {
-    reset({
-      titulo: "",
-      descricao: "",
-      data: new Date().toISOString().split("T")[0],
-      horario: new Date().toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" }),
-      residente: 0,
-      funcionario: 0,
-      categoria: CATEGORIAS.POSITIVO,
-      resolvido: false,
-      foto: undefined,
-    });
-    setEditando(false);
+    setComportamentoEditando(null);
     setModalAberto(true);
   };
 
-  // abrir modal editar (preenche form)
+  // abrir modal editar
   const abrirModalEditar = (id: number) => {
     const item = comportamentos.find((c) => c.id === id);
     if (!item) return;
-    reset({
-      id: item.id,
-      titulo: item.titulo,
-      descricao: item.descricao ?? "",
-      data: item.data.toISOString().split("T")[0],
-      horario: item.horario,
-      residente: item.id_residente ?? item.residente?.id ?? 0,
-      funcionario: item.id_funcionario ?? item.funcionario?.id ?? 0,
-      categoria: item.categoria,
-      resolvido: item.resolvido ?? false,
-      foto: undefined,
-    });
-    setEditando(true);
+    setComportamentoEditando(item);
     setModalAberto(true);
   };
 
   const fecharModal = () => {
     setModalAberto(false);
-    setEditando(false);
-  };
-
-  // ===== UPLOAD helper =====
-  const uploadFotoSeHouver = async (fileList?: FileList, prefix = "foto") => {
-    if (!fileList || fileList.length === 0) return null;
-    const file = fileList[0];
-    const ext = file.name.split(".").pop();
-    const fileName = `${prefix}_${Date.now()}.${ext}`;
-    const path = `${fileName}`;
-
-    const { error: uploadError } = await supabase.storage.from(STORAGE_BUCKET).upload(path, file, {
-      cacheControl: "3600",
-      upsert: true,
-      contentType: file.type,
-    });
-
-    if (uploadError) {
-      console.error("Erro ao fazer upload:", uploadError);
-      throw uploadError;
-    }
-
-    const { publicURL } = supabase.storage.from(STORAGE_BUCKET).getPublicUrl(path);
-    return publicURL || null;
-  };
-
-  // onSubmit (criar/editar)
-  const onSubmit = async (formData: FormValues) => {
-    setLoading(true);
-    try {
-      // Upload foto (se houver)
-      let fotoUrl: string | null = null;
-      if (formData.foto && formData.foto.length > 0) {
-        fotoUrl = await uploadFotoSeHouver(formData.foto, `comportamento_${formData.titulo?.replace(/\s+/g, "_")}`);
-      }
-
-      const payload: any = {
-        titulo: formData.titulo,
-        descricao: formData.descricao ?? "",
-        data: formData.data,
-        horario: formData.horario,
-        categoria: formData.categoria,
-        foto: fotoUrl,
-        resolvido: !!formData.resolvido,
-        id_residente: Number(formData.residente),
-        id_funcionario: Number(formData.funcionario),
-      };
-
-      if (editando && formData.id) {
-        // atualizar
-        const { error } = await supabase.from("comportamento").update(payload).eq("id", formData.id);
-        if (error) throw error;
-      } else {
-        // inserir
-        const { error } = await supabase.from("comportamento").insert([payload]);
-        if (error) throw error;
-      }
-
-      await fetchComportamentos();
-      setModalAberto(false);
-    } catch (err) {
-      console.error("Erro ao salvar comportamento:", err);
-      alert("Erro ao salvar comportamento. Veja o console.");
-    } finally {
-      setLoading(false);
-    }
+    setComportamentoEditando(null);
   };
 
   // excluir
@@ -446,7 +302,7 @@ const RegistroComportamento: React.FC = () => {
           </div>
         </div>
 
-        {/* Novo + Filtros (details) - EXATAMENTE COMO NO ARQUIVO QUE VOCÊ MANDOU */}
+        {/* Novo + Filtros (details) */}
         <details className="group mb-8 w-full">
           <summary
             className="flex flex-col sm:flex-row gap-4 items-end list-none [&::-webkit-details-marker]:hidden cursor-pointer"
@@ -465,7 +321,7 @@ const RegistroComportamento: React.FC = () => {
             </div>
           </summary>
 
-          {/* Painel de filtros - EXATAMENTE COMO NO ARQUIVO QUE VOCÊ MANDOU */}
+          {/* Painel de filtros */}
           <form
             ref={formFiltrosRef}
             onSubmit={e => {
@@ -584,7 +440,7 @@ const RegistroComportamento: React.FC = () => {
           </div>
         )}
 
-        {/* Lista de Comportamentos - Ocupa toda a largura */}
+        {/* Lista de Comportamentos */}
         {!loading && (
           <div className="bg-odara-white border-l-4 border-odara-primary rounded-2xl shadow-lg p-6">
             <h2 className="text-2xl font-bold text-odara-dark flex items-center mb-2">
@@ -676,158 +532,17 @@ const RegistroComportamento: React.FC = () => {
           </div>
         )}
 
-        {/* Modal adicionar/editar */}
-        {modalAberto && (
-          <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 p-4">
-            <div className="w-full max-w-4xl bg-white rounded-2xl shadow-lg overflow-hidden max-h-[90vh] flex flex-col relative">
-
-              {/* Header do Modal */}
-              <div className="bg-odara-primary text-white p-6">
-                <div className="flex justify-between items-center">
-                  <h2 className="text-2xl font-bold">
-                    {editando ? "Editar Registro de Comportamento" : "Novo Registro de Comportamento"}
-                  </h2>
-
-                  {/* Botão fechar */}
-                  <button
-                    onClick={fecharModal}
-                    className="text-white hover:text-odara-offwhite transition-colors duration-200 p-1 rounded-full hover:bg-white/20"
-                  >
-                    <FaTimes size={20} />
-                  </button>
-                </div>
-
-                <p className="text-odara-offwhite/80 mt-1 text-sm">
-                  {editando
-                    ? "Atualize as informações do comportamento"
-                    : "Preencha os dados para registrar o comportamento"}
-                </p>
-              </div>
-
-              {/* Corpo */}
-              <div className="flex-1 overflow-y-auto p-6 bg-odara-offwhite/30">
-
-                {/* Form principal */}
-                <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-
-                  {/* Título */}
-                  <div>
-                    <label className="block text-sm font-semibold mb-1 text-odara-dark">Título</label>
-                    <input
-                      {...register("titulo")}
-                      className="w-full border border-odara-primary/40 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-odara-primary focus:outline-none transition"
-                      placeholder="Ex: Comportamento cooperativo"
-                    />
-                    {errors.titulo && (
-                      <p className="text-red-500 text-xs mt-1">
-                        {String(errors.titulo.message)}
-                      </p>
-                    )}
-                  </div>
-
-                  {/* Descrição */}
-                  <div>
-                    <label className="block text-sm font-semibold mb-1 text-odara-dark">Descrição</label>
-                    <textarea
-                      {...register("descricao")}
-                      rows={3}
-                      className="w-full border border-odara-primary/40 rounded-lg px-3 py-2 text-sm resize-none focus:ring-2 focus:ring-odara-primary focus:outline-none transition"
-                      placeholder="Descreva o comportamento observado..."
-                    />
-                  </div>
-
-                  {/* Data + Horário */}
-                  <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <label className="block text-sm font-semibold mb-1 text-odara-dark">Data</label>
-                      <input
-                        type="date"
-                        {...register("data")}
-                        className="w-full border border-odara-primary/40 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-odara-primary focus:outline-none transition"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-sm font-semibold mb-1 text-odara-dark">Horário</label>
-                      <input
-                        type="time"
-                        {...register("horario")}
-                        className="w-full border border-odara-primary/40 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-odara-primary focus:outline-none transition"
-                      />
-                    </div>
-                  </div>
-
-                  {/* Residente */}
-                  <div>
-                    <label className="block text-sm font-semibold mb-1 text-odara-dark">Residente *</label>
-                    <select
-                      {...register("id_residente")}
-                      className="w-full px-4 py-2 border border-odara-primary rounded-lg bg-white text-odara-secondary focus:ring-2 focus:ring-odara-primary"
-                      required
-                    >
-                      <option value="">Selecione um residente</option>
-                      {residentes.map((r) => (
-                        <option key={r.id} value={r.id}>{r.nome}</option>
-                      ))}
-                    </select>
-                  </div>
-
-                  {/* Funcionário */}
-                  <div>
-                    <label className="block text-sm font-semibold mb-1 text-odara-dark">Funcionário *</label>
-                    <select
-                      {...register("id_funcionario")}
-                      required
-                      className="w-full px-4 py-2 border border-odara-primary rounded-lg bg-white text-odara-secondary focus:ring-2 focus:ring-odara-primary"
-                    >
-                      <option value="">Selecionar funcionário</option>
-                      {funcionarios.map((f) => (
-                        <option key={f.id} value={f.id}>{f.nome}</option>
-                      ))}
-                    </select>
-                  </div>
-
-                  {/* Categoria */}
-                  <div>
-                    <label className="block text-sm font-semibold mb-1 text-odara-dark">Categoria *</label>
-                    <select
-                      {...register("categoria")}
-                      required
-                      className="w-full px-4 py-2 border border-odara-primary rounded-lg bg-white text-odara-secondary focus:ring-2 focus:ring-odara-primary"
-                    >
-                      <option value="">Selecionar categoria</option>
-                      <option value="Positivo">Positivo</option>
-                      <option value="Negativo">Negativo</option>
-                      <option value="Neutro">Neutro</option>
-                    </select>
-                  </div>
-
-                  {/* Botões */}
-                  <div className="flex justify-end gap-3 pt-4 border-t border-odara-primary/30">
-                    <button
-                      type="button"
-                      onClick={fecharModal}
-                      className="px-4 py-2 rounded-lg border border-odara-primary bg-odara-white hover:bg-odara-primary text-odara-primary hover:text-odara-white font-medium transition"
-                    >
-                      Cancelar
-                    </button>
-
-                    <button
-                      type="submit"
-                      disabled={isSubmitting}
-                      className="px-4 py-2 rounded-lg bg-odara-accent hover:bg-odara-secondary text-white text-sm font-medium transition"
-                    >
-                      {editando ? "Salvar Alterações" : "Registrar"}
-                    </button>
-                  </div>
-                </form>
-              </div>
-            </div>
-          </div>
-        )}
-
+        {/* Modal usando o componente separado */}
+        <ModalComportamento 
+          comportamento={comportamentoEditando}
+          isOpen={modalAberto}
+          onClose={() => {
+            fecharModal();
+            fetchComportamentos(); // Recarregar a lista após fechar o modal
+          }}
+        />
       </div>
     </div>
-
   );
 };
 

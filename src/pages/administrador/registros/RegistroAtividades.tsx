@@ -454,7 +454,7 @@ const RegistroAtividades = () => {
                 : titulo
             }
           </span>
-          <Filter size={12} className="text-gray-500" />
+          <ChevronDown size={12} className="text-gray-500" />
         </button>
 
         {aberto && (
@@ -572,7 +572,7 @@ const RegistroAtividades = () => {
         </div>
 
         {/* Filtros de data */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-5 mt-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-5 mt-5 pt-5 border-t border-gray-200">
           <div>
             <div className='flex gap-1 items-center ml-1 mb-1'>
               <Filter size={10} className="text-odara-accent" />
@@ -835,10 +835,13 @@ const RegistroAtividades = () => {
       />
 
       <div className="flex-1 p-4 sm:p-6 lg:p-8">
-        <div className='flex items-center justify-between'>
-          <Cabecalho />
-          <BotaoNovaAtividade />
-        </div>
+				{/* Cabeçalho e Botão Novo */}
+				<div className='flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6'>
+					<Cabecalho />
+					<div className="flex justify-end">
+						<BotaoNovaAtividade />
+					</div>
+				</div>
 
         {/* Barra de Busca e Filtros */}
         <div className="flex flex-col sm:flex-row gap-4 mb-6">

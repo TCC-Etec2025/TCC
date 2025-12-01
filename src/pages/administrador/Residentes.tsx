@@ -175,6 +175,12 @@ const Residentes: React.FC = () => {
   const ModalConfirmacaoExclusao = () => {
     if (!modalExclusaoAberto) return null;
 
+    // Encontrar o residente baseado no ID
+    const residente = residenteParaExcluir
+      ? listaResidentes.find(r => r.id === residenteParaExcluir)
+      : null;
+    const nomeResidente = residente?.nome || '';
+
     return (
       <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-[100] p-4">
         <div className="bg-white rounded-2xl shadow-lg p-6 max-w-md w-full">
@@ -187,7 +193,21 @@ const Residentes: React.FC = () => {
             {/* Textos do modal */}
             <h3 className="text-lg font-bold text-odara-dark mb-2">Confirmar exclusão</h3>
             <p className="text-odara-name mb-6">
-              Tem certeza que deseja excluir este residente? Esta ação não pode ser desfeita.
+              Tem certeza que deseja excluir este residente?
+            </p>
+
+            {/* Detalhes do residente */}
+            {nomeResidente && (
+              <div className="bg-odara-offwhite rounded-lg p-3 mb-4 border border-gray-200">
+                <p className="text-sm font-medium text-odara-dark">Residente:</p>
+                <p className="text-sm text-odara-name truncate" title={nomeResidente}>
+                  "{nomeResidente}"
+                </p>
+              </div>
+            )}
+
+            <p className="text-sm text-odara-alerta mb-6 font-medium">
+              Esta ação não pode ser desfeita.
             </p>
 
             {/* Botões de ação */}

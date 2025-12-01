@@ -15,7 +15,7 @@ type Props = {
 type Residente = {
   id: number;
   nome: string;
-  foto_url: string | null;
+  foto: string | null;
 };
 
 export default function CadastroPertence({ pertence }: Props) {
@@ -53,7 +53,7 @@ export default function CadastroPertence({ pertence }: Props) {
       try {
         const { data, error } = await supabase
           .from("residente")
-          .select("id, nome, foto_url")
+          .select("id, nome, foto")
           .order("nome", { ascending: true });
 
         if (error) {

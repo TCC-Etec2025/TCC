@@ -241,9 +241,9 @@ const ModalComportamento: React.FC<ModalComportamentoProps> = ({
                                 className="w-full px-4 py-2 border border-odara-primary rounded-lg bg-white text-odara-secondary focus:ring-2 focus:ring-odara-primary"
                             >
                                 <option value="">Selecionar categoria</option>
-                                <option value="Positivo">Positivo</option>
-                                <option value="Negativo">Negativo</option>
-                                <option value="Neutro">Neutro</option>
+                                <option value="positivo">Positivo</option>
+                                <option value="negativo">Negativo</option>
+                                <option value="neutro">Neutro</option>
                             </select>
                         </div>
 

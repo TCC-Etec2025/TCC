@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { Filter, Search, CheckCircle, Clock, CircleX, Plus, Edit, Trash, Info, ChevronDown, Check, TriangleAlert, Palette } from 'lucide-react';
+import toast, { Toaster } from 'react-hot-toast';
 import { supabase } from '../../../lib/supabaseClient';
 import ModalAtividades from './ModalAtividades';
 
@@ -510,7 +511,10 @@ const RegistroAtividades = () => {
         <div className="grid grid-cols-1 md:grid-cols-4 gap-5">
           {/* Filtro de Residente */}
           <div>
-            <label className="block text-sm font-semibold text-gray-700 mb-1">Residente</label>
+            <div className='flex gap-1 items-center ml-1 mb-1'>
+              <Filter size={10} className="text-odara-accent" />
+              <label className="block text-sm font-semibold text-odara-secondary">Residente</label>
+            </div>
             <FiltroDropdown
               titulo="Todos os residentes"
               aberto={filtroResidenteAberto}
@@ -524,7 +528,10 @@ const RegistroAtividades = () => {
 
           {/* Filtro de Categoria */}
           <div>
-            <label className="block text-sm font-semibold text-gray-700 mb-1">Categoria</label>
+            <div className='flex gap-1 items-center ml-1 mb-1'>
+              <Filter size={10} className="text-odara-accent" />
+              <label className="block text-sm font-semibold text-odara-secondary">Categoria</label>
+            </div>
             <FiltroDropdown
               titulo="Todas as categorias"
               aberto={filtroCategoriaAberto}
@@ -538,7 +545,10 @@ const RegistroAtividades = () => {
 
           {/* Filtro de Status */}
           <div>
-            <label className="block text-sm font-semibold text-gray-700 mb-1">Status</label>
+            <div className='flex gap-1 items-center ml-1 mb-1'>
+              <Filter size={10} className="text-odara-accent" />
+              <label className="block text-sm font-semibold text-odara-secondary">Status</label>
+            </div>
             <FiltroDropdown
               titulo="Todos os status"
               aberto={filtroStatusAberto}
@@ -564,22 +574,28 @@ const RegistroAtividades = () => {
         {/* Filtros de data */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-5 mt-4">
           <div>
-            <label className="block text-sm font-semibold text-gray-700 mb-1">Data inicial</label>
+            <div className='flex gap-1 items-center ml-1 mb-1'>
+              <Filter size={10} className="text-odara-accent" />
+              <label className="block text-sm font-semibold text-odara-secondary">Data inicial</label>
+            </div>
             <input
               type="date"
               value={filtros.startDate || ''}
               onChange={(e) => setFiltros(prev => ({ ...prev, startDate: e.target.value || null }))}
-              className="w-full h-10 border border-gray-300 rounded-lg px-3 text-sm focus:ring-2 focus:ring-odara-primary focus:border-transparent"
+              className="w-full h-10 border border-gray-300 rounded-lg px-3 text-sm text-odara-dark focus:ring-2 focus:ring-odara-primary focus:border-transparent focus:outline-none"
             />
           </div>
 
           <div>
-            <label className="block text-sm font-semibold text-gray-700 mb-1">Data final</label>
+            <div className='flex gap-1 items-center ml-1 mb-1'>
+              <Filter size={10} className="text-odara-accent" />
+              <label className="block text-sm font-semibold text-odara-secondary">Data Final</label>
+            </div>
             <input
               type="date"
               value={filtros.endDate || ''}
               onChange={(e) => setFiltros(prev => ({ ...prev, endDate: e.target.value || null }))}
-              className="w-full h-10 border border-gray-300 rounded-lg px-3 text-sm focus:ring-2 focus:ring-odara-primary focus:border-transparent"
+              className="w-full h-10 border border-gray-300 rounded-lg px-3 text-sm text-odara-dark focus:ring-2 focus:ring-odara-primary focus:border-transparent focus:outline-none"
             />
           </div>
         </div>
@@ -846,7 +862,7 @@ const RegistroAtividades = () => {
               onClick={toggleFiltros}
               className="flex items-center gap-2 bg-white rounded-xl px-4 py-3 border border-gray-200 text-odara-dark font-medium hover:bg-odara-primary/10 transition w-max justify-between"
             >
-              <Filter className="text-odara-accent" />
+              <Filter size={20} className="text-odara-accent" />
               <span>
                 {!filtrosAberto ? 'Abrir ' : 'Fechar '} Filtros
               </span>

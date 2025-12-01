@@ -409,7 +409,7 @@ const RegistroMedicamentos: React.FC = () => {
             <div className={`w-3 h-3 rounded-full mr-3 ${cores.bola}`}></div>
             <p className={`text-sm sm:text-base ${cores.text}`}>
               Início: {formatarData(medicamento.data_inicio)}
-              <span className="text-odara-accent ml-2 font-medium">
+              <span className="text-odara-accent ml-1 font-medium">
                 {medicamento.data_fim ? ` • Fim: ${formatarData(medicamento.data_fim)}` : ' • Uso contínuo'}
               </span>
             </p>
@@ -523,10 +523,11 @@ const RegistroMedicamentos: React.FC = () => {
     return (
       <div className="mb-8 bg-white p-5 rounded-xl shadow border border-gray-200 animate-fade-in">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
+          {/* Filtro de Residente */}
           <div>
             <div className='flex gap-1 items-center ml-1 mb-1'>
               <Filter size={10} className="text-odara-accent" />
-              <label className="block text-sm font-medium text-gray-700">Residente</label>
+              <label className="block text-sm font-semibold text-odara-secondary">Residente</label>
             </div>
             <FiltroDropdown
               titulo="Todos os residentes"
@@ -539,10 +540,11 @@ const RegistroMedicamentos: React.FC = () => {
             />
           </div>
 
+          {/* Filtro de Status */}
           <div>
             <div className='flex gap-1 items-center ml-1 mb-1'>
               <Filter size={10} className="text-odara-accent" />
-              <label className="block text-sm font-medium text-gray-700">Status</label>
+              <label className="block text-sm font-semibold text-odara-secondary">Status</label>
             </div>
             <FiltroDropdown
               titulo="Todos os status"

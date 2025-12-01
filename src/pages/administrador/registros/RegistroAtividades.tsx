@@ -765,12 +765,6 @@ const RegistroAtividades = () => {
             ))}
           </div>
         )}
-
-        {/* Contador de resultados */}
-        <div className="my-4 text-sm text-gray-400">
-          Total de {atividadesFiltradas.length} atividade(s) encontrada(s) de {atividades.length}
-          {searchTerm && <span> para "{searchTerm}"</span>}
-        </div>
       </div>
     );
   };
@@ -862,6 +856,12 @@ const RegistroAtividades = () => {
 
         <SecaoFiltros />
         <ListaAtividades />
+
+        {/* Contador de resultados */}
+        <div className="my-4 text-sm text-gray-400">
+          Total de {atividadesFiltradas.length} atividade(s) encontrada(s) de {atividades.length}
+          {searchTerm && <span> para "{searchTerm}"</span>}
+        </div>
       </div>
     </div>
   );

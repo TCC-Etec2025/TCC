@@ -36,7 +36,9 @@ type Medicamento = {
 /* Schema de Validação */
 const schema = yup.object({
     id: yup.number().nullable(),
-    residentes: yup.string().required('Residente é obrigatório'),
+    id_residente: yup.number()  // ← ALTERADO: de 'residentes' para 'id_residente'
+        .required('Residente é obrigatório')
+        .min(1, 'Residente é obrigatório'), // Adicionado para garantir que não seja 0
     nome: yup.string().required('Nome do medicamento é obrigatório'),
     dosagem: yup.string().required('Dosagem é obrigatória'),
     dose: yup.string().required('Dose é obrigatória'),
@@ -49,7 +51,6 @@ const schema = yup.object({
     observacao: yup.string().nullable(),
     saude_relacionada: yup.string().nullable(),
     foto: yup.string().nullable(),
-    id_residente: yup.number()
 }).required();
 
 type FormValues = yup.InferType<typeof schema>;
@@ -259,10 +260,10 @@ const ModalMedicamentos = ({ medicamento, isOpen, onClose }: ModalMedicamentosPr
                                         </option>
                                     ))}
                                 </select>
-                                                                
-                                {errors.residentes && (
+
+                                {errors.id_residente && (
                                     <p className="text-sm text-red-600  flex items-center gap-1">
-                                        <Info size={14} /> {errors.residentes.message}
+                                        <Info size={14} /> {errors.id_residente.message}
                                     </p>
                                 )}
                             </div>
@@ -276,7 +277,7 @@ const ModalMedicamentos = ({ medicamento, isOpen, onClose }: ModalMedicamentosPr
                                     className="w-full px-4 py-2 border border-odara-primary rounded-lg focus:border-transparent focus:outline-none focus:ring-odara-secondary focus:ring-2 text-odara-secondary text-sm sm:text-base mb-2"
                                     placeholder="Digite o nome do medicamento"
                                 />
-                                                                
+
                                 {errors.nome && (
                                     <p className="text-sm text-red-600  flex items-center gap-1">
                                         <Info size={14} /> {errors.nome.message}
@@ -296,7 +297,7 @@ const ModalMedicamentos = ({ medicamento, isOpen, onClose }: ModalMedicamentosPr
                                     className="w-full px-4 py-2 border border-odara-primary rounded-lg focus:border-transparent focus:outline-none focus:ring-odara-secondary focus:ring-2 text-odara-secondary text-sm sm:text-base mb-2"
                                     placeholder="Ex: 50mg, 100ml"
                                 />
-                                                                
+
                                 {errors.dosagem && (
                                     <p className="text-sm text-red-600  flex items-center gap-1">
                                         <Info size={14} /> {errors.dosagem.message}
@@ -313,7 +314,7 @@ const ModalMedicamentos = ({ medicamento, isOpen, onClose }: ModalMedicamentosPr
                                     className="w-full px-4 py-2 border border-odara-primary rounded-lg focus:border-transparent focus:outline-none focus:ring-odara-secondary focus:ring-2 text-odara-secondary text-sm sm:text-base mb-2"
                                     placeholder="Ex: 1 comprimido, 2 gotas"
                                 />
-                                                                
+
                                 {errors.dose && (
                                     <p className="text-sm text-red-600  flex items-center gap-1">
                                         <Info size={14} /> {errors.dose.message}
@@ -391,7 +392,7 @@ const ModalMedicamentos = ({ medicamento, isOpen, onClose }: ModalMedicamentosPr
                                     <option value="meses">Meses</option>
                                     <option value="vezes">Número de vezes</option>
                                 </select>
-                                                                
+
                                 {errors.recorrencia && (
                                     <p className="text-sm text-red-600  flex items-center gap-1">
                                         <Info size={14} /> {errors.recorrencia.message}

@@ -214,8 +214,8 @@ const PaginaChecklist = () => {
             className="flex items-center gap-2 bg-white rounded-xl px-4 py-3 border border-gray-200 text-odara-dark font-medium hover:bg-odara-primary/10 transition min-w-48 justify-between"
             onClick={() => setFiltroAberto(!filtroAberto)}
           >
-            <span>{opcoesFiltro.find(filtro => filtro.id === filtroStatus)?.label}</span>
             <WrapperIcone icone={Filter} tamanho={20} className="text-odara-accent" />
+            <span>{opcoesFiltro.find(filtro => filtro.id === filtroStatus)?.label}</span>
           </button>
 
           {filtroAberto && (

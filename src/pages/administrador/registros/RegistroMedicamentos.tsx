@@ -1,6 +1,6 @@
 // src/components/RegistroMedicamentos.tsx
 import { useEffect, useState, useRef, useCallback } from 'react';
-import { Filter, Search, CheckCircle, Clock, CircleX, Plus, Edit, Trash, Info, ChevronDown, Check } from 'lucide-react';
+import { Filter, Search, CheckCircle, Clock, CircleX, Plus, Edit, Trash, Info, ChevronDown, Check, Pill } from 'lucide-react';
 import toast, { Toaster } from 'react-hot-toast';
 import { supabase } from '../../../lib/supabaseClient';
 import ModalMedicamentos from './ModalMedicamentos';
@@ -243,6 +243,7 @@ const RegistroMedicamentos: React.FC = () => {
 
       return true;
     })
+
     .sort((a, b) => {
       const dataA = new Date(`${a.data_inicio}T${a.horario_inicio}`).getTime();
       const dataB = new Date(`${b.data_inicio}T${b.horario_inicio}`).getTime();
@@ -258,7 +259,6 @@ const RegistroMedicamentos: React.FC = () => {
     const IconeStatus = obterIconeStatus(medicamento.status);
 
     return (
-      // Removido o ref={dropdownRef} daqui, pois ele causava o bug
       <div className="relative">
         <button
           onClick={() => toggleDropdown(medicamento.id)}
@@ -277,21 +277,20 @@ const RegistroMedicamentos: React.FC = () => {
               onClick={() => setDropdownAberto(null)}
             ></div>
 
-            {/* MENU DROPDOWN (Com Z-Index maior que a camada invisível) */}
+            {/* MENU DROPDOWN */}
             <div className="absolute top-full right-0 mt-2 w-48 bg-white rounded-lg shadow-lg border border-gray-200 z-20 overflow-hidden">
               {STATUS_OPTIONS.map((option) => {
                 const OptionIcon = obterIconeStatus(option.value);
                 return (
                   <button
                     key={option.value}
-                    // Adicionado e.stopPropagation() para garantir
                     onClick={(e) => {
                       e.stopPropagation();
                       atualizarStatus(medicamento.id, option.value);
                     }}
                     className={`flex items-center gap-3 w-full text-left px-4 py-3 text-sm hover:bg-odara-primary/10 transition ${medicamento.status === option.value
-                        ? 'bg-odara-primary/20 text-odara-primary font-semibold'
-                        : 'text-gray-700'
+                      ? 'bg-odara-primary/20 text-odara-primary font-semibold'
+                      : 'text-gray-700'
                       }`}
                   >
                     <OptionIcon size={14} className={"text-odara-accent"} />
@@ -333,7 +332,7 @@ const RegistroMedicamentos: React.FC = () => {
         <button
           type="button"
           onClick={() => setAberto(!aberto)}
-          className="flex items-center justify-between w-full h-10 border border-gray-300 rounded-lg px-3 text-sm hover:bg-gray-50 transition-colors"
+          className="flex items-center justify-between w-full h-10 border border-gray-300 rounded-lg px-3 text-sm hover:bg-gray-50 transition-colors "
         >
           <span className="text-odara-dark">
             {tipo === 'residente'
@@ -349,14 +348,14 @@ const RegistroMedicamentos: React.FC = () => {
         </button>
 
         {aberto && (
-          <div className="absolute top-full left-0 right-0 mt-1 bg-white rounded-lg shadow-lg border border-gray-200 z-10 py-1 max-h-60 overflow-y-auto">
+          <div className="absolute top-full left-0 right-0 mt-1 bg-white rounded-lg shadow-lg border border-gray-200 z-10 max-h-60 overflow-hidden">
             {tipo === 'residente' ? (
               <>
                 <button
                   onClick={() => onSelecionar(null)}
                   className={`flex items-center gap-3 w-full text-left px-4 py-3 text-sm hover:bg-odara-primary/10 transition ${!valorSelecionado
-                      ? 'bg-odara-primary/20 text-odara-primary font-semibold'
-                      : 'text-gray-700'
+                    ? 'bg-odara-primary/20 text-odara-primary font-semibold'
+                    : 'text-gray-700'
                     }`}
                 >
                   <span>Todos os residentes</span>
@@ -367,8 +366,8 @@ const RegistroMedicamentos: React.FC = () => {
                     key={id}
                     onClick={() => onSelecionar(id)}
                     className={`flex items-center gap-3 w-full text-left px-4 py-3 text-sm hover:bg-odara-primary/10 transition ${valorSelecionado === id
-                        ? 'bg-odara-primary/20 text-odara-primary font-semibold'
-                        : 'text-gray-700'
+                      ? 'bg-odara-primary/20 text-odara-primary font-semibold'
+                      : 'text-gray-700'
                       }`}
                   >
                     <span>{nome}</span>
@@ -382,8 +381,8 @@ const RegistroMedicamentos: React.FC = () => {
                   key={opcao.value}
                   onClick={() => onSelecionar(opcao.value)}
                   className={`flex items-center gap-3 w-full text-left px-4 py-3 text-sm hover:bg-odara-primary/10 transition ${(opcao.value === 'todos' && !valorSelecionado) || valorSelecionado === opcao.value
-                      ? 'bg-odara-primary/20 text-odara-primary font-semibold'
-                      : 'text-gray-700'
+                    ? 'bg-odara-primary/20 text-odara-primary font-semibold'
+                    : 'text-gray-700'
                     }`}
                 >
                   <span>{opcao.label}</span>
@@ -404,22 +403,25 @@ const RegistroMedicamentos: React.FC = () => {
 
     return (
       <div className="bg-white rounded-lg shadow-md border border-gray-200 hover:shadow-lg transition-shadow duration-200 flex flex-col h-full">
-        {/* Cabeçalho do Card - COM BOTÃO DE STATUS FUNCIONAL */}
+        {/* Header do Card */}
         <div className={`flex items-center justify-between p-3 rounded-t-lg ${cores.border} ${cores.bg}`}>
           <div className="flex items-center">
             <div className={`w-3 h-3 rounded-full mr-3 ${cores.bola}`}></div>
             <p className={`text-sm sm:text-base ${cores.text}`}>
               Início: {formatarData(medicamento.data_inicio)}
-              {medicamento.data_fim ? ` • Fim: ${formatarData(medicamento.data_fim)}` : ' • Uso contínuo'}
+              <span className="text-odara-accent ml-2 font-medium">
+                {medicamento.data_fim ? ` • Fim: ${formatarData(medicamento.data_fim)}` : ' • Uso contínuo'}
+              </span>
             </p>
           </div>
 
-          {/* BOTÃO DE STATUS */}
+          {/* Botão de Status (altera o status) */}
           <DropdownStatus medicamento={medicamento} />
         </div>
 
-        {/* Resto do código do Card permanece igual */}
-        <div className="p-4 flex-1 flex flex-col min-h-[200px]">
+        {/* Corpo do Card */}
+        <div className="p-4 flex-1 flex flex-col">
+          {/* Título do Corpo */}
           <div className="flex items-start justify-between mb-3">
             <h3 className="text-lg sm:text-xl font-bold text-odara-dark line-clamp-1 flex-1">
               {medicamento.nome}
@@ -442,49 +444,58 @@ const RegistroMedicamentos: React.FC = () => {
             </div>
           </div>
 
+          {/* Detalhes do Corpo */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 flex-1">
+            {/* Coluna Esquerda */}
             <div className="space-y-3">
               <div>
                 <strong className="text-odara-dark text-sm">Dosagem:</strong>
-                <p className="text-odara-name mt-1 text-sm">{medicamento.dosagem || 'Não informado'}</p>
+                <span className="text-odara-name mt-1 text-sm">{' ' + medicamento.dosagem || ' Não informado'}</span>
               </div>
+
               <div>
                 <strong className="text-odara-dark text-sm">Dose:</strong>
-                <p className="text-odara-name mt-1 text-sm">{medicamento.dose || 'Não informado'}</p>
+                <span className="text-odara-name mt-1 text-sm">{' ' + medicamento.dose || ' Não informado'}</span>
               </div>
+
               <div>
                 <strong className="text-odara-dark text-sm">Horário:</strong>
-                <p className="text-odara-name mt-1 text-sm">{medicamento.horario_inicio || 'Não informado'}</p>
+                <span className="text-odara-name mt-1 text-sm">{' ' + medicamento.horario_inicio || ' Não informado'}</span>
               </div>
+              
               <div>
                 <strong className="text-odara-dark text-sm">Recorrência:</strong>
-                <p className="text-odara-name mt-1 text-sm">{medicamento.recorrencia || 'Não informado'}</p>
+                <span className="text-odara-name mt-1 text-sm">{' ' + medicamento.recorrencia || ' Não informado'}</span>
               </div>
             </div>
-
+            
+            {/* Coluna Direita */}
             <div className="space-y-3">
               <div>
                 <strong className="text-odara-dark text-sm">Efeitos colaterais:</strong>
-                <p className="text-odara-name mt-1 text-sm line-clamp-2">
-                  {medicamento.efeitos_colaterais || 'Não informado'}
-                </p>
+                <span className="text-odara-name mt-1 text-sm">
+                  {' ' + medicamento.efeitos_colaterais || ' Nenhum'}
+                </span>
               </div>
+              
               <div>
                 <strong className="text-odara-dark text-sm">Observações:</strong>
-                <p className="text-odara-name mt-1 text-sm line-clamp-2">
-                  {medicamento.observacao || 'Não informado'}
-                </p>
+                <span className="text-odara-name mt-1 text-sm">
+                  {' ' + medicamento.observacao || ' Não informado'}
+                </span>
               </div>
+
               <div>
                 <strong className="text-odara-dark text-sm">Saúde relacionada:</strong>
-                <p className="text-odara-name mt-1 text-sm line-clamp-2">
-                  {medicamento.saude_relacionada || 'Não informado'}
-                </p>
+                <span className="text-odara-name mt-1 text-sm">
+                  {' ' + medicamento.saude_relacionada || ' Não informado'}
+                </span>
               </div>
             </div>
           </div>
         </div>
 
+        {/* Footer do Card */}
         <div className="px-4 py-3 bg-gray-50 rounded-b-lg border-t border-gray-200 mt-auto">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
             <div className="flex items-center gap-2">
@@ -506,36 +517,6 @@ const RegistroMedicamentos: React.FC = () => {
     );
   };
 
-  // Resto do código permanece igual...
-  const BarraBuscaEFiltro = () => {
-    return (
-      <div className="flex flex-col md:flex-row gap-4 mb-8">
-        <div className="flex-1 relative">
-          <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-            <Search className="text-odara-primary mr-3 h-4 w-4 flex-shrink-0" />
-          </div>
-          <input
-            type="text"
-            placeholder="Buscar medicamentos por nome..."
-            className="w-full pl-10 pr-4 py-3 bg-white rounded-xl border border-gray-200 text-odara-dark placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-odara-primary focus:border-transparent"
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-          />
-        </div>
-
-        <div className="flex gap-2">
-          <button
-            onClick={toggleFiltros}
-            className="flex items-center gap-2 px-4 py-3 bg-white border border-gray-200 rounded-xl text-odara-dark hover:bg-gray-50 transition-colors"
-          >
-            <Filter size={16} />
-            <span>Filtros</span>
-          </button>
-        </div>
-      </div>
-    );
-  };
-
   const SecaoFiltros = () => {
     if (!filtrosAberto) return null;
 
@@ -543,7 +524,10 @@ const RegistroMedicamentos: React.FC = () => {
       <div className="mb-8 bg-white p-5 rounded-xl shadow border border-gray-200 animate-fade-in">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Residente</label>
+            <div className='flex gap-1 items-center ml-1 mb-1'>
+              <Filter size={10} className="text-odara-accent" />
+              <label className="block text-sm font-medium text-gray-700">Residente</label>
+            </div>
             <FiltroDropdown
               titulo="Todos os residentes"
               aberto={filtroResidenteAberto}
@@ -556,7 +540,10 @@ const RegistroMedicamentos: React.FC = () => {
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Status</label>
+            <div className='flex gap-1 items-center ml-1 mb-1'>
+              <Filter size={10} className="text-odara-accent" />
+              <label className="block text-sm font-medium text-gray-700">Status</label>
+            </div>
             <FiltroDropdown
               titulo="Todos os status"
               aberto={filtroStatusAberto}
@@ -571,27 +558,12 @@ const RegistroMedicamentos: React.FC = () => {
           <div className="flex md:items-end gap-2 pt-1 md:pt-0">
             <button
               onClick={limparFiltros}
-              className="h-10 px-4 bg-gray-200 rounded hover:bg-gray-300 text-sm font-medium transition-colors"
+              className="bg-odara-accent hover:bg-odara-secondary text-white font-semibold py-2 px-4 rounded-lg flex items-center transition text-sm h-10"
             >
               Limpar Filtros
             </button>
           </div>
         </div>
-
-        {(filtros.residenteId || filtros.status) && (
-          <div className="mt-4 flex flex-wrap gap-2 text-xs">
-            {filtros.residenteId && (
-              <span className="bg-odara-secondary text-white px-2 py-1 rounded-full">
-                Residente: {medicamentos.find(m => m.residente?.id === filtros.residenteId)?.residente?.nome}
-              </span>
-            )}
-            {filtros.status && (
-              <span className="bg-odara-primary text-white px-2 py-1 rounded-full">
-                Status: {filtros.status}
-              </span>
-            )}
-          </div>
-        )}
       </div>
     );
   };
@@ -599,18 +571,27 @@ const RegistroMedicamentos: React.FC = () => {
   const ListaMedicamentos = () => {
     return (
       <div className="bg-white border-l-4 border-odara-primary rounded-2xl shadow-lg p-4 sm:p-6">
-        <div className="flex flex-col sm:flex-row sm:items-center gap-2 mb-6">
+        <div className="flex flex-col sm:flex-row items-center gap-2 mb-4">
           <h2 className="text-2xl lg:text-3xl font-bold text-odara-dark">Medicamentos</h2>
           <span className="bg-gray-200 text-gray-700 px-3 py-1 rounded-full text-sm font-medium">
             Total: {medicamentosFiltrados.length}
           </span>
         </div>
 
-        <div className="mb-4 text-sm text-gray-400">
-          Total de {medicamentosFiltrados.length} de {medicamentos.length} medicamentos encontrados
-          {searchTerm && <span> para "{searchTerm}"</span>}
-          {filtros.status && <span> - Filtro: {FILTRO_STATUS_OPTIONS.find(f => f.value === filtros.status)?.label}</span>}
-        </div>
+        {(filtros.residenteId || filtros.status) && (
+          <div className="mb-4 flex flex-wrap gap-2 text-xs">
+            {filtros.residenteId && (
+              <span className="bg-odara-secondary text-white px-2 py-1 rounded-full">
+                Residente: {medicamentos.find(m => m.residente?.id === filtros.residenteId)?.residente?.nome}
+              </span>
+            )}
+            {filtros.status && (
+              <span className="bg-odara-secondary text-white px-2 py-1 rounded-full">
+                Status: {filtros.status}
+              </span>
+            )}
+          </div>
+        )}
 
         {medicamentosFiltrados.length === 0 ? (
           <div className="p-8 rounded-xl bg-odara-name/10 text-center">
@@ -641,6 +622,7 @@ const RegistroMedicamentos: React.FC = () => {
     return (
       <div className="flex flex-col sm:flex-row justify-center xl:justify-start items-start sm:items-center gap-4 mb-6">
         <div className="flex items-center">
+          <Pill size={30} className='text-odara-accent mr-2'/>
           <h1 className="text-2xl sm:text-3xl font-bold text-odara-dark mr-2">
             Registro de Medicamentos
           </h1>
@@ -679,7 +661,6 @@ const RegistroMedicamentos: React.FC = () => {
   /* Renderização Principal */
   return (
     <div className="flex min-h-screen bg-odara-offwhite">
-      <Toaster position="top-right" />
 
       <ModalMedicamentos
         medicamento={medicamentoSelecionado}
@@ -688,11 +669,51 @@ const RegistroMedicamentos: React.FC = () => {
       />
 
       <div className="flex-1 p-4 sm:p-6 lg:p-8">
-        <Cabecalho />
-        <BotaoNovoMedicamento />
-        <BarraBuscaEFiltro />
+        <div className='flex items-center justify-between'>
+          <Cabecalho />
+          <BotaoNovoMedicamento />
+        </div>
+
+        {/* Barra de Busca e Filtros */}
+        <div className="flex flex-col sm:flex-row gap-4 mb-6">
+          {/* Barra de Busca */}
+          <div className="flex-1 relative min-w-[300px]">
+            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+              {/* Ícone de busca */}
+              <Search className="text-odara-primary h-4 w-4" />
+            </div>
+
+            <input
+              type="text"
+              placeholder="Buscar nome de medicamento..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="w-full pl-10 pr-4 py-3 bg-white rounded-xl border border-gray-200 text-odara-dark placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-odara-primary focus:border-transparent"
+            />
+          </div>
+
+          {/* Botão ativador do modal de filtros */}
+          <div className="flex gap-2">
+            <button
+              onClick={toggleFiltros}
+              className="flex items-center gap-2 bg-white rounded-xl px-4 py-3 border border-gray-200 text-odara-dark font-medium hover:bg-odara-primary/10 transition w-max justify-between"
+            >
+              <Filter size={20} className="text-odara-accent" />
+              <span>
+                {!filtrosAberto ? 'Abrir ' : 'Fechar '} Filtros
+              </span>
+            </button>
+          </div>
+        </div>
+
         <SecaoFiltros />
         <ListaMedicamentos />
+
+        {/* Contador de resultados */}
+        <div className="my-4 text-sm text-gray-400">
+          Total de {medicamentosFiltrados.length} medicamento(s) encontrado(s) de {medicamentos.length}
+          {searchTerm && <span> para "{searchTerm}"</span>}
+        </div>
       </div>
     </div>
   );

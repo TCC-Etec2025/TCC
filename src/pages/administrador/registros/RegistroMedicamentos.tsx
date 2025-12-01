@@ -671,10 +671,13 @@ const RegistroMedicamentos: React.FC = () => {
       />
 
       <div className="flex-1 p-4 sm:p-6 lg:p-8">
-        <div className='flex items-center justify-between'>
-          <Cabecalho />
-          <BotaoNovoMedicamento />
-        </div>
+				{/* Cabeçalho e Botão Novo */}
+				<div className='flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6'>
+					<Cabecalho />
+					<div className="flex justify-end">
+						<BotaoNovoMedicamento />
+					</div>
+				</div>
 
         {/* Barra de Busca e Filtros */}
         <div className="flex flex-col sm:flex-row gap-4 mb-6">

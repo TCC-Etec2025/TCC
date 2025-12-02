@@ -1,5 +1,4 @@
 import { Routes, Route } from 'react-router-dom'
-import { Toaster } from 'react-hot-toast'
 
 /* ------------------- Componentes de Rota e Layout */
 import RotaProtegida from './components/RotaProtegida'
@@ -143,27 +142,6 @@ export default function App() {
           <Route path="funcionario/checklist/exames/medicos" element={<ExamesMedicos />} />
         </Route>
       </Routes>
-
-      <Toaster
-        position="top-center"
-        toastOptions={{
-          duration: 400,
-          style: {
-            background: '#e4edfd',
-            color: '#52323a',
-            border: '1px solid #0036ca',
-            borderRadius: '12px',
-            fontSize: '14px',
-            fontWeight: 500
-          },
-          success: {
-            style: { background: '#f0fdf4', border: '1px solid #00c950' }
-          },
-          error: {
-            style: { background: '#fce7e7', border: '1px solid #c90d00' }
-          }
-        }}
-      />
     </>
   )
 }

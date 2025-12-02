@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useRef, useCallback } from "react";
-import {Plus, Edit, Trash, Info, ChevronDown, Check, Siren, Filter, Search, CheckCircle, Clock, RockingChair, UsersRound, AlertTriangle} from "lucide-react";
+import { Plus, Edit, Trash, Info, ChevronDown, Check, Siren, Filter, Search, CheckCircle, Clock, RockingChair, UsersRound, AlertTriangle } from "lucide-react";
 import { supabase } from "../../../lib/supabaseClient";
 import ModalOcorrencias from "./ModalOcorrencias";
 import toast, { Toaster } from "react-hot-toast";
@@ -316,6 +316,9 @@ const RegistroOcorrencias: React.FC = () => {
 			endDate: null
 		});
 		setSearchTerm('');
+		setFiltroStatusAberto(false);
+		setFiltroCategoriaAberto(false);
+		setFiltroResidenteAberto(false);
 	};
 
 	/* Filtragem */
@@ -353,12 +356,8 @@ const RegistroOcorrencias: React.FC = () => {
 
 		// Filtro por data
 		if (filtros.startDate || filtros.endDate) {
-			const dataOcorrencia = ocorrencia.data.includes('T')
-				? ocorrencia.data.split('T')[0]
-				: ocorrencia.data.slice(0, 10);
-
-			if (filtros.startDate && dataOcorrencia < filtros.startDate) return false;
-			if (filtros.endDate && dataOcorrencia > filtros.endDate) return false;
+			if (filtros.startDate && ocorrencia.data < filtros.startDate) return false;
+			if (filtros.endDate && ocorrencia.data > filtros.endDate) return false;
 		}
 
 		return true;
@@ -470,13 +469,15 @@ const RegistroOcorrencias: React.FC = () => {
 
 		return (
 			<div className="mb-8 bg-white p-5 rounded-xl shadow border border-gray-200 animate-fade-in">
-				<div className="grid grid-cols-1 md:grid-cols-4 gap-5">
+				{/* Primeira Linha */}
+				<div className="flex flex-col md:flex-row gap-5 w-full">
 					{/* Filtro de Categoria */}
-					<div>
+					<div className="flex-1">
 						<div className='flex gap-1 items-center ml-1 mb-1'>
 							<Filter size={10} className="text-odara-accent" />
 							<label className="block text-sm font-semibold text-odara-secondary">Categoria</label>
 						</div>
+
 						<FiltroDropdown
 							titulo="Todas as categorias"
 							aberto={filtroCategoriaAberto}
@@ -489,11 +490,12 @@ const RegistroOcorrencias: React.FC = () => {
 					</div>
 
 					{/* Filtro de Status */}
-					<div>
+					<div className="flex-1">
 						<div className='flex gap-1 items-center ml-1 mb-1'>
 							<Filter size={10} className="text-odara-accent" />
 							<label className="block text-sm font-semibold text-odara-secondary">Status</label>
 						</div>
+
 						<FiltroDropdown
 							titulo="Todos os status"
 							aberto={filtroStatusAberto}
@@ -506,11 +508,12 @@ const RegistroOcorrencias: React.FC = () => {
 					</div>
 
 					{/* Filtro de Residente */}
-					<div>
+					<div className="flex-1">
 						<div className='flex gap-1 items-center ml-1 mb-1'>
 							<Filter size={10} className="text-odara-accent" />
 							<label className="block text-sm font-semibold text-odara-secondary">Residente</label>
 						</div>
+
 						<FiltroDropdown
 							titulo="Todos os residentes"
 							aberto={filtroResidenteAberto}
@@ -523,23 +526,26 @@ const RegistroOcorrencias: React.FC = () => {
 					</div>
 
 					{/* Botões de ação dos filtros */}
-					<div className="flex md:items-end gap-2 pt-1 md:pt-0">
+					<div className="flex md:items-end gap-2 pt-1 md:pt-0 md:w-auto w-full">
 						<button
 							onClick={limparFiltros}
-							className="bg-odara-accent hover:bg-odara-secondary text-white font-semibold py-2 px-4 rounded-lg flex items-center transition text-sm h-10"
+							className="bg-odara-accent hover:bg-odara-secondary text-white font-semibold py-2 px-4 rounded-lg flex items-center transition text-sm h-10 md:w-auto w-full justify-center"
 						>
 							Limpar Filtros
 						</button>
 					</div>
 				</div>
 
+				{/* Segunda Linha */}
 				{/* Filtros de data */}
 				<div className="grid grid-cols-1 md:grid-cols-2 gap-5 mt-5 pt-5 border-t border-gray-200">
+					{/* A Partir da Data */}
 					<div>
 						<div className='flex gap-1 items-center ml-1 mb-1'>
 							<Filter size={10} className="text-odara-accent" />
-							<label className="block text-sm font-semibold text-odara-secondary">Data inicial</label>
+							<label className="block text-sm font-semibold text-odara-secondary">A Partir da Data</label>
 						</div>
+
 						<input
 							type="date"
 							value={filtros.startDate || ''}
@@ -548,11 +554,13 @@ const RegistroOcorrencias: React.FC = () => {
 						/>
 					</div>
 
+					{/* Até a Data */}
 					<div>
 						<div className='flex gap-1 items-center ml-1 mb-1'>
 							<Filter size={10} className="text-odara-accent" />
-							<label className="block text-sm font-semibold text-odara-secondary">Data Final</label>
+							<label className="block text-sm font-semibold text-odara-secondary">Até a Data</label>
 						</div>
+
 						<input
 							type="date"
 							value={filtros.endDate || ''}
@@ -711,32 +719,45 @@ const RegistroOcorrencias: React.FC = () => {
 
 					{/* Providências */}
 					{ocorrencia.providencias && (
-						<div className="mb-3">
+						<div>
 							<strong className="text-odara-dark text-sm">Providências:</strong>
 							<span className="text-odara-name mt-1 text-sm">
 								{' ' + ocorrencia.providencias}
 							</span>
 						</div>
 					)}
+				</div>
 
-					{/* Informações de pessoas */}
-					<div className="mt-auto pt-3 border-t border-gray-100">
-						<div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-							{ocorrencia.residente?.nome ?
-								<div className="flex items-center gap-2">
-									<RockingChair size={12} className="text-odara-accent" />
-									<span className="text-xs text-odara-dark">
-										<strong>Residente:</strong> {ocorrencia.residente?.nome}
+				{/* Footer */}
+				<div className="p-4 flex-1 flex flex-col bg-gray-50 rounded-b-lg border-t border-gray-200">
+					<div className="flex flex-col sm:flex-row justify-between items-center gap-2">
+						{/* Lado esquerdo: Residente e Funcionário*/}
+						<div className="flex items-center justify-start flex-wrap gap-1">
+							{ocorrencia.residente?.nome ? (
+								<>
+									<span className="inline-flex items-center gap-1 bg-odara-accent text-white rounded-full px-3 py-1 text-xs font-medium">
+										<RockingChair size={12} />
+										{ocorrencia.residente.nome}
+										{ocorrencia.residente?.quarto && (
+											<span className="ml-1 text-xs opacity-75">
+												(Q {ocorrencia.residente.quarto})
+											</span>
+										)}
 									</span>
-								</div>
-								: ''}
+									<span className="text-odara-accent mx-1">•</span>
+								</>
+							) : ''}
 
-							<div className="flex items-center gap-2">
+							<span className="text-xs text-odara-dark inline-flex items-center gap-1">
 								<UsersRound size={12} className="text-odara-accent" />
-								<span className="text-xs text-odara-dark">
-									<strong>Funcionário:</strong> {ocorrencia.funcionario?.nome || "Não informado"}
-								</span>
-							</div>
+								{ocorrencia.funcionario?.nome || "Não informado"}
+							</span>
+						</div>
+
+						{/* Lado direito: Data de criação - alinhado à direita */}
+						<div className="text-xs text-odara-name flex items-center gap-1 ml-auto sm:ml-0">
+							<Clock size={10} />
+							Criado em: {ocorrencia.criado_em ? new Date(ocorrencia.criado_em).toLocaleDateString('pt-BR') : 'N/A'}
 						</div>
 					</div>
 				</div>
@@ -787,7 +808,7 @@ const RegistroOcorrencias: React.FC = () => {
 	const ListaOcorrencias = () => {
 		return (
 			<div className="bg-white border-l-4 border-odara-primary rounded-2xl shadow-lg p-4 sm:p-6">
-				<div className="flex flex-col sm:flex-row items-center gap-2 mb-4">
+				<div className="flex flex-col sm:flex-row items-center justify-between gap-2 mb-4">
 					<h2 className="text-2xl lg:text-3xl font-bold text-odara-dark">Ocorrências</h2>
 					<span className="bg-gray-200 text-gray-700 px-3 py-1 rounded-full text-sm font-medium">
 						Total: {ocorrenciasFiltradas.length} de {ocorrencias.length}
@@ -795,8 +816,8 @@ const RegistroOcorrencias: React.FC = () => {
 				</div>
 
 				{/* Tags de filtros ativos */}
-				{(filtros.categoria || filtros.status || filtros.residenteId || searchTerm) && (
-					<div className="mb-4 flex flex-wrap gap-2 text-xs">
+				{(filtros.categoria || filtros.status || filtros.residenteId || filtros.startDate || filtros.endDate || searchTerm) && (
+					<div className="mb-4 flex flex-wrap gap-2 text-xs justify-center">
 						{searchTerm && (
 							<span className="bg-odara-secondary text-white px-2 py-1 rounded-full">
 								Busca: "{searchTerm}"
@@ -819,8 +840,8 @@ const RegistroOcorrencias: React.FC = () => {
 						)}
 						{(filtros.startDate || filtros.endDate) && (
 							<span className="bg-odara-secondary text-white px-2 py-1 rounded-full">
-								Data: {filtros.startDate ? ` ${formatarDataParaExibicao(filtros.startDate)}` : 'não informada'}
-								{filtros.endDate ? ' a' + ` ${formatarDataParaExibicao(filtros.endDate)}` : ''}
+								Data: {filtros.startDate ? ` ${formatarDataParaExibicao(filtros.startDate)}` : ''}
+								{filtros.endDate ? ' até' + ` ${formatarDataParaExibicao(filtros.endDate)}` : ''}
 							</span>
 						)}
 					</div>
@@ -901,7 +922,7 @@ const RegistroOcorrencias: React.FC = () => {
 
 			<div className="flex-1 p-4 sm:p-6 lg:p-8">
 				{/* Cabeçalho e Botão Novo */}
-				<div className='flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6'>
+				<div className='flex flex-col sm:flex-row sm:items-center justify-between gap-4 my-6'>
 					<Cabecalho />
 					<div className="flex justify-end">
 						<BotaoNovaOcorrencia />

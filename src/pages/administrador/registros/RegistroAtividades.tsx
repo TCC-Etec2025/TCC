@@ -284,7 +284,14 @@ const RegistroAtividades = () => {
   };
 
   const limparFiltros = () => {
-    setFiltros({ status: null, categoria: null, residenteId: null, startDate: null, endDate: null });
+    setFiltros({ 
+      status: null, 
+      categoria: null, 
+      residenteId: null, 
+      startDate: null, 
+      endDate: null 
+    });    
+		setSearchTerm('');
     setFiltroStatusAberto(false);
     setFiltroCategoriaAberto(false);
     setFiltroResidenteAberto(false);
@@ -576,7 +583,7 @@ const RegistroAtividades = () => {
           <div>
             <div className='flex gap-1 items-center ml-1 mb-1'>
               <Filter size={10} className="text-odara-accent" />
-              <label className="block text-sm font-semibold text-odara-secondary">Data inicial</label>
+              <label className="block text-sm font-semibold text-odara-secondary">A Partir da Data</label>
             </div>
             <input
               type="date"

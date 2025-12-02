@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { Plus, Edit, Trash, Filter, Search, Info, Calendar, Clock, User, Stethoscope, AlertCircle, CheckCircle, ChevronDown, Check } from 'lucide-react';
+import { Plus, Edit, Trash, Filter, Search, Info, Calendar, Clock, User, Stethoscope, AlertCircle, CheckCircle, ChevronDown, Check, XCircle, RockingChair } from 'lucide-react';
 import { supabase } from '../../../lib/supabaseClient';
 import ModalConsultas from './ModalConsultas';
 import toast, { Toaster } from 'react-hot-toast';
@@ -35,10 +35,10 @@ const COR_STATUS: Record<string, {
   icon: React.ComponentType<any>;
 }> = {
   agendada: {
-    bola: 'bg-blue-500',
-    bg: 'bg-blue-50',
+    bola: 'bg-yellow-500',
+    bg: 'bg-yellow-50',
     text: 'text-odara-dark',
-    border: 'border-b border-blue-200',
+    border: 'border-b border-yellow-200',
     icon: Calendar
   },
   realizada: {
@@ -49,11 +49,11 @@ const COR_STATUS: Record<string, {
     icon: CheckCircle
   },
   cancelada: {
-    bola: 'bg-red-500',
-    bg: 'bg-red-50',
+    bola: 'bg-gray-500',
+    bg: 'bg-gray-50',
     text: 'text-odara-dark',
-    border: 'border-b border-red-200',
-    icon: AlertCircle
+    border: 'border-b border-gray-200',
+    icon: XCircle
   },
 };
 
@@ -179,7 +179,7 @@ const RegistroConsultas = () => {
   const atualizarStatus = async (id: number, novoStatus: string) => {
     try {
       // Atualizar localmente primeiro para feedback imediato
-      setConsultas(prev => prev.map(c => 
+      setConsultas(prev => prev.map(c =>
         c.id === id ? { ...c, status: novoStatus } : c
       ));
 
@@ -187,9 +187,9 @@ const RegistroConsultas = () => {
         .from('consulta')
         .update({ status: novoStatus })
         .eq('id', id);
-      
+
       if (error) throw error;
-      
+
       toast.success('Status atualizado com sucesso!');
     } catch (err) {
       console.error('Erro ao atualizar status:', err);
@@ -231,7 +231,12 @@ const RegistroConsultas = () => {
   };
 
   const limparFiltros = () => {
-    setFiltros({ status: null, residenteId: null, startDate: null, endDate: null });
+    setFiltros({
+      status: null,
+      residenteId: null,
+      startDate: null,
+      endDate: null
+    });
     setSearchTerm('');
     setFiltroStatusAberto(false);
     setFiltroResidenteAberto(false);
@@ -312,11 +317,10 @@ const RegistroConsultas = () => {
                       atualizarStatus(consulta.id, option.value);
                       setDropdownAberto(null);
                     }}
-                    className={`flex items-center gap-3 w-full text-left px-4 py-3 text-sm hover:bg-odara-primary/10 transition ${
-                      consulta.status === option.value
-                        ? 'bg-odara-primary/20 text-odara-primary font-semibold'
-                        : 'text-gray-700'
-                    }`}
+                    className={`flex items-center gap-3 w-full text-left px-4 py-3 text-sm hover:bg-odara-primary/10 transition ${consulta.status === option.value
+                      ? 'bg-odara-primary/20 text-odara-primary font-semibold'
+                      : 'text-gray-700'
+                      }`}
                   >
                     <OptionIcon size={14} className="text-odara-accent" />
                     <span className="capitalize">{option.label}</span>
@@ -378,11 +382,10 @@ const RegistroConsultas = () => {
               <>
                 <button
                   onClick={() => onSelecionar(null)}
-                  className={`flex items-center gap-3 w-full text-left px-4 py-3 text-sm hover:bg-odara-primary/10 transition ${
-                    !valorSelecionado
-                      ? 'bg-odara-primary/20 text-odara-primary font-semibold'
-                      : 'text-gray-700'
-                  }`}
+                  className={`flex items-center gap-3 w-full text-left px-4 py-3 text-sm hover:bg-odara-primary/10 transition ${!valorSelecionado
+                    ? 'bg-odara-primary/20 text-odara-primary font-semibold'
+                    : 'text-gray-700'
+                    }`}
                 >
                   <span>Todos os residentes</span>
                   {!valorSelecionado && <Check className="ml-auto text-odara-primary" size={14} />}
@@ -391,11 +394,10 @@ const RegistroConsultas = () => {
                   <button
                     key={residente.id}
                     onClick={() => onSelecionar(residente.id)}
-                    className={`flex items-center gap-3 w-full text-left px-4 py-3 text-sm hover:bg-odara-primary/10 transition ${
-                      valorSelecionado === residente.id
-                        ? 'bg-odara-primary/20 text-odara-primary font-semibold'
-                        : 'text-gray-700'
-                    }`}
+                    className={`flex items-center gap-3 w-full text-left px-4 py-3 text-sm hover:bg-odara-primary/10 transition ${valorSelecionado === residente.id
+                      ? 'bg-odara-primary/20 text-odara-primary font-semibold'
+                      : 'text-gray-700'
+                      }`}
                   >
                     <span>{residente.nome} {residente.quarto ? `(Q ${residente.quarto})` : ''}</span>
                     {valorSelecionado === residente.id && <Check className="ml-auto text-odara-primary" size={14} />}
@@ -407,11 +409,10 @@ const RegistroConsultas = () => {
                 <button
                   key={opcao.value}
                   onClick={() => onSelecionar(opcao.value)}
-                  className={`flex items-center gap-3 w-full text-left px-4 py-3 text-sm hover:bg-odara-primary/10 transition ${
-                    (opcao.value === 'todos' && !valorSelecionado) || valorSelecionado === opcao.value
-                      ? 'bg-odara-primary/20 text-odara-primary font-semibold'
-                      : 'text-gray-700'
-                  }`}
+                  className={`flex items-center gap-3 w-full text-left px-4 py-3 text-sm hover:bg-odara-primary/10 transition ${(opcao.value === 'todos' && !valorSelecionado) || valorSelecionado === opcao.value
+                    ? 'bg-odara-primary/20 text-odara-primary font-semibold'
+                    : 'text-gray-700'
+                    }`}
                 >
                   <span>{opcao.label}</span>
                   {((opcao.value === 'todos' && !valorSelecionado) || valorSelecionado === opcao.value) && (
@@ -431,47 +432,65 @@ const RegistroConsultas = () => {
 
     return (
       <div className="mb-8 bg-white p-5 rounded-xl shadow border border-gray-200 animate-fade-in">
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-5">
-          {/* Filtro de Residente */}
-          <div>
-            <div className='flex gap-1 items-center ml-1 mb-1'>
-              <Filter size={10} className="text-odara-accent" />
-              <label className="block text-sm font-semibold text-odara-secondary">Residente</label>
+        {/* Primeira Linha */}
+        <div className="flex flex-col md:flex-row gap-5 w-full">
+          <div className='flex flex-col md:flex-row flex-1 gap-5'>
+            {/* Filtro de Residente */}
+            <div className="flex-1">
+              <div className='flex gap-1 items-center ml-1 mb-1'>
+                <Filter size={10} className="text-odara-accent" />
+                <label className="block text-sm font-semibold text-odara-secondary">Residente</label>
+              </div>
+              <FiltroDropdown
+                titulo="Todos os residentes"
+                aberto={filtroResidenteAberto}
+                setAberto={setFiltroResidenteAberto}
+                ref={filtroResidenteRef}
+                valorSelecionado={filtros.residenteId}
+                onSelecionar={selecionarResidente}
+                tipo="residente"
+              />
             </div>
-            <FiltroDropdown
-              titulo="Todos os residentes"
-              aberto={filtroResidenteAberto}
-              setAberto={setFiltroResidenteAberto}
-              ref={filtroResidenteRef}
-              valorSelecionado={filtros.residenteId}
-              onSelecionar={selecionarResidente}
-              tipo="residente"
-            />
+
+            {/* Filtro de Status */}
+            <div className="flex-1">
+              <div className='flex gap-1 items-center ml-1 mb-1'>
+                <Filter size={10} className="text-odara-accent" />
+                <label className="block text-sm font-semibold text-odara-secondary">Status</label>
+              </div>
+              <FiltroDropdown
+                titulo="Todos os status"
+                aberto={filtroStatusAberto}
+                setAberto={setFiltroStatusAberto}
+                ref={filtroStatusRef}
+                valorSelecionado={filtros.status || 'todos'}
+                onSelecionar={selecionarStatus}
+                tipo="status"
+              />
+            </div>
           </div>
 
-          {/* Filtro de Status */}
-          <div>
-            <div className='flex gap-1 items-center ml-1 mb-1'>
-              <Filter size={10} className="text-odara-accent" />
-              <label className="block text-sm font-semibold text-odara-secondary">Status</label>
-            </div>
-            <FiltroDropdown
-              titulo="Todos os status"
-              aberto={filtroStatusAberto}
-              setAberto={setFiltroStatusAberto}
-              ref={filtroStatusRef}
-              valorSelecionado={filtros.status || 'todos'}
-              onSelecionar={selecionarStatus}
-              tipo="status"
-            />
+          {/* Botões de ação */}
+          <div className="flex md:items-end gap-2 pt-1 md:pt-0 md:w-auto w-full">
+            <button
+              onClick={limparFiltros}
+              className="bg-odara-accent hover:bg-odara-secondary text-white font-semibold py-2 px-4 rounded-lg flex items-center transition text-sm h-10 md:w-auto w-full justify-center"
+            >
+              Limpar Filtros
+            </button>
           </div>
-
-          {/* Filtro de Data Inicial */}
+        </div>
+        
+        {/* Segunda Linha */}
+        {/* Filtro de Data */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-5 mt-5 pt-5 border-t border-gray-200">
+          {/* A Partir da Data */}
           <div>
             <div className='flex gap-1 items-center ml-1 mb-1'>
               <Filter size={10} className="text-odara-accent" />
-              <label className="block text-sm font-semibold text-odara-secondary">Data inicial</label>
+              <label className="block text-sm font-semibold text-odara-secondary">A Partir da Data</label>
             </div>
+
             <input
               type="date"
               value={filtros.startDate || ''}
@@ -480,24 +499,13 @@ const RegistroConsultas = () => {
             />
           </div>
 
-          {/* Botões de ação */}
-          <div className="flex md:items-end gap-2 pt-1 md:pt-0">
-            <button
-              onClick={limparFiltros}
-              className="bg-odara-accent hover:bg-odara-secondary text-white font-semibold py-2 px-4 rounded-lg flex items-center transition text-sm h-10"
-            >
-              Limpar Filtros
-            </button>
-          </div>
-        </div>
-
-        {/* Filtro de Data Final */}
-        <div className="mt-5 pt-5 border-t border-gray-200">
-          <div className="max-w-xs">
-            <div className='flex gap-1 items-center ml-1 mb-1'>
+          {/* Até a Data */}
+          <div>
+            <div className="flex gap-1 items-center ml-1 mb-1">
               <Filter size={10} className="text-odara-accent" />
-              <label className="block text-sm font-semibold text-odara-secondary">Data final</label>
+              <label className="block text-sm font-semibold text-odara-secondary">Até a Data</label>
             </div>
+
             <input
               type="date"
               value={filtros.endDate || ''}
@@ -604,18 +612,19 @@ const RegistroConsultas = () => {
           </div>
         </div>
 
-        {/* Footer do Card - Seguindo o padrão do RegistroAtividades */}
+        {/* Footer do Card */}
         <div className="px-4 py-3 bg-gray-50 rounded-b-lg border-t border-gray-200">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
             <div className="flex items-center flex-wrap gap-1">
               <span className="bg-odara-accent text-white px-3 py-1 rounded-full text-xs font-medium flex items-center gap-1">
-                <User size={12} />
+                <RockingChair size={12} />
                 {consulta.residente?.nome || 'Sem residente'}
                 {consulta.residente?.quarto && (
                   <span className="ml-1 bg-white/20 px-1 rounded">Q {consulta.residente.quarto}</span>
                 )}
               </span>
             </div>
+
             <div className="text-xs text-odara-name flex items-center gap-1">
               <Clock size={10} />
               Criado em: {consulta.criado_em ? new Date(consulta.criado_em).toLocaleDateString('pt-BR') : 'N/A'}
@@ -629,7 +638,7 @@ const RegistroConsultas = () => {
   const ListaConsultas = () => {
     return (
       <div className="bg-white border-l-4 border-odara-primary rounded-2xl shadow-lg p-4 sm:p-6">
-        <div className="flex flex-col sm:flex-row items-center gap-2 mb-4">
+        <div className="flex flex-col sm:flex-row items-center justify-between gap-2 mb-4">
           <h2 className="text-2xl lg:text-3xl font-bold text-odara-dark">Consultas</h2>
           <span className="bg-gray-200 text-gray-700 px-3 py-1 rounded-full text-sm font-medium">
             Total: {consultasFiltradas.length} de {consultas.length}
@@ -638,7 +647,7 @@ const RegistroConsultas = () => {
 
         {/* Tags de filtros ativos */}
         {(filtros.status || filtros.residenteId || filtros.startDate || filtros.endDate || searchTerm) && (
-          <div className="mb-4 flex flex-wrap gap-2 text-xs">
+          <div className="mb-4 flex flex-wrap justify-center gap-2 text-xs">
             {searchTerm && (
               <span className="bg-odara-secondary text-white px-2 py-1 rounded-full">
                 Busca: "{searchTerm}"
@@ -656,8 +665,8 @@ const RegistroConsultas = () => {
             )}
             {(filtros.startDate || filtros.endDate) && (
               <span className="bg-odara-secondary text-white px-2 py-1 rounded-full">
-                Data: {filtros.startDate ? ` ${filtros.startDate.split('-').reverse().join('/')}` : 'não informada'}
-                {filtros.endDate ? ' a' + ` ${filtros.endDate.split('-').reverse().join('/')}` : ''}
+                Data: {filtros.startDate ? ` ${filtros.startDate.split('-').reverse().join('/')}` : ''}
+                {filtros.endDate ? ' até' + ` ${filtros.endDate.split('-').reverse().join('/')}` : ''}
               </span>
             )}
           </div>

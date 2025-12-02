@@ -93,11 +93,10 @@ const AdminDashboard = () => {
 
         setNumeroIdosos(contadorIdosos ?? 0);
         setNumeroColaboradores(contadorColaboradores ?? 0);
-
-        toast.success('Dados carregados com sucesso!');
+        
       } catch (erro: any) {
         console.error('Erro ao buscar dados:', erro);
-        toast.error('Erro ao carregar dados: ' + (erro?.message ?? String(erro)));
+        
       } finally {
         setCarregando(false);
       }

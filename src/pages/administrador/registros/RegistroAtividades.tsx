@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
-import { Filter, Search, CheckCircle, Clock, CircleX, Plus, Edit, Trash, Info, ChevronDown, Check, TriangleAlert, Palette } from 'lucide-react';
+import { Filter, Search, CheckCircle, Clock, CircleX, Plus, Edit, Trash, Info, ChevronDown, Check, TriangleAlert, Palette, RockingChair } from 'lucide-react';
 import toast, { Toaster } from 'react-hot-toast';
 import { supabase } from '../../../lib/supabaseClient';
 import ModalAtividades from './ModalAtividades';
@@ -284,14 +284,14 @@ const RegistroAtividades = () => {
   };
 
   const limparFiltros = () => {
-    setFiltros({ 
-      status: null, 
-      categoria: null, 
-      residenteId: null, 
-      startDate: null, 
-      endDate: null 
-    });    
-		setSearchTerm('');
+    setFiltros({
+      status: null,
+      categoria: null,
+      residenteId: null,
+      startDate: null,
+      endDate: null
+    });
+    setSearchTerm('');
     setFiltroStatusAberto(false);
     setFiltroCategoriaAberto(false);
     setFiltroResidenteAberto(false);
@@ -617,7 +617,7 @@ const RegistroAtividades = () => {
     return (
       <div className="bg-white rounded-lg shadow-md border border-gray-200 hover:shadow-lg transition-shadow duration-200 flex flex-col h-full">
         {/* Header do Card */}
-        <div className={`flex items-center justify-between p-3 rounded-t-lg ${configStatus.corFundo} ${configStatus.corBorda}`}>
+        <div className={`flex flex-wrap justify-center sm:justify-between gap-2 items-center p-3 rounded-t-lg ${configStatus.corFundo} ${configStatus.corBorda}`}>
           {/* Coluna Esquerda */}
           <div className="flex items-center">
             <div className={`w-3 h-3 rounded-full mr-3 ${configStatus.corBolinha}`}></div>
@@ -645,6 +645,7 @@ const RegistroAtividades = () => {
             <h3 className="text-lg sm:text-xl font-bold text-odara-dark line-clamp-1 flex-1">
               {atividade.nome || 'Sem nome'}
             </h3>
+
             <div className="flex items-center gap-1 ml-2">
               <button
                 onClick={() => abrirModalEdicao(atividade)}
@@ -653,6 +654,7 @@ const RegistroAtividades = () => {
               >
                 <Edit size={14} />
               </button>
+
               <button
                 onClick={() => excluirAtividade(atividade.id)}
                 className="text-odara-alerta hover:text-odara-white transition-colors duration-200 p-2 rounded-full hover:bg-odara-alerta"
@@ -674,12 +676,14 @@ const RegistroAtividades = () => {
                 </span>
               </div>
 
-              {atividade.local && (
+              {atividade.observacao && (
                 <div>
-                  <strong className="text-odara-dark text-sm">Local:</strong>
-                  <span className="text-odara-name mt-1 text-sm">
-                    {' ' + atividade.local}
-                  </span>
+                  <div>
+                    <strong className="text-odara-dark text-sm">Descrição:</strong>
+                    <span className="text-odara-name mt-1 text-sm">
+                      {' ' + atividade.observacao}
+                    </span>
+                  </div>
                 </div>
               )}
             </div>
@@ -694,14 +698,13 @@ const RegistroAtividades = () => {
                   </span>
                 </div>
               )}
-              {atividade.observacao && (
+
+              {atividade.local && (
                 <div>
-                  <div>
-                    <strong className="text-odara-dark text-sm">Observações:</strong>
-                    <span className="text-odara-name mt-1 text-sm">
-                      {' ' + atividade.observacao}
-                    </span>
-                  </div>
+                  <strong className="text-odara-dark text-sm">Local:</strong>
+                  <span className="text-odara-name mt-1 text-sm">
+                    {' ' + atividade.local}
+                  </span>
                 </div>
               )}
             </div>
@@ -710,18 +713,27 @@ const RegistroAtividades = () => {
 
         {/* Footer do Card */}
         <div className="px-4 py-3 bg-gray-50 rounded-b-lg border-t border-gray-200">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-            <div className="flex items-center text-sm flex-wrap gap-1">
+          <div className="flex flex-wrap justify-center sm:justify-between gap-2 text-xs">
+            <div className="flex items-center justify-center sm:justify-start text-sm flex-wrap gap-1">
               {atividade.residentes
                 .map(r => r?.nome)
                 .filter(Boolean)
                 .sort((a, b) => a!.localeCompare(b!))
                 .map(residente => (
-                  <span key={residente} className="bg-odara-accent text-white px-3 py-1 rounded-full text-xs font-medium">
+                  <span key={residente} className="bg-odara-accent text-white px-3 py-1 rounded-full text-xs font-medium flex items-center gap-1">
+                    <RockingChair size={12} />
                     {residente}
                   </span>
                 ))}
             </div>
+
+            {/* Ciado em */}
+            {/* 
+              <div className="text-xs text-odara-name flex items-center gap-1">
+                <Clock size={10} />
+                Criado em: {atividade.criado_em ? new Date(atividade.criado_em).toLocaleDateString('pt-BR') : 'N/A'}
+              </div>
+             */}
           </div>
         </div>
       </div>
@@ -743,21 +755,30 @@ const RegistroAtividades = () => {
         {/* Filtros ativos */}
         {(filtros.status || filtros.categoria || filtros.residenteId || filtros.startDate || filtros.endDate) && (
           <div className="mb-4 flex flex-wrap gap-2 text-xs">
-            {filtros.status && (
+            {searchTerm && (
               <span className="bg-odara-secondary text-white px-2 py-1 rounded-full">
-                Status: {FILTRO_STATUS_OPTIONS.find(opt => opt.value === filtros.status)?.label}
+                Busca: {searchTerm}
               </span>
             )}
-            {filtros.categoria && (
-              <span className="bg-odara-secondary text-white px-2 py-1 rounded-full">
-                Categoria: {FILTRO_CATEGORIA_OPTIONS.find(opt => opt.value === filtros.categoria)?.label}
-              </span>
-            )}
+
             {filtros.residenteId && (
               <span className="bg-odara-secondary text-white px-2 py-1 rounded-full">
                 Residente: {residentes.find(r => r.id === filtros.residenteId)?.nome}
               </span>
             )}
+
+            {filtros.categoria && (
+              <span className="bg-odara-secondary text-white px-2 py-1 rounded-full">
+                Categoria: {FILTRO_CATEGORIA_OPTIONS.find(opt => opt.value === filtros.categoria)?.label}
+              </span>
+            )}
+
+            {filtros.status && (
+              <span className="bg-odara-secondary text-white px-2 py-1 rounded-full">
+                Status: {FILTRO_STATUS_OPTIONS.find(opt => opt.value === filtros.status)?.label}
+              </span>
+            )}
+
             {(filtros.startDate || filtros.endDate) && (
               <span className="bg-odara-secondary text-white px-2 py-1 rounded-full">
                 Data: {filtros.startDate ? ` ${formatarDataParaExibicao(filtros.startDate)}` : 'não informada'}
@@ -842,13 +863,13 @@ const RegistroAtividades = () => {
       />
 
       <div className="flex-1 p-4 sm:p-6 lg:p-8">
-				{/* Cabeçalho e Botão Novo */}
-				<div className='flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6'>
-					<Cabecalho />
-					<div className="flex justify-end">
-						<BotaoNovaAtividade />
-					</div>
-				</div>
+        {/* Cabeçalho e Botão Novo */}
+        <div className='flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6'>
+          <Cabecalho />
+          <div className="flex justify-end">
+            <BotaoNovaAtividade />
+          </div>
+        </div>
 
         {/* Barra de Busca e Filtros */}
         <div className="flex flex-col sm:flex-row gap-4 mb-6">

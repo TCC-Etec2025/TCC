@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { Plus, Edit, Trash, Filter, Search, Info, Calendar, Clock, User, Stethoscope, AlertCircle, CheckCircle, ChevronDown, Check, XCircle, RockingChair } from 'lucide-react';
+import { Plus, Edit, Trash, Filter, Search, Info, Calendar, Clock, ClipboardPlus, AlertCircle, CheckCircle, ChevronDown, Check, XCircle, RockingChair } from 'lucide-react';
 import { supabase } from '../../../lib/supabaseClient';
 import ModalConsultas from './ModalConsultas';
 import toast, { Toaster } from 'react-hot-toast';
@@ -306,7 +306,7 @@ const RegistroConsultas = () => {
               onClick={() => setDropdownAberto(null)}
             ></div>
 
-            <div className="absolute top-full right-0 mt-2 w-48 bg-white rounded-lg shadow-lg border border-gray-200 z-20 overflow-hidden">
+            <div className="absolute top-full xs:right-0 mt-2 w-48 bg-white rounded-lg shadow-lg border border-gray-200 z-20 overflow-hidden">
               {STATUS_OPTIONS.map((option) => {
                 const OptionIcon = option.icon;
                 return (
@@ -480,7 +480,7 @@ const RegistroConsultas = () => {
             </button>
           </div>
         </div>
-        
+
         {/* Segunda Linha */}
         {/* Filtro de Data */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-5 mt-5 pt-5 border-t border-gray-200">
@@ -525,7 +525,7 @@ const RegistroConsultas = () => {
     return (
       <div className="bg-white rounded-lg shadow-md border border-gray-200 hover:shadow-lg transition-shadow duration-200 flex flex-col h-full">
         {/* Header do Card */}
-        <div className={`flex items-center justify-between p-3 rounded-t-lg ${coresStatus.border} ${coresStatus.bg}`}>
+        <div className={`flex flex-wrap justify-center sm:justify-between gap-2 items-center p-3 rounded-t-lg ${coresStatus.border} ${coresStatus.bg}`}>
           {/* Coluna Esquerda */}
           <div className="flex items-center">
             <div className={`w-3 h-3 rounded-full mr-3 ${coresStatus.bola}`}></div>
@@ -547,15 +547,9 @@ const RegistroConsultas = () => {
         <div className="p-4 flex-1 flex flex-col">
           {/* Título e Botões de Ação */}
           <div className="flex items-start justify-between mb-3">
-            <div className="flex-1">
-              <h3 className="text-lg sm:text-xl font-bold text-odara-dark mb-1">
-                {consulta.residente?.nome || 'Residente não informado'}
-              </h3>
-              <p className="text-sm text-odara-name flex items-center gap-1">
-                <Stethoscope size={14} className="text-odara-accent" />
-                Dr(a). {consulta.medico}
-              </p>
-            </div>
+            <h3 className="text-lg sm:text-xl font-bold text-odara-dark line-clamp-1 flex-1">
+              {consulta.residente?.nome || 'Residente não informado'}
+            </h3>
 
             {/* Botões de ação */}
             <div className="flex items-center gap-1 ml-2">
@@ -577,7 +571,7 @@ const RegistroConsultas = () => {
           </div>
 
           {/* Detalhes da Consulta */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 flex-1">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 flex-1">
             {/* Coluna Esquerda */}
             <div className="space-y-3">
               {consulta.motivo_consulta && (
@@ -588,6 +582,19 @@ const RegistroConsultas = () => {
                   </span>
                 </div>
               )}
+
+              {consulta.medico && (
+                <div>
+                  <strong className="text-odara-dark text-sm">Médica:</strong>
+                  <span className="text-odara-name mt-1 text-sm">
+                    {' ' + consulta.medico}
+                  </span>
+                </div>
+              )}
+            </div>
+
+            {/* Coluna Direita */}
+            <div className="space-y-3">
               {consulta.tratamento_indicado && (
                 <div>
                   <strong className="text-odara-dark text-sm">Tratamento:</strong>
@@ -596,10 +603,7 @@ const RegistroConsultas = () => {
                   </span>
                 </div>
               )}
-            </div>
 
-            {/* Coluna Direita */}
-            <div className="space-y-3">
               {consulta.observacao && (
                 <div>
                   <strong className="text-odara-dark text-sm">Observações:</strong>
@@ -614,15 +618,16 @@ const RegistroConsultas = () => {
 
         {/* Footer do Card */}
         <div className="px-4 py-3 bg-gray-50 rounded-b-lg border-t border-gray-200">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+          <div className="flex flex-wrap justify-center sm:justify-between gap-2 text-xs">
             <div className="flex items-center flex-wrap gap-1">
               <span className="bg-odara-accent text-white px-3 py-1 rounded-full text-xs font-medium flex items-center gap-1">
                 <RockingChair size={12} />
                 {consulta.residente?.nome || 'Sem residente'}
-                {consulta.residente?.quarto && (
-                  <span className="ml-1 bg-white/20 px-1 rounded">Q {consulta.residente.quarto}</span>
-                )}
               </span>
+
+              {consulta.residente?.quarto && (
+                <span className="ml-1 bg-white/20 px-1 rounded">{' • Quarto: ' + consulta.residente.quarto}</span>
+              )}
             </div>
 
             <div className="text-xs text-odara-name flex items-center gap-1">
@@ -647,22 +652,25 @@ const RegistroConsultas = () => {
 
         {/* Tags de filtros ativos */}
         {(filtros.status || filtros.residenteId || filtros.startDate || filtros.endDate || searchTerm) && (
-          <div className="mb-4 flex flex-wrap justify-center gap-2 text-xs">
+          <div className="mb-4 flex flex-wrap justify-center sm:justify-start gap-2 text-xs">
             {searchTerm && (
               <span className="bg-odara-secondary text-white px-2 py-1 rounded-full">
-                Busca: "{searchTerm}"
+                Busca: {searchTerm}
               </span>
             )}
-            {filtros.status && (
-              <span className="bg-odara-secondary text-white px-2 py-1 rounded-full">
-                Status: {FILTRO_STATUS_OPTIONS.find(opt => opt.value === filtros.status)?.label}
-              </span>
-            )}
+
             {filtros.residenteId && (
               <span className="bg-odara-secondary text-white px-2 py-1 rounded-full">
                 Residente: {residentes.find(r => r.id === filtros.residenteId)?.nome}
               </span>
             )}
+
+            {filtros.status && (
+              <span className="bg-odara-secondary text-white px-2 py-1 rounded-full">
+                Status: {FILTRO_STATUS_OPTIONS.find(opt => opt.value === filtros.status)?.label}
+              </span>
+            )}
+
             {(filtros.startDate || filtros.endDate) && (
               <span className="bg-odara-secondary text-white px-2 py-1 rounded-full">
                 Data: {filtros.startDate ? ` ${filtros.startDate.split('-').reverse().join('/')}` : ''}
@@ -706,7 +714,7 @@ const RegistroConsultas = () => {
     return (
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
         <div className="flex items-center">
-          <Stethoscope size={30} className='text-odara-accent mr-2' />
+          <ClipboardPlus size={30} className='text-odara-accent mr-2' />
           <h1 className="text-2xl sm:text-3xl font-bold text-odara-dark mr-2">
             Registro de Consultas Médicas
           </h1>
@@ -735,7 +743,7 @@ const RegistroConsultas = () => {
     return (
       <button
         onClick={abrirModalNova}
-        className="bg-odara-accent hover:bg-odara-secondary text-white font-semibold py-2 px-4 rounded-lg flex items-center transition text-sm h-10 mb-6"
+        className="bg-odara-accent hover:bg-odara-secondary text-white font-semibold py-2 px-4 rounded-lg flex items-center transition text-sm h-10 mb-6 w-max"
       >
         <Plus className="mr-2" /> Nova Consulta
       </button>

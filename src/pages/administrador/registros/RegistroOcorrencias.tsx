@@ -922,7 +922,7 @@ const RegistroOcorrencias: React.FC = () => {
 
 			<div className="flex-1 p-4 sm:p-6 lg:p-8">
 				{/* Cabeçalho e Botão Novo */}
-				<div className='flex flex-col sm:flex-row sm:items-center justify-between gap-4 my-6'>
+				<div className='flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6'>
 					<Cabecalho />
 					<div className="flex justify-end">
 						<BotaoNovaOcorrencia />

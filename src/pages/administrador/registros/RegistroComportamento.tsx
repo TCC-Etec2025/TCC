@@ -6,19 +6,10 @@ import {
   FaTrash,
   FaFilter,
   FaInfoCircle,
-  FaArrowLeft,
-  FaTimes,
   FaCheck,
 } from "react-icons/fa";
-import { Link } from "react-router-dom";
 import { supabase } from "../../../lib/supabaseClient";
-import { useForm } from "react-hook-form";
-import * as yup from "yup";
-import { yupResolver } from "@hookform/resolvers/yup";
-import ModalComportamento from "./ModalComportamento"; // Importando o modal separado
-
-// ================= CONFIG =================
-const STORAGE_BUCKET = "comportamento_fotos";
+import ModalComportamento from "./ModalComportamento";
 
 // ===== CONSTANTES =====
 const CATEGORIAS = {
@@ -52,6 +43,11 @@ type Residente = {
   foto?: string | null;
 };
 
+type Funcionario = {
+  id: number;
+  nome: string;
+};
+
 type Comportamento = {
   id: number;
   titulo: string;
@@ -61,11 +57,10 @@ type Comportamento = {
   id_residente: number | null;
   residente: Residente;
   id_funcionario: number | null;
-  funcionario: Residente;
+  funcionario: Funcionario;
   categoria: string;
-  resolvido: boolean;
+  status: boolean;
   criado_em?: string | null;
-  foto?: string | null;
 };
 
 // ===== COMPONENTE =====
@@ -73,7 +68,6 @@ const RegistroComportamento: React.FC = () => {
   // estados
   const [comportamentos, setComportamentos] = useState<Comportamento[]>([]);
   const [residentes, setResidentes] = useState<Residente[]>([]);
-  const [funcionarios, setFuncionarios] = useState<Residente[]>([]);
   const [loading, setLoading] = useState(false);
 
   // filtros e UI
@@ -101,7 +95,6 @@ const RegistroComportamento: React.FC = () => {
   useEffect(() => {
     fetchComportamentos();
     fetchResidentes();
-    fetchFuncionarios();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -112,18 +105,7 @@ const RegistroComportamento: React.FC = () => {
       const { data, error } = await supabase
         .from("comportamento")
         .select(
-          `
-            id,
-            titulo,
-            descricao,
-            data,
-            horario,
-            categoria,
-            foto,
-            resolvido,
-            criado_em,
-            id_residente,
-            id_funcionario,
+          `*,
             residente:residente(id, nome, foto),
             funcionario:funcionario(id, nome)
           `
@@ -154,9 +136,8 @@ const RegistroComportamento: React.FC = () => {
           data: new Date(d.data),
           horario: d.horario,
           categoria: d.categoria,
-          resolvido: d.resolvido,
+          status: d.resolvido,
           criado_em: d.criado_em,
-          foto: d.foto ?? null,
           id_residente: d.id_residente ?? residenteObj?.id ?? null,
           id_funcionario: d.id_funcionario ?? funcionarioObj?.id ?? null,
           residente: {
@@ -187,16 +168,6 @@ const RegistroComportamento: React.FC = () => {
       if (data) setResidentes(data as Residente[]);
     } catch (err) {
       console.error("Erro ao buscar residentes:", err);
-    }
-  };
-
-  const fetchFuncionarios = async () => {
-    try {
-      const { data, error } = await supabase.from("funcionario").select("id, nome").order("nome");
-      if (error) throw error;
-      if (data) setFuncionarios(data as Residente[]);
-    } catch (err) {
-      console.error("Erro ao buscar funcionários:", err);
     }
   };
 
@@ -237,7 +208,7 @@ const RegistroComportamento: React.FC = () => {
     try {
       const item = comportamentos.find((c) => c.id === id);
       if (!item) return;
-      const novo = !item.resolvido;
+      const novo = !item.status;
 
       // otimista
       setComportamentos((ant) => ant.map((c) => (c.id === id ? { ...c, resolvido: novo } : c)));
@@ -256,7 +227,7 @@ const RegistroComportamento: React.FC = () => {
       if (filtros.categoria && comportamento.categoria !== filtros.categoria) return false;
       if (filtros.residenteId && comportamento.residente?.id !== filtros.residenteId) return false;
       if (filtros.status) {
-        const st = comportamento.resolvido ? "resolvido" : "pendente";
+        const st = comportamento.status ? "resolvido" : "pendente";
         if (st !== filtros.status) return false;
       }
       if (filtros.startDate || filtros.endDate) {
@@ -268,8 +239,8 @@ const RegistroComportamento: React.FC = () => {
     })
     .sort((a, b) => b.data.getTime() - a.data.getTime());
 
-  const contadorPendentes = comportamentos.filter((c) => !c.resolvido).length;
-  const contadorConcluidos = comportamentos.filter((c) => c.resolvido).length;
+  const contadorPendentes = comportamentos.filter((c) => !c.status).length;
+  const contadorConcluidos = comportamentos.filter((c) => c.status).length;
 
   const temFiltrosAtivos = filtros.categoria || filtros.residenteId || filtros.status || filtros.startDate || filtros.endDate;
 
@@ -500,14 +471,14 @@ const RegistroComportamento: React.FC = () => {
 
                       <div className="flex items-center gap-3">
                         <label className="flex items-center gap-2 text-sm cursor-pointer">
-                          <input type="checkbox" checked={comportamento.resolvido} onChange={(e) => { e.stopPropagation(); alternarResolvido(comportamento.id); }} className="rounded border-odara-primary text-odara-accent focus:ring-odara-accent" />
-                          <span className={comportamento.resolvido ? "text-green-600 font-semibold" : "text-odara-dark"}>{comportamento.resolvido ? "Resolvido" : "Pendente"}</span>
+                          <input type="checkbox" checked={comportamento.status} onChange={(e) => { e.stopPropagation(); alternarResolvido(comportamento.id); }} className="rounded border-odara-primary text-odara-accent focus:ring-odara-accent" />
+                          <span className={comportamento.status ? "text-green-600 font-semibold" : "text-odara-dark"}>{comportamento.status ? "Resolvido" : "Pendente"}</span>
                         </label>
                       </div>
                     </div>
 
                     <h6 className="text-xl font-bold mb-1 flex items-center">
-                      {comportamento.resolvido && <span className="text-green-500 mr-2"><FaCheck className="h-4 w-4" /></span>}
+                      {comportamento.status && <span className="text-green-500 mr-2"><FaCheck className="h-4 w-4" /></span>}
                       {comportamento.titulo}
                     </h6>
 
@@ -533,7 +504,7 @@ const RegistroComportamento: React.FC = () => {
         )}
 
         {/* Modal usando o componente separado */}
-        <ModalComportamento 
+        <ModalComportamento
           comportamento={comportamentoEditando}
           isOpen={modalAberto}
           onClose={() => {

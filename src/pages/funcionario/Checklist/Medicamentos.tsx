@@ -81,10 +81,10 @@ const COR_STATUS: Record<string, {
 };
 
 const STATUS_OPTIONS = [
-  { value: 'pendente', label: 'Pendente' },
-  { value: 'administrado', label: 'Administrado' },
-  { value: 'parcial', label: 'Parcial' },
-  { value: 'nao_administrado', label: 'Não Administrado' }
+  { value: 'pendente', label: 'Pendente', icon: Clock },
+  { value: 'administrado', label: 'Administrado', icon: CircleCheck },
+  { value: 'parcial', label: 'Parcial', icon: CircleMinus },
+  { value: 'nao_administrado', label: 'Não Administrado', icon: XCircle }
 ];
 
 const FILTRO_STATUS_OPTIONS = [
@@ -116,7 +116,7 @@ const Medicamentos: React.FC = () => {
   const [residentes, setResidentes] = useState<Residente[]>([]);
 
   const [datesExpanded, setDatesExpanded] = useState<Record<string, boolean>>({});
-  const [dateError, setDateError] = useState<string | null>(null);
+  const [dateError, setDateError] = useState(null as string | null);
   const [searchTerm, setSearchTerm] = useState('');
   const [filtrosAberto, setFiltrosAberto] = useState(false);
   const [filtroResidenteAberto, setFiltroResidenteAberto] = useState(false);
@@ -307,9 +307,9 @@ const Medicamentos: React.FC = () => {
     const cores = COR_STATUS[admin.status] || COR_STATUS.pendente;
 
     return (
-      <div className="bg-white rounded-lg shadow-md border border-gray-200 hover:shadow-lg transition-shadow duration-200 flex flex-col h-full">
-        {/* Header do Card */}
-        <div className={`flex items-center justify-between p-3 rounded-t-lg ${cores.border} ${cores.bg}`}>
+      <div className="bg-white rounded-lg shadow border border-gray-200 hover:shadow-md transition-shadow duration-200">
+        {/* Header */}
+        <div className={`flex items-center justify-between p-2 sm:p-3 ${cores.border} ${cores.bg}`}>
           <div className="flex items-center flex-1 min-w-0">
             <div className={`w-3 h-3 rounded-full mr-3 flex-shrink-0 ${cores.bola}`} />
             <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-2 overflow-hidden">
@@ -317,9 +317,9 @@ const Medicamentos: React.FC = () => {
                 {formatarData(admin.data_prevista)}
               </p>
               <span className="hidden sm:inline text-odara-accent">•</span>
-              <p className="text-sm text-odara-accent truncate">
+              <span className="text-sm text-odara-accent truncate">
                 {admin.horario_previsto.slice(0, 5)}
-              </p>
+              </span>
             </div>
           </div>
 
@@ -1268,7 +1268,7 @@ const Medicamentos: React.FC = () => {
         <ListaAdministracoes />
 
         {/* Contador de resultados */}
-        <div className="mt-4 text-xs sm:text-sm text-gray-400 px-2">
+        <div className="mt-2 sm:mt-4 text-xs sm:text-sm text-gray-400 px-1 sm:px-2">
           Mostrando {gruposRenderizaveis.reduce((acc, grupo) => acc + grupo.itens.length, 0)} de {listaCompleta.length} administrações
           {(searchTerm || filtros.residenteId || filtros.status) && ' com filtros aplicados'}
         </div>

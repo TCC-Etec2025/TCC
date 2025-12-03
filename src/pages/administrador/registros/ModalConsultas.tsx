@@ -54,7 +54,7 @@ const schema = yup.object({
   status: yup.string().default('agendada')
 }).required();
 
-// Definir tipo explicitamente para evitar problemas de inferência
+// Definir tipo explicitamente
 interface FormValues {
   id?: number | null;
   id_residente: number;
@@ -79,7 +79,7 @@ const ModalConsultas: React.FC<ModalConsultaProps> = ({ consulta, isOpen, onClos
     reset,
     formState: { errors }
   } = useForm<FormValues>({
-    resolver: yupResolver(schema) as any, // Type assertion para resolver problema de tipos
+    resolver: yupResolver(schema) as any,
     defaultValues: {
       id: null,
       id_residente: 0,
@@ -142,8 +142,9 @@ const ModalConsultas: React.FC<ModalConsultaProps> = ({ consulta, isOpen, onClos
     }
   }, [consulta, reset, isOpen]);
 
-  /* Handler de Submit */
+  /* Handler de Submit - SIMPLES E FUNCIONAL */
   const onSubmit = async (values: FormValues) => {
+    console.log('Salvando consulta:', values);
     setIsSubmitting(true);
 
     try {
@@ -157,6 +158,8 @@ const ModalConsultas: React.FC<ModalConsultaProps> = ({ consulta, isOpen, onClos
         observacao: values.observacao || null,
         status: values.status
       };
+
+      console.log('Payload enviado:', payload);
 
       if (values.id) {
         // Atualizar consulta existente
@@ -182,7 +185,7 @@ const ModalConsultas: React.FC<ModalConsultaProps> = ({ consulta, isOpen, onClos
       }, 500);
     } catch (err: any) {
       console.error('Erro ao salvar consulta:', err);
-      toast.error('Erro ao salvar consulta');
+      toast.error(`Erro ao salvar consulta: ${err.message}`);
     } finally {
       setIsSubmitting(false);
     }
@@ -330,14 +333,14 @@ const ModalConsultas: React.FC<ModalConsultaProps> = ({ consulta, isOpen, onClos
               </div>
             </div>
 
-            {/* Motivo da Consulta */}
+            {/* Motivo da Consulta  */}
             <div>
               <label className="block text-medium text-odara-dark mb-2 flex items-center gap-1">
                 <FileText size={16} className="text-odara-accent" />
-                Motivo da Consulta *
+                Título da Consulta *
               </label>
               <textarea
-                placeholder="Descreva o motivo da consulta..."
+                placeholder="Escreva o título da consulta..."
                 rows={3}
                 {...register('motivo_consulta')}
                 className="w-full px-4 py-2 border border-odara-primary rounded-lg focus:border-transparent focus:outline-none focus:ring-odara-secondary focus:ring-2 text-odara-secondary text-sm sm:text-base"

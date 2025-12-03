@@ -5,7 +5,6 @@ const Navbar = () => {
   const location = useLocation();
   const navigate = useNavigate();
 
-  // Verifique se a rota está ativa
   const isActive = (path) => {
     return location.pathname.toLowerCase() === path.toLowerCase();
   }
@@ -13,7 +12,6 @@ const Navbar = () => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isHomePage, setIsHomePage] = useState(true);
 
-  // Verifica se está na home page
   useEffect(() => {
     setIsHomePage(location.pathname === "/");
   }, [location.pathname]);
@@ -23,7 +21,7 @@ const Navbar = () => {
       id: "top",
       label: "Home",
       icon: (
-        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
           <path
             strokeLinecap="round"
             strokeLinejoin="round"
@@ -37,7 +35,7 @@ const Navbar = () => {
       id: "documentacao",
       label: "Funcionalidades",
       icon: (
-        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
           <path
             strokeLinecap="round"
             strokeLinejoin="round"
@@ -51,7 +49,7 @@ const Navbar = () => {
       id: "sobre",
       label: "Sobre",
       icon: (
-        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
           <path
             strokeLinecap="round"
             strokeLinejoin="round"
@@ -65,7 +63,7 @@ const Navbar = () => {
       id: "contato",
       label: "Contato",
       icon: (
-        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
           <path
             strokeLinecap="round"
             strokeLinejoin="round"
@@ -82,7 +80,7 @@ const Navbar = () => {
       path: "/documentacao",
       label: "Documentação",
       icon: (
-        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
           <path
             strokeLinecap="round"
             strokeLinejoin="round"
@@ -95,80 +93,75 @@ const Navbar = () => {
   ];
 
   // Função para scroll suave para seções da Home
-  const scrollToSection = (sectionId) => {
-    if (sectionId === "top") {
-      scrollToTop();
-      return;
-    }
+    const scrollToSection = (sectionId) => {
+      if (sectionId === "top") {
+        scrollToTop();
+        return;
+      }
 
-    if (location.pathname !== "/") {
-      navigate("/");
-      setTimeout(() => {
+      if (location.pathname !== "/") {
+        navigate("/");
+        setTimeout(() => {
+          const element = document.getElementById(sectionId);
+          if (element) {
+            element.scrollIntoView({ behavior: "smooth", block: "start" });
+          }
+        }, 100);
+      } else {
         const element = document.getElementById(sectionId);
         if (element) {
           element.scrollIntoView({ behavior: "smooth", block: "start" });
         }
-      }, 100);
-    } else {
-      const element = document.getElementById(sectionId);
-      if (element) {
-        element.scrollIntoView({ behavior: "smooth", block: "start" });
       }
-    }
-    setIsMobileMenuOpen(false);
-  };
+      setIsMobileMenuOpen(false);
+    };
 
-  const scrollToTop = () => {
-    if (location.pathname !== "/") {
-      navigate("/");
-    } else {
-      window.scrollTo({ top: 0, behavior: "smooth" });
-    }
-    setIsMobileMenuOpen(false);
-  };
+    const scrollToTop = () => {
+      if (location.pathname !== "/") {
+        navigate("/");
+      } else {
+        window.scrollTo({ top: 0, behavior: "smooth" });
+      }
+      setIsMobileMenuOpen(false);
+    };
 
   return (
     <>
       <nav className="bg-odara-primary text-white shadow-lg sticky top-0 z-40 backdrop-blur-sm">
-        <div className="max-w-8xl mx-auto px-4 sm:px-6 lg:px-8 py-0.5">
-          <div className="flex justify-between items-center h-13">
-            {/* Logo Section */}
-            <div className="flex items-center space-x-3 group">
-              <div className="w-11 h-11 bg-odara-white rounded-full flex items-center justify-center overflow-hidden border-2 border-odara-contorno shadow-lg transition-transform">
+        <div className="max-w-8xl mx-auto px-4 sm:px-6 lg:px-8 py-0">
+          <div className="flex justify-between items-center h-12">
+            <div className="flex items-center space-x-2 group">
+              <div className="w-10 h-10 bg-odara-white rounded-full flex items-center justify-center overflow-hidden border-2 border-odara-contorno shadow-lg">
                 <img
                   src="../images/logo.png"
                   alt="Logo Odara Gestão"
                   className="w-full h-full object-cover"
                   onError={(e) => {
-                    e.target.onerror = null
+                    e.target.onerror = null;
                   }}
                 />
               </div>
               <div className="flex flex-col">
-                <h1 className="text-xl font-bold text-white transition-transform">
-                  Odara <span className="font-normal nome-empresa-pequeno">Gestão</span>
+                <h1 className="text-lg font-bold text-white">
+                  Odara <span className="font-normal">Gestão</span>
                 </h1>
                 <span className="text-xs text-odara-white hidden sm:block">Sistema de Gestão para ILPIs</span>
               </div>
             </div>
 
-            {/* Navigation Links */}
             <div className="hidden md:flex items-center space-x-1">
               <button
                 onClick={scrollToTop}
                 className={`
-                  flex items-center space-x-2 px-4 py-2.5 rounded-lg text-sm font-medium transition duration-200 relative font-semibold text-odara-contorno transform
-                  ease-in-out
+                  flex items-center space-x-1 px-3 py-1 rounded-lg text-sm font-medium transition duration-200 relative font-semibold text-odara-contorno
                   ${isActive("/")
-                    ? "bg-odara-secondary text-odara-contorno border-2 border-odara-contorno shadow-lg backdrop-blur-sm"
-                    : "hover:bg-white hover:text-odara-primary hover:scale-100 hover:shadow-md hover:backdrop-blur-sm"
+                    ? "bg-odara-secondary text-odara-contorno border-2 border-odara-contorno shadow-lg"
+                    : "hover:bg-white hover:text-odara-primary hover:shadow-md"
                   }
                 `}
               >
-                <span
-                  className={`transition-colors ${isActive("/") ? "text-odara-white" : ""}`}
-                >
-                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <span className={`${isActive("/") ? "text-odara-white" : ""}`}>
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                     <path
                       strokeLinecap="round"
                       strokeLinejoin="round"
@@ -185,51 +178,42 @@ const Navbar = () => {
                   key={item.path}
                   to={item.path}
                   className={`
-                    flex items-center space-x-2 px-4 py-2.5 rounded-lg text-sm font-medium transition duration-200 relative group font-semibold text-odara-contorno transform
-                    ease-in-out
+                    flex items-center space-x-1 px-3 py-1 rounded-lg text-sm font-medium transition duration-200 relative group font-semibold text-odara-contorno
                     ${isActive(item.path)
-                      ? "bg-odara-secondary text-odara-contorno border-2 border-odara-contorno shadow-lg backdrop-blur-sm"
-                      : "hover:bg-white hover:text-odara-primary hover:scale-100 hover:shadow-md hover:backdrop-blur-sm"
+                      ? "bg-odara-secondary text-odara-contorno border-2 border-odara-contorno shadow-lg"
+                      : "hover:bg-white hover:text-odara-primary hover:shadow-md"
                     }
                   `}
                 >
-                  <span
-                    className={`transition-colors ${isActive(item.path) ? "text-odara-white" : ""}`}
-                  >
+                  <span className={`${isActive(item.path) ? "text-odara-white" : ""}`}>
                     {item.icon}
                   </span>
                   <span>{item.label}</span>
-                  {isActive(item.path) && (
-                    <div className="absolute bottom-0 left-1/2 transform -translate-x-1/2 w-2 h-0.5 rounded-full"></div>
-                  )}
                 </Link>
               ))}
             </div>
 
-            {/* Botão do menu mobile */}
             <div className="md:hidden">
               <button
                 onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-                className="p-2 rounded-lg text-white/90 hover:text-white hover:bg-white/10 transition-colors"
+                className="p-2 rounded-lg text-white/90 hover:text-white hover:bg-white/10"
               >
-                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
                 </svg>
               </button>
             </div>
           </div>
 
-          {/* Mobile Navigation - Menu expandido (visível apenas em mobile) */}
           {isMobileMenuOpen && (
-            <div className="md:hidden border-t border-white/20 py-2">
-              <div className="flex flex-col space-y-1">
-                {/* Home com subitens no mobile */}
+            <div className="md:hidden border-t border-white/20 py-1">
+              <div className="flex flex-col space-y-0.5">
                 <div className="px-2">
                   <button
                     onClick={scrollToTop}
-                    className="flex items-center space-x-3 px-4 py-3 text-sm font-medium text-odara-contorno w-full text-left"
+                    className="flex items-center space-x-2 px-3 py-2 text-sm font-medium text-odara-contorno w-full text-left"
                   >
-                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                       <path
                         strokeLinecap="round"
                         strokeLinejoin="round"
@@ -239,12 +223,12 @@ const Navbar = () => {
                     </svg>
                     <span>Home</span>
                   </button>
-                  <div className="ml-6 border-l-2 border-white/20 pl-2">
+                  <div className="ml-4 border-l-2 border-white/20 pl-2">
                     {homeNavigationItems.filter(item => item.id !== 'top').map((item) => (
                       <button
                         key={item.id}
                         onClick={() => scrollToSection(item.id)}
-                        className="flex items-center space-x-3 px-4 py-3 text-sm font-medium transition duration-100 rounded-lg font-semibold text-odara-contorno transform ease-in-out w-full text-left hover:bg-white hover:text-odara-primary"
+                        className="flex items-center space-x-2 px-3 py-2 text-sm font-medium text-odara-contorno w-full text-left hover:bg-white hover:text-odara-primary rounded"
                       >
                         <span className="text-odara-primary">
                           {item.icon}
@@ -255,19 +239,18 @@ const Navbar = () => {
                   </div>
                 </div>
 
-                {/* Outros itens no mobile */}
                 {navigationItems.map((item) => (
                   <Link
                     key={item.path}
                     to={item.path}
                     onClick={() => setIsMobileMenuOpen(false)}
-                    className={`flex items-center space-x-3 px-4 py-3 text-sm font-medium transition duration-100 rounded-lg mx-2 font-semibold text-odara-contorno transform ease-in-out ${
+                    className={`flex items-center space-x-2 px-3 py-2 text-sm font-medium rounded mx-1 text-odara-contorno ${
                       isActive(item.path)
-                        ? "bg-odara-secondary text-odara-contorno border-2 border-odara-contorno shadow-md"
+                        ? "bg-odara-secondary text-odara-contorno border border-odara-contorno"
                         : "hover:bg-white hover:text-odara-primary"
                     }`}
                   >
-                    <span className={`transition-colors ${isActive(item.path) ? "text-odara-white" : ""}`}>
+                    <span className={`${isActive(item.path) ? "text-odara-white" : ""}`}>
                       {item.icon}
                     </span>
                     <span>{item.label}</span>
@@ -279,15 +262,20 @@ const Navbar = () => {
         </div>
       </nav>
 
-      {/* Sidebar Navigation*/}
       {isHomePage && (
-        <div className="fixed right-3 top-1/3 transform -translate-y-1/2 z-30">
+        <div className="fixed right-3 top-1/3 transform -translate-y-1/2 z-30 hidden md:flex">
           <div className="bg-odara-primary/90 backdrop-blur-lg rounded-xl shadow-2xl border border-odara-offwhite p-2">
             <div className="flex flex-col space-y-2">
               {homeNavigationItems.map((item) => (
                 <button
                   key={item.id}
-                  onClick={() => scrollToSection(item.id)}
+                  onClick={() => {
+                    if (item.id === "top") {
+                      scrollToTop();
+                    } else {
+                      scrollToSection(item.id);
+                    }
+                  }}
                   className="flex items-center justify-center w-10 h-10 text-odara-white hover:bg-odara-secondary hover:scale-110 transition-all duration-300 rounded-lg relative group"
                 >
                   <span className="text-odara-white group-hover:text-odara-contorno">

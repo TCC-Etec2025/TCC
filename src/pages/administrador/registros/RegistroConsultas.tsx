@@ -513,7 +513,7 @@ const RegistroConsultas = () => {
               onClick={limparFiltros}
               className="bg-odara-accent hover:bg-odara-secondary text-white font-semibold py-2 px-4 rounded-lg flex items-center transition text-sm h-10 w-max justify-center"
             >
-              Limpar Filtros
+              Limpar Filtros/Busca
             </button>
           </div>
         </div>
@@ -691,23 +691,19 @@ const RegistroConsultas = () => {
 
             {/* Coluna Direita */}
             <div className="space-y-3">
-              {consulta.tratamento_indicado && (
                 <div>
                   <strong className="text-odara-dark text-sm">Tratamento:</strong>
                   <span className="text-odara-name mt-1 text-sm">
-                    {' ' + consulta.tratamento_indicado}
+                    {consulta.tratamento_indicado ? ` ${consulta.tratamento_indicado}` : ' Não informado'}
                   </span>
                 </div>
-              )}
-
-              {consulta.observacao && (
+              
                 <div>
                   <strong className="text-odara-dark text-sm">Observações:</strong>
-                  <span className="text-odara-name mt-1 text-sm">
-                    {' ' + consulta.observacao}
+                  <span className="text-odara-name mt-1 text-sm">                    
+                    {consulta.observacao ? ` ${consulta.observacao}` : ' Nenhuma'}
                   </span>
                 </div>
-              )}
             </div>
           </div>
         </div>
@@ -809,9 +805,10 @@ const RegistroConsultas = () => {
   const Cabecalho = () => {
     return (
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
-        <div className="flex items-center">
-          <ClipboardPlus size={30} className='text-odara-accent mr-2' />
-          <h1 className="text-2xl sm:text-3xl font-bold text-odara-dark mr-2">
+        <div className="flex items-center gap-2">
+          <ClipboardPlus size={30} className='text-odara-accent' />
+
+          <h1 className="text-2xl sm:text-3xl font-bold text-odara-dark">
             Registro de Consultas Médicas
           </h1>
 

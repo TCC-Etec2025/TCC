@@ -1,9 +1,11 @@
 import React, { useEffect, useState } from 'react';
 import { X, Save, Plus, Loader, Info, User, Calendar, Clock, Stethoscope, FileText, Pill, AlertCircle } from 'lucide-react';
 import { useForm } from 'react-hook-form';
+
 import * as yup from 'yup';
 import { yupResolver } from '@hookform/resolvers/yup';
 import { supabase } from '../../../lib/supabaseClient';
+
 import toast, { Toaster } from 'react-hot-toast';
 
 /* Tipos */

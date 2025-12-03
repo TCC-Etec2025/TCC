@@ -1,7 +1,8 @@
-import { useEffect, useRef, useState } from "react";
-import { FaPlus, FaEdit, FaTrash, FaInfoCircle, FaFilter, FaChevronLeft, FaChevronRight, FaUser } from "react-icons/fa";
+import { useEffect, useRef, useState, useCallback } from "react";
+import { FaPlus, FaEdit, FaTrash, FaInfoCircle, FaFilter, FaChevronLeft, FaChevronRight, FaUser, FaSync } from "react-icons/fa";
 import { supabase } from "../../../lib/supabaseClient";
 import ModalAlimentar from "./ModalAlimentar";
+import toast from "react-hot-toast";
 
 const refeicoes = {
   "cafe-da-manha": "Café da manhã",
@@ -58,12 +59,14 @@ const formatTime = (time: string) => {
 const RegistroAlimentar = () => {
   const [registros, setRegistros] = useState<RegistroAlimentar[]>([]);
   const [residentes, setResidentes] = useState<Residente[]>([]);
+  const [funcionarios, setFuncionarios] = useState<Funcionario[]>([]);
   const [registroSelecionado, setRegistroSelecionado] = useState<RegistroAlimentar | null>(null);
   const [loading, setLoading] = useState(true);
   const [modalAberto, setModalAberto] = useState(false);
   const [currentWeek, setCurrentWeek] = useState(new Date());
   const [viewMode, setViewMode] = useState<"semanal" | "lista">("semanal");
   const [residenteSelecionado, setResidenteSelecionado] = useState<number | null>(null);
+  const [refreshing, setRefreshing] = useState(false);
 
   const [filtros, setFiltros] = useState<{
     residenteId: number | null;
@@ -80,49 +83,92 @@ const RegistroAlimentar = () => {
   const [registrosFiltrados, setRegistrosFiltrados] = useState<RegistroAlimentar[]>([]);
   const formRef = useRef<HTMLFormElement>(null);
 
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        setLoading(true);
-        const { data: registrosData, error: registrosError } = await supabase
-          .from("registro_alimentar")
-          .select("*")
-          .order("data", { ascending: false })
-          .order("horario", { ascending: false });
-        if (registrosError) throw registrosError;
+  // Função para carregar todos os dados
+  const carregarDados = useCallback(async () => {
+    try {
+      setRefreshing(true);
+      
+      // Carregar residentes
+      const { data: residentesData, error: residentesError } = await supabase
+        .from("residente")
+        .select("id, nome")
+        .order("nome");
+      if (residentesError) throw residentesError;
 
-        const { data: residentesData, error: residentesError } = await supabase
-          .from("residente")
-          .select("id, nome")
-          .order("nome");
-        if (residentesError) throw residentesError;
+      // Carregar funcionários
+      const { data: funcionariosData, error: funcionariosError } = await supabase
+        .from("funcionario")
+        .select("id, nome")
+        .order("nome");
+      if (funcionariosError) throw funcionariosError;
 
-        const { data: funcionariosData, error: funcionariosError } = await supabase
-          .from("funcionario")
-          .select("id, nome")
-          .order("nome");
-        if (funcionariosError) throw funcionariosError;
+      // Carregar registros alimentares
+      const { data: registrosData, error: registrosError } = await supabase
+        .from("registro_alimentar")
+        .select("*")
+        .order("data", { ascending: false })
+        .order("horario", { ascending: false });
+      if (registrosError) throw registrosError;
 
-        setResidentes(residentesData || []);
+      setResidentes(residentesData || []);
+      setFuncionarios(funcionariosData || []);
 
-        if (registrosData) {
-          setRegistros(
-            registrosData.map(r => ({
-              ...r,
-              residente: residentesData?.find(res => res.id === r.id_residente),
-              funcionario: funcionariosData?.find(func => func.id === r.id_funcionario)
-            }))
-          );
-        }
-      } catch (e) {
-        console.error("Erro ao buscar dados:", e);
-      } finally {
-        setLoading(false);
+      if (registrosData) {
+        setRegistros(
+          registrosData.map(r => ({
+            ...r,
+            residente: residentesData?.find(res => res.id === r.id_residente),
+            funcionario: funcionariosData?.find(func => func.id === r.id_funcionario)
+          }))
+        );
       }
-    };
-    fetchData();
+    } catch (e) {
+      console.error("Erro ao buscar dados:", e);
+      toast.error("Erro ao carregar registros");
+    } finally {
+      setLoading(false);
+      setRefreshing(false);
+    }
   }, []);
 
+  // Carregar dados iniciais
+  useEffect(() => {
+    carregarDados();
+  }, [carregarDados]);
+
+  // Assinar mudanças em tempo real
+  useEffect(() => {
+    const channel = supabase
+      .channel('registro_alimentar_changes')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'registro_alimentar'
+        },
+        () => {
+          // Recarregar dados quando houver mudanças
+          carregarDados();
+        }
+      )
+      .subscribe();
+
+    // Limpar assinatura ao desmontar
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [carregarDados]);
+
+  // Recarregar dados quando o modal fechar
+  useEffect(() => {
+    if (!modalAberto) {
+      // Recarregar dados quando o modal for fechado (após salvar)
+      carregarDados();
+    }
+  }, [modalAberto, carregarDados]);
+
+  // Filtrar registros
   useEffect(() => {
     if (registros.length === 0) {
       setRegistrosFiltrados([]);
@@ -164,9 +210,13 @@ const RegistroAlimentar = () => {
     try {
       const { error } = await supabase.from("registro_alimentar").delete().eq("id", id);
       if (error) throw error;
+      
+      // Atualizar localmente
       setRegistros(prev => prev.filter(r => r.id !== id));
+      toast.success("Registro excluído com sucesso");
     } catch (e) {
       console.error("Erro ao excluir:", e);
+      toast.error("Erro ao excluir registro");
     }
   };
 
@@ -199,26 +249,39 @@ const RegistroAlimentar = () => {
       <ModalAlimentar
         alimentar={registroSelecionado}
         isOpen={modalAberto}
-        onClose={() => setModalAberto(false)}
+        onClose={() => {
+          setModalAberto(false);
+          setRegistroSelecionado(null);
+        }}
       />
       <div className="flex-1 p-6 lg:p-10 w-full max-w-full overflow-hidden">
         <div className="flex justify-between items-center mb-6">
           <div className="flex items-center">
             <h1 className="text-3xl font-bold text-odara-dark mr-2">Registro Alimentar</h1>
-            <div className="relative">
-              <div className="inline-block group">
-                <button className="text-odara-dark hover:text-odara-secondary transition-colors duration-200">
-                  <FaInfoCircle size={20} className="text-odara-accent hover:text-odara-secondary" />
-                </button>
-                <div
-                  className="absolute z-10 left-0 top-full mt-2 w-72 p-3 bg-odara-dropdown text-odara-name text-sm rounded-lg shadow-lg
-                             opacity-0 pointer-events-none transform scale-95 transition-all duration-150
-                             group-hover:opacity-100 group-hover:pointer-events-auto group-hover:scale-100"
-                  role="tooltip"
-                >
-                  <h3 className="font-bold mb-2">Registro Alimentar</h3>
-                  <p>Registra as refeições oferecidas aos residentes com horário, tipo, alimentos e responsável.</p>
-                  <div className="absolute bottom-full left-8 w-0 h-0 border-8 border-transparent border-b-odara-dropdown"></div>
+            <div className="flex items-center gap-2">
+              <button
+                onClick={carregarDados}
+                disabled={refreshing}
+                className="p-2 rounded-full hover:bg-gray-100 transition-colors disabled:opacity-50"
+                title="Recarregar dados"
+              >
+                <FaSync className={`text-odara-accent ${refreshing ? 'animate-spin' : ''}`} />
+              </button>
+              <div className="relative">
+                <div className="inline-block group">
+                  <button className="text-odara-dark hover:text-odara-secondary transition-colors duration-200">
+                    <FaInfoCircle size={20} className="text-odara-accent hover:text-odara-secondary" />
+                  </button>
+                  <div
+                    className="absolute z-10 left-0 top-full mt-2 w-72 p-3 bg-odara-dropdown text-odara-name text-sm rounded-lg shadow-lg
+                               opacity-0 pointer-events-none transform scale-95 transition-all duration-150
+                               group-hover:opacity-100 group-hover:pointer-events-auto group-hover:scale-100"
+                    role="tooltip"
+                  >
+                    <h3 className="font-bold mb-2">Registro Alimentar</h3>
+                    <p>Registra as refeições oferecidas aos residentes com horário, tipo, alimentos e responsável.</p>
+                    <div className="absolute bottom-full left-8 w-0 h-0 border-8 border-transparent border-b-odara-dropdown"></div>
+                  </div>
                 </div>
               </div>
             </div>
@@ -486,7 +549,17 @@ const RegistroAlimentar = () => {
                                 {dayRegistros.length === 0 && (
                                   <button
                                     onClick={() => {
-                                      setRegistroSelecionado(null);
+                                      const novaData = formatDateKey(date);
+                                      const novoRegistro = {
+                                        id: 0,
+                                        data: novaData,
+                                        horario: "12:00",
+                                        refeicao: ref.key,
+                                        alimento: "",
+                                        id_residente: residenteSelecionado || 0,
+                                        id_funcionario: 0
+                                      };
+                                      setRegistroSelecionado(novoRegistro as RegistroAlimentar);
                                       setModalAberto(true);
                                     }}
                                     className="w-full h-full min-h-[60px] flex items-center justify-center text-gray-400 hover:text-odara-accent hover:bg-white/50 rounded-lg border-2 border-dashed border-gray-300 hover:border-odara-accent transition-colors group"
@@ -550,6 +623,10 @@ const RegistroAlimentar = () => {
                         <div>
                           <strong className="text-odara-dark">Residente:</strong>
                           <span className="text-odara-name ml-1">{r.residente?.nome}</span>
+                        </div>
+                        <div>
+                          <strong className="text-odara-dark">Registrado por:</strong>
+                          <span className="text-odara-name ml-1">{r.funcionario?.nome || "Não identificado"}</span>
                         </div>
                       </div>
                     </div>

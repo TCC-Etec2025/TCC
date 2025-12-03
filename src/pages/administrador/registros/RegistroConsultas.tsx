@@ -1,8 +1,10 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { Plus, Edit, Trash, Filter, Search, Info, Calendar, Clock, ClipboardPlus, AlertCircle, CheckCircle, ChevronDown, Check, XCircle, RockingChair } from 'lucide-react';
+import { Plus, Edit, Trash, Filter, Search, Info, Calendar, Clock, ClipboardPlus, AlertCircle, CheckCircle, ChevronDown, Check, XCircle, RockingChair, AlertTriangle } from 'lucide-react';
+
 import { supabase } from '../../../lib/supabaseClient';
-import ModalConsultas from './ModalConsultas';
 import toast, { Toaster } from 'react-hot-toast';
+
+import ModalConsultas from './ModalConsultas';
 
 /* Tipos */
 type Residente = {
@@ -79,16 +81,20 @@ const RegistroConsultas = () => {
   const [infoVisivel, setInfoVisivel] = useState(false);
   const [loading, setLoading] = useState(false);
 
+  // Estados de exclusão
+  const [modalExclusaoAberto, setModalExclusaoAberto] = useState<boolean>(false);
+  const [consultaParaExcluir, setConsultaParaExcluir] = useState<number | null>(null);
+
   // Estados de busca e filtros
   const [searchTerm, setSearchTerm] = useState('');
   const [filtros, setFiltros] = useState<{
-    status: string | null;
     residenteId: number | null;
+    status: string | null;
     startDate: string | null;
     endDate: string | null;
   }>({
-    status: null,
     residenteId: null,
+    status: null,
     startDate: null,
     endDate: null
   });
@@ -100,17 +106,18 @@ const RegistroConsultas = () => {
   const [dropdownAberto, setDropdownAberto] = useState<number | null>(null);
 
   // Refs para dropdowns
-  const filtroStatusRef = useRef<HTMLDivElement>(null);
   const filtroResidenteRef = useRef<HTMLDivElement>(null);
+  const filtroStatusRef = useRef<HTMLDivElement>(null);
 
   /* Efeitos */
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
-      if (filtroStatusRef.current && !filtroStatusRef.current.contains(event.target as Node)) {
-        setFiltroStatusAberto(false);
-      }
       if (filtroResidenteRef.current && !filtroResidenteRef.current.contains(event.target as Node)) {
         setFiltroResidenteAberto(false);
+      }
+
+      if (filtroStatusRef.current && !filtroStatusRef.current.contains(event.target as Node)) {
+        setFiltroStatusAberto(false);
       }
     };
 
@@ -121,6 +128,7 @@ const RegistroConsultas = () => {
   /* Carregar Dados */
   const carregarConsultas = useCallback(async () => {
     setLoading(true);
+
     try {
       const { data, error } = await supabase
         .from('consulta')
@@ -155,34 +163,51 @@ const RegistroConsultas = () => {
     carregarConsultas();
     carregarResidentes();
   }, [carregarConsultas, carregarResidentes]);
+  
 
-  /* Operações */
-  const excluirConsulta = async (id: number) => {
-    if (!window.confirm('Tem certeza que deseja excluir esta consulta?')) return;
+	/* Handlers de Exclusão */
+	const abrirModalExclusao = (id: number) => {
+		setConsultaParaExcluir(id);
+		setModalExclusaoAberto(true);
+	};
 
-    try {
-      const { error } = await supabase
-        .from('consulta')
-        .delete()
-        .eq('id', id);
+	const fecharModalExclusao = () => {
+		setModalExclusaoAberto(false);
+		setConsultaParaExcluir(null);
+	};
 
-      if (error) throw error;
+	const executarExclusao = async () => {
+		if (!consultaParaExcluir) return;
 
-      setConsultas(prev => prev.filter(c => c.id !== id));
-      toast.success('Consulta excluída com sucesso!');
-    } catch (err) {
-      console.error('Erro ao excluir consulta:', err);
-      toast.error('Erro ao excluir consulta.');
-    }
-  };
+		try {
+			const { error } = await supabase
+				.from("consulta")
+				.delete()
+				.eq("id", consultaParaExcluir);
+
+			if (error) throw error;
+
+			// Atualiza a lista localmente
+			setConsultas(prev => prev.filter(o => o.id !== consultaParaExcluir));
+			toast.success('Consulta excluída com sucesso!');
+		} catch (err) {
+			console.error('Erro ao excluir consulta:', err);
+			toast.error('Erro ao excluir consulta');
+		} finally {
+			fecharModalExclusao();
+		}
+	};
 
   const atualizarStatus = async (id: number, novoStatus: string) => {
     try {
       // Atualizar localmente primeiro para feedback imediato
-      setConsultas(prev => prev.map(c =>
-        c.id === id ? { ...c, status: novoStatus } : c
+      setConsultas(prev => prev.map(consulta =>
+        consulta.id === id
+          ? { ...consulta, status: novoStatus }
+          : consulta
       ));
 
+      // Atualiza no banco de dados
       const { error } = await supabase
         .from('consulta')
         .update({ status: novoStatus })
@@ -216,18 +241,22 @@ const RegistroConsultas = () => {
     carregarConsultas();
   };
 
-  const toggleFiltros = () => {
-    setFiltrosAberto(!filtrosAberto);
+  const toggleDropdown = (id: number) => {
+    setDropdownAberto(dropdownAberto === id ? null : id);
   };
 
-  const selecionarStatus = (status: string | null) => {
-    setFiltros(prev => ({ ...prev, status: status === 'todos' ? null : status }));
-    setFiltroStatusAberto(false);
+  const toggleFiltros = () => {
+    setFiltrosAberto(!filtrosAberto);
   };
 
   const selecionarResidente = (residenteId: number | null) => {
     setFiltros(prev => ({ ...prev, residenteId }));
     setFiltroResidenteAberto(false);
+  };
+
+  const selecionarStatus = (status: string | null) => {
+    setFiltros(prev => ({ ...prev, status: status === 'todos' ? null : status }));
+    setFiltroStatusAberto(false);
   };
 
   const limparFiltros = () => {
@@ -242,45 +271,44 @@ const RegistroConsultas = () => {
     setFiltroResidenteAberto(false);
   };
 
-  const toggleDropdown = (id: number) => {
-    setDropdownAberto(dropdownAberto === id ? null : id);
-  };
+  /* Filtragem e Ordenação */
+  const consultasFiltradas = consultas
+    .filter(consulta => {
+      // Filtro por texto (busca em médico, motivo, nome do residente)
+      if (searchTerm.trim()) {
+        const termo = searchTerm.toLowerCase();
+        const buscaMedico = consulta.medico.toLowerCase().includes(termo);
+        const buscaMotivo = consulta.motivo_consulta?.toLowerCase().includes(termo) || false;
+        const buscaResidente = consulta.residente?.nome.toLowerCase().includes(termo) || false;
 
-  /* Filtragem */
-  const consultasFiltradas = consultas.filter(consulta => {
-    // Filtro por texto (busca em médico, motivo, nome do residente)
-    if (searchTerm.trim()) {
-      const termo = searchTerm.toLowerCase();
-      const buscaMedico = consulta.medico.toLowerCase().includes(termo);
-      const buscaMotivo = consulta.motivo_consulta?.toLowerCase().includes(termo) || false;
-      const buscaResidente = consulta.residente?.nome.toLowerCase().includes(termo) || false;
+        if (!buscaMedico && !buscaMotivo && !buscaResidente) {
+          return false;
+        }
+      }
 
-      if (!buscaMedico && !buscaMotivo && !buscaResidente) {
+      // Filtro por residente
+      if (filtros.residenteId && consulta.residente?.id !== filtros.residenteId) {
         return false;
       }
-    }
 
-    // Filtro por status
-    if (filtros.status && consulta.status !== filtros.status) {
-      return false;
-    }
+      // Filtro por status
+      if (filtros.status && consulta.status !== filtros.status) {
+        return false;
+      }
 
-    // Filtro por residente
-    if (filtros.residenteId && consulta.residente?.id !== filtros.residenteId) {
-      return false;
-    }
+      // Filtro por data
+      if (filtros.startDate || filtros.endDate) {
+        if (filtros.startDate && consulta.data_consulta < filtros.startDate) return false;
+        if (filtros.endDate && consulta.data_consulta > filtros.endDate) return false;
+      }
 
-    // Filtro por data
-    if (filtros.startDate || filtros.endDate) {
-      if (filtros.startDate && consulta.data_consulta < filtros.startDate) return false;
-      if (filtros.endDate && consulta.data_consulta > filtros.endDate) return false;
-    }
+      return true;
+    })
 
-    return true;
-  }).sort((a, b) => {
-    if (a.data_consulta !== b.data_consulta) return a.data_consulta.localeCompare(b.data_consulta);
-    return a.horario.localeCompare(b.horario);
-  });
+    .sort((a, b) => {
+      if (a.data_consulta !== b.data_consulta) return a.data_consulta.localeCompare(b.data_consulta);
+      return a.horario.localeCompare(b.horario);
+    });
 
   /* Componentes de UI */
   const DropdownStatus = ({ consulta }: { consulta: Consulta }) => {
@@ -301,12 +329,14 @@ const RegistroConsultas = () => {
 
         {dropdownAberto === consulta.id && (
           <>
+            {/* CAMADA INVISÍVEL PARA FECHAR AO CLICAR FORA */}
             <div
               className="fixed inset-0 z-10 cursor-default"
               onClick={() => setDropdownAberto(null)}
             ></div>
 
-            <div className="absolute top-full xs:right-0 mt-2 w-48 bg-white rounded-lg shadow-lg border border-gray-200 z-20 overflow-hidden">
+            {/* MENU DROPDOWN */}
+            <div className="absolute top-full sm:right-0 mt-2 w-48 bg-white rounded-lg shadow-lg border border-gray-200 z-20 overflow-hidden">
               {STATUS_OPTIONS.map((option) => {
                 const OptionIcon = option.icon;
                 return (
@@ -390,6 +420,7 @@ const RegistroConsultas = () => {
                   <span>Todos os residentes</span>
                   {!valorSelecionado && <Check className="ml-auto text-odara-primary" size={14} />}
                 </button>
+
                 {residentes.map(residente => (
                   <button
                     key={residente.id}
@@ -399,7 +430,11 @@ const RegistroConsultas = () => {
                       : 'text-gray-700'
                       }`}
                   >
-                    <span>{residente.nome} {residente.quarto ? `(Q ${residente.quarto})` : ''}</span>
+                    <span>
+                      {residente.nome}
+                      {residente.quarto ? `(${residente.quarto})` : ''}
+                    </span>
+
                     {valorSelecionado === residente.id && <Check className="ml-auto text-odara-primary" size={14} />}
                   </button>
                 ))}
@@ -436,11 +471,12 @@ const RegistroConsultas = () => {
         <div className="flex flex-col md:flex-row gap-5 w-full">
           <div className='flex flex-col md:flex-row flex-1 gap-5'>
             {/* Filtro de Residente */}
-            <div className="flex-1">
+            <div>
               <div className='flex gap-1 items-center ml-1 mb-1'>
                 <Filter size={10} className="text-odara-accent" />
                 <label className="block text-sm font-semibold text-odara-secondary">Residente</label>
               </div>
+
               <FiltroDropdown
                 titulo="Todos os residentes"
                 aberto={filtroResidenteAberto}
@@ -453,11 +489,12 @@ const RegistroConsultas = () => {
             </div>
 
             {/* Filtro de Status */}
-            <div className="flex-1">
+            <div>
               <div className='flex gap-1 items-center ml-1 mb-1'>
                 <Filter size={10} className="text-odara-accent" />
                 <label className="block text-sm font-semibold text-odara-secondary">Status</label>
               </div>
+
               <FiltroDropdown
                 titulo="Todos os status"
                 aberto={filtroStatusAberto}
@@ -470,19 +507,18 @@ const RegistroConsultas = () => {
             </div>
           </div>
 
-          {/* Botões de ação */}
-          <div className="flex md:items-end gap-2 pt-1 md:pt-0 md:w-auto w-full">
+          {/* Botão Limpar Filtros/Busca */}
+          <div className="flex md:items-end gap-2 pt-1 md:pt-0 w-max">
             <button
               onClick={limparFiltros}
-              className="bg-odara-accent hover:bg-odara-secondary text-white font-semibold py-2 px-4 rounded-lg flex items-center transition text-sm h-10 md:w-auto w-full justify-center"
+              className="bg-odara-accent hover:bg-odara-secondary text-white font-semibold py-2 px-4 rounded-lg flex items-center transition text-sm h-10 w-max justify-center"
             >
               Limpar Filtros
             </button>
           </div>
         </div>
 
-        {/* Segunda Linha */}
-        {/* Filtro de Data */}
+        {/* Segunda Linha (Filtro de Data) */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-5 mt-5 pt-5 border-t border-gray-200">
           {/* A Partir da Data */}
           <div>
@@ -518,9 +554,68 @@ const RegistroConsultas = () => {
     );
   };
 
+  const ModalConfirmacaoExclusao = () => {
+    if (!modalExclusaoAberto) return null;
+
+    // Obter o título da ocorrência para exibir no modal
+    const consulta = consultaParaExcluir
+      ? consultas.find(o => o.id === consultaParaExcluir)
+      : null;
+    const tituloConsulta = consulta?.motivo_consulta || '';
+
+    return (
+      <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-[100] p-4 animate-fade-in">
+        <div className="bg-white rounded-2xl shadow-xl p-6 max-w-md w-full animate-scale-in">
+          <div className="text-center">
+            {/* Ícone de alerta */}
+            <div className="mx-auto flex items-center justify-center h-14 w-14 rounded-full bg-odara-alerta/10 mb-4">
+              <AlertTriangle className="h-7 w-7 text-odara-alerta" />
+            </div>
+
+            {/* Textos do modal */}
+            <h3 className="text-xl font-bold text-odara-dark mb-2">Confirmar exclusão</h3>
+            <p className="text-odara-name mb-4">
+              Tem certeza que deseja excluir esta consulta?
+            </p>
+
+            {/* Detalhes da consulta */}
+            {tituloConsulta && (
+              <div className="bg-odara-offwhite rounded-lg p-3 mb-4 border border-gray-200">
+                <p className="text-sm font-medium text-odara-dark">Consulta:</p>
+                <p className="text-sm font-semibold text-odara-name truncate" title={tituloConsulta}>
+                  {tituloConsulta}
+                </p>
+              </div>
+            )}
+
+            <p className="text-sm text-odara-alerta mb-6 font-medium">
+              Esta ação não pode ser desfeita.
+            </p>
+
+            {/* Botões de ação */}
+            <div className="flex gap-3 justify-center">
+              <button
+                onClick={fecharModalExclusao}
+                className="px-6 py-2 border border-odara-primary text-odara-primary rounded-lg hover:bg-odara-primary/10 transition-colors duration-200 flex-1"
+                autoFocus
+              >
+                Cancelar
+              </button>
+              <button
+                onClick={executarExclusao}
+                className="px-5 py-2.5 bg-odara-alerta text-white rounded-lg hover:bg-red-700 transition-colors duration-200 font-medium flex-1"
+              >
+                Excluir
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  };
+
   const CardConsulta = ({ consulta }: { consulta: Consulta }) => {
     const coresStatus = COR_STATUS[consulta.status] || COR_STATUS.agendada;
-    const IconeStatus = coresStatus.icon;
 
     return (
       <div className="bg-white rounded-lg shadow-md border border-gray-200 hover:shadow-lg transition-shadow duration-200 flex flex-col h-full">
@@ -560,8 +655,9 @@ const RegistroConsultas = () => {
               >
                 <Edit size={14} />
               </button>
+
               <button
-                onClick={() => excluirConsulta(consulta.id)}
+                onClick={() => abrirModalExclusao(consulta.id)}
                 className="text-odara-alerta hover:text-odara-white transition-colors duration-200 p-2 rounded-full hover:bg-odara-alerta"
                 title="Excluir consulta"
               >
@@ -626,13 +722,13 @@ const RegistroConsultas = () => {
               </span>
 
               {consulta.residente?.quarto && (
-                <span className="ml-1 bg-white/20 px-1 rounded">{' • Quarto: ' + consulta.residente.quarto}</span>
+                <span className="text-xs text-odara-dark">{'• ' + consulta.residente.quarto}</span>
               )}
             </div>
 
             <div className="text-xs text-odara-name flex items-center gap-1">
               <Clock size={10} />
-              Criado em: {consulta.criado_em ? new Date(consulta.criado_em).toLocaleDateString('pt-BR') : 'N/A'}
+              Criado: {consulta.criado_em ? new Date(consulta.criado_em).toLocaleDateString('pt-BR') : 'N/A'}
             </div>
           </div>
         </div>
@@ -718,6 +814,7 @@ const RegistroConsultas = () => {
           <h1 className="text-2xl sm:text-3xl font-bold text-odara-dark mr-2">
             Registro de Consultas Médicas
           </h1>
+
           <div className="relative">
             <button
               onMouseEnter={() => setInfoVisivel(true)}
@@ -729,7 +826,7 @@ const RegistroConsultas = () => {
             {infoVisivel && (
               <div className="absolute z-10 left-0 top-full mt-2 w-72 p-3 bg-odara-dropdown text-odara-name text-sm rounded-lg shadow-lg">
                 <h3 className="font-bold mb-2">Registro de Consultas Médicas</h3>
-                <p>Registro de consultas médicas realizadas pelos residentes. Você pode adicionar, editar ou excluir consultas conforme necessário.</p>
+                <p>Você pode adicionar, editar ou excluir consultas dos residentes conforme necessário.</p>
                 <div className="absolute bottom-full left-4 border-4 border-transparent border-b-odara-dropdown"></div>
               </div>
             )}
@@ -759,6 +856,9 @@ const RegistroConsultas = () => {
         isOpen={modalAberto}
         onClose={fecharModal}
       />
+
+      {/* Modal de Confirmação de Exclusão */}
+      <ModalConfirmacaoExclusao />
 
       {/* Toaster para notificações */}
       <Toaster

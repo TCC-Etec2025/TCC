@@ -587,8 +587,8 @@ const RegistroOcorrencias: React.FC = () => {
 				<div className="bg-white rounded-2xl shadow-xl p-6 max-w-md w-full animate-scale-in">
 					<div className="text-center">
 						{/* Ícone de alerta */}
-						<div className="mx-auto flex items-center justify-center h-14 w-14 rounded-full bg-red-50 mb-4">
-							<AlertTriangle className="h-7 w-7 text-red-600" />
+						<div className="mx-auto flex items-center justify-center h-14 w-14 rounded-full bg-odara-alerta/10 mb-4">
+							<AlertTriangle className="h-7 w-7 text-odara-alerta" />
 						</div>
 
 						{/* Textos do modal */}
@@ -601,8 +601,8 @@ const RegistroOcorrencias: React.FC = () => {
 						{tituloOcorrencia && (
 							<div className="bg-odara-offwhite rounded-lg p-3 mb-4 border border-gray-200">
 								<p className="text-sm font-medium text-odara-dark">Ocorrência:</p>
-								<p className="text-sm text-odara-name truncate" title={tituloOcorrencia}>
-									"{tituloOcorrencia}"
+								<p className="text-sm font-semibold text-odara-name truncate" title={tituloOcorrencia}>
+									{tituloOcorrencia}
 								</p>
 							</div>
 						)}
@@ -615,14 +615,15 @@ const RegistroOcorrencias: React.FC = () => {
 						<div className="flex gap-3 justify-center">
 							<button
 								onClick={fecharModalExclusao}
-								className="px-5 py-2.5 border border-gray-300 text-odara-dark rounded-lg hover:bg-gray-50 transition-colors duration-200 font-medium flex-1"
+								className="px-6 py-2 border border-odara-primary text-odara-primary rounded-lg hover:bg-odara-primary/10 transition-colors duration-200 flex-1"
 								autoFocus
 							>
 								Cancelar
 							</button>
+							
 							<button
 								onClick={executarExclusao}
-								className="px-5 py-2.5 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors duration-200 font-medium flex-1"
+								className="px-5 py-2.5 bg-odara-alerta text-white rounded-lg hover:bg-red-700 transition-colors duration-200 font-medium flex-1"
 							>
 								Excluir
 							</button>
@@ -784,7 +785,7 @@ const RegistroOcorrencias: React.FC = () => {
 						{infoVisivel && (
 							<div className="absolute z-10 left-0 top-full mt-2 w-72 p-3 bg-odara-dropdown text-odara-name text-sm rounded-lg shadow-lg">
 								<h3 className="font-bold mb-2">Registro de Ocorrências</h3>
-								<p>Documenta incidentes, acidentes, saúde e situações relevantes para acompanhamento.</p>
+								<p>Documenta incidentes, acidentes, complicações e situações relevantes para acompanhamento.</p>
 								<div className="absolute bottom-full left-4 border-4 border-transparent border-b-odara-dropdown"></div>
 							</div>
 						)}

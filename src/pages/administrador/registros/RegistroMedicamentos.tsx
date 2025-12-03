@@ -1,8 +1,10 @@
 // src/components/RegistroMedicamentos.tsx
-import { useEffect, useState, useRef, useCallback } from 'react';
-import { Filter, Search, CheckCircle, Clock, CircleX, Plus, Edit, Trash, Info, ChevronDown, Check, Pill } from 'lucide-react';
-import toast, { Toaster } from 'react-hot-toast';
+import { useEffect, useState, useRef, useCallback, useMemo } from 'react';
+import { Filter, Search, CheckCircle, Clock, CircleX, Plus, Edit, Trash, Info, ChevronDown, Check, Pill, RockingChair, AlertTriangle } from 'lucide-react';
+
 import { supabase } from '../../../lib/supabaseClient';
+import toast, { Toaster } from 'react-hot-toast';
+
 import ModalMedicamentos from './ModalMedicamentos';
 
 /* Tipos */
@@ -33,10 +35,30 @@ type Medicamento = {
 };
 
 /* Constantes */
-const COR_STATUS: Record<string, { bola: string; bg: string; text: string; border: string }> = {
-  ativo: { bola: 'bg-green-500', bg: 'bg-green-50', text: 'text-odara-dark font-semibold', border: 'border-b border-green-200' },
-  suspenso: { bola: 'bg-yellow-500', bg: 'bg-yellow-50', text: 'text-odara-dark font-semibold', border: 'border-b border-yellow-200' },
-  finalizado: { bola: 'bg-gray-500', bg: 'bg-gray-50', text: 'text-odara-dark font-semibold', border: 'border-b border-gray-200' }
+const COR_STATUS: Record<string, {
+  bola: string;
+  bg: string;
+  text: string;
+  border: string
+}> = {
+  ativo: {
+    bola: 'bg-green-500',
+    bg: 'bg-green-50',
+    text: 'text-odara-dark font-semibold',
+    border: 'border-b border-green-200'
+  },
+  suspenso: {
+    bola: 'bg-yellow-500',
+    bg: 'bg-yellow-50',
+    text: 'text-odara-dark font-semibold',
+    border: 'border-b border-yellow-200'
+  },
+  finalizado: {
+    bola: 'bg-gray-500',
+    bg: 'bg-gray-50',
+    text: 'text-odara-dark font-semibold',
+    border: 'border-b border-gray-200'
+  }
 };
 
 const STATUS_OPTIONS = [
@@ -53,20 +75,39 @@ const FILTRO_STATUS_OPTIONS = [
 ];
 
 const RegistroMedicamentos: React.FC = () => {
-  // Estados
+  // Estados principais
   const [medicamentos, setMedicamentos] = useState<Medicamento[]>([]);
+  const [residentes, setResidentes] = useState<Residente[]>([]);
   const [modalAberto, setModalAberto] = useState(false);
   const [medicamentoSelecionado, setMedicamentoSelecionado] = useState<Medicamento | null>(null);
   const [infoVisivel, setInfoVisivel] = useState(false);
+  const [loading, setLoading] = useState(false);
+  
+    // Estados de exclusão
+    const [modalExclusaoAberto, setModalExclusaoAberto] = useState<boolean>(false);
+    const [medicamentoParaExcluir, setMedicamentoParaExcluir] = useState<number | null>(null);
+
+  // Estados de busca e filtros
   const [searchTerm, setSearchTerm] = useState('');
-  const [filtros, setFiltros] = useState<{ residenteId: number | null; status: string | null }>({
+  const [filtros, setFiltros] = useState<{
+    residenteId: number | null;
+    status: string | null;
+    startDate: string | null;
+    endDate: string | null;
+  }>({
     residenteId: null,
-    status: null
+    status: null,
+    startDate: null,
+    endDate: null
   });
-  const [dropdownAberto, setDropdownAberto] = useState<number | null>(null);
-  const [filtroResidenteAberto, setFiltroResidenteAberto] = useState(false);
+
+  // Estados de UI
   const [filtroStatusAberto, setFiltroStatusAberto] = useState(false);
+  const [filtroResidenteAberto, setFiltroResidenteAberto] = useState(false);
   const [filtrosAberto, setFiltrosAberto] = useState(false);
+  const [dropdownAberto, setDropdownAberto] = useState<number | null>(null);
+
+  // Refs para dropdowns
   const filtroResidenteRef = useRef<HTMLDivElement>(null);
   const filtroStatusRef = useRef<HTMLDivElement>(null);
 
@@ -97,19 +138,12 @@ const RegistroMedicamentos: React.FC = () => {
   };
 
   /* Efeitos */
-  // Dentro do useEffect existente
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
-      // REMOVA OU COMENTE ESTA PARTE:
-      /* if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
-        setDropdownAberto(null);
-      }
-      */
-
-      // Mantenha apenas a lógica dos filtros:
       if (filtroResidenteRef.current && !filtroResidenteRef.current.contains(event.target as Node)) {
         setFiltroResidenteAberto(false);
       }
+
       if (filtroStatusRef.current && !filtroStatusRef.current.contains(event.target as Node)) {
         setFiltroStatusAberto(false);
       }
@@ -119,8 +153,10 @@ const RegistroMedicamentos: React.FC = () => {
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
-  /* Operações de Dados */
+  /* Carregar Dados */
   const carregarMedicamentos = useCallback(async () => {
+    setLoading(true);
+
     try {
       const { data, error } = await supabase
         .from('medicamento')
@@ -135,16 +171,71 @@ const RegistroMedicamentos: React.FC = () => {
     } catch (error) {
       console.error('Erro ao buscar medicamentos:', error);
       toast.error('Erro ao carregar medicamentos');
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  const carregarResidentes = useCallback(async () => {
+    try {
+      const { data, error } = await supabase
+        .from('residente')
+        .select('id, nome, quarto')
+        .order('nome');
+
+      if (!error) setResidentes(data || []);
+    } catch (err) {
+      console.error('Erro ao carregar residentes:', err);
     }
   }, []);
 
   useEffect(() => {
     carregarMedicamentos();
-  }, [carregarMedicamentos]);
+    carregarResidentes();
+  }, [carregarMedicamentos, carregarResidentes]);
 
-  // FUNÇÃO CORRIGIDA - atualizar status do medicamento
+  /* Handlers de Exclusão */
+	const abrirModalExclusao = (id: number) => {
+		setMedicamentoParaExcluir(id);
+		setModalExclusaoAberto(true);
+	};
+
+	const fecharModalExclusao = () => {
+		setModalExclusaoAberto(false);
+		setMedicamentoParaExcluir(null);
+	};
+
+	const executarExclusao = async () => {
+		if (!medicamentoParaExcluir) return;
+
+		try {
+			const { error } = await supabase
+				.from("medicamento")
+				.delete()
+				.eq("id", medicamentoParaExcluir);
+
+			if (error) throw error;
+
+			// Atualiza a lista localmente
+			setMedicamentos(prev => prev.filter(o => o.id !== medicamentoParaExcluir));
+			toast.success('Medicamento excluída com sucesso!');
+		} catch (err) {
+			console.error('Erro ao excluir medicamento:', err);
+			toast.error('Erro ao excluir medicamento');
+		} finally {
+			fecharModalExclusao();
+		}
+	};
+
   const atualizarStatus = async (id: number, novoStatus: string) => {
     try {
+      // Atualizar localmente primeiro para feedback imediato
+      setMedicamentos(prev => prev.map(medicamento =>
+        medicamento.id === id
+          ? { ...medicamento, status: novoStatus }
+          : medicamento
+      ));
+
       // Atualiza no banco de dados
       const { error } = await supabase
         .from('medicamento')
@@ -153,34 +244,13 @@ const RegistroMedicamentos: React.FC = () => {
 
       if (error) throw error;
 
-      // Atualiza o estado local imediatamente
-      setMedicamentos(prev =>
-        prev.map(medicamento =>
-          medicamento.id === id
-            ? { ...medicamento, status: novoStatus }
-            : medicamento
-        )
-      );
-
       setDropdownAberto(null);
-      toast.success(`Status alterado para ${novoStatus}`);
+      toast.success('Status atualizado com sucesso!');
     } catch (err) {
       console.error('Erro ao atualizar status:', err);
       toast.error('Falha ao atualizar status.');
-    }
-  };
-
-  const removerMedicamento = async (id: number) => {
-    if (!confirm('Tem certeza que deseja excluir este medicamento?')) return;
-
-    try {
-      const { error } = await supabase.from('medicamento').delete().eq('id', id);
-      if (error) throw error;
-      setMedicamentos(prev => prev.filter(m => m.id !== id));
-      toast.success('Medicamento excluído com sucesso.');
-    } catch (err) {
-      console.error('Erro ao excluir medicamento:', err);
-      toast.error('Erro ao excluir medicamento.');
+      // Reverter em caso de erro
+      carregarMedicamentos();
     }
   };
 
@@ -220,42 +290,79 @@ const RegistroMedicamentos: React.FC = () => {
   };
 
   const limparFiltros = () => {
-    setFiltros({ residenteId: null, status: null });
-    setFiltroResidenteAberto(false);
+    setFiltros({
+      status: null,
+      residenteId: null,
+      startDate: null,
+      endDate: null
+    });
+    setSearchTerm('');
     setFiltroStatusAberto(false);
+    setFiltroResidenteAberto(false);
   };
 
   /* Filtragem e Ordenação */
-  const medicamentosFiltrados = medicamentos
-    .filter(medicamento => {
-      if (searchTerm.trim() &&
-        !medicamento.nome.toLowerCase().includes(searchTerm.toLowerCase())) {
-        return false;
-      }
+  const medicamentosFiltrados = useMemo(() => {
+    return medicamentos
+      .filter(medicamento => {
+        // Filtro por texto (busca em medicamento, status, nome do residente)
+        if (searchTerm.trim() &&
+          !medicamento.nome.toLowerCase().includes(searchTerm.toLowerCase())) {
+          return false;
+        }
 
-      if (filtros.residenteId && medicamento.residente?.id !== filtros.residenteId) {
-        return false;
-      }
+        // Filtro por residente
+        if (filtros.residenteId && medicamento.residente?.id !== filtros.residenteId) {
+          return false;
+        }
 
-      if (filtros.status && filtros.status !== 'todos' && medicamento.status !== filtros.status) {
-        return false;
-      }
+        // Filtro por status
+        if (filtros.status && filtros.status !== 'todos' && medicamento.status !== filtros.status) {
+          return false;
+        }
 
-      return true;
-    })
+        // Filtro por data: lógica corrigida conforme especificação
+        const dataInicio = medicamento.data_inicio;
+        const dataFim = medicamento.data_fim;
+        const temDataFim = dataFim && dataFim.trim() !== '';
 
-    .sort((a, b) => {
-      const dataA = new Date(`${a.data_inicio}T${a.horario_inicio}`).getTime();
-      const dataB = new Date(`${b.data_inicio}T${b.horario_inicio}`).getTime();
+        // Filtro "Até a data" (endDate)
+        // REQ: Mostra apenas medicamentos que não iniciaram depois do endDate
+        if (filtros.endDate) {
+          // 1. Nunca mostrar medicamentos que começaram depois do endDate
+          if (dataInicio > filtros.endDate) {
+            return false;
+          }
+        }
 
-      if (dataA !== dataB) return dataA - dataB;
+        // Filtro "A partir da data" (startDate)
+        // REQ: Mostra apenas medicamentos que não finalizaram antes do startDate
+        if (filtros.startDate) {
+          // 1. Se começou depois ou no startDate, sempre mostra
+          if (dataInicio >= filtros.startDate) {
+            return true;
+          }
 
-      return (a.residente?.quarto ?? '').localeCompare(b.residente?.quarto ?? '');
-    });
+          // 2. Se começou antes do startDate, verificar se não terminou antes
+          if (temDataFim && dataFim! < filtros.startDate) {
+            return false;
+          }
+        }
+
+        return true;
+      })
+      .sort((a, b) => {
+        const dataA = new Date(`${a.data_inicio}T${a.horario_inicio}`).getTime();
+        const dataB = new Date(`${b.data_inicio}T${b.horario_inicio}`).getTime();
+
+        if (dataA !== dataB) return dataA - dataB;
+
+        return (a.residente?.quarto ?? '').localeCompare(b.residente?.quarto ?? '');
+      });
+  }, [medicamentos, searchTerm, filtros]);
 
   /* Componentes de UI */
   const DropdownStatus = ({ medicamento }: { medicamento: Medicamento }) => {
-    const cores = COR_STATUS[medicamento.status] || COR_STATUS.ativo;
     const IconeStatus = obterIconeStatus(medicamento.status);
 
     return (
@@ -264,7 +371,7 @@ const RegistroMedicamentos: React.FC = () => {
           onClick={() => toggleDropdown(medicamento.id)}
           className="flex items-center gap-2 px-3 py-1 text-sm border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
         >
-          <IconeStatus size={14} className={"text-odara-accent"} />
+          <IconeStatus size={14} className="text-odara-accent" />
           <span className="text-odara-dark capitalize">{medicamento.status}</span>
           <ChevronDown size={12} className="text-gray-500" />
         </button>
@@ -278,7 +385,7 @@ const RegistroMedicamentos: React.FC = () => {
             ></div>
 
             {/* MENU DROPDOWN */}
-            <div className="absolute top-full right-0 mt-2 w-48 bg-white rounded-lg shadow-lg border border-gray-200 z-20 overflow-hidden">
+            <div className="absolute top-full sm:right-0 mt-2 w-48 bg-white rounded-lg shadow-lg border border-gray-200 z-20 overflow-hidden">
               {STATUS_OPTIONS.map((option) => {
                 const OptionIcon = obterIconeStatus(option.value);
                 return (
@@ -325,19 +432,19 @@ const RegistroMedicamentos: React.FC = () => {
     onSelecionar: (value: any) => void;
     tipo: 'residente' | 'status';
   }) => {
-    const residentes = obterResidentesUnicos();
+    const residentesUnicos = obterResidentesUnicos();
 
     return (
       <div className="relative" ref={ref}>
         <button
           type="button"
           onClick={() => setAberto(!aberto)}
-          className="flex items-center justify-between w-full h-10 border border-gray-300 rounded-lg px-3 text-sm hover:bg-gray-50 transition-colors "
+          className="flex items-center justify-between w-full h-10 border border-gray-300 rounded-lg px-3 text-sm hover:bg-gray-50 transition-colors"
         >
           <span className="text-odara-dark">
             {tipo === 'residente'
               ? valorSelecionado
-                ? residentes.find(([id]) => id === valorSelecionado)?.[1]
+                ? residentesUnicos.find(([id]) => id === valorSelecionado)?.[1]
                 : titulo
               : valorSelecionado
                 ? FILTRO_STATUS_OPTIONS.find(opt => opt.value === valorSelecionado)?.label
@@ -348,7 +455,7 @@ const RegistroMedicamentos: React.FC = () => {
         </button>
 
         {aberto && (
-          <div className="absolute top-full left-0 right-0 mt-1 bg-white rounded-lg shadow-lg border border-gray-200 z-10 max-h-60 overflow-hidden">
+          <div className="absolute top-full left-0 right-0 mt-1 bg-white rounded-lg shadow-lg border border-gray-200 z-10 max-h-60 overflow-y-auto">
             {tipo === 'residente' ? (
               <>
                 <button
@@ -361,7 +468,8 @@ const RegistroMedicamentos: React.FC = () => {
                   <span>Todos os residentes</span>
                   {!valorSelecionado && <Check className="ml-auto text-odara-primary" size={14} />}
                 </button>
-                {residentes.map(([id, nome]) => (
+
+                {residentesUnicos.map(([id, nome]) => (
                   <button
                     key={id}
                     onClick={() => onSelecionar(id)}
@@ -370,7 +478,10 @@ const RegistroMedicamentos: React.FC = () => {
                       : 'text-gray-700'
                       }`}
                   >
-                    <span>{nome}</span>
+                    <span>
+                      {nome}
+                    </span>
+
                     {valorSelecionado === id && <Check className="ml-auto text-odara-primary" size={14} />}
                   </button>
                 ))}
@@ -404,18 +515,21 @@ const RegistroMedicamentos: React.FC = () => {
     return (
       <div className="bg-white rounded-lg shadow-md border border-gray-200 hover:shadow-lg transition-shadow duration-200 flex flex-col h-full">
         {/* Header do Card */}
-        <div className={`flex items-center justify-between p-3 rounded-t-lg ${cores.border} ${cores.bg}`}>
+        <div className={`flex flex-wrap justify-center sm:justify-between gap-2 items-center p-3 rounded-t-lg ${cores.border} ${cores.bg}`}>
+          {/* Coluna Esquerda */}
           <div className="flex items-center">
             <div className={`w-3 h-3 rounded-full mr-3 ${cores.bola}`}></div>
-            <p className={`text-sm sm:text-base ${cores.text}`}>
-              Início: {formatarData(medicamento.data_inicio)}
-              <span className="text-odara-accent ml-1 font-medium">
-                {medicamento.data_fim ? ` • Fim: ${formatarData(medicamento.data_fim)}` : ' • Uso contínuo'}
+            <p className={`text-sm sm:text-base text-odara-dark`}>
+              <span className='font-semibold'>
+                Início: {formatarData(medicamento.data_inicio)}
+              </span>
+              <span className="text-odara-accent ml-2">
+                {medicamento.data_fim ? ` • Fim: ${formatarData(medicamento.data_fim)}` : '• Uso contínuo'}
               </span>
             </p>
           </div>
 
-          {/* Botão de Status (altera o status) */}
+          {/* Coluna Direita - Status */}
           <DropdownStatus medicamento={medicamento} />
         </div>
 
@@ -426,6 +540,8 @@ const RegistroMedicamentos: React.FC = () => {
             <h3 className="text-lg sm:text-xl font-bold text-odara-dark line-clamp-1 flex-1">
               {medicamento.nome}
             </h3>
+
+            {/* Botões de ação */}
             <div className="flex items-center gap-1 ml-2">
               <button
                 onClick={() => abrirModalEdicao(medicamento)}
@@ -434,8 +550,9 @@ const RegistroMedicamentos: React.FC = () => {
               >
                 <Edit size={14} />
               </button>
+
               <button
-                onClick={() => removerMedicamento(medicamento.id)}
+                onClick={() => abrirModalExclusao(medicamento.id)}
                 className="text-odara-alerta hover:text-odara-white transition-colors duration-200 p-2 rounded-full hover:bg-odara-alerta"
                 title="Excluir medicamento"
               >
@@ -444,7 +561,7 @@ const RegistroMedicamentos: React.FC = () => {
             </div>
           </div>
 
-          {/* Detalhes do Corpo */}
+          {/* Detalhes do Medicamento */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 flex-1">
             {/* Coluna Esquerda */}
             <div className="space-y-3">
@@ -462,26 +579,19 @@ const RegistroMedicamentos: React.FC = () => {
                 <strong className="text-odara-dark text-sm">Horário:</strong>
                 <span className="text-odara-name mt-1 text-sm">{' ' + medicamento.horario_inicio || ' Não informado'}</span>
               </div>
-              
+
               <div>
                 <strong className="text-odara-dark text-sm">Recorrência:</strong>
                 <span className="text-odara-name mt-1 text-sm">{' ' + medicamento.recorrencia || ' Não informado'}</span>
               </div>
             </div>
-            
+
             {/* Coluna Direita */}
             <div className="space-y-3">
               <div>
                 <strong className="text-odara-dark text-sm">Efeitos colaterais:</strong>
                 <span className="text-odara-name mt-1 text-sm">
                   {' ' + medicamento.efeitos_colaterais || ' Nenhum'}
-                </span>
-              </div>
-              
-              <div>
-                <strong className="text-odara-dark text-sm">Observações:</strong>
-                <span className="text-odara-name mt-1 text-sm">
-                  {' ' + medicamento.observacao || ' Não informado'}
                 </span>
               </div>
 
@@ -491,24 +601,35 @@ const RegistroMedicamentos: React.FC = () => {
                   {' ' + medicamento.saude_relacionada || ' Não informado'}
                 </span>
               </div>
+
+              <div>
+                <strong className="text-odara-dark text-sm">Observações:</strong>
+                <span className="text-odara-name mt-1 text-sm">
+                  {' ' + medicamento.observacao || ' Não informado'}
+                </span>
+              </div>
             </div>
           </div>
         </div>
 
         {/* Footer do Card */}
-        <div className="px-4 py-3 bg-gray-50 rounded-b-lg border-t border-gray-200 mt-auto">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-            <div className="flex items-center gap-2">
-              <span className="bg-odara-accent text-white px-3 py-1 rounded-full text-xs font-medium">
+        <div className="px-4 py-3 bg-gray-50 rounded-b-lg border-t border-gray-200">
+          <div className="flex flex-wrap justify-center sm:justify-between gap-2 text-xs">
+            <div className="flex items-center flex-wrap gap-1">
+              <span className="bg-odara-accent text-white px-3 py-1 rounded-full text-xs font-medium flex items-center gap-1">
+                <RockingChair size={12} />
                 {medicamento.residente?.nome || 'Residente'}
               </span>
+
               {medicamento.residente?.quarto && (
                 <span className="text-xs text-odara-dark">
-                  Quarto: {medicamento.residente.quarto}
+                  {'• ' + medicamento.residente.quarto}
                 </span>
               )}
             </div>
-            <div className="text-xs text-odara-name">
+
+            <div className="text-xs text-odara-name flex items-center gap-1">
+              <Clock size={10} />
               Atualizado: {formatarData(new Date().toISOString())}
             </div>
           </div>
@@ -522,84 +643,211 @@ const RegistroMedicamentos: React.FC = () => {
 
     return (
       <div className="mb-8 bg-white p-5 rounded-xl shadow border border-gray-200 animate-fade-in">
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
-          {/* Filtro de Residente */}
-          <div>
-            <div className='flex gap-1 items-center ml-1 mb-1'>
-              <Filter size={10} className="text-odara-accent" />
-              <label className="block text-sm font-semibold text-odara-secondary">Residente</label>
+        {/* Primeira Linha */}
+        <div className="flex flex-col md:flex-row gap-5 w-full">
+          <div className='flex flex-col md:flex-row flex-1 gap-5 w-full'>
+            {/* Filtro de Residente */}
+            <div className="flex-1 min-w-0">
+              <div className='flex gap-1 items-center ml-1 mb-1'>
+                <Filter size={10} className="text-odara-accent" />
+                <label className="block text-sm font-semibold text-odara-secondary">Residente</label>
+              </div>
+
+              <FiltroDropdown
+                titulo="Todos os residentes"
+                aberto={filtroResidenteAberto}
+                setAberto={setFiltroResidenteAberto}
+                ref={filtroResidenteRef}
+                valorSelecionado={filtros.residenteId}
+                onSelecionar={selecionarResidente}
+                tipo="residente"
+              />
             </div>
-            <FiltroDropdown
-              titulo="Todos os residentes"
-              aberto={filtroResidenteAberto}
-              setAberto={setFiltroResidenteAberto}
-              ref={filtroResidenteRef}
-              valorSelecionado={filtros.residenteId}
-              onSelecionar={selecionarResidente}
-              tipo="residente"
-            />
+
+            {/* Filtro de Status */}
+            <div className="flex-1 min-w-0">
+              <div className='flex gap-1 items-center ml-1 mb-1'>
+                <Filter size={10} className="text-odara-accent" />
+                <label className="block text-sm font-semibold text-odara-secondary">Status</label>
+              </div>
+
+              <FiltroDropdown
+                titulo="Todos os status"
+                aberto={filtroStatusAberto}
+                setAberto={setFiltroStatusAberto}
+                ref={filtroStatusRef}
+                valorSelecionado={filtros.status || 'todos'}
+                onSelecionar={selecionarStatus}
+                tipo="status"
+              />
+            </div>
           </div>
 
-          {/* Filtro de Status */}
-          <div>
-            <div className='flex gap-1 items-center ml-1 mb-1'>
-              <Filter size={10} className="text-odara-accent" />
-              <label className="block text-sm font-semibold text-odara-secondary">Status</label>
-            </div>
-            <FiltroDropdown
-              titulo="Todos os status"
-              aberto={filtroStatusAberto}
-              setAberto={setFiltroStatusAberto}
-              ref={filtroStatusRef}
-              valorSelecionado={filtros.status || 'todos'}
-              onSelecionar={selecionarStatus}
-              tipo="status"
-            />
-          </div>
-
-          <div className="flex md:items-end gap-2 pt-1 md:pt-0">
+          {/* Botão Limpar Filtros/Busca */}
+          <div className="flex md:items-end gap-2 pt-1 md:pt-0 md:flex-shrink-0">
             <button
               onClick={limparFiltros}
-              className="bg-odara-accent hover:bg-odara-secondary text-white font-semibold py-2 px-4 rounded-lg flex items-center transition text-sm h-10"
+              className="bg-odara-accent hover:bg-odara-secondary text-white font-semibold py-2 px-4 rounded-lg flex items-center transition text-sm h-10 w-full md:w-auto justify-center"
             >
               Limpar Filtros
             </button>
+          </div>
+        </div>
+
+        {/* Segunda Linha (Filtro de Data) */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-5 mt-5 pt-5 border-t border-gray-200">
+          {/* A Partir da Data */}
+          <div>
+            <div className='flex gap-1 items-center ml-1 mb-1'>
+              <Filter size={10} className="text-odara-accent" />
+              <label className="block text-sm font-semibold text-odara-secondary">A Partir da Data</label>
+            </div>
+
+            <input
+              type="date"
+              value={filtros.startDate || ''}
+              onChange={(e) => setFiltros(prev => ({ ...prev, startDate: e.target.value || null }))}
+              className="w-full h-10 border border-gray-300 rounded-lg px-3 text-sm focus:ring-2 focus:ring-odara-primary focus:outline-none"
+            />
+            <p className="text-xs text-gray-500 mt-1">
+              Mostra apenas medicamentos que não finalizaram antes dessa data
+            </p>
+          </div>
+
+          {/* Até a Data */}
+          <div>
+            <div className="flex gap-1 items-center ml-1 mb-1">
+              <Filter size={10} className="text-odara-accent" />
+              <label className="block text-sm font-semibold text-odara-secondary">Até a Data</label>
+            </div>
+
+            <input
+              type="date"
+              value={filtros.endDate || ''}
+              onChange={(e) => setFiltros(prev => ({ ...prev, endDate: e.target.value || null }))}
+              className="w-full h-10 border border-gray-300 rounded-lg px-3 text-sm focus:ring-2 focus:ring-odara-primary focus:outline-none"
+            />
+            <p className="text-xs text-gray-500 mt-1">
+              Mostra apenas medicamentos que não iniciaram depois dessa data
+            </p>
           </div>
         </div>
       </div>
     );
   };
 
+	const ModalConfirmacaoExclusao = () => {
+		if (!modalExclusaoAberto) return null;
+
+		// Obter o título da medicamento para exibir no modal
+		const medicamento = medicamentoParaExcluir
+			? medicamentos.find(m => m.id === medicamentoParaExcluir)
+			: null;
+		const nomeMedicamento = medicamento?.nome || '';
+
+		return (
+			<div className="fixed inset-0 bg-black/50 flex items-center justify-center z-[100] p-4 animate-fade-in">
+				<div className="bg-white rounded-2xl shadow-xl p-6 max-w-md w-full animate-scale-in">
+					<div className="text-center">
+						{/* Ícone de alerta */}
+						<div className="mx-auto flex items-center justify-center h-14 w-14 rounded-full bg-odara-alerta/10 mb-4">
+							<AlertTriangle className="h-7 w-7 text-odara-alerta" />
+						</div>
+
+						{/* Textos do modal */}
+						<h3 className="text-xl font-bold text-odara-dark mb-2">Confirmar exclusão</h3>
+						<p className="text-odara-name mb-4">
+							Tem certeza que deseja excluir este medicamento?
+						</p>
+
+						{/* Detalhes do medicamento */}
+						{nomeMedicamento && (
+							<div className="bg-odara-offwhite rounded-lg p-3 mb-4 border border-gray-200">
+								<p className="text-sm font-medium text-odara-dark">Medicamento:</p>
+								<p className="text-sm font-semibold text-odara-name truncate" title={nomeMedicamento}>
+								  {nomeMedicamento}
+								</p>
+							</div>
+						)}
+
+						<p className="text-sm text-odara-alerta mb-6 font-medium">
+							Esta ação não pode ser desfeita.
+						</p>
+
+						{/* Botões de ação */}
+						<div className="flex gap-3 justify-center">
+							<button
+								onClick={fecharModalExclusao}
+								className="px-6 py-2 border border-odara-primary text-odara-primary rounded-lg hover:bg-odara-primary/10 transition-colors duration-200 flex-1"
+								autoFocus
+							>
+								Cancelar
+							</button>
+
+							<button
+								onClick={executarExclusao}
+								className="px-5 py-2.5 bg-odara-alerta text-white rounded-lg hover:bg-red-700 transition-colors duration-200 font-medium flex-1"
+							>
+								Excluir
+							</button>
+						</div>
+					</div>
+				</div>
+			</div>
+		);
+	};
+
   const ListaMedicamentos = () => {
     return (
       <div className="bg-white border-l-4 border-odara-primary rounded-2xl shadow-lg p-4 sm:p-6">
-        <div className="flex flex-col sm:flex-row items-center gap-2 mb-4">
+        <div className="flex flex-col sm:flex-row items-center justify-between gap-2 mb-4">
           <h2 className="text-2xl lg:text-3xl font-bold text-odara-dark">Medicamentos</h2>
           <span className="bg-gray-200 text-gray-700 px-3 py-1 rounded-full text-sm font-medium">
             Total: {medicamentosFiltrados.length}
           </span>
         </div>
 
-        {(filtros.residenteId || filtros.status) && (
-          <div className="mb-4 flex flex-wrap gap-2 text-xs">
-            {filtros.residenteId && (
+        {/* Tags de filtros ativos */}
+        {(filtros.status || filtros.residenteId || filtros.startDate || filtros.endDate || searchTerm) && (
+          <div className="mb-4 flex flex-wrap justify-center sm:justify-start gap-2 text-xs">
+            {searchTerm && (
               <span className="bg-odara-secondary text-white px-2 py-1 rounded-full">
-                Residente: {medicamentos.find(m => m.residente?.id === filtros.residenteId)?.residente?.nome}
+                Busca: {searchTerm}
               </span>
             )}
+
+            {filtros.residenteId && (
+              <span className="bg-odara-secondary text-white px-2 py-1 rounded-full">
+                Residente: {residentes.find(r => r.id === filtros.residenteId)?.nome}
+              </span>
+            )}
+
             {filtros.status && (
               <span className="bg-odara-secondary text-white px-2 py-1 rounded-full">
                 Status: {filtros.status}
               </span>
             )}
+
+            {(filtros.startDate || filtros.endDate) && (
+              <span className="bg-odara-secondary text-white px-2 py-1 rounded-full">
+                Data: {filtros.startDate ? ` ${filtros.startDate.split('-').reverse().join('/')}` : ''}
+                {filtros.endDate ? ' até' + ` ${filtros.endDate.split('-').reverse().join('/')}` : ''}
+              </span>
+            )}
           </div>
         )}
 
-        {medicamentosFiltrados.length === 0 ? (
+        {/* Lista ou mensagem de vazio */}
+        {loading ? (
+          <div className="p-8 text-center">
+            <p className="text-odara-dark/60 text-lg">Carregando medicamentos...</p>
+          </div>
+        ) : medicamentosFiltrados.length === 0 ? (
           <div className="p-8 rounded-xl bg-odara-name/10 text-center">
             <p className="text-odara-dark/60 text-lg">
               {medicamentos.length === 0 ? 'Nenhum medicamento cadastrado' : 'Nenhum medicamento encontrado'}
             </p>
+
             {medicamentos.length > 0 && (
               <p className="text-odara-dark/40 text-sm mt-2">
                 Tente ajustar os termos da busca ou os filtros
@@ -622,12 +870,13 @@ const RegistroMedicamentos: React.FC = () => {
 
   const Cabecalho = () => {
     return (
-      <div className="flex flex-col sm:flex-row justify-center xl:justify-start items-start sm:items-center gap-4 mb-6">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
         <div className="flex items-center">
-          <Pill size={30} className='text-odara-accent mr-2'/>
+          <Pill size={30} className='text-odara-accent mr-2' />
           <h1 className="text-2xl sm:text-3xl font-bold text-odara-dark mr-2">
             Registro de Medicamentos
           </h1>
+
           <div className="relative">
             <button
               onMouseEnter={() => setInfoVisivel(true)}
@@ -639,7 +888,7 @@ const RegistroMedicamentos: React.FC = () => {
             {infoVisivel && (
               <div className="absolute z-10 left-0 top-full mt-2 w-72 p-3 bg-odara-dropdown text-odara-name text-sm rounded-lg shadow-lg">
                 <h3 className="font-bold mb-2">Registro de Medicamentos</h3>
-                <p>Controle de dosagens, horários, efeitos e observações dos tratamentos.</p>
+                <p>Você pode adicionar, editar ou excluir medicamentos dos residentes conforme necessário.</p>
                 <div className="absolute bottom-full left-4 border-4 border-transparent border-b-odara-dropdown"></div>
               </div>
             )}
@@ -653,7 +902,7 @@ const RegistroMedicamentos: React.FC = () => {
     return (
       <button
         onClick={abrirModalNovo}
-        className="bg-odara-accent hover:bg-odara-secondary text-white font-semibold py-2 px-4 rounded-lg flex items-center transition text-sm h-10 mb-6"
+        className="bg-odara-accent hover:bg-odara-secondary text-white font-semibold py-2 px-4 rounded-lg flex items-center transition text-sm h-10 mb-6 w-max"
       >
         <Plus className="mr-2" /> Novo Medicamento
       </button>
@@ -663,34 +912,65 @@ const RegistroMedicamentos: React.FC = () => {
   /* Renderização Principal */
   return (
     <div className="flex min-h-screen bg-odara-offwhite">
-
+      {/* Modal de Medicamentos */}
       <ModalMedicamentos
         medicamento={medicamentoSelecionado}
         isOpen={modalAberto}
         onClose={fecharModal}
       />
 
+			{/* Modal de Confirmação de Exclusão */}
+			<ModalConfirmacaoExclusao />
+
+      {/* Toaster para notificações */}
+      <Toaster
+        position="top-center"
+        toastOptions={{
+          duration: 4000,
+          style: {
+            background: '#e4edfdff',
+            color: '#52323a',
+            border: '1px solid #0036caff',
+            borderRadius: '12px',
+            fontSize: '14px',
+            fontWeight: '500',
+          },
+          success: {
+            style: {
+              background: '#f0fdf4',
+              color: '#52323a',
+              border: '1px solid #00c950',
+            },
+          },
+          error: {
+            style: {
+              background: '#fce7e7ff',
+              color: '#52323a',
+              border: '1px solid #c90d00ff',
+            },
+          },
+        }}
+      />
+
+
       <div className="flex-1 p-4 sm:p-6 lg:p-8">
-				{/* Cabeçalho e Botão Novo */}
-				<div className='flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6'>
-					<Cabecalho />
-					<div className="flex justify-end">
-						<BotaoNovoMedicamento />
-					</div>
-				</div>
+        {/* Cabeçalho e Botão Novo */}
+        <div className='flex flex-wrap justify-center sm:justify-between gap-4 mb-6'>
+          <Cabecalho />
+          <BotaoNovoMedicamento />
+
+        </div>
 
         {/* Barra de Busca e Filtros */}
         <div className="flex flex-col sm:flex-row gap-4 mb-6">
           {/* Barra de Busca */}
           <div className="flex-1 relative min-w-[300px]">
             <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-              {/* Ícone de busca */}
               <Search className="text-odara-primary h-4 w-4" />
             </div>
-
             <input
               type="text"
-              placeholder="Buscar nome de medicamento..."
+              placeholder="Buscar por médico, motivo ou residente..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               className="w-full pl-10 pr-4 py-3 bg-white rounded-xl border border-gray-200 text-odara-dark placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-odara-primary focus:border-transparent"
@@ -701,7 +981,7 @@ const RegistroMedicamentos: React.FC = () => {
           <div className="flex gap-2">
             <button
               onClick={toggleFiltros}
-              className="flex items-center gap-2 bg-white rounded-xl px-4 py-3 border border-gray-200 text-odara-dark font-medium hover:bg-odara-primary/10 transition w-max justify-between"
+              className="flex items-center gap-2 bg-white rounded-xl px-4 py-3 border border-gray-200 text-odara-dark font-medium hover:bg-odara-primary/10 transition w-full sm:w-max justify-center"
             >
               <Filter size={20} className="text-odara-accent" />
               <span>
@@ -711,7 +991,10 @@ const RegistroMedicamentos: React.FC = () => {
           </div>
         </div>
 
+        {/* Seção de Filtros */}
         <SecaoFiltros />
+
+        {/* Lista de Medicamentos */}
         <ListaMedicamentos />
 
         {/* Contador de resultados */}

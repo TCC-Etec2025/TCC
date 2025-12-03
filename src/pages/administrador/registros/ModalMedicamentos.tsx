@@ -256,7 +256,7 @@ const ModalMedicamentos = ({ medicamento, isOpen, onClose }: ModalMedicamentosPr
                                     <option value="0">Selecione um residente...</option>
                                     {residentes.map(r => (
                                         <option key={r.id} value={r.id}>
-                                            {r.nome} {r.quarto ? `(Q ${r.quarto})` : ''}
+                                            {r.nome} {r.quarto ? `(${r.quarto})` : ''}
                                         </option>
                                     ))}
                                 </select>

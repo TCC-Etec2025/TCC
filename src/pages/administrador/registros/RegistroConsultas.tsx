@@ -616,6 +616,12 @@ const RegistroConsultas = () => {
 
   const CardConsulta = ({ consulta }: { consulta: Consulta }) => {
     const coresStatus = COR_STATUS[consulta.status] || COR_STATUS.agendada;
+     // Extrai o primeiro parágrafo ou linha para ser o "título"
+    const motivo = consulta.motivo_consulta || '';
+    const titulo = motivo.split('\n')[0]; // Primeira linha como título
+    const descricao = motivo.includes('\n') 
+      ? motivo.substring(motivo.indexOf('\n')).trim() 
+      : '';
 
     return (
       <div className="bg-white rounded-lg shadow-md border border-gray-200 hover:shadow-lg transition-shadow duration-200 flex flex-col h-full">
@@ -643,7 +649,7 @@ const RegistroConsultas = () => {
           {/* Título e Botões de Ação */}
           <div className="flex items-start justify-between mb-3">
             <h3 className="text-lg sm:text-xl font-bold text-odara-dark line-clamp-1 flex-1">
-              {consulta.residente?.nome || 'Residente não informado'}
+              {titulo || 'Consulta sem título'}
             </h3>
 
             {/* Botões de ação */}
@@ -670,14 +676,14 @@ const RegistroConsultas = () => {
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 flex-1">
             {/* Coluna Esquerda */}
             <div className="space-y-3">
-              {consulta.motivo_consulta && (
-                <div>
-                  <strong className="text-odara-dark text-sm">Motivo:</strong>
-                  <span className="text-odara-name mt-1 text-sm">
-                    {' ' + consulta.motivo_consulta}
-                  </span>
-                </div>
-              )}
+              {descricao && (
+              <div>
+                <strong className="text-odara-dark text-sm">Descrição:</strong>
+                <span className="text-odara-name mt-1 text-sm">
+                  {' ' + descricao}
+                </span>
+              </div>
+            )}
 
               {consulta.medico && (
                 <div>

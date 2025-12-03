@@ -1,24 +1,9 @@
-import { useState, useEffect, useMemo, useRef, useCallback } from 'react';
-import {
-  FaExclamationCircle,
-  FaFilter,
-  FaChevronDown,
-  FaChevronRight,
-  FaRegCommentAlt,
-  FaClock,
-  FaUser,
-  FaPills,
-  FaCheck,
-  FaCheckCircle,
-  FaTimesCircle,
-  FaMinusCircle,
-  FaCalendarAlt,
-  FaSearch,
-  FaTrash,
-  FaEdit,
-  FaInfoCircle,
-  FaSyringe
-} from 'react-icons/fa';
+import { useState, useEffect, useMemo, useRef} from 'react';
+import { 
+  Pill, Filter, Search, Info, ChevronDown, ChevronRight, 
+  Calendar, Clock, User, CheckCircle, XCircle, MinusCircle,
+  Edit, Check
+} from 'lucide-react';
 import { supabase } from '../../../lib/supabaseClient';
 import { useUser } from '../../../context/UserContext';
 import { useObservacaoModal } from '../../../hooks/useObservacaoModal';
@@ -61,42 +46,48 @@ const getTodayString = () => {
   return `${year}-${month}-${day}`;
 };
 
-const COR_STATUS: Record<string, { bola: string; bg: string; text: string; border: string; icon: any }> = {
+const COR_STATUS: Record<string, { 
+  bola: string; 
+  bg: string; 
+  text: string; 
+  border: string; 
+  icon: any 
+}> = {
   administrado: { 
     bola: 'bg-green-500', 
     bg: 'bg-green-50', 
-    text: 'text-odara-dark font-semibold', 
+    text: 'text-green-700', 
     border: 'border-b border-green-200',
-    icon: FaCheckCircle
+    icon: CheckCircle
   },
   parcial: { 
     bola: 'bg-yellow-500', 
     bg: 'bg-yellow-50', 
-    text: 'text-odara-dark font-semibold', 
+    text: 'text-yellow-700', 
     border: 'border-b border-yellow-200',
-    icon: FaMinusCircle
+    icon: MinusCircle
   },
   nao_administrado: { 
     bola: 'bg-red-500', 
     bg: 'bg-red-50', 
-    text: 'text-odara-dark font-semibold', 
+    text: 'text-red-700', 
     border: 'border-b border-red-200',
-    icon: FaTimesCircle
+    icon: XCircle
   },
   pendente: { 
     bola: 'bg-gray-400', 
     bg: 'bg-gray-50', 
-    text: 'text-odara-dark font-semibold', 
+    text: 'text-gray-700', 
     border: 'border-b border-gray-200',
-    icon: FaClock
+    icon: Clock
   }
 };
 
 const STATUS_OPTIONS = [
-  { value: 'pendente', label: 'Pendente' },
-  { value: 'administrado', label: 'Administrado' },
-  { value: 'parcial', label: 'Parcial' },
-  { value: 'nao_administrado', label: 'Não Administrado' }
+  { value: 'pendente', label: 'Pendente', icon: Clock },
+  { value: 'administrado', label: 'Administrado', icon: CheckCircle },
+  { value: 'parcial', label: 'Parcial', icon: MinusCircle },
+  { value: 'nao_administrado', label: 'Não Administrado', icon: XCircle }
 ];
 
 const FILTRO_STATUS_OPTIONS = [
@@ -113,13 +104,13 @@ const Medicamentos = () => {
   const [residentes, setResidentes] = useState<Residente[]>([]);
   
   const [datesExpanded, setDatesExpanded] = useState<Record<string, boolean>>({});
-  const [dateError, setDateError] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [filtrosAberto, setFiltrosAberto] = useState(false);
   const [filtroResidenteAberto, setFiltroResidenteAberto] = useState(false);
   const [filtroStatusAberto, setFiltroStatusAberto] = useState(false);
   const [dropdownAberto, setDropdownAberto] = useState<number | null>(null);
   const [infoVisivel, setInfoVisivel] = useState(false);
+  const [loading, setLoading] = useState(false);
 
   const { usuario } = useUser();
   const { openModal, ObservacaoModal } = useObservacaoModal();
@@ -127,43 +118,50 @@ const Medicamentos = () => {
   const filtroResidenteRef = useRef<HTMLDivElement>(null);
   const filtroStatusRef = useRef<HTMLDivElement>(null);
 
+  // CORREÇÃO: Remover o valor padrão das datas no filtro inicial
   const [filtros, setFiltros] = useState({
     residenteId: null as number | null,
     status: null as string | null,
-    startDate: getTodayString() as string | null,
-    endDate: getTodayString() as string | null,
+    startDate: null as string | null, // Remover valor padrão
+    endDate: null as string | null,   // Remover valor padrão
   });
 
   useEffect(() => {
     const fetchData = async () => {
+      setLoading(true);
       try {
         const { data: adminData, error: adminErr } = await supabase
           .from("administracao_medicamento")
-          .select("*");
+          .select("*")
+          .order('data_prevista', { ascending: true });
 
         if (adminErr) throw adminErr;
         setAdministracoes(adminData || []);
 
-        const medicamentoIds = [...new Set(adminData.map(a => a.id_medicamento))];
+        const medicamentoIds = [...new Set(adminData?.map(a => a.id_medicamento) || [])];
 
-        const { data: medsData, error: medsErr } = await supabase
-          .from("medicamento")
-          .select("*")
-          .in("id", medicamentoIds);
+        if (medicamentoIds.length > 0) {
+          const { data: medsData, error: medsErr } = await supabase
+            .from("medicamento")
+            .select("*")
+            .in("id", medicamentoIds);
 
-        if (medsErr) throw medsErr;
-
-        setMedicamentos(medsData || []);
+          if (medsErr) throw medsErr;
+          setMedicamentos(medsData || []);
+        }
 
         const { data: resData, error: resErr } = await supabase
           .from("residente")
-          .select("id, nome, quarto");
+          .select("id, nome, quarto")
+          .order('nome');
 
         if (resErr) throw resErr;
         setResidentes(resData || []);
 
       } catch (err) {
         console.error("Erro ao buscar dados:", err);
+      } finally {
+        setLoading(false);
       }
     };
 
@@ -188,10 +186,14 @@ const Medicamentos = () => {
     const { residenteId, status, startDate, endDate } = filtros;
 
     const filtradas = listaCompleta.filter(admin => {
-      // Filtro por nome do medicamento
-      if (searchTerm.trim() &&
-        !admin.medicamento.nome.toLowerCase().includes(searchTerm.toLowerCase())) {
-        return false;
+      // Filtro por nome do medicamento ou residente
+      if (searchTerm.trim()) {
+        const busca = searchTerm.toLowerCase();
+        const nomeMed = admin.medicamento.nome.toLowerCase();
+        const nomeRes = admin.residente.nome.toLowerCase();
+        if (!nomeMed.includes(busca) && !nomeRes.includes(busca)) {
+          return false;
+        }
       }
 
       // Filtro por residente
@@ -200,14 +202,18 @@ const Medicamentos = () => {
       // Filtro por status
       if (status && status !== 'todos' && admin.status !== status) return false;
 
-      // Filtro por data
+      // CORREÇÃO: Filtro por data - apenas filtrar se ambas as datas estiverem preenchidas
       if (startDate && endDate) {
+        // Filtra por intervalo de datas
         if (admin.data_prevista < startDate || admin.data_prevista > endDate) return false;
       } else if (startDate) {
+        // Filtra apenas por data inicial
         if (admin.data_prevista < startDate) return false;
       } else if (endDate) {
+        // Filtra apenas por data final
         if (admin.data_prevista > endDate) return false;
       }
+      // Se nenhuma data for selecionada, mostra todos
 
       return true;
     });
@@ -265,9 +271,14 @@ const Medicamentos = () => {
 
   const handleStatusClick = async (adminId: number, status: string) => {
     try {
-      const obs = await openModal("");
-      if (obs) updateStatus(adminId, status, obs);
-      else if (status === "administrado") updateStatus(adminId, status);
+      if (status === "administrado") {
+        updateStatus(adminId, status);
+      } else {
+        const obs = await openModal("");
+        if (obs !== null) {
+          updateStatus(adminId, status, obs);
+        }
+      }
     } catch {
       // cancelado
     }
@@ -276,7 +287,6 @@ const Medicamentos = () => {
   const handleEditObservation = async (admin: AdministracaoComDetalhes) => {
     try {
       const novaObs = await openModal(admin.observacao || "");
-
       if (novaObs !== null && novaObs !== admin.observacao) {
         updateStatus(admin.id, admin.status, novaObs);
       }
@@ -293,17 +303,14 @@ const Medicamentos = () => {
   };
 
   const formatarData = (data: string) => {
-    return data.split('-').reverse().join('/');
+    return new Date(data).toLocaleDateString('pt-BR');
   };
 
   const obterResidentesUnicos = () => {
-    const residentesMap = new Map();
+    const residentesMap = new Map<number, string>();
     listaCompleta
-      .filter(m => m.residente)
       .forEach(m => {
-        if (m.residente) {
-          residentesMap.set(m.residente.id, m.residente.nome);
-        }
+        residentesMap.set(m.residente.id, m.residente.nome);
       });
     return Array.from(residentesMap.entries());
   };
@@ -323,7 +330,12 @@ const Medicamentos = () => {
   };
 
   const limparFiltros = () => {
-    setFiltros({ residenteId: null, status: null, startDate: null, endDate: null });
+    setFiltros({ 
+      residenteId: null, 
+      status: null, 
+      startDate: null,  // Não definir data padrão ao limpar
+      endDate: null     // Não definir data padrão ao limpar
+    });
     setSearchTerm('');
     setFiltroResidenteAberto(false);
     setFiltroStatusAberto(false);
@@ -333,6 +345,20 @@ const Medicamentos = () => {
     setDropdownAberto(dropdownAberto === id ? null : id);
   };
 
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (filtroResidenteRef.current && !filtroResidenteRef.current.contains(event.target as Node)) {
+        setFiltroResidenteAberto(false);
+      }
+      if (filtroStatusRef.current && !filtroStatusRef.current.contains(event.target as Node)) {
+        setFiltroStatusAberto(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
   const DropdownStatus = ({ admin }: { admin: AdministracaoComDetalhes }) => {
     const cores = COR_STATUS[admin.status] || COR_STATUS.pendente;
     const IconeStatus = cores.icon;
@@ -341,11 +367,13 @@ const Medicamentos = () => {
       <div className="relative">
         <button
           onClick={() => toggleDropdown(admin.id)}
-          className="flex items-center gap-2 px-3 py-1.5 text-sm border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors w-full sm:w-auto"
+          className="flex items-center gap-1 px-2 py-1 text-xs sm:text-sm border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
         >
-          <IconeStatus size={14} className={"text-odara-accent"} />
-          <span className="text-odara-dark capitalize">{admin.status.replace('_', ' ')}</span>
-          <FaChevronDown size={12} className="text-gray-500" />
+          <IconeStatus size={12} className="text-odara-accent" />
+          <span className="text-odara-dark capitalize hidden xs:inline">
+            {admin.status.replace('_', ' ')}
+          </span>
+          <ChevronDown size={10} className="text-gray-500" />
         </button>
 
         {dropdownAberto === admin.id && (
@@ -355,9 +383,9 @@ const Medicamentos = () => {
               onClick={() => setDropdownAberto(null)}
             ></div>
 
-            <div className="absolute top-full left-0 right-0 sm:right-auto sm:left-0 mt-1 w-full sm:w-48 bg-white rounded-lg shadow-lg border border-gray-200 z-20 overflow-hidden">
+            <div className="absolute top-full left-0 right-0 sm:right-auto sm:left-0 mt-1 w-40 bg-white rounded-lg shadow-lg border border-gray-200 z-20 overflow-hidden">
               {STATUS_OPTIONS.map((option) => {
-                const OptionIcon = COR_STATUS[option.value].icon;
+                const OptionIcon = option.icon;
                 return (
                   <button
                     key={option.value}
@@ -366,16 +394,16 @@ const Medicamentos = () => {
                       handleStatusClick(admin.id, option.value);
                       setDropdownAberto(null);
                     }}
-                    className={`flex items-center gap-3 w-full text-left px-4 py-3 text-sm hover:bg-odara-primary/10 transition ${
+                    className={`flex items-center gap-2 w-full text-left px-3 py-2 text-xs sm:text-sm hover:bg-odara-primary/10 transition ${
                       admin.status === option.value
                         ? 'bg-odara-primary/20 text-odara-primary font-semibold'
                         : 'text-gray-700'
                     }`}
                   >
-                    <OptionIcon size={14} className={"text-odara-accent"} />
+                    <OptionIcon size={12} className="text-odara-accent" />
                     <span className="capitalize">{option.label}</span>
                     {admin.status === option.value && (
-                      <FaCheck className="ml-auto text-odara-primary" size={14} />
+                      <Check className="ml-auto text-odara-primary" size={12} />
                     )}
                   </button>
                 );
@@ -404,26 +432,26 @@ const Medicamentos = () => {
     onSelecionar: (value: any) => void;
     tipo: 'residente' | 'status';
   }) => {
-    const residentes = obterResidentesUnicos();
+    const residentesUnicos = obterResidentesUnicos();
 
     return (
       <div className="relative" ref={ref}>
         <button
           type="button"
           onClick={() => setAberto(!aberto)}
-          className="flex items-center justify-between w-full h-11 border border-gray-300 rounded-lg px-3 text-sm hover:bg-gray-50 transition-colors"
+          className="flex items-center justify-between w-full h-10 border border-gray-300 rounded-lg px-3 text-xs sm:text-sm hover:bg-gray-50 transition-colors"
         >
-          <span className="text-odara-dark truncate">
+          <span className="text-odara-dark truncate text-left">
             {tipo === 'residente'
               ? valorSelecionado
-                ? residentes.find(([id]) => id === valorSelecionado)?.[1]
+                ? residentesUnicos.find(([id]) => id === valorSelecionado)?.[1]
                 : titulo
               : valorSelecionado
                 ? FILTRO_STATUS_OPTIONS.find(opt => opt.value === valorSelecionado)?.label
                 : titulo
             }
           </span>
-          <FaChevronDown size={12} className="text-gray-500 flex-shrink-0" />
+          <ChevronDown size={12} className="text-gray-500 flex-shrink-0 ml-1" />
         </button>
 
         {aberto && (
@@ -432,27 +460,27 @@ const Medicamentos = () => {
               <>
                 <button
                   onClick={() => onSelecionar(null)}
-                  className={`flex items-center gap-3 w-full text-left px-4 py-3 text-sm hover:bg-odara-primary/10 transition ${
+                  className={`flex items-center justify-between w-full text-left px-3 py-2 text-xs sm:text-sm hover:bg-odara-primary/10 transition ${
                     !valorSelecionado
                       ? 'bg-odara-primary/20 text-odara-primary font-semibold'
                       : 'text-gray-700'
                   }`}
                 >
                   <span>Todos os residentes</span>
-                  {!valorSelecionado && <FaCheck className="ml-auto text-odara-primary" size={14} />}
+                  {!valorSelecionado && <Check className="text-odara-primary" size={12} />}
                 </button>
-                {residentes.map(([id, nome]) => (
+                {residentesUnicos.map(([id, nome]) => (
                   <button
                     key={id}
                     onClick={() => onSelecionar(id)}
-                    className={`flex items-center gap-3 w-full text-left px-4 py-3 text-sm hover:bg-odara-primary/10 transition ${
+                    className={`flex items-center justify-between w-full text-left px-3 py-2 text-xs sm:text-sm hover:bg-odara-primary/10 transition ${
                       valorSelecionado === id
                         ? 'bg-odara-primary/20 text-odara-primary font-semibold'
                         : 'text-gray-700'
                     }`}
                   >
                     <span className="truncate">{nome}</span>
-                    {valorSelecionado === id && <FaCheck className="ml-auto text-odara-primary" size={14} />}
+                    {valorSelecionado === id && <Check className="text-odara-primary" size={12} />}
                   </button>
                 ))}
               </>
@@ -461,7 +489,7 @@ const Medicamentos = () => {
                 <button
                   key={opcao.value}
                   onClick={() => onSelecionar(opcao.value)}
-                  className={`flex items-center gap-3 w-full text-left px-4 py-3 text-sm hover:bg-odara-primary/10 transition ${
+                  className={`flex items-center justify-between w-full text-left px-3 py-2 text-xs sm:text-sm hover:bg-odara-primary/10 transition ${
                     (opcao.value === 'todos' && !valorSelecionado) || valorSelecionado === opcao.value
                       ? 'bg-odara-primary/20 text-odara-primary font-semibold'
                       : 'text-gray-700'
@@ -469,7 +497,7 @@ const Medicamentos = () => {
                 >
                   <span>{opcao.label}</span>
                   {((opcao.value === 'todos' && !valorSelecionado) || valorSelecionado === opcao.value) && (
-                    <FaCheck className="ml-auto text-odara-primary" size={14} />
+                    <Check className="text-odara-primary" size={12} />
                   )}
                 </button>
               ))
@@ -482,156 +510,111 @@ const Medicamentos = () => {
 
   const CardAdministracao = ({ admin }: { admin: AdministracaoComDetalhes }) => {
     const cores = COR_STATUS[admin.status] || COR_STATUS.pendente;
+    const IconeStatus = cores.icon;
 
     return (
-      <div className="bg-white rounded-lg shadow-md border border-gray-200 hover:shadow-lg transition-shadow duration-200 flex flex-col h-full">
-        {/* Header do Card */}
-        <div className={`flex items-center justify-between p-3 rounded-t-lg ${cores.border} ${cores.bg}`}>
+      <div className="bg-white rounded-lg shadow border border-gray-200 hover:shadow-md transition-shadow duration-200">
+        {/* Header */}
+        <div className={`flex items-center justify-between p-2 sm:p-3 ${cores.border} ${cores.bg}`}>
           <div className="flex items-center flex-1 min-w-0">
-            <div className={`w-3 h-3 rounded-full mr-3 flex-shrink-0 ${cores.bola}`}></div>
-            <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-2 overflow-hidden">
-              <p className={`text-sm ${cores.text} truncate`}>
-                <FaCalendarAlt className="inline mr-1" size={12} />
+            <div className={`w-2 h-2 sm:w-3 sm:h-3 rounded-full mr-2 flex-shrink-0 ${cores.bola}`}></div>
+            <div className="flex items-center gap-1 sm:gap-2 min-w-0">
+              <Calendar size={10} className="text-gray-500 flex-shrink-0" />
+              <span className={`text-xs sm:text-sm ${cores.text} truncate`}>
                 {formatarData(admin.data_prevista)}
-              </p>
-              <span className="hidden sm:inline text-gray-400">•</span>
-              <p className="text-sm text-gray-600 truncate">
-                <FaClock className="inline mr-1" size={12} />
+              </span>
+              <span className="text-gray-400 mx-1 hidden sm:inline">•</span>
+              <Clock size={10} className="text-gray-500 flex-shrink-0" />
+              <span className="text-xs sm:text-sm text-gray-600">
                 {admin.horario_previsto.slice(0, 5)}
-              </p>
+              </span>
             </div>
           </div>
-
-          {/* Botão de Status Mobile */}
-          <div className="sm:hidden">
-            <DropdownStatus admin={admin} />
-          </div>
           
-          {/* Status Desktop */}
-          <div className="hidden sm:flex items-center gap-2">
-            <DropdownStatus admin={admin} />
-          </div>
+          <DropdownStatus admin={admin} />
         </div>
 
         {/* Corpo do Card */}
-        <div className="p-4 flex-1 flex flex-col">
-          {/* Título do Corpo */}
-          <div className="flex items-start justify-between mb-3">
-            <h3 className="text-base sm:text-lg font-bold text-odara-dark line-clamp-2 flex-1">
-              {admin.medicamento.nome}
-            </h3>
-          </div>
+        <div className="p-2 sm:p-3">
+          <h3 className="text-sm sm:text-base font-semibold text-odara-dark line-clamp-2 mb-1 sm:mb-2">
+            {admin.medicamento.nome}
+          </h3>
 
-          {/* Detalhes do Corpo */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4 flex-1">
-            {/* Coluna Esquerda */}
-            <div className="space-y-2 sm:space-y-3">
-              <div>
-                <strong className="text-odara-dark text-xs sm:text-sm block">Dosagem:</strong>
-                <span className="text-odara-name text-xs sm:text-sm mt-0.5 block">
+          <div className="space-y-1 sm:space-y-2 text-xs sm:text-sm">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-1">
+              <div className="flex items-center gap-1">
+                <span className="font-medium text-gray-600">Dosagem:</span>
+                <span className="text-gray-800 truncate max-w-[120px] sm:max-w-none">
                   {admin.medicamento.dosagem || 'Não informado'}
                 </span>
               </div>
-
-              <div>
-                <strong className="text-odara-dark text-xs sm:text-sm block">Residente:</strong>
-                <div className="flex items-center gap-1.5 mt-0.5">
-                  <FaUser className="text-gray-400" size={12} />
-                  <span className="text-odara-name text-xs sm:text-sm">{admin.residente.nome}</span>
-                </div>
-                {admin.residente.quarto && (
-                  <span className="text-xs text-odara-dark bg-gray-100 px-2 py-0.5 rounded mt-1 inline-block">
-                    Quarto: {admin.residente.quarto}
-                  </span>
-                )}
+              
+              <div className="flex items-center gap-1">
+                <User size={10} className="text-gray-500 flex-shrink-0" />
+                <span className="text-gray-800 truncate max-w-[100px] sm:max-w-[150px]">
+                  {admin.residente.nome}
+                </span>
               </div>
             </div>
-            
-            {/* Coluna Direita */}
-            <div className="space-y-2 sm:space-y-3">
-              <div>
-                <strong className="text-odara-dark text-xs sm:text-sm block">Status atual:</strong>
-                <div className="flex items-center gap-1.5 mt-0.5">
-                  {cores.icon({ size: 12, className: "text-odara-accent" })}
-                  <span className="text-odara-name text-xs sm:text-sm capitalize">
-                    {admin.status.replace('_', ' ')}
-                  </span>
-                </div>
+
+            <div className="flex items-start justify-between">
+              <div className="flex-1 min-w-0">
+                <span className="font-medium text-gray-600">Obs:</span>
+                <span className="text-gray-800 text-xs sm:text-sm line-clamp-1 sm:line-clamp-2 ml-1">
+                  {admin.observacao || 'Nenhuma'}
+                </span>
               </div>
-              
-              <div>
-                <strong className="text-odara-dark text-xs sm:text-sm block">Observação:</strong>
-                <div className="flex items-start gap-1.5 mt-0.5">
-                  <FaRegCommentAlt className="text-gray-400 mt-0.5 flex-shrink-0" size={12} />
-                  <span className="text-odara-name text-xs sm:text-sm flex-1 line-clamp-2">
-                    {admin.observacao || 'Nenhuma observação'}
-                  </span>
-                  {admin.observacao && (
-                    <button
-                      onClick={() => handleEditObservation(admin)}
-                      className="text-odara-accent hover:text-odara-secondary transition-colors flex-shrink-0"
-                      title="Editar observação"
-                    >
-                      <FaEdit size={12} />
-                    </button>
-                  )}
-                </div>
-              </div>
+              <button
+                onClick={() => handleEditObservation(admin)}
+                className="text-odara-accent hover:text-odara-secondary transition-colors flex-shrink-0 ml-2"
+                title="Editar observação"
+              >
+                <Edit size={12} />
+              </button>
             </div>
           </div>
         </div>
 
-        {/* Footer do Card - Botões de ação */}
-        <div className="px-3 py-3 bg-gray-50 rounded-b-lg border-t border-gray-200 mt-auto">
-          <div className="flex flex-col gap-2">
-            <div className="grid grid-cols-3 gap-2">
-              <button
-                onClick={() => handleStatusClick(admin.id, "administrado")}
-                className={`flex flex-col items-center justify-center py-2 rounded-lg text-xs font-medium transition-colors ${
-                  admin.status === "administrado" 
-                    ? 'bg-green-100 text-green-700 border border-green-300' 
-                    : 'bg-white text-gray-700 border border-gray-300 hover:bg-green-50 hover:text-green-600 hover:border-green-200'
-                }`}
-              >
-                <FaCheckCircle size={14} className="mb-1" />
-                <span className="hidden xs:inline">Ok</span>
-              </button>
-              
-              <button
-                onClick={() => handleStatusClick(admin.id, "parcial")}
-                className={`flex flex-col items-center justify-center py-2 rounded-lg text-xs font-medium transition-colors ${
-                  admin.status === "parcial" 
-                    ? 'bg-yellow-100 text-yellow-700 border border-yellow-300' 
-                    : 'bg-white text-gray-700 border border-gray-300 hover:bg-yellow-50 hover:text-yellow-600 hover:border-yellow-200'
-                }`}
-              >
-                <FaMinusCircle size={14} className="mb-1" />
-                <span className="hidden xs:inline">Parcial</span>
-              </button>
-              
-              <button
-                onClick={() => handleStatusClick(admin.id, "nao_administrado")}
-                className={`flex flex-col items-center justify-center py-2 rounded-lg text-xs font-medium transition-colors ${
-                  admin.status === "nao_administrado" 
-                    ? 'bg-red-100 text-red-700 border border-red-300' 
-                    : 'bg-white text-gray-700 border border-gray-300 hover:bg-red-50 hover:text-red-600 hover:border-red-200'
-                }`}
-              >
-                <FaTimesCircle size={14} className="mb-1" />
-                <span className="hidden xs:inline">Não</span>
-              </button>
-            </div>
-            
+        {/* Botões de ação */}
+        <div className="px-2 py-1.5 sm:px-3 sm:py-2 bg-gray-50 rounded-b-lg border-t border-gray-200">
+          <div className="grid grid-cols-3 gap-1 sm:gap-2">
             <button
-              onClick={() => handleEditObservation(admin)}
-              className={`w-full flex items-center justify-center gap-2 py-2 rounded-lg text-xs font-medium transition-colors ${
-                admin.observacao 
-                  ? 'bg-blue-100 text-blue-700 border border-blue-300' 
-                  : 'bg-white text-gray-700 border border-gray-300 hover:bg-blue-50 hover:text-blue-600 hover:border-blue-200'
+              onClick={() => handleStatusClick(admin.id, "administrado")}
+              className={`flex items-center justify-center gap-1 py-1.5 sm:py-2 rounded text-[10px] sm:text-xs font-medium transition-colors ${
+                admin.status === "administrado" 
+                  ? 'bg-green-100 text-green-700 border border-green-300' 
+                  : 'bg-white text-gray-700 border border-gray-300 hover:bg-green-50 hover:text-green-600 hover:border-green-200'
               }`}
             >
-              <FaRegCommentAlt size={12} />
-              {admin.observacao ? 'Editar Observação' : 'Adicionar Observação'}
+              <CheckCircle size={10} className="sm:w-4 sm:h-4" />
+              <span className="hidden xs:inline">Ok</span>
+              <span className="xs:hidden sm:hidden xs:inline">✓</span>
+            </button>
+            
+            <button
+              onClick={() => handleStatusClick(admin.id, "parcial")}
+              className={`flex items-center justify-center gap-1 py-1.5 sm:py-2 rounded text-[10px] sm:text-xs font-medium transition-colors ${
+                admin.status === "parcial" 
+                  ? 'bg-yellow-100 text-yellow-700 border border-yellow-300' 
+                  : 'bg-white text-gray-700 border border-gray-300 hover:bg-yellow-50 hover:text-yellow-600 hover:border-yellow-200'
+              }`}
+            >
+              <MinusCircle size={10} className="sm:w-4 sm:h-4" />
+              <span className="hidden xs:inline">Parcial</span>
+              <span className="xs:hidden sm:hidden xs:inline">~</span>
+            </button>
+            
+            <button
+              onClick={() => handleStatusClick(admin.id, "nao_administrado")}
+              className={`flex items-center justify-center gap-1 py-1.5 sm:py-2 rounded text-[10px] sm:text-xs font-medium transition-colors ${
+                admin.status === "nao_administrado" 
+                  ? 'bg-red-100 text-red-700 border border-red-300' 
+                  : 'bg-white text-gray-700 border border-gray-300 hover:bg-red-50 hover:text-red-600 hover:border-red-200'
+              }`}
+            >
+              <XCircle size={10} className="sm:w-4 sm:h-4" />
+              <span className="hidden xs:inline">Não</span>
+              <span className="xs:hidden sm:hidden xs:inline">✗</span>
             </button>
           </div>
         </div>
@@ -643,12 +626,12 @@ const Medicamentos = () => {
     if (!filtrosAberto) return null;
 
     return (
-      <div className="mb-6 bg-white p-4 sm:p-5 rounded-xl shadow border border-gray-200">
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+      <div className="mb-4 bg-white p-3 sm:p-4 rounded-lg sm:rounded-xl shadow border border-gray-200">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
           {/* Filtro de Residente */}
           <div>
             <div className='flex gap-1 items-center mb-1'>
-              <FaFilter size={10} className="text-odara-accent" />
+              <Filter size={10} className="text-odara-accent" />
               <label className="block text-xs sm:text-sm font-semibold text-odara-secondary">Residente</label>
             </div>
             <FiltroDropdown
@@ -665,7 +648,7 @@ const Medicamentos = () => {
           {/* Filtro de Status */}
           <div>
             <div className='flex gap-1 items-center mb-1'>
-              <FaFilter size={10} className="text-odara-accent" />
+              <Filter size={10} className="text-odara-accent" />
               <label className="block text-xs sm:text-sm font-semibold text-odara-secondary">Status</label>
             </div>
             <FiltroDropdown
@@ -679,51 +662,44 @@ const Medicamentos = () => {
             />
           </div>
 
-          {/* Filtro de Datas */}
+          {/* Data Inicial */}
           <div>
             <div className='flex gap-1 items-center mb-1'>
-              <FaFilter size={10} className="text-odara-accent" />
-              <label className="block text-xs sm:text-sm font-semibold text-odara-secondary">Período</label>
+              <Filter size={10} className="text-odara-accent" />
+              <label className="block text-xs sm:text-sm font-semibold text-odara-secondary">Data Inicial</label>
             </div>
-            <div className="flex gap-2">
-              <input
-                type="date"
-                value={filtros.startDate || ''}
-                onChange={(e) => {
-                  setFiltros(prev => ({ ...prev, startDate: e.target.value || null }));
-                  setDateError(null);
-                }}
-                className={`flex-1 border rounded-lg px-3 py-2 text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-odara-primary focus:border-transparent ${
-                  dateError ? 'border-red-500 bg-red-50' : 'border-gray-300'
-                }`}
-              />
-              <input
-                type="date"
-                value={filtros.endDate || ''}
-                onChange={(e) => {
-                  setFiltros(prev => ({ ...prev, endDate: e.target.value || null }));
-                  setDateError(null);
-                }}
-                className={`flex-1 border rounded-lg px-3 py-2 text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-odara-primary focus:border-transparent ${
-                  dateError ? 'border-red-500 bg-red-50' : 'border-gray-300'
-                }`}
-              />
+            <input
+              type="date"
+              value={filtros.startDate || ''}
+              onChange={(e) => {
+                setFiltros(prev => ({ ...prev, startDate: e.target.value || null }));
+              }}
+              className="w-full border rounded px-2 sm:px-3 py-1.5 sm:py-2 text-xs sm:text-sm focus:outline-none focus:ring-1 sm:focus:ring-2 focus:ring-odara-primary border-gray-300"
+            />
+          </div>
+
+          {/* Data Final */}
+          <div>
+            <div className='flex gap-1 items-center mb-1'>
+              <Filter size={10} className="text-odara-accent" />
+              <label className="block text-xs sm:text-sm font-semibold text-odara-secondary">Data Final</label>
             </div>
-            {dateError && (
-              <div className="flex items-center mt-1 text-red-600 text-xs">
-                <FaExclamationCircle className="mr-1" />
-                {dateError}
-              </div>
-            )}
+            <input
+              type="date"
+              value={filtros.endDate || ''}
+              onChange={(e) => {
+                setFiltros(prev => ({ ...prev, endDate: e.target.value || null }));
+              }}
+              className="w-full border rounded px-2 sm:px-3 py-1.5 sm:py-2 text-xs sm:text-sm focus:outline-none focus:ring-1 sm:focus:ring-2 focus:ring-odara-primary border-gray-300"
+            />
           </div>
         </div>
 
-        <div className="mt-4 flex justify-end">
+        <div className="mt-3 sm:mt-4 flex justify-end">
           <button
             onClick={limparFiltros}
-            className="bg-odara-accent hover:bg-odara-secondary text-white font-semibold py-2 px-4 rounded-lg flex items-center gap-2 transition text-xs sm:text-sm"
+            className="bg-odara-accent hover:bg-odara-secondary text-white font-semibold py-1.5 sm:py-2 px-3 sm:px-4 rounded-lg text-xs sm:text-sm transition-colors"
           >
-            <FaTrash size={12} />
             Limpar Filtros
           </button>
         </div>
@@ -733,39 +709,22 @@ const Medicamentos = () => {
 
   const Cabecalho = () => {
     return (
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 mb-6">
-        <div className="flex items-center gap-2">
-          <FaPills size={28} className='text-odara-accent'/>
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 sm:gap-4 mb-4 sm:mb-6">
+        <div className="flex items-center gap-2 sm:gap-3">
+          <Pill size={24} className='text-odara-accent sm:w-8 sm:h-8' />
           <div>
-            <h1 className="text-xl sm:text-2xl font-bold text-odara-dark">
+            <h1 className="text-lg sm:text-2xl font-bold text-odara-dark">
               Checklist de Medicamentos
             </h1>
-            <p className="text-xs sm:text-sm text-gray-600">
+            <p className="text-[10px] sm:text-sm text-gray-600">
               Controle diário de administrações
             </p>
           </div>
-          <div className="relative">
-            <button
-              onMouseEnter={() => setInfoVisivel(true)}
-              onMouseLeave={() => setInfoVisivel(false)}
-              onTouchStart={() => setInfoVisivel(!infoVisivel)}
-              className="transition-colors duration-200"
-            >
-              <FaInfoCircle size={16} className="text-odara-accent hover:text-odara-secondary" />
-            </button>
-            {infoVisivel && (
-              <div className="absolute z-10 left-0 top-full mt-2 w-64 p-3 bg-odara-dropdown text-odara-name text-xs sm:text-sm rounded-lg shadow-lg">
-                <h3 className="font-bold mb-1">Checklist de Medicamentos</h3>
-                <p>Controle diário das administrações de medicamentos dos residentes.</p>
-                <div className="absolute bottom-full left-4 border-4 border-transparent border-b-odara-dropdown"></div>
-              </div>
-            )}
-          </div>
         </div>
         
-        <div className="bg-white px-3 py-1.5 rounded-lg border border-gray-200">
-          <div className="flex items-center gap-2">
-            <FaSyringe className="text-odara-accent" size={14} />
+        <div className="bg-white px-2 sm:px-3 py-1 sm:py-1.5 rounded border border-gray-200">
+          <div className="flex items-center gap-1 sm:gap-2">
+            <Pill className="text-odara-accent" size={12} className="sm:w-4 sm:h-4" />
             <span className="text-xs sm:text-sm font-medium text-odara-dark">
               {listaCompleta.length} administrações
             </span>
@@ -777,110 +736,114 @@ const Medicamentos = () => {
 
   return (
     <div className="min-h-screen bg-odara-offwhite">
-      <div className="p-3 sm:p-4 md:p-6">
+      <div className="p-2 sm:p-4 md:p-6 lg:p-8">
         <Cabecalho />
 
         {/* Barra de Busca e Filtros */}
-        <div className="flex flex-col sm:flex-row gap-3 mb-4">
+        <div className="flex flex-col sm:flex-row gap-2 sm:gap-3 mb-3 sm:mb-4">
           {/* Barra de Busca */}
           <div className="flex-1 relative">
-            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-              <FaSearch className="text-odara-primary h-4 w-4" />
+            <div className="absolute inset-y-0 left-0 pl-2 sm:pl-3 flex items-center pointer-events-none">
+              <Search className="text-odara-primary h-3.5 w-3.5 sm:h-4 sm:w-4" />
             </div>
             <input
               type="text"
-              placeholder="Buscar medicamento..."
+              placeholder="Buscar medicamento ou residente..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full pl-10 pr-4 py-2.5 sm:py-3 bg-white rounded-xl border border-gray-200 text-odara-dark placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-odara-primary focus:border-transparent text-sm sm:text-base"
+              className="w-full pl-8 sm:pl-10 pr-3 py-2 sm:py-3 bg-white rounded-lg sm:rounded-xl border border-gray-200 text-odara-dark placeholder:text-gray-400 focus:outline-none focus:ring-1 sm:focus:ring-2 focus:ring-odara-primary text-sm sm:text-base"
             />
           </div>
 
           {/* Botão ativador do modal de filtros */}
-          <div className="flex gap-2">
-            <button
-              onClick={toggleFiltros}
-              className="flex items-center gap-2 bg-white rounded-xl px-3 sm:px-4 py-2.5 sm:py-3 border border-gray-200 text-odara-dark font-medium hover:bg-odara-primary/10 transition text-sm"
-            >
-              <FaFilter size={16} className="text-odara-accent" />
-              <span className="hidden sm:inline">
-                {!filtrosAberto ? 'Abrir ' : 'Fechar '} Filtros
-              </span>
-              <span className="sm:hidden">Filtros</span>
-            </button>
-          </div>
+          <button
+            onClick={toggleFiltros}
+            className="flex items-center justify-center gap-1 sm:gap-2 bg-white rounded-lg sm:rounded-xl px-3 sm:px-4 py-2 sm:py-3 border border-gray-200 text-odara-dark font-medium hover:bg-odara-primary/10 transition text-sm min-w-[90px] sm:min-w-[120px]"
+          >
+            <Filter size={14} className="text-odara-accent sm:w-5 sm:h-5" />
+            <span className="hidden xs:inline sm:inline">{!filtrosAberto ? 'Filtros' : 'Fechar'}</span>
+            <span className="xs:hidden sm:hidden">{!filtrosAberto ? 'Filtros' : 'X'}</span>
+          </button>
         </div>
 
         <SecaoFiltros />
 
         {/* Lista de Medicamentos */}
-        <div className="bg-white border-l-4 border-odara-primary rounded-xl sm:rounded-2xl shadow-lg p-3 sm:p-4 md:p-6">
+        <div className="bg-white border-l-2 sm:border-l-4 border-odara-primary rounded-lg sm:rounded-xl shadow p-2 sm:p-4 md:p-6">
           {(filtros.residenteId || filtros.status || searchTerm || filtros.startDate || filtros.endDate) && (
-            <div className="mb-4 flex flex-wrap gap-1.5 sm:gap-2 text-xs">
+            <div className="mb-2 sm:mb-3 flex flex-wrap gap-1 sm:gap-2 text-xs sm:text-sm">
+              {searchTerm && (
+                <span className="bg-odara-accent text-white px-2 py-0.5 sm:px-3 sm:py-1 rounded-full flex items-center gap-0.5 sm:gap-1">
+                  <Search size={8} className="sm:w-3 sm:h-3" />
+                  <span className="truncate max-w-[80px] sm:max-w-none">"{searchTerm}"</span>
+                </span>
+              )}
               {filtros.residenteId && (
-                <span className="bg-odara-secondary text-white px-2 sm:px-3 py-1 rounded-full flex items-center gap-1">
-                  <FaUser size={10} />
-                  {residentes.find(r => r.id === filtros.residenteId)?.nome}
+                <span className="bg-odara-secondary text-white px-2 py-0.5 sm:px-3 sm:py-1 rounded-full flex items-center gap-0.5 sm:gap-1">
+                  <User size={8} className="sm:w-3 sm:h-3" />
+                  <span className="truncate max-w-[100px] sm:max-w-[150px]">
+                    {residentes.find(r => r.id === filtros.residenteId)?.nome}
+                  </span>
                 </span>
               )}
               {filtros.status && filtros.status !== 'todos' && (
-                <span className="bg-odara-secondary text-white px-2 sm:px-3 py-1 rounded-full">
+                <span className="bg-odara-secondary text-white px-2 py-0.5 sm:px-3 sm:py-1 rounded-full truncate">
                   Status: {filtros.status}
                 </span>
               )}
-              {searchTerm && (
-                <span className="bg-odara-accent text-white px-2 sm:px-3 py-1 rounded-full flex items-center gap-1">
-                  <FaSearch size={10} />
-                  "{searchTerm}"
-                </span>
-              )}
               {(filtros.startDate || filtros.endDate) && (
-                <span className="bg-odara-primary/20 text-odara-primary px-2 sm:px-3 py-1 rounded-full flex items-center gap-1">
-                  <FaCalendarAlt size={10} />
-                  {filtros.startDate && formatarData(filtros.startDate)}
-                  {filtros.endDate && ` - ${formatarData(filtros.endDate)}`}
+                <span className="bg-odara-primary/20 text-odara-primary px-2 py-0.5 sm:px-3 sm:py-1 rounded-full flex items-center gap-0.5 sm:gap-1">
+                  <Calendar size={8} className="sm:w-3 sm:h-3" />
+                  <span className="truncate max-w-[120px] sm:max-w-none">
+                    {filtros.startDate && formatarData(filtros.startDate)}
+                    {filtros.endDate && ` - ${formatarData(filtros.endDate)}`}
+                  </span>
                 </span>
               )}
             </div>
           )}
 
-          {gruposRenderizaveis.length === 0 ? (
-            <div className="p-6 sm:p-8 rounded-xl bg-odara-name/10 text-center">
-              <FaPills className="mx-auto text-gray-300 mb-3" size={40} />
-              <p className="text-odara-dark/60 text-base sm:text-lg">
+          {loading ? (
+            <div className="p-4 sm:p-6 rounded-lg sm:rounded-xl bg-odara-name/10 text-center">
+              <p className="text-odara-dark/60 text-sm sm:text-base">Carregando administrações...</p>
+            </div>
+          ) : gruposRenderizaveis.length === 0 ? (
+            <div className="p-4 sm:p-6 rounded-lg sm:rounded-xl bg-odara-name/10 text-center">
+              <Pill className="mx-auto text-gray-300 mb-2 sm:mb-3" size={24} className="sm:w-12 sm:h-12" />
+              <p className="text-odara-dark/60 text-sm sm:text-base">
                 Nenhuma administração encontrada
               </p>
-              <p className="text-odara-dark/40 text-xs sm:text-sm mt-2">
+              <p className="text-odara-dark/40 text-xs sm:text-sm mt-1 sm:mt-2">
                 Tente ajustar os termos da busca ou os filtros
               </p>
             </div>
           ) : (
-            <div className="space-y-4 sm:space-y-6">
+            <div className="space-y-3 sm:space-y-4">
               {gruposRenderizaveis.map(grupo => {
                 const pendentes = grupo.itens.filter(item => item.status === 'pendente').length;
                 
                 return (
-                  <div key={`group-${grupo.dataFormatada}`} className="bg-gray-50 rounded-xl overflow-hidden border border-gray-200">
+                  <div key={`group-${grupo.dataFormatada}`} className="bg-gray-50 rounded-lg sm:rounded-xl overflow-hidden border border-gray-200">
                     {/* Cabeçalho da Data */}
                     <div 
-                      className="bg-gradient-to-r from-odara-primary/10 to-odara-accent/10 p-3 sm:p-4 border-b border-gray-200 flex items-center justify-between cursor-pointer select-none"
+                      className="bg-gradient-to-r from-odara-primary/10 to-odara-accent/10 p-2 sm:p-3 border-b border-gray-200 flex items-center justify-between cursor-pointer"
                       onClick={() => toggleDate(grupo.dataFormatada)}
                     >
-                      <div className="flex items-center gap-2 sm:gap-3 flex-1 min-w-0">
+                      <div className="flex items-center gap-1 sm:gap-2 flex-1 min-w-0">
                         {grupo.isExpandido ? 
-                          <FaChevronDown className="text-odara-accent flex-shrink-0" size={16} /> : 
-                          <FaChevronRight className="text-odara-accent flex-shrink-0" size={16} />
+                          <ChevronDown className="text-odara-accent flex-shrink-0" size={12} className="sm:w-5 sm:h-5" /> : 
+                          <ChevronRight className="text-odara-accent flex-shrink-0" size={12} className="sm:w-5 sm:h-5" />
                         }
-                        <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-3 overflow-hidden">
-                          <h2 className="text-lg sm:text-xl font-bold text-odara-dark truncate">
+                        <div className="flex flex-col sm:flex-row sm:items-center gap-0.5 sm:gap-3 overflow-hidden">
+                          <h2 className="text-sm sm:text-lg font-bold text-odara-dark truncate">
                             {formatarData(grupo.dataFormatada)}
                           </h2>
-                          <div className="flex items-center gap-2">
-                            <span className="bg-white px-2 py-0.5 sm:px-2.5 sm:py-1 rounded-full border text-xs font-medium">
+                          <div className="flex items-center gap-1 sm:gap-2">
+                            <span className="bg-white px-1.5 py-0.5 sm:px-2.5 sm:py-1 rounded-full border text-[10px] sm:text-xs font-medium">
                               {grupo.itens.length} item{grupo.itens.length !== 1 ? 's' : ''}
                             </span>
                             {pendentes > 0 && (
-                              <span className="bg-amber-100 text-amber-800 px-2 py-0.5 sm:px-2.5 sm:py-1 rounded-full border border-amber-200 text-xs font-medium">
+                              <span className="bg-amber-100 text-amber-800 px-1.5 py-0.5 sm:px-2.5 sm:py-1 rounded-full border border-amber-200 text-[10px] sm:text-xs font-medium">
                                 {pendentes} pendente{pendentes !== 1 ? 's' : ''}
                               </span>
                             )}
@@ -891,8 +854,8 @@ const Medicamentos = () => {
 
                     {/* Lista de Medicamentos */}
                     {grupo.isExpandido && (
-                      <div className="p-3 sm:p-4">
-                        <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-3 sm:gap-4">
+                      <div className="p-2 sm:p-3">
+                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-2 sm:gap-4">
                           {grupo.itens.map(admin => (
                             <CardAdministracao key={admin.id} admin={admin} />
                           ))}
@@ -907,7 +870,7 @@ const Medicamentos = () => {
         </div>
 
         {/* Contador de resultados */}
-        <div className="mt-4 text-xs sm:text-sm text-gray-400 px-2">
+        <div className="mt-2 sm:mt-4 text-xs sm:text-sm text-gray-400 px-1 sm:px-2">
           Mostrando {gruposRenderizaveis.reduce((acc, grupo) => acc + grupo.itens.length, 0)} de {listaCompleta.length} administrações
           {(searchTerm || filtros.residenteId || filtros.status) && ' com filtros aplicados'}
         </div>

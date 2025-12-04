@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { X, Save, Plus, Loader, Clock, Utensils, User, Calendar } from 'lucide-react';
+import { X, Save, Plus, Loader, Info } from 'lucide-react';
 import { useForm } from 'react-hook-form';
 
 import * as yup from 'yup';
@@ -24,6 +24,7 @@ type RegistroAlimentar = {
     alimento: string;
     id_residente: number;
     id_funcionario: number;
+    observacao?: string; // Adicionado
     concluido?: boolean;
     criado_em?: string;
     atualizado_em?: string;
@@ -47,24 +48,23 @@ const REFEICOES = {
     'ceia': 'Ceia'
 } as const;
 
-/* Schema de Validação */
+/* Schema de Validação - atualizado com observacao */
 const schema = yup.object({
     id: yup.number().nullable(),
     id_residente: yup.number()
         .required('Residente é obrigatório')
         .min(1, 'Selecione um residente'),
     data: yup.string().required('Data é obrigatória'),
-    horario: yup.string()
-        .required('Horário é obrigatório')
-        .matches(/^\d{2}:\d{2}$/, 'Formato HH:MM'),
+    horario: yup.string().required('Horário é obrigatório'),
     refeicao: yup.string().required('Refeição é obrigatória'),
     alimento: yup.string().required('Alimento é obrigatório'),
+    observacao: yup.string().optional(), // Campo opcional
     id_funcionario: yup.number()
         .required('Funcionário é obrigatório')
         .min(1, 'Funcionário inválido')
 }).required();
 
-/* Tipo do Formulário */
+/* Tipo do Formulário - atualizado com observacao */
 interface FormValues {
     id?: number | null;
     id_residente: number;
@@ -72,6 +72,7 @@ interface FormValues {
     horario: string;
     refeicao: string;
     alimento: string;
+    observacao?: string; // Adicionado
     id_funcionario: number;
 }
 
@@ -97,9 +98,10 @@ const ModalAlimentar: React.FC<ModalAlimentarProps> = ({
             id: null,
             id_residente: 0,
             data: new Date().toISOString().split('T')[0],
-            horario: '',
+            horario: new Date().toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit", hour12: false }),
             refeicao: '',
             alimento: '',
+            observacao: '', // Valor padrão
             id_funcionario: usuario?.id || 0
         }
     });
@@ -126,13 +128,22 @@ const ModalAlimentar: React.FC<ModalAlimentarProps> = ({
 
             // Resetar formulário com dados do registro alimentar ou valores padrão
             if (alimentar) {
+                // Extrair horario da string de data
+                let horario = "";
+                try {
+                    const dataObj = new Date(alimentar.data);
+                    horario = dataObj.toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit", hour12: false });
+                } catch {
+                    horario = new Date().toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit", hour12: false });
+                }
                 reset({
                     id: alimentar.id,
                     id_residente: alimentar.id_residente,
                     data: alimentar.data,
-                    horario: alimentar.horario,
+                    horario: horario,
                     refeicao: alimentar.refeicao,
                     alimento: alimentar.alimento,
+                    observacao: alimentar.observacao || '', // Adicionado
                     id_funcionario: usuario?.id || 0
                 });
             } else {
@@ -140,9 +151,10 @@ const ModalAlimentar: React.FC<ModalAlimentarProps> = ({
                     id: null,
                     id_residente: 0,
                     data: new Date().toISOString().split('T')[0],
-                    horario: '',
+                    horario: new Date().toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit", hour12: false }),
                     refeicao: '',
                     alimento: '',
+                    observacao: '', // Valor padrão
                     id_funcionario: usuario?.id || 0
                 });
             }
@@ -160,8 +172,11 @@ const ModalAlimentar: React.FC<ModalAlimentarProps> = ({
                 horario: values.horario,
                 refeicao: values.refeicao,
                 alimento: values.alimento,
+                observacao: values.observacao || null, // Adicionado
                 id_funcionario: values.id_funcionario
             };
+
+            console.log("Dados sendo enviados:", payload);
 
             if (values.id) {
                 // Atualizar registro existente
@@ -181,6 +196,10 @@ const ModalAlimentar: React.FC<ModalAlimentarProps> = ({
                 if (error) throw error;
                 toast.success('Registro alimentar criado com sucesso!');
             }
+
+            setTimeout(() => {
+                onClose();
+            }, 500);
 
             // Fechar o modal imediatamente após sucesso
             onClose();
@@ -258,7 +277,6 @@ const ModalAlimentar: React.FC<ModalAlimentarProps> = ({
                         {/* Linha 1 - Residente */}
                         <div>
                             <label className="block text-medium text-odara-dark mb-2 flex items-center gap-1">
-                                <User size={16} className="text-odara-accent" />
                                 Residente *
                             </label>
                             <select
@@ -274,7 +292,7 @@ const ModalAlimentar: React.FC<ModalAlimentarProps> = ({
                             </select>
                             {errors.id_residente && (
                                 <p className="text-sm text-red-600 mt-2 flex items-center gap-1">
-                                    {errors.id_residente.message}
+                                    <Info size={14} /> {errors.id_residente.message}
                                 </p>
                             )}
                         </div>
@@ -283,7 +301,6 @@ const ModalAlimentar: React.FC<ModalAlimentarProps> = ({
                         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                             <div>
                                 <label className="block text-medium text-odara-dark mb-2 flex items-center gap-1">
-                                    <Calendar size={16} className="text-odara-accent" />
                                     Data *
                                 </label>
                                 <input
@@ -293,14 +310,13 @@ const ModalAlimentar: React.FC<ModalAlimentarProps> = ({
                                 />
                                 {errors.data && (
                                     <p className="text-sm text-red-600 mt-2 flex items-center gap-1">
-                                        {errors.data.message}
+                                        <Info size={14} /> {errors.data.message}
                                     </p>
                                 )}
                             </div>
 
                             <div>
                                 <label className="block text-medium text-odara-dark mb-2 flex items-center gap-1">
-                                    <Clock size={16} className="text-odara-accent" />
                                     Horário *
                                 </label>
                                 <input
@@ -310,14 +326,13 @@ const ModalAlimentar: React.FC<ModalAlimentarProps> = ({
                                 />
                                 {errors.horario && (
                                     <p className="text-sm text-red-600 mt-2 flex items-center gap-1">
-                                        {errors.horario.message}
+                                        <Info size={14} /> {errors.horario.message}
                                     </p>
                                 )}
                             </div>
 
                             <div>
                                 <label className="block text-medium text-odara-dark mb-2 flex items-center gap-1">
-                                    <Utensils size={16} className="text-odara-accent" />
                                     Refeição *
                                 </label>
                                 <select
@@ -333,7 +348,7 @@ const ModalAlimentar: React.FC<ModalAlimentarProps> = ({
                                 </select>
                                 {errors.refeicao && (
                                     <p className="text-sm text-red-600 mt-2 flex items-center gap-1">
-                                        {errors.refeicao.message}
+                                        <Info size={14} /> {errors.refeicao.message}
                                     </p>
                                 )}
                             </div>
@@ -342,7 +357,6 @@ const ModalAlimentar: React.FC<ModalAlimentarProps> = ({
                         {/* Alimentos */}
                         <div>
                             <label className="block text-medium text-odara-dark mb-2 flex items-center gap-1">
-                                <Utensils size={16} className="text-odara-accent" />
                                 Alimentos *
                             </label>
                             <textarea
@@ -353,9 +367,25 @@ const ModalAlimentar: React.FC<ModalAlimentarProps> = ({
                             />
                             {errors.alimento && (
                                 <p className="text-sm text-red-600 mt-2 flex items-center gap-1">
-                                    {errors.alimento.message}
+                                    <Info size={14} /> {errors.alimento.message}
                                 </p>
                             )}
+                        </div>
+
+                        {/* Observações - NOVO CAMPO */}
+                        <div>
+                            <label className="block text-medium text-odara-dark mb-2 flex items-center gap-1">
+                                Observações
+                            </label>
+                            <textarea
+                                placeholder="Observações adicionais sobre a refeição (opcional)..."
+                                rows={2}
+                                {...register('observacao')}
+                                className="w-full px-4 py-2 border border-odara-primary rounded-lg focus:border-transparent focus:outline-none focus:ring-odara-secondary focus:ring-2 text-odara-secondary text-sm sm:text-base"
+                            />
+                            <p className="text-xs text-gray-500 mt-1">
+                                Informações complementares sobre a refeição, aceitação, comportamento, etc.
+                            </p>
                         </div>
 
                         {/* Botões de Ação */}

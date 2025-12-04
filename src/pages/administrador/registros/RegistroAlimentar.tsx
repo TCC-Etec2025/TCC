@@ -31,29 +31,29 @@ type RegistroAlimentar = {
 
 /* Constantes */
 const REFEICOES = {
-  "cafe-da-manha": "Café da manhã",
-  "lanche-manha": "Lanche manhã",
+  "cafe-da-manha": "Café da Manhã",
+  "lanche-manha": "Lanche da Manhã",
   "almoco": "Almoço",
-  "lanche-tarde": "Lanche tarde",
+  "lanche-tarde": "Lanche da Tarde",
   "jantar": "Jantar",
   "ceia": "Ceia"
 } as const;
 
 const REFEICOES_ORDENADAS = [
-  { key: "cafe-da-manha", label: "Café da manhã", icon: Coffee },
-  { key: "lanche-manha", label: "Lanche manhã", icon: Banana },
+  { key: "cafe-da-manha", label: "Café da Manhã", icon: Coffee },
+  { key: "lanche-manha", label: "Lanche da Manhã", icon: Banana },
   { key: "almoco", label: "Almoço", icon: CookingPot },
-  { key: "lanche-tarde", label: "Lanche tarde", icon: Cookie },
+  { key: "lanche-tarde", label: "Lanche da Tarde", icon: Cookie },
   { key: "jantar", label: "Jantar", icon: Soup },
   { key: "ceia", label: "Ceia", icon: GlassWater }
 ];
 
 const FILTRO_REFEICAO_OPTIONS = [
   { value: "todas", label: "Todas as refeições" },
-  { value: "cafe-da-manha", label: "Café da manhã" },
-  { value: "lanche-manha", label: "Lanche manhã" },
+  { value: "cafe-da-manha", label: "Café da Manhã" },
+  { value: "lanche-manha", label: "Lanche da Manhã" },
   { value: "almoco", label: "Almoço" },
-  { value: "lanche-tarde", label: "Lanche tarde" },
+  { value: "lanche-tarde", label: "Lanche da Tarde" },
   { value: "jantar", label: "Jantar" },
   { value: "ceia", label: "Ceia" }
 ];
@@ -84,7 +84,9 @@ const RegistroAlimentar = () => {
   const [modalAberto, setModalAberto] = useState(false);
   const [currentWeek, setCurrentWeek] = useState(new Date());
   const [viewMode, setViewMode] = useState<"semanal" | "lista">("semanal");
-  const [residenteSelecionado, setResidenteSelecionado] = useState<number | null>(null);
+
+  // Estado compartilhado para residente selecionado
+  const [residenteSelecionadoFiltro, setResidenteSelecionadoFiltro] = useState<number | null>(null);
 
   /* Estados de exclusão */
   const [modalExclusaoAberto, setModalExclusaoAberto] = useState<boolean>(false);
@@ -250,8 +252,25 @@ const RegistroAlimentar = () => {
   };
 
   const selecionarResidente = (residenteId: number | null) => {
-    setFiltros(prev => ({ ...prev, residenteId }));
+    // Atualiza ambos os estados de uma vez
+    setResidenteSelecionadoFiltro(residenteId);
+
+    // Se estiver no modo lista, também atualiza os filtros
+    if (viewMode === "lista") {
+      setFiltros(prev => ({ ...prev, residenteId }));
+    }
     setFiltroResidenteAberto(false);
+  };
+
+  // Função para mudar o modo de visualização - agora sincroniza o residente
+  const mudarViewMode = (novoMode: "semanal" | "lista") => {
+    if (novoMode === "lista") {
+      // Ao mudar para lista, sincroniza o residente selecionado com os filtros
+      setFiltros(prev => ({ ...prev, residenteId: residenteSelecionadoFiltro }));
+    }
+
+    setViewMode(novoMode);
+    setFiltrosAberto(false);
   };
 
   const selecionarRefeicao = (refeicao: string | null) => {
@@ -260,6 +279,7 @@ const RegistroAlimentar = () => {
   };
 
   const limparFiltros = () => {
+    setResidenteSelecionadoFiltro(null);
     setFiltros({
       residenteId: null,
       refeicao: null,
@@ -280,7 +300,7 @@ const RegistroAlimentar = () => {
   };
   const goToToday = () => setCurrentWeek(new Date());
 
-  /* Filtragem e ordenação */
+  /* Filtragem e ordenação - simplificada */
   const registrosFiltrados = registros
     .filter(registro => {
       // Filtro por texto (busca em alimento, nome do residente)
@@ -294,18 +314,23 @@ const RegistroAlimentar = () => {
         }
       }
 
-      // Filtro por residente
-      if (filtros.residenteId && registro.residente?.id !== filtros.residenteId) {
+      // Para modo semanal, usa residenteSelecionadoFiltro diretamente
+      // Para modo lista, usa filtros.residenteId
+      const filtroResidente = viewMode === "semanal"
+        ? (residenteSelecionadoFiltro ? registro.residente?.id !== residenteSelecionadoFiltro : false)
+        : (filtros.residenteId && registro.residente?.id !== filtros.residenteId);
+
+      if (filtroResidente) {
         return false;
       }
 
-      // Filtro por refeição
-      if (filtros.refeicao && registro.refeicao !== filtros.refeicao) {
+      // Filtro por refeição (apenas modo lista)
+      if (viewMode === "lista" && filtros.refeicao && registro.refeicao !== filtros.refeicao) {
         return false;
       }
 
-      // Filtro por data
-      if (filtros.startDate || filtros.endDate) {
+      // Filtro por data (apenas modo lista)
+      if (viewMode === "lista" && (filtros.startDate || filtros.endDate)) {
         if (filtros.startDate && registro.data < filtros.startDate) return false;
         if (filtros.endDate && registro.data > filtros.endDate) return false;
       }
@@ -580,11 +605,13 @@ const RegistroAlimentar = () => {
         <div className="flex flex-wrap justify-center sm:justify-between gap-2 items-center p-3 rounded-t-lg bg-gray-50 border-b border-gray-200">
           {/* Coluna Esquerda */}
           <div className="flex items-center">
-            <Utensils size={14} className="text-odara-accent mr-2" />
+            <div className="bg-odara-accent w-3 h-3 rounded-full mr-3"></div>
+
             <p className="text-sm sm:text-base text-odara-dark">
               <span className='font-semibold'>
                 {registro.data.split('-').reverse().join('/')}
               </span>
+
               <span className="text-odara-accent ml-2">
                 • {formatTime(registro.horario)}
               </span>
@@ -593,7 +620,12 @@ const RegistroAlimentar = () => {
 
           {/* Coluna Direita - Tipo de Refeição */}
           <div className="flex items-center gap-2 px-3 py-1 bg-odara-accent/10 rounded-lg">
-            <Utensils size={12} className="text-odara-accent" />
+            {(() => {
+              const refeicaoInfo = REFEICOES_ORDENADAS.find(opt => opt.key === registro.refeicao);
+              const IconeComponente = refeicaoInfo?.icon || Utensils;
+              return <IconeComponente size={12} className="text-odara-accent" />;
+            })()}
+
             <span className="text-xs font-medium text-odara-dark capitalize">
               {REFEICOES[registro.refeicao as keyof typeof REFEICOES] || registro.refeicao}
             </span>
@@ -605,7 +637,7 @@ const RegistroAlimentar = () => {
           {/* Título e Botões de Ação */}
           <div className="flex items-start justify-between mb-3">
             <h3 className="text-lg sm:text-xl font-bold text-odara-dark line-clamp-1 flex-1">
-              {registro.residente?.nome || 'Residente não informado'}
+              {REFEICOES[registro.refeicao as keyof typeof REFEICOES] || registro.refeicao}
             </h3>
 
             {/* Botões de ação */}
@@ -631,32 +663,17 @@ const RegistroAlimentar = () => {
           {/* Detalhes do Registro */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 flex-1">
             {/* Coluna Esquerda */}
-            <div className="space-y-3">
-              <div>
-                <strong className="text-odara-dark text-sm">Alimentos:</strong>
-                <p className="text-odara-name mt-1 text-sm line-clamp-2">
-                  {registro.alimento}
-                </p>
-              </div>
-
-              {registro.observacao && (
-                <div>
-                  <strong className="text-odara-dark text-sm">Observações:</strong>
-                  <p className="text-odara-name mt-1 text-sm line-clamp-2">
-                    {registro.observacao}
-                  </p>
-                </div>
-              )}
+            <div className="flex flex-wrap">
+              <span className="text-odara-name text-sm ml-1 inline-block align-center">
+                <strong className="text-odara-dark">Alimentos:</strong> {' ' + registro.alimento}
+              </span>
             </div>
 
             {/* Coluna Direita */}
-            <div className="space-y-3">
-              <div>
-                <strong className="text-odara-dark text-sm">Registrado por:</strong>
-                <p className="text-odara-name mt-1 text-sm">
-                  {registro.funcionario?.nome || 'Não informado'}
-                </p>
-              </div>
+            <div className="flex flex-wrap">
+              <span className="text-odara-name text-sm ml-1 inline-block align-center">
+                <strong className="text-odara-dark">Observações:</strong> {registro.observacao || 'Nenhuma'}
+              </span>
             </div>
           </div>
         </div>
@@ -683,17 +700,55 @@ const RegistroAlimentar = () => {
 
   /* Componente: Visualização em Lista */
   const ListaRegistros = () => {
+    // Filtrar registros para a visualização em lista
+    const registrosFiltradosLista = registros
+      .filter(registro => {
+        // Filtro por texto (busca em alimento, nome do residente)
+        if (searchTerm.trim()) {
+          const termo = searchTerm.toLowerCase();
+          const buscaAlimento = registro.alimento.toLowerCase().includes(termo);
+          const buscaResidente = registro.residente?.nome.toLowerCase().includes(termo) || false;
+
+          if (!buscaAlimento && !buscaResidente) {
+            return false;
+          }
+        }
+
+        // Filtro por residente
+        if (filtros.residenteId && registro.residente?.id !== filtros.residenteId) {
+          return false;
+        }
+
+        // Filtro por refeição
+        if (filtros.refeicao && registro.refeicao !== filtros.refeicao) {
+          return false;
+        }
+
+        // Filtro por data
+        if (filtros.startDate || filtros.endDate) {
+          if (filtros.startDate && registro.data < filtros.startDate) return false;
+          if (filtros.endDate && registro.data > filtros.endDate) return false;
+        }
+
+        return true;
+      })
+      .sort((a, b) => {
+        const ta = new Date(a.data + "T" + a.horario).getTime();
+        const tb = new Date(b.data + "T" + b.horario).getTime();
+        return tb - ta;
+      });
+
     return (
       <div className="bg-white border-l-4 border-odara-primary rounded-2xl shadow-lg p-4 sm:p-6">
         <div className="flex flex-col sm:flex-row items-center justify-between gap-2 mb-4">
           <h2 className="text-2xl lg:text-3xl font-bold text-odara-dark">Todos os Registros</h2>
           <span className="bg-gray-200 text-gray-700 px-3 py-1 rounded-full text-sm font-medium">
-            Total: {registrosFiltrados.length} de {registros.length}
+            Total: {registrosFiltradosLista.length} de {registros.length}
           </span>
         </div>
 
-        {/* Tags de filtros ativos */}
-        {(filtros.refeicao || filtros.residenteId || filtros.startDate || filtros.endDate || searchTerm) && (
+        {/* Tags de filtros ativos - incluindo residente selecionado se houver */}
+        {(filtros.residenteId || filtros.refeicao || filtros.startDate || filtros.endDate || searchTerm) && (
           <div className="mb-4 flex flex-wrap justify-center sm:justify-start gap-2 text-xs">
             {searchTerm && (
               <span className="bg-odara-secondary text-white px-2 py-1 rounded-full">
@@ -702,7 +757,8 @@ const RegistroAlimentar = () => {
             )}
 
             {filtros.residenteId && (
-              <span className="bg-odara-secondary text-white px-2 py-1 rounded-full">
+              <span className="bg-odara-secondary text-white px-3 py-1.5 rounded-full flex items-center gap-1">
+                <RockingChair size={10} />
                 Residente: {residentes.find(r => r.id === filtros.residenteId)?.nome}
               </span>
             )}
@@ -727,7 +783,7 @@ const RegistroAlimentar = () => {
           <div className="p-8 text-center">
             <p className="text-odara-dark/60 text-lg">Carregando registros...</p>
           </div>
-        ) : registrosFiltrados.length === 0 ? (
+        ) : registrosFiltradosLista.length === 0 ? (
           <div className="p-8 rounded-xl bg-odara-name/10 text-center">
             <p className="text-odara-dark/60 text-lg">
               {registros.length === 0 ? 'Nenhum registro alimentar' : 'Nenhum registro encontrado'}
@@ -740,7 +796,7 @@ const RegistroAlimentar = () => {
           </div>
         ) : (
           <div className="grid grid-cols-1 xl:grid-cols-2 gap-6 max-h-[800px] overflow-y-auto p-2">
-            {registrosFiltrados.map(registro => (
+            {registrosFiltradosLista.map(registro => (
               <CardRegistro
                 key={registro.id}
                 registro={registro}
@@ -754,8 +810,23 @@ const RegistroAlimentar = () => {
 
   /* Componente: Visualização Semanal */
   const VisualizacaoSemanal = () => {
-    const registrosSemanais = residenteSelecionado
-      ? registrosFiltrados.filter(r => r.id_residente === residenteSelecionado)
+    const [filtroSemanalResidenteAberto, setFiltroSemanalResidenteAberto] = useState(false);
+    const filtroSemanalResidenteRef = useRef<HTMLDivElement>(null);
+
+    // Efeito para fechar dropdown ao clicar fora
+    useEffect(() => {
+      const handleClickOutside = (event: MouseEvent) => {
+        if (filtroSemanalResidenteRef.current && !filtroSemanalResidenteRef.current.contains(event.target as Node)) {
+          setFiltroSemanalResidenteAberto(false);
+        }
+      };
+
+      document.addEventListener('mousedown', handleClickOutside);
+      return () => document.removeEventListener('mousedown', handleClickOutside);
+    }, []);
+
+    const registrosSemanais = residenteSelecionadoFiltro
+      ? registrosFiltrados.filter(r => r.id_residente === residenteSelecionadoFiltro)
       : [];
 
     const getIconeRefeicao = (refeicaoKey: string) => {
@@ -773,37 +844,71 @@ const RegistroAlimentar = () => {
     }, {} as Record<string, Record<string, RegistroAlimentar[]>>);
 
     return (
-      <div className="bg-white rounded-2xl shadow-xl p-4 sm:p-6 border border-gray-200">
-        {/* Seletor de residente */}
-        <div className="mb-6 p-4 bg-odara-accent/10 rounded-xl border border-odara-accent/20">
+      <div className="bg-white rounded-2xl shadow-xl p-4 sm:p-6 border-l-4 border-odara-primary">
+        {/* Seletor de residente - estilizado igual ao da lista */}
+        <div className="mb-8 bg-white p-5 rounded-xl shadow border border-gray-200 animate-fade-in shadow-sm">
           <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
             <div className="flex items-center gap-2">
-              <RockingChair className="text-odara-accent text-lg" />
-              <label className="text-sm font-semibold text-odara-dark">
+              <RockingChair size={14} className="text-odara-accent text-lg" />
+              <label className="block text-sm font-semibold text-odara-secondary">
                 Selecione um residente para visualizar a semana:
               </label>
             </div>
-            <select
-              value={residenteSelecionado || ""}
-              onChange={e => setResidenteSelecionado(e.target.value ? Number(e.target.value) : null)}
-              className="flex-1 border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-odara-accent"
-            >
-              <option value="">Selecione um residente...</option>
-              {residentes.map(residente => (
-                <option key={residente.id} value={residente.id}>{residente.nome}</option>
-              ))}
-            </select>
-            {residenteSelecionado && (
-              <div className="flex items-center gap-2 text-sm text-odara-dark">
-                <span className="font-semibold">
-                  Visualizando: {residentes.find(r => r.id === residenteSelecionado)?.nome}
+
+            {/* Filtro de Residente estilizado igual ao da lista */}
+            <div className="relative flex-1 z-30" ref={filtroSemanalResidenteRef}>
+              <button
+                type="button"
+                onClick={() => setFiltroSemanalResidenteAberto(!filtroSemanalResidenteAberto)}
+                className="flex items-center justify-between w-full h-10 border border-gray-300 rounded-lg px-3 text-sm hover:bg-gray-50 transition-colors"
+              >
+                <span className="text-odara-dark">
+                  {residenteSelecionadoFiltro
+                    ? residentes.find(r => r.id === residenteSelecionadoFiltro)?.nome
+                    : "Selecione um residente..."}
                 </span>
-              </div>
-            )}
+                <ChevronDown size={12} className="text-gray-500" />
+              </button>
+
+              {filtroSemanalResidenteAberto && (
+                <div className="absolute top-full left-0 right-0 mt-1 bg-white rounded-lg shadow-lg border border-gray-200 z-40 max-h-60 overflow-y-auto">
+                  <button
+                    onClick={() => {
+                      setResidenteSelecionadoFiltro(null);
+                      setFiltroSemanalResidenteAberto(false);
+                    }}
+                    className={`flex items-center gap-3 w-full text-left px-4 py-3 text-sm hover:bg-odara-primary/10 transition ${!residenteSelecionadoFiltro
+                      ? 'bg-odara-primary/20 text-odara-primary font-semibold'
+                      : 'text-gray-700'
+                      }`}
+                  >
+                    <span>Selecione um residente...</span>
+                    {!residenteSelecionadoFiltro && <Check className="ml-auto text-odara-primary" size={14} />}
+                  </button>
+
+                  {residentes.map(residente => (
+                    <button
+                      key={residente.id}
+                      onClick={() => {
+                        setResidenteSelecionadoFiltro(residente.id);
+                        setFiltroSemanalResidenteAberto(false);
+                      }}
+                      className={`flex items-center gap-3 w-full text-left px-4 py-3 text-sm hover:bg-odara-primary/10 transition ${residenteSelecionadoFiltro === residente.id
+                        ? 'bg-odara-primary/20 text-odara-primary font-semibold'
+                        : 'text-gray-700'
+                        }`}
+                    >
+                      <span>{residente.nome}</span>
+                      {residenteSelecionadoFiltro === residente.id && <Check className="ml-auto text-odara-primary" size={14} />}
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
           </div>
         </div>
 
-        {!residenteSelecionado ? (
+        {!residenteSelecionadoFiltro ? (
           <div className="text-center py-12 bg-gray-50 rounded-xl border-2 border-dashed border-gray-300">
             <RockingChair className="text-6xl text-gray-400 mx-auto mb-4" />
             <h3 className="text-xl font-semibold text-gray-600 mb-2">Selecione um residente</h3>
@@ -813,30 +918,70 @@ const RegistroAlimentar = () => {
           </div>
         ) : (
           <>
+            {/* Tags de filtros ativos */}
+            <div className="mb-4 flex flex-wrap gap-2 text-xs justify-center">
+              {/* Tag do residente selecionado */}
+              {residenteSelecionadoFiltro && (
+                <span className="bg-odara-secondary text-white px-3 py-1.5 rounded-full flex items-center gap-1">
+                  <RockingChair size={10} />
+                  Residente: {residentes.find(r => r.id === residenteSelecionadoFiltro)?.nome}
+                </span>
+              )}
+
+              {/* Tag de busca se houver */}
+              {searchTerm && (
+                <span className="bg-odara-secondary text-white px-3 py-1.5 rounded-full">
+                  Busca: {searchTerm}
+                </span>
+              )}
+
+              {/* Outras tags apenas se houverem filtros ativos */}
+              {(filtros.refeicao || filtros.startDate || filtros.endDate) && (
+                <>
+                  {filtros.refeicao && (
+                    <span className="bg-odara-accent text-white px-3 py-1.5 rounded-full">
+                      Refeição: {REFEICOES[filtros.refeicao as keyof typeof REFEICOES]}
+                    </span>
+                  )}
+
+                  {(filtros.startDate || filtros.endDate) && (
+                    <span className="bg-odara-accent text-white px-3 py-1.5 rounded-full">
+                      Data: {filtros.startDate ? ` ${filtros.startDate.split('-').reverse().join('/')}` : ''}
+                      {filtros.endDate ? ' até' + ` ${filtros.endDate.split('-').reverse().join('/')}` : ''}
+                    </span>
+                  )}
+                </>
+              )}
+            </div>
+
             {/* Controles de navegação */}
-            <div className="sticky top-0 z-10 bg-odara-white py-2 flex flex-col sm:flex-row justify-between items-center mb-8">
+            <div className="sticky top-0 z-10 bg-odara-white py-2 flex flex-col justify-between items-center mb-8 pb-6 border-b border-gray-200">
               <div className="flex items-center gap-4 mt-4 sm:mt-0">
                 <input
-                  className="border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-odara-accent"
+                  className="flex items-center gap-2 border border-odara-primary rounded-lg focus:outline-none focus:border-none focus:ring-2 focus:ring-odara-secondary shadow-sm px-3 py-2 text-odara-dark"
                   type="date"
                   value={formatDateKey(currentWeek)}
                   onChange={e => setCurrentWeek(new Date(e.target.value))}
                 />
+
                 <button
                   onClick={goToToday}
                   className="px-4 py-2 bg-odara-accent text-white rounded-xl hover:bg-odara-secondary transition text-sm shadow-sm"
                 >
-                  Hoje
+                  Ir para Hoje
                 </button>
-                <div className="flex items-center gap-2 bg-gray-100 rounded-xl px-3 py-2 shadow-inner">
-                  <button onClick={() => navigateWeek("prev")} className="p-2 rounded-full hover:bg-gray-200 transition">
-                    <ChevronLeft className="text-odara-dark" />
+
+                <div className="flex items-center gap-2 border border-odara-primary rounded-lg focus:outline-none focus:border-none focus:ring-2 focus:ring-odara-secondary shadow-sm">
+                  <button onClick={() => navigateWeek("prev")} className="p-2 rounded-full transition">
+                    <ChevronLeft size={25} className="text-odara-primary hover:text-odara-secondary" />
                   </button>
-                  <span className="text-lg font-semibold text-odara-dark min-w-[150px] text-center">
+
+                  <span className="text-odara-dark min-w-[100px] text-center">
                     {weekDates[0].toLocaleDateString("pt-BR", { day: "2-digit", month: "2-digit" })} - {weekDates[6].toLocaleDateString("pt-BR", { day: "2-digit", month: "2-digit" })}
                   </span>
-                  <button onClick={() => navigateWeek("next")} className="p-2 rounded-full hover:bg-gray-200 transition">
-                    <ChevronRight className="text-odara-dark" />
+
+                  <button onClick={() => navigateWeek("next")} className="p-2 rounded-full transition">
+                    <ChevronRight size={25} className="text-odara-primary hover:text-odara-secondary" />
                   </button>
                 </div>
               </div>
@@ -859,7 +1004,7 @@ const RegistroAlimentar = () => {
                           }`}
                       >
                         <div className="font-semibold text-md capitalize">
-                          {date.toLocaleDateString("pt-BR", { weekday: "long"})}
+                          {date.toLocaleDateString("pt-BR", { weekday: "long" })}
                         </div>
                         <div className="text-lg font-bold">{date.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' })}</div>
                       </div>
@@ -903,7 +1048,7 @@ const RegistroAlimentar = () => {
                               >
                                 <div className="flex justify-between items-start mb-1">
                                   <span className="flex text-xs font-medium text-odara-accent bg-odara-accent/10 px-1.5 py-0.5 rounded gap-2">
-                                    <Clock size={15}/>
+                                    <Clock size={15} />
                                     {formatTime(registro.horario)}
                                   </span>
 
@@ -944,7 +1089,7 @@ const RegistroAlimentar = () => {
                                     horario: "12:00",
                                     refeicao: ref.key,
                                     alimento: "",
-                                    id_residente: residenteSelecionado || 0,
+                                    id_residente: residenteSelecionadoFiltro || 0,
                                     id_funcionario: 0
                                   };
                                   setRegistroSelecionado(novoRegistro as RegistroAlimentar);
@@ -990,7 +1135,7 @@ const RegistroAlimentar = () => {
   /* Componente: Cabeçalho */
   const Cabecalho = () => {
     return (
-      <div className="flex items-center">
+      <div className="flex items-center mb-6">
         <Apple size={30} className='text-odara-accent mr-2' />
         <h1 className="text-2xl sm:text-3xl font-bold text-odara-dark mr-2">
           Registro Alimentar
@@ -1099,26 +1244,6 @@ const RegistroAlimentar = () => {
 
           {/* Botões de modo de visualização e filtros */}
           <div className="flex gap-4">
-            {/* Botões de visualização */}
-            <div className="flex bg-white rounded-lg border border-gray-200 overflow-hidden shadow-sm">
-              <button
-                onClick={() => {
-                  setViewMode("semanal");
-                  setFiltrosAberto(false);
-                }}
-                className={`px-4 py-2 text-sm font-medium transition-colors ${viewMode === "semanal" ? "bg-odara-accent text-white" : "text-gray-600 hover:bg-gray-100"
-                  }`}
-              >
-                Semanal
-              </button>
-              <button
-                onClick={() => setViewMode("lista")}
-                className={`px-4 py-2 text-sm font-medium transition-colors ${viewMode === "lista" ? "bg-odara-accent text-white" : "text-gray-600 hover:bg-gray-100"
-                  }`}
-              >
-                Lista
-              </button>
-            </div>
 
             {/* Botão de filtros (apenas para modo lista) */}
             {viewMode === "lista" && (
@@ -1132,6 +1257,27 @@ const RegistroAlimentar = () => {
                 </span>
               </button>
             )}
+
+            {/* Botões de visualização - usando mudarViewMode */}
+            <div className="flex bg-white rounded-lg border border-gray-200 overflow-hidden items-center shadow-sm h-max">
+              <div>
+                <button
+                  onClick={() => mudarViewMode("semanal")}
+                  className={`px-6 py-4 text-md font-medium transition-colors ${viewMode === "semanal" ? "bg-odara-accent text-white" : "text-gray-600 hover:bg-gray-100"
+                    }`}
+                >
+                  Semanal
+                </button>
+
+                <button
+                  onClick={() => mudarViewMode("lista")}
+                  className={`px-6 py-4 text-md font-medium transition-colors ${viewMode === "lista" ? "bg-odara-accent text-white" : "text-gray-600 hover:bg-gray-100"
+                    }`}
+                >
+                  Lista
+                </button>
+              </div>
+            </div>
           </div>
         </div>
 
@@ -1141,7 +1287,7 @@ const RegistroAlimentar = () => {
         {/* Conteúdo principal */}
         {viewMode === "semanal" ? <VisualizacaoSemanal /> : <ListaRegistros />}
 
-        {/* Contador de resultados */}
+        {/* Contador de resultados - ajustado */}
         <div className="my-4 text-sm text-gray-400">
           Total de {registrosFiltrados.length} registro(s) encontrado(s) de {registros.length}
           {searchTerm && <span> para "{searchTerm}"</span>}

@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Search, Plus, Edit, Trash2, User, AlertTriangle, Mail, Phone } from 'lucide-react';
+import { Search, Plus, Edit, Trash2, User, AlertTriangle, Mail, Phone, MoreVertical } from 'lucide-react';
 import { supabase } from '../../lib/supabaseClient';
 import toast, { Toaster } from 'react-hot-toast';
 
@@ -52,6 +52,7 @@ const Usuarios: React.FC = () => {
   const [modalExclusaoAberto, setModalExclusaoAberto] = useState<boolean>(false);
   const [usuarioParaExcluir, setUsuarioParaExcluir] = useState<number | null>(null);
   const [atualizandoStatus, setAtualizandoStatus] = useState<number | null>(null);
+  const [menuAberto, setMenuAberto] = useState<number | null>(null);
 
   // Busca todos os usuários do banco de dados com consultas separadas
   const buscarUsuarios = async () => {
@@ -120,6 +121,13 @@ const Usuarios: React.FC = () => {
         const papel = papeisData?.find(p => p.id === usuario.id_papel);
         const funcionario = funcionariosData?.find(f => f.id_usuario === usuario.id);
         const responsavel = responsaveisData?.find(r => r.id_usuario === usuario.id);
+        
+        // Adicionar parentesco ao responsável se existir
+        const responsavelComParentesco = responsavel ? {
+          ...responsavel,
+          parentesco: parentescos[responsavel.id] || '',
+          telefone_principal: responsavel.telefone_principal
+        } : undefined;
 
         return {
           ...usuario,
@@ -132,10 +140,7 @@ const Usuarios: React.FC = () => {
             status: funcionario.status,
             telefone_principal: funcionario.telefone_principal
           } : undefined,
-          responsavel: responsavel ? {
-            ...responsavel,
-            telefone_principal: responsavel.telefone_principal
-          } : undefined
+          responsavel: responsavelComParentesco
         };
       });
 
@@ -172,7 +177,7 @@ const Usuarios: React.FC = () => {
     );
   });
 
-  // Formata número de telefone para exibição - CORRIGIDA
+  // Formata número de telefone para exibição
   const formatarTelefone = (telefone: string) => {
     if (!telefone) return '';
     
@@ -227,22 +232,12 @@ const Usuarios: React.FC = () => {
       : 'bg-gray-100 text-gray-400 hover:bg-gray-200';
   };
 
-  // Retorna as classes CSS para o papel do usuário
-  const obterPapelAcento = (papel: string | undefined) => {
-    switch (papel?.toLowerCase()) {
-      case 'administrador': return 'Administrador';
-      case 'funcionario': return 'Funcionário';
-      case 'responsavel': return 'Responsável';
-      default: return 'Não informado';
-    }
-  };
-
   // Obtém o nome do usuário (funcionário ou responsável)
   const obterNomeUsuario = (usuario: Usuario): string => {
     return usuario.funcionario?.nome || usuario.responsavel?.nome || 'Nome não informado';
   };
 
-  // Obtém informações adicionais do usuário - CORRIGIDA
+  // Obtém informações adicionais do usuário
   const obterInfoUsuario = (usuario: Usuario): string => {
     if (usuario.funcionario) {
       return `${usuario.funcionario.cpf} • ${usuario.funcionario.cargo}`;
@@ -251,6 +246,16 @@ const Usuarios: React.FC = () => {
       return `${usuario.responsavel.cpf}${usuario.responsavel.parentesco ? ' • ' + usuario.responsavel.parentesco : ''}`;
     }
     return 'Usuário do sistema';
+  };
+
+  // Formata o nome do papel
+  const formatarPapel = (papel: string | undefined) => {
+    switch (papel?.toLowerCase()) {
+      case 'administrador': return 'Administrador';
+      case 'funcionario': return 'Funcionário';
+      case 'responsavel': return 'Responsável';
+      default: return papel || 'Não informado';
+    }
   };
 
   // Abre o modal de confirmação para exclusão
@@ -328,6 +333,126 @@ const Usuarios: React.FC = () => {
     );
   };
 
+  // Card para mobile
+  const CardUsuarioMobile = ({ usuario }: { usuario: Usuario }) => {
+    const nomeUsuario = obterNomeUsuario(usuario);
+    const infoUsuario = obterInfoUsuario(usuario);
+    const telefone = usuario.funcionario?.telefone_principal || usuario.responsavel?.telefone_principal;
+    const papelFormatado = formatarPapel(usuario.papel?.nome);
+
+    return (
+      <div className="bg-white rounded-lg border border-gray-200 shadow-sm mb-4 overflow-hidden">
+        {/* Cabeçalho do card */}
+        <div className="p-4 border-b border-gray-100 bg-odara-offwhite/30">
+          <div className="flex items-start justify-between">
+            <div className="flex items-center gap-3">
+              <div className="bg-odara-primary/20 rounded-full p-2 flex-shrink-0">
+                <User className="h-5 w-5 text-odara-primary" />
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="font-medium text-odara-dark truncate">{nomeUsuario}</p>
+                <p className="text-xs text-gray-400 truncate">{infoUsuario}</p>
+              </div>
+            </div>
+            
+            <div className="relative">
+              <button
+                onClick={() => setMenuAberto(menuAberto === usuario.id ? null : usuario.id)}
+                className="p-1 hover:bg-gray-100 rounded"
+              >
+                <MoreVertical className="h-5 w-5 text-odara-dropdown-accent" />
+              </button>
+              
+              {menuAberto === usuario.id && (
+                <div className="absolute right-0 mt-1 w-40 bg-white rounded-lg shadow-lg border border-gray-200 z-10">
+                  {usuario.papel?.nome?.toLowerCase() === 'funcionario' && (
+                    <button
+                      onClick={() => {
+                        navigate('/app/admin/funcionario/permissoes', { 
+                          state: { 
+                            idFuncionario: usuario.id, 
+                            nomeFuncionario: nomeUsuario 
+                          } 
+                        });
+                        setMenuAberto(null);
+                      }}
+                      className="flex items-center gap-2 w-full text-left px-4 py-3 text-sm hover:bg-odara-primary/10 text-odara-dropdown-accent"
+                    >
+                      <Edit className="h-4 w-4" />
+                      Editar permissões
+                    </button>
+                  )}
+                  <button
+                    onClick={() => {
+                      abrirModalExclusao(usuario.id);
+                      setMenuAberto(null);
+                    }}
+                    className="flex items-center gap-2 w-full text-left px-4 py-3 text-sm hover:bg-red-50 text-odara-alerta"
+                  >
+                    <Trash2 className="h-4 w-4" />
+                    Excluir
+                  </button>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+
+        {/* Conteúdo do card */}
+        <div className="p-4">
+          {/* E-mail */}
+          <div className="mb-4">
+            <p className="text-xs text-gray-500 mb-1">E-mail</p>
+            <div className="flex items-center gap-2">
+              <Mail className="h-4 w-4 text-odara-primary flex-shrink-0" />
+              <span className="text-sm text-gray-600 truncate">{usuario.email}</span>
+            </div>
+          </div>
+
+          {/* Telefone */}
+          {telefone && (
+            <div className="mb-4">
+              <p className="text-xs text-gray-500 mb-1">Telefone</p>
+              <div className="flex items-center gap-2">
+                <Phone className="h-4 w-4 text-odara-primary flex-shrink-0" />
+                <span className="text-sm text-gray-600">{formatarTelefone(telefone)}</span>
+              </div>
+            </div>
+          )}
+
+          {/* Papel */}
+          <div className="mb-4">
+            <p className="text-xs text-gray-500 mb-1">Papel</p>
+            <span className="text-sm font-medium text-odara-dark capitalize">
+              {papelFormatado}
+            </span>
+          </div>
+
+          {/* Status e data de cadastro */}
+          <div className="grid grid-cols-2 gap-4 pt-3 border-t border-gray-100">
+            <div>
+              <p className="text-xs text-gray-500 mb-1">Status</p>
+              <button
+                onClick={() => alternarStatus(usuario.id, usuario.status)}
+                disabled={atualizandoStatus === usuario.id}
+                className={`px-2 py-1 rounded-full text-xs font-medium transition-colors ${obterCorStatus(usuario.status)} ${atualizandoStatus === usuario.id ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'
+                  }`}
+              >
+                {atualizandoStatus === usuario.id ? 'Alterando...' : (usuario.status ? 'Ativo' : 'Inativo')}
+              </button>
+            </div>
+            <div>
+              <p className="text-xs text-gray-500 mb-1">Cadastro</p>
+              <p className="text-sm font-medium text-odara-dark">
+                {new Date(usuario.criado_em).toLocaleDateString('pt-BR')}
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  };
+
   // Estado de carregamento
   if (carregando) {
     return (
@@ -344,19 +469,19 @@ const Usuarios: React.FC = () => {
       {/* Modal de Confirmação */}
       <ModalConfirmacaoExclusao />
 
-      <div className="container mx-auto p-6 lg:p-8">
+      <div className="container mx-auto p-4 sm:p-6 lg:p-8">
         {/* Cabeçalho */}
-        <div className="flex flex-col sm:flex-row justify-between items-start lg:items-center gap-4 mb-6">
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 sm:gap-4 mb-6">
           {/* Título */}
           <div className="flex-1 min-w-0">
-            <h1 className="text-2xl lg:text-3xl font-bold text-odara-dark">Usuários do Sistema</h1>
-            <p className="text-sm text-odara-dark/70 mt-1">Gerenciamento de acessos e permissões</p>
+            <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold text-odara-dark">Usuários do Sistema</h1>
+            <p className="text-xs sm:text-sm text-odara-dark/70 mt-1">Gerenciamento de acessos e permissões</p>
           </div>
 
           {/* Botão Cadastrar Usuário */}
-          <div className="flex-shrink-0">
+          <div className="flex-shrink-0 w-full sm:w-auto">
             <button
-              className="bg-odara-accent hover:bg-odara-secondary text-white font-medium py-2 px-4 rounded-lg flex items-center justify-center transition-colors w-full lg:w-auto"
+              className="bg-odara-accent hover:bg-odara-secondary text-white font-medium py-2 px-4 rounded-lg flex items-center justify-center transition-colors w-full sm:w-auto"
               onClick={() => navigate('/app/admin/usuario/formulario')}
             >
               <Plus className="mr-2 h-4 w-4" />
@@ -366,145 +491,179 @@ const Usuarios: React.FC = () => {
         </div>
 
         {/* Barra de Busca */}
-        <div className="flex-1 relative mb-8">
-          <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-            <Search className="text-odara-primary mr-3 h-4 w-4 flex-shrink-0" />
+        <div className="relative mb-6 sm:mb-8">
+          <div className="absolute inset-y-0 left-0 pl-3 sm:pl-4 flex items-center pointer-events-none">
+            <Search className="text-odara-primary h-4 w-4 sm:h-5 sm:w-5" />
           </div>
 
           <input
             type="text"
             placeholder="Buscar por e-mail, telefone, nome, CPF, cargo, papel ou parentesco..."
-            className="w-full pl-10 pr-4 py-3 bg-white rounded-xl border border-gray-200 text-odara-dark placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-odara-primary focus:border-transparent"
+            className="w-full pl-10 sm:pl-12 pr-4 py-2 sm:py-3 bg-white rounded-lg sm:rounded-xl border border-gray-200 text-odara-dark placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-odara-primary focus:border-transparent text-sm sm:text-base"
             value={termoBusca}
             onChange={(e) => setTermoBusca(e.target.value)}
           />
         </div>
 
-        {/* Tabela de Usuários */}
-        <div className="bg-white rounded-xl shadow-sm overflow-hidden border-l-4 border-odara-primary">
-          <div className="overflow-x-auto">
-            <table className="w-full text-sm">
-              <thead className="border-b-1 border-odara-primary bg-odara-primary/10 text-odara-primary">
-                <tr>
-                  <th className="p-4 text-left font-semibold align-middle">Usuário</th>
-                  <th className="p-4 text-left font-semibold align-middle">Contato</th>
-                  <th className="p-4 text-left font-semibold align-middle">Papel</th>
-                  <th className="p-4 text-left font-semibold align-middle">Status</th>
-                  <th className="p-4 text-left font-semibold align-middle">Cadastro</th>
-                  <th className="p-4 text-left font-semibold align-middle">Ações</th>
-                </tr>
-              </thead>
-
-              <tbody className="divide-y divide-gray-100">
-                {usuariosFiltrados.map((usuario) => (
-                  <tr key={usuario.id} className="hover:bg-odara-offwhite/40 transition-colors">
-                    {/* Coluna Usuário */}
-                    <td className="p-4">
-                      <div className="flex items-center gap-3 min-w-[200px]">
-                        {/* Ícone */}
-                        <div className="bg-odara-primary/20 rounded-full p-2 flex-shrink-0">
-                          <User className="h-4 w-4 text-odara-primary" />
-                        </div>
-
-                        {/* Nome e informações */}
-                        <div>
-                          <p className="font-medium text-odara-dark">{obterNomeUsuario(usuario)}</p>
-                          <p className="text-xs text-gray-400">{obterInfoUsuario(usuario)}</p>
-                        </div>
-                      </div>
-                    </td>
-
-                    {/* Coluna Contato */}
-                    <td className="p-4">
-                      <div className="space-y-1 text-odara-dark">
-                        <div className="flex items-center gap-2">
-                          <Mail className="h-3 w-3 text-odara-primary" />
-                          <span className="text-sm truncate">{usuario.email}</span>
-                        </div>
-                        {(usuario.funcionario?.telefone_principal || usuario.responsavel?.telefone_principal) && (
-                          <div className="flex items-center gap-2">
-                            <Phone className="h-3 w-3 text-odara-primary" />
-                            <span className="text-sm truncate">
-                              {formatarTelefone(usuario.funcionario?.telefone_principal || usuario.responsavel?.telefone_principal || '')}
-                            </span>
-                          </div>
-                        )}
-                      </div>
-                    </td>
-
-                    {/* Coluna Papel */}
-                    <td className="p-4">
-                      <span className={`text-xs text-odara-dark font-medium capitalize ${usuario.papel?.nome ? '' : 'px-2 py-1 rounded-full bg-gray-100 text-gray-400'}`}>
-                        <div className="flex items-center gap-1">
-                          <span>{obterPapelAcento(usuario.papel?.nome)}</span>
-                        </div>
-                      </span>
-                    </td>
-
-                    {/* Coluna Status */}
-                    <td className="p-4">
-                      <button
-                        onClick={() => alternarStatus(usuario.id, usuario.status)}
-                        disabled={atualizandoStatus === usuario.id}
-                        className={`px-3 py-1 rounded-full text-xs font-medium transition-colors ${obterCorStatus(usuario.status)} ${atualizandoStatus === usuario.id ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'
-                          }`}
-                        title="Clique para alterar o status"
-                      >
-                        {atualizandoStatus === usuario.id ? 'Alterando...' : (usuario.status ? 'Ativo' : 'Inativo')}
-                      </button>
-                    </td>
-
-                    {/* Coluna Data de Cadastro */}
-                    <td className="p-4 whitespace-nowrap text-odara-dark">
-                      {new Date(usuario.criado_em).toLocaleDateString('pt-BR')}
-                    </td>
-
-                    {/* Coluna Ações */}
-                    <td className="p-4">
-                      <div className="flex space-x-2">
-                        {/* Botão Editar */}
-                        {usuario.papel?.nome?.toLowerCase() === 'funcionario' && (
-                        <button
-                          className="p-1 text-odara-dropdown-accent transition hover:text-odara-secondary rounded"
-                          title="Editar usuário"
-                          onClick={() => navigate('/app/admin/funcionario/permissoes', { state: { idFuncionario: usuario.id, nomeFuncionario: obterNomeUsuario(usuario) } })}
-                        >
-                          <Edit className="h-4 w-4" />
-                        </button>
-                        )}
-
-                        {/* Botão Excluir */}
-                        <button
-                          className="p-1 text-odara-alerta transition hover:text-red-700 rounded"
-                          onClick={() => abrirModalExclusao(usuario.id)}
-                          title="Excluir usuário"
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </button>
-                      </div>
-                    </td>
+        {/* Tabela para desktop - Cards para mobile */}
+        <div className="hidden lg:block">
+          {/* Tabela Desktop */}
+          <div className="bg-white rounded-xl shadow-sm overflow-hidden border-l-4 border-odara-primary">
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead className="border-b-1 border-odara-primary bg-odara-primary/10 text-odara-primary">
+                  <tr>
+                    <th className="p-4 text-left font-semibold align-middle">Usuário</th>
+                    <th className="p-4 text-left font-semibold align-middle">Contato</th>
+                    <th className="p-4 text-left font-semibold align-middle">Papel</th>
+                    <th className="p-4 text-left font-semibold align-middle">Status</th>
+                    <th className="p-4 text-left font-semibold align-middle">Cadastro</th>
+                    <th className="p-4 text-left font-semibold align-middle">Ações</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
+                </thead>
 
-            {/* Resultado vazio */}
-            {usuariosFiltrados.length === 0 && (
-              <div className="text-center py-12">
-                <User className="h-12 w-12 text-gray-300 mx-auto mb-4" />
-                <p className="text-gray-400">
-                  {termoBusca ? 'Nenhum usuário encontrado' : 'Nenhum usuário cadastrado'}
-                </p>
-                <p className="text-sm text-gray-400 mt-1">
-                  {termoBusca ? 'Tente ajustar sua busca' : 'Cadastre o primeiro usuário'}
-                </p>
-              </div>
-            )}
+                <tbody className="divide-y divide-gray-100">
+                  {usuariosFiltrados.map((usuario) => {
+                    const nomeUsuario = obterNomeUsuario(usuario);
+                    const infoUsuario = obterInfoUsuario(usuario);
+                    const telefone = usuario.funcionario?.telefone_principal || usuario.responsavel?.telefone_principal;
+                    const papelFormatado = formatarPapel(usuario.papel?.nome);
+
+                    return (
+                      <tr key={usuario.id} className="hover:bg-odara-offwhite/40 transition-colors">
+                        {/* Coluna Usuário */}
+                        <td className="p-4">
+                          <div className="flex items-center gap-3 min-w-[200px]">
+                            {/* Ícone */}
+                            <div className="bg-odara-primary/20 rounded-full p-2 flex-shrink-0">
+                              <User className="h-4 w-4 text-odara-primary" />
+                            </div>
+
+                            {/* Nome e informações */}
+                            <div>
+                              <p className="font-medium text-odara-dark">{nomeUsuario}</p>
+                              <p className="text-xs text-gray-400">{infoUsuario}</p>
+                            </div>
+                          </div>
+                        </td>
+
+                        {/* Coluna Contato */}
+                        <td className="p-4">
+                          <div className="space-y-1 text-odara-dark">
+                            <div className="flex items-center gap-2">
+                              <Mail className="h-3 w-3 text-odara-primary" />
+                              <span className="text-sm truncate">{usuario.email}</span>
+                            </div>
+                            {telefone && (
+                              <div className="flex items-center gap-2">
+                                <Phone className="h-3 w-3 text-odara-primary" />
+                                <span className="text-sm truncate">
+                                  {formatarTelefone(telefone)}
+                                </span>
+                              </div>
+                            )}
+                          </div>
+                        </td>
+
+                        {/* Coluna Papel */}
+                        <td className="p-4">
+                          <span className={`text-xs text-odara-dark font-medium capitalize ${usuario.papel?.nome ? '' : 'px-2 py-1 rounded-full bg-gray-100 text-gray-400'}`}>
+                            <div className="flex items-center gap-1">
+                              <span>{papelFormatado}</span>
+                            </div>
+                          </span>
+                        </td>
+
+                        {/* Coluna Status */}
+                        <td className="p-4">
+                          <button
+                            onClick={() => alternarStatus(usuario.id, usuario.status)}
+                            disabled={atualizandoStatus === usuario.id}
+                            className={`px-3 py-1 rounded-full text-xs font-medium transition-colors ${obterCorStatus(usuario.status)} ${atualizandoStatus === usuario.id ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'
+                              }`}
+                            title="Clique para alterar o status"
+                          >
+                            {atualizandoStatus === usuario.id ? 'Alterando...' : (usuario.status ? 'Ativo' : 'Inativo')}
+                          </button>
+                        </td>
+
+                        {/* Coluna Data de Cadastro */}
+                        <td className="p-4 whitespace-nowrap text-odara-dark">
+                          {new Date(usuario.criado_em).toLocaleDateString('pt-BR')}
+                        </td>
+
+                        {/* Coluna Ações */}
+                        <td className="p-4">
+                          <div className="flex space-x-2">
+                            {/* Botão Editar permissões (apenas para funcionários) */}
+                            {usuario.papel?.nome?.toLowerCase() === 'funcionario' && (
+                              <button
+                                className="p-1 text-odara-dropdown-accent transition hover:text-odara-secondary rounded"
+                                title="Editar permissões"
+                                onClick={() => navigate('/app/admin/funcionario/permissoes', { 
+                                  state: { 
+                                    idFuncionario: usuario.id, 
+                                    nomeFuncionario: nomeUsuario 
+                                  } 
+                                })}
+                              >
+                                <Edit className="h-4 w-4" />
+                              </button>
+                            )}
+
+                            {/* Botão Excluir */}
+                            <button
+                              className="p-1 text-odara-alerta transition hover:text-red-700 rounded"
+                              onClick={() => abrirModalExclusao(usuario.id)}
+                              title="Excluir usuário"
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+
+              {/* Resultado vazio */}
+              {usuariosFiltrados.length === 0 && (
+                <div className="text-center py-12">
+                  <User className="h-12 w-12 text-gray-300 mx-auto mb-4" />
+                  <p className="text-gray-400">
+                    {termoBusca ? 'Nenhum usuário encontrado' : 'Nenhum usuário cadastrado'}
+                  </p>
+                  <p className="text-sm text-gray-400 mt-1">
+                    {termoBusca ? 'Tente ajustar sua busca' : 'Cadastre o primeiro usuário'}
+                  </p>
+                </div>
+              )}
+            </div>
           </div>
         </div>
 
+        {/* Cards para mobile e tablet */}
+        <div className="lg:hidden">
+          {usuariosFiltrados.length > 0 ? (
+            usuariosFiltrados.map((usuario) => (
+              <CardUsuarioMobile key={usuario.id} usuario={usuario} />
+            ))
+          ) : (
+            <div className="text-center py-12 bg-white rounded-lg border border-gray-200">
+              <User className="h-12 w-12 text-gray-300 mx-auto mb-4" />
+              <p className="text-gray-400">
+                {termoBusca ? 'Nenhum usuário encontrado' : 'Nenhum usuário cadastrado'}
+              </p>
+              <p className="text-sm text-gray-400 mt-1">
+                {termoBusca ? 'Tente ajustar sua busca' : 'Cadastre o primeiro usuário'}
+              </p>
+            </div>
+          )}
+        </div>
+
         {/* Contador de resultados */}
-        <div className="mt-4 text-sm text-gray-400">
+        <div className="mt-4 text-xs sm:text-sm text-gray-400">
           Total de {usuariosFiltrados.length} usuário(s) encontrado(s) de {listaUsuarios.length}
         </div>
       </div>

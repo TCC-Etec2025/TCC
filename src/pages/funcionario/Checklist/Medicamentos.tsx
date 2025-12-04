@@ -307,7 +307,7 @@ const Medicamentos: React.FC = () => {
     const cores = COR_STATUS[admin.status] || COR_STATUS.pendente;
 
     return (
-      <div className="bg-white rounded-lg shadow border border-gray-200 hover:shadow-md transition-shadow duration-200">
+      <div className="bg-white rounded-lg shadow border overflow-hidden border-gray-200 hover:shadow-md transition-shadow duration-200">
         {/* Header */}
         <div className={`flex items-center justify-between p-2 sm:p-3 ${cores.border} ${cores.bg}`}>
           <div className="flex items-center flex-1 min-w-0">

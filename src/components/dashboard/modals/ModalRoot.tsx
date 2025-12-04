@@ -13,7 +13,7 @@ interface Props {
   idResidente: number | null;
 }
 
-export const ModalRoot = ({ isOpen, onClose, tipo, idResidente }: Props) => {
+export const ModalRoot = ({ isOpen, onClose, tipo, idResidente  }: Props) => {
   if (!isOpen) return null;
 
   const renderContent = () => {
@@ -33,7 +33,7 @@ export const ModalRoot = ({ isOpen, onClose, tipo, idResidente }: Props) => {
     switch (tipo) {
       case 'MEDICAMENTOS': return 'Gestão de Medicamentos';
       case 'ATIVIDADES': return 'Calendário de Atividades';
-      case 'CARDAPIO': return 'Histórico Alimentar';
+      case 'CARDAPIO': return 'Agenda Alimentar';
       case 'CONSULTAS': return 'Agenda Médica';
       case 'OCORRENCIA': return 'Histórico de Ocorrências';
       default: return 'Detalhes';
@@ -41,21 +41,25 @@ export const ModalRoot = ({ isOpen, onClose, tipo, idResidente }: Props) => {
   };
 
   return (
-    <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-4 backdrop-blur-sm animate-in fade-in duration-200">
-      <div className="bg-white rounded-2xl max-w-2xl w-full max-h-[90vh] flex flex-col shadow-2xl">
+    <div className="fixed inset-0 bg-odara-offwhite/50 flex items-center justify-center z-50 p-4 backdrop-blur-sm animate-in fade-in duration-200">
+      <div className="bg-white rounded-2xl max-w-7xl w-full max-h-[90vh] flex flex-col shadow-2xl overflow-hidden border-l-4 border-odara-primary">
         {/* Header */}
-        <div className="flex items-center justify-between p-6 border-b border-gray-100">
-          <h2 className="text-xl font-bold text-gray-800">{getTitulo()}</h2>
-          <button 
-            onClick={onClose} 
-            className="p-2 hover:bg-gray-100 rounded-full transition-colors group"
-          >
-            <X size={20} className="text-gray-400 group-hover:text-gray-600" />
-          </button>
+        <div className="border-b-1 border-odara-primary bg-odara-primary/70 text-odara-accent p-6">
+          <div className="flex justify-between items-center">
+            <h2 className="text-2xl font-bold">{getTitulo()}</h2>
+
+            {/* Botão fechar */}
+            <button
+              onClick={onClose}
+              className="text-odara-accent transition-colors duration-200 p-1 rounded-full hover:text-odara-secondary"
+            >
+              <X size={20} />
+            </button>
+          </div>
         </div>
 
         {/* Content Area */}
-        <div className="p-6 overflow-y-auto custom-scrollbar bg-gray-50/30 flex-1">
+        <div className="overflow-y-auto custom-scrollbar bg-odara-offwhite flex-1">
           {renderContent()}
         </div>
       </div>

@@ -1,8 +1,9 @@
 import { useState, useEffect, useCallback } from "react";
-import { 
-  Home, Pill, Utensils, Palette, Bell, 
-  ChevronLeft, ChevronRight, User, Calendar as CalendarIcon, 
-  Clock, Eye, Loader2, Calendar, UsersRound, X, ChevronRight as ChevronRightIcon
+import {
+  Home, Pill, Apple, Coffee, Banana, Cookie, Soup, GlassWater, CookingPot, Palette, Bell,
+  ChevronLeft, ChevronRight, User, Calendar as CalendarIcon, Microscope,
+  Clock, Eye, Loader2, Calendar, UsersRound, X, ChevronRight as ChevronRightIcon,
+  RockingChair
 } from "lucide-react";
 import { supabase } from "../../lib/supabaseClient";
 import { useUser } from "../../context/UserContext";
@@ -13,6 +14,7 @@ type MedicamentoResumo = { id: number; nome: string; dosagem: string; horario_in
 type AtividadeResumo = { id: number; nome: string; horario_inicio: string; local: string | null; };
 type AlimentacaoResumo = { id: number; refeicao: string; alimento: string; horario: string; };
 type ConsultaResumo = { id: number; data_consulta: string; horario: string; medico: string; motivo_consulta: string | null; };
+type ExameResumo = { id: number; tipo: string; laboratorio: string | null; data_prevista: string; horario_previsto: string; status: string; };
 type OcorrenciaResumo = { id: number; titulo: string; descricao: string; horario: string; providencias: string | null; status: boolean; };
 type AdministracaoResumo = { id: number; horario_previsto: string; status: string; nome_medicamento: string; };
 
@@ -22,7 +24,7 @@ type ResidenteResumo = {
   foto: string | null;
   quarto: string | null;
   dependencia: string | null;
-  plano_saude?: string; 
+  plano_saude?: string;
   numero_carteirinha?: string;
   observacoes?: string;
 };
@@ -34,28 +36,40 @@ type DadosResidente = {
   atividades_dia: AtividadeResumo[];
   alimentacao_dia: AlimentacaoResumo[];
   consultas_semana: ConsultaResumo[];
+  exames_semana: ExameResumo[];
   ocorrencias_dia: OcorrenciaResumo[];
 };
 
 const formatarDataLocal = (date: Date) => {
-    const ano = date.getFullYear();
-    const mes = String(date.getMonth() + 1).padStart(2, '0');
-    const dia = String(date.getDate()).padStart(2, '0');
-    return `${ano}-${mes}-${dia}`;
+  const ano = date.getFullYear();
+  const mes = String(date.getMonth() + 1).padStart(2, '0');
+  const dia = String(date.getDate()).padStart(2, '0');
+  return `${ano}-${mes}-${dia}`;
+};
+
+// Função para verificar se uma data é hoje ou futura
+const isDataHojeOuFutura = (dataString: string): boolean => {
+  const hoje = new Date();
+  hoje.setHours(0, 0, 0, 0); // Zera horas para comparar apenas datas
+  
+  const data = new Date(dataString);
+  data.setHours(0, 0, 0, 0);
+  
+  return data >= hoje;
 };
 
 const DashboardResponsavel = () => {
   const { usuario } = useUser();
   const [loading, setLoading] = useState(true);
   const [erro, setErro] = useState<string | null>(null);
-  
+
   const [dados, setDados] = useState<DadosResidente[]>([]);
-  
+
   const [visualizacao, setVisualizacao] = useState<"casa" | "familiar">("casa");
   const [idxSelecionado, setIdxSelecionado] = useState(0);
 
   const [modalAberto, setModalAberto] = useState<TipoModal>(null);
-  
+
   // Estado para painel de notificações
   const [notificacoesAbertas, setNotificacoesAbertas] = useState<boolean>(false);
 
@@ -79,7 +93,7 @@ const DashboardResponsavel = () => {
       setLoading(true);
       const dataHoje = formatarDataLocal(new Date());
       const { data, error } = await supabase
-        .rpc('get_detalhes_residentes_por_responsavel', { 
+        .rpc('get_detalhes_residentes_por_responsavel', {
           p_id_responsavel: usuario.id,
           p_data_referencia: dataHoje
         });
@@ -109,13 +123,13 @@ const DashboardResponsavel = () => {
       <Loader2 className="h-10 w-10 animate-spin text-odara-primary" />
     </div>
   );
-  
+
   if (erro || dados.length === 0) return (
     <div className="flex min-h-screen bg-odara-offwhite items-center justify-center">
       <div className="text-center">
         <p className="text-gray-500 mb-4">{erro || "Nenhum residente vinculado."}</p>
-        <button 
-          onClick={fetchResumo} 
+        <button
+          onClick={fetchResumo}
           className="px-4 py-2 bg-odara-primary text-white rounded-lg hover:bg-odara-primary/90 transition-colors"
         >
           Tentar novamente
@@ -125,39 +139,98 @@ const DashboardResponsavel = () => {
   );
 
   const familiarAtual = dados[idxSelecionado];
-  
-  // Listas agregadas
-  const ocorrenciasView = visualizacao === "casa" 
-    ? dados.flatMap(d => d.ocorrencias_dia.map(o => ({...o, nome_residente: d.residente.nome})))
-    : familiarAtual.ocorrencias_dia.map(o => ({...o, nome_residente: familiarAtual.residente.nome}));
-  
+
+  {/* Listas agregadas */} 
+  // Const OCORRENCIAS
+  const ocorrenciasView = visualizacao === "casa"
+    ? dados.flatMap(d => d.ocorrencias_dia.map(o => ({ ...o, nome_residente: d.residente.nome })))
+    : familiarAtual.ocorrencias_dia.map(o => ({ ...o, nome_residente: familiarAtual.residente.nome }));
+
+  // Const MEDICAMENTOS
   const medicamentosView = visualizacao === "casa"
-    ? dados.flatMap(d => d.medicamentos_ativos.map(m => ({...m, nome_residente: d.residente.nome})))
-    : familiarAtual.medicamentos_ativos.map(m => ({...m, nome_residente: familiarAtual.residente.nome}));
-  
-  const cardapioView = visualizacao === "casa"
-    ? dados.flatMap(d => d.alimentacao_dia.map(m => ({...m, nome_residente: d.residente.nome})))
-    : familiarAtual.alimentacao_dia.map(m => ({...m, nome_residente: familiarAtual.residente.nome}));
+    ? dados.flatMap(d => d.medicamentos_ativos.map(m => ({ ...m, nome_residente: d.residente.nome })))
+    : familiarAtual.medicamentos_ativos.map(m => ({ ...m, nome_residente: familiarAtual.residente.nome }));
 
-  const atividadesView = visualizacao === "casa"
-    ? dados.flatMap(d => d.atividades_dia.map(m => ({...m, nome_residente: d.residente.nome})))
-    : familiarAtual.atividades_dia.map(m => ({...m, nome_residente: familiarAtual.residente.nome}));
-
-  const consultasView = visualizacao === "casa"
-    ? dados.flatMap(d => d.consultas_semana.map(m => ({...m, nome_residente: d.residente.nome})))
-    : familiarAtual.consultas_semana.map(m => ({...m, nome_residente: familiarAtual.residente.nome}));
-
-  // Próximo Medicamento
   const administracoesView = visualizacao === "casa"
-    ? dados.flatMap(d => d.administracoes_dia.map(a => ({...a, nome_residente: d.residente.nome})))
-    : familiarAtual.administracoes_dia.map(a => ({...a, nome_residente: familiarAtual.residente.nome}));
+    ? dados.flatMap(d => d.administracoes_dia.map(a => ({ ...a, nome_residente: d.residente.nome })))
+    : familiarAtual.administracoes_dia.map(a => ({ ...a, nome_residente: familiarAtual.residente.nome }));
 
   const proximoMedicamento = administracoesView
     .filter(a => a.status === 'pendente')
     .sort((a, b) => a.horario_previsto.localeCompare(b.horario_previsto))[0];
 
+  // Const ALIMENTAR
+  const REFEICOES_CONFIG = [
+    { key: "cafe-da-manha", label: "Café da Manhã", icon: <Coffee size={18} /> },
+    { key: "lanche-manha", label: "Lanche da Manhã", icon: <Banana size={18} /> },
+    { key: "almoco", label: "Almoço", icon: <CookingPot size={18} /> },
+    { key: "lanche-tarde", label: "Lanche da Tarde", icon: <Cookie size={18} /> },
+    { key: "jantar", label: "Jantar", icon: <Soup size={18} /> },
+    { key: "ceia", label: "Ceia", icon: <GlassWater size={18} /> },
+  ];
+
+  const cardapioView = visualizacao === "casa"
+    ? dados.flatMap(d => d.alimentacao_dia.map(m => ({ ...m, nome_residente: d.residente.nome })))
+    : familiarAtual.alimentacao_dia.map(m => ({ ...m, nome_residente: familiarAtual.residente.nome }));
+
+  // Const ATIVIDADES
+  const atividadesView = visualizacao === "casa"
+    ? dados.flatMap(d => d.atividades_dia.map(m => ({ ...m, nome_residente: d.residente.nome })))
+    : familiarAtual.atividades_dia.map(m => ({ ...m, nome_residente: familiarAtual.residente.nome }));
+
+  // Const CONSULTAS - Filtrar apenas hoje e futuras
+  const consultasView = visualizacao === "casa"
+    ? dados.flatMap(d => 
+        d.consultas_semana
+          .filter(c => isDataHojeOuFutura(c.data_consulta))
+          .map(c => ({ ...c, nome_residente: d.residente.nome }))
+      )
+    : familiarAtual.consultas_semana
+        .filter(c => isDataHojeOuFutura(c.data_consulta))
+        .map(c => ({ ...c, nome_residente: familiarAtual.residente.nome }));
+
+  // Const EXAMES - Filtrar apenas hoje e futuras
+  const examesView = visualizacao === "casa"
+    ? dados.flatMap(d => 
+        d.exames_semana
+          .filter(e => isDataHojeOuFutura(e.data_prevista))
+          .map(e => ({ ...e, nome_residente: d.residente.nome }))
+      )
+    : familiarAtual.exames_semana
+        .filter(e => isDataHojeOuFutura(e.data_prevista))
+        .map(e => ({ ...e, nome_residente: familiarAtual.residente.nome }));
+
   // Contador total de alertas (ocorrências + próximo medicamento)
   const totalAlertas = ocorrenciasView.length + (proximoMedicamento ? 1 : 0);
+
+  // Função para formatar data e determinar cor
+  const formatarDataComCor = (dataString: string) => {
+    const data = new Date(dataString);
+    const hoje = new Date();
+    hoje.setHours(0, 0, 0, 0);
+    const amanha = new Date();
+    amanha.setDate(hoje.getDate() + 1);
+    amanha.setHours(0, 0, 0, 0);
+    
+    data.setHours(0, 0, 0, 0);
+    
+    let dataColor = "text-gray-400";
+    let dataBg = "bg-white";
+    
+    if (data.getTime() === hoje.getTime()) {
+      dataColor = "text-odara-alerta";
+      dataBg = "bg-white";
+    } else if (data.getTime() === amanha.getTime()) {
+      dataColor = "text-gray-200";
+      dataBg = "bg-white";
+    }
+
+    return {
+      formatted: data.toLocaleDateString('pt-BR', { day: '2-digit', month: 'short' }),
+      color: dataColor,
+      bg: dataBg
+    };
+  };
 
   // Componente de Cabeçalho
   const CabecalhoDashboard = () => {
@@ -168,7 +241,7 @@ const DashboardResponsavel = () => {
             {visualizacao === "casa" ? "Área do Responsável" : `Perfil - ${familiarAtual.residente.nome}`}
           </h1>
           <p className="text-odara-dark/60 text-sm">
-            {visualizacao === "casa" ? "Visão geral de todos os residentes" : `Quarto ${familiarAtual.residente.quarto || "-"}`}
+            {visualizacao === "casa" ? "Visão geral de todos os residentes" : `Quarto ${familiarAtual.residente.quarto || "não informado"}`}
           </p>
         </div>
 
@@ -177,7 +250,7 @@ const DashboardResponsavel = () => {
             <WrapperIcone icone={Calendar} tamanho={20} className="text-odara-primary" />
             <span>{new Date().toLocaleDateString('pt-BR', { day: '2-digit', month: 'short', year: 'numeric' })}</span>
           </div>
-          
+
           {/* Botão de Notificações no Cabeçalho - Só mostra se houver alertas */}
           {totalAlertas > 0 && (
             <button
@@ -186,10 +259,10 @@ const DashboardResponsavel = () => {
               aria-label="Notificações"
             >
               <div className="p-2 bg-odara-primary/10 rounded-lg group-hover:bg-odara-primary/20 transition-colors">
-                <WrapperIcone 
-                  icone={Bell} 
-                  tamanho={20} 
-                  className="text-odara-primary" 
+                <WrapperIcone
+                  icone={Bell}
+                  tamanho={20}
+                  className="text-odara-primary"
                 />
               </div>
               <span className="absolute -top-1 -right-1 bg-odara-primary text-white text-xs font-bold w-5 h-5 flex items-center justify-center rounded-full">
@@ -208,12 +281,12 @@ const DashboardResponsavel = () => {
 
     return (
       <>
-        <div 
-          className="fixed inset-0 z-40 bg-black/20"
+        <div
+          className="fixed inset-0 z-40 bg-odara-offwhite/50 backdrop-blur-sm"
           onClick={() => setNotificacoesAbertas(false)}
         />
-        
-        <div 
+
+        <div
           className="fixed z-50 bg-white rounded-lg shadow-xl border border-gray-200
             inset-x-0 bottom-0 top-16
             sm:inset-auto sm:right-4 sm:top-20 sm:max-w-sm sm:w-full
@@ -268,7 +341,7 @@ const DashboardResponsavel = () => {
                       <div className="flex items-center justify-between mt-2">
                         <span className="text-xs text-gray-500">{proximoMedicamento.nome_residente}</span>
                         <span className="text-xs font-bold text-odara-primary">
-                          Hoje às {proximoMedicamento.horario_previsto.slice(0,5)}
+                          Hoje às {proximoMedicamento.horario_previsto.slice(0, 5)}
                         </span>
                       </div>
                     </div>
@@ -304,7 +377,7 @@ const DashboardResponsavel = () => {
                           </p>
                           <div className="flex items-center justify-between mt-2">
                             <span className="text-xs text-gray-500">{ocorrencia.nome_residente}</span>
-                            <span className="text-xs text-gray-500">{ocorrencia.horario.slice(0,5)}</span>
+                            <span className="text-xs text-gray-500">{ocorrencia.horario.slice(0, 5)}</span>
                           </div>
                         </div>
                         <ChevronRightIcon size={14} className="text-odara-primary flex-shrink-0 mt-0.5" />
@@ -340,12 +413,11 @@ const DashboardResponsavel = () => {
             className="bg-white p-4 sm:p-6 rounded-xl shadow hover:shadow-md transition cursor-pointer border border-gray-100 group"
           >
             <div className="flex items-center gap-3 sm:gap-4">
-              <div className="relative w-12 h-12 sm:w-14 sm:h-14 rounded-full overflow-hidden bg-gray-100 shrink-0 border-2 border-white shadow">
-                {d.residente.foto ? 
-                  <img src={d.residente.foto} alt={d.residente.nome} className="w-full h-full object-cover"/> : 
-                  <User className="w-full h-full p-2 sm:p-3 text-gray-400"/>
+              <div className="relative w-12 h-12 sm:w-14 sm:h-14 rounded-full overflow-hidden bg-odara-primary/10 shrink-0 border-2 border-white shadow">
+                {d.residente.foto ?
+                  <img src={d.residente.foto} alt={d.residente.nome} className="w-full h-full object-cover" /> :
+                  <RockingChair className="w-full h-full p-2 sm:p-3 text-odara-primary" />
                 }
-                <div className="absolute bottom-0 right-0 w-3 h-3 bg-green-500 rounded-full border-2 border-white"></div>
               </div>
               <div className="flex-1 min-w-0">
                 <h3 className="font-bold text-base sm:text-lg text-odara-dark group-hover:text-odara-primary transition-colors truncate">
@@ -359,7 +431,7 @@ const DashboardResponsavel = () => {
                   </span>
                 </div>
               </div>
-              <ChevronRight className="text-gray-300 group-hover:text-odara-primary transition-colors flex-shrink-0" size={20}/>
+              <ChevronRight className="text-gray-300 group-hover:text-odara-primary transition-colors flex-shrink-0" size={20} />
             </div>
           </div>
         ))}
@@ -379,14 +451,14 @@ const DashboardResponsavel = () => {
             <Home size={18} />
             <span>Voltar para Visão Geral</span>
           </button>
-          
+
           {dados.length > 1 && (
             <div className="flex items-center gap-2">
               <button onClick={anteriorFamiliar} className="p-2 bg-gray-50 rounded-full hover:bg-gray-100 transition">
-                <ChevronLeft size={18}/>
+                <ChevronLeft size={18} />
               </button>
               <button onClick={proximoFamiliar} className="p-2 bg-gray-50 rounded-full hover:bg-gray-100 transition">
-                <ChevronRight size={18}/>
+                <ChevronRight size={18} />
               </button>
             </div>
           )}
@@ -394,9 +466,9 @@ const DashboardResponsavel = () => {
 
         <div className="flex flex-col sm:flex-row items-center gap-4 sm:gap-6 mb-6">
           <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-full border-4 border-white shadow-lg overflow-hidden bg-gray-200">
-            {familiarAtual.residente.foto ? 
-              <img src={familiarAtual.residente.foto} alt={familiarAtual.residente.nome} className="w-full h-full object-cover"/> : 
-              <User className="w-full h-full p-3 sm:p-5 text-gray-400"/>
+            {familiarAtual.residente.foto ?
+              <img src={familiarAtual.residente.foto} alt={familiarAtual.residente.nome} className="w-full h-full object-cover" /> :
+              <User className="w-full h-full p-3 sm:p-5 text-gray-400" />
             }
           </div>
           <div className="flex-1 text-center sm:text-left">
@@ -430,128 +502,398 @@ const DashboardResponsavel = () => {
     );
   };
 
-  // Componente de Cartões de Informações (layout responsivo de 4 colunas - agora usando 4 colunas para os cards)
+  // Componente de Cartões de Informações (layout responsivo de 5 colunas)
   const CartoesInformacoes = () => {
     return (
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4 sm:gap-6">
         {/* Medicamentos */}
-        <div 
-          onClick={() => setModalAberto('MEDICAMENTOS')}
-          className="bg-white p-4 sm:p-5 rounded-xl shadow hover:shadow-md transition cursor-pointer border border-gray-200 group"
+        <div
+          // onClick={() => setModalAberto('MEDICAMENTOS')} // COMENTADO PARA DESATIVAR
+          className="bg-white p-4 sm:p-5 rounded-xl shadow border border-gray-200"
         >
           <div className="flex justify-between items-center mb-3">
             <h3 className="font-semibold text-odara-dark flex items-center gap-2 text-base">
               <div className="p-2 bg-odara-primary/10 rounded-lg">
-                <WrapperIcone icone={Pill} tamanho={18} className="text-odara-primary"/>
+                <WrapperIcone icone={Pill} tamanho={18} className="text-odara-primary" />
               </div>
-              <span>Medicamentos</span>
+              <span>Medicamentos Ativos</span>
             </h3>
-            <Eye size={16} className="text-gray-400 group-hover:text-odara-primary transition-colors"/>
           </div>
-          <div className="space-y-2">
-            {medicamentosView.slice(0, 3).map(med => (
-              <div key={med.id} className="flex justify-between items-center text-sm p-2 hover:bg-gray-50 rounded-lg transition">
-                <div className="min-w-0">
-                  <p className="font-medium text-odara-dark truncate">{med.nome}</p>
-                  <p className="text-xs text-gray-500 truncate">{med.dosagem}</p>
-                </div>
-                <div className="w-2 h-2 rounded-full bg-green-400 flex-shrink-0"></div>
-              </div>
-            ))}
-            {medicamentosView.length === 0 && (
-              <p className="text-sm text-gray-400 text-center py-4">Nenhum medicamento ativo.</p>
+
+          <div className="space-y-4 pt-2 max-h-80 overflow-y-auto">
+            {dados.length === 0 ? (
+              <p className="text-sm text-gray-400 text-center py-4">Nenhum residente vinculado.</p>
+            ) : (
+              dados.map((residenteData, index) => {
+                const medicamentosResidente = residenteData.medicamentos_ativos;
+
+                return (
+                  <div
+                    key={residenteData.residente.id}
+                    className={`pb-4 ${index < dados.length - 1 ? 'border-b border-gray-200' : ''}`}
+                  >
+                    <div className="mb-3">
+                      <h4 className="font-medium text-sm text-odara-dark font-semibold flex items-center gap-2">
+                        <RockingChair size={14} className="text-odara-accent" />
+                        {residenteData.residente.nome}
+                      </h4>
+                    </div>
+
+                    <div className="space-y-2">
+                      {medicamentosResidente.length === 0 ? (
+                        <p className="text-xs text-gray-400 text-center py-2">
+                          Nenhum medicamento ativo.
+                        </p>
+                      ) : (
+                        medicamentosResidente.slice(0, 3).map(med => {
+                          const administracaoHoje = residenteData.administracoes_dia?.find(
+                            a => a.nome_medicamento === med.nome
+                          );
+                          
+                          const horarioTextColor = administracaoHoje?.status === 'concluído' 
+                            ? 'text-green-500' 
+                            : 'text-gray-400';
+                          const horarioBorderColor = administracaoHoje?.status === 'concluído'
+                            ? 'border-green-500'
+                            : 'border-gray-200';
+
+                          return (
+                            <div key={med.id} className="flex gap-2 items-center text-sm bg-gray-50 p-2 rounded-lg">
+                              <div className="min-w-0 flex-1">
+                                <p className="font-medium text-odara-dark truncate">{med.nome}</p>
+                                <p className="text-xs text-gray-500 truncate mt-0.5">
+                                  {med.dosagem}
+                                </p>
+                              </div>
+                              
+                              <span className={`text-xs flex-shrink-0 bg-white px-2 py-0.5 rounded-full border ${horarioBorderColor} ${horarioTextColor} whitespace-nowrap`}>
+                                {med.horario_inicio.slice(0, 5)}
+                                {administracaoHoje?.status === 'concluído' && (
+                                  <span className="ml-1">✓</span>
+                                )}
+                              </span>
+                            </div>
+                          );
+                        })
+                      )}
+
+                      {medicamentosResidente.length > 3 && (
+                        <p className="text-xs text-odara-primary text-center">
+                          +{medicamentosResidente.length - 3} medicamentos
+                        </p>
+                      )}
+                    </div>
+                  </div>
+                );
+              })
             )}
           </div>
         </div>
 
         {/* Cardápio */}
-        <div 
-          onClick={() => setModalAberto('CARDAPIO')}
-          className="bg-white p-4 sm:p-5 rounded-xl shadow hover:shadow-md transition cursor-pointer border border-gray-200 group"
+        <div
+          // onClick={() => setModalAberto('CARDAPIO')} // COMENTADO PARA DESATIVAR
+          className="bg-white p-4 sm:p-5 rounded-xl shadow border border-gray-200"
         >
           <div className="flex justify-between items-center mb-3">
             <h3 className="font-semibold text-odara-dark flex items-center gap-2 text-base">
               <div className="p-2 bg-odara-primary/10 rounded-lg">
-                <WrapperIcone icone={Utensils} tamanho={18} className="text-odara-primary"/>
+                <WrapperIcone icone={Apple} tamanho={18} className="text-odara-primary" />
               </div>
-              <span>Cardápio (Hoje)</span>
+              <span>Cardápio do Dia</span>
             </h3>
-            <Eye size={16} className="text-gray-400 group-hover:text-odara-primary transition-colors"/>
           </div>
-          <div className="space-y-2 pt-2">
-            {cardapioView.slice(0, 3).map(item => (
-              <div key={item.id} className="flex gap-2 items-center text-sm">
-                <div className="w-1.5 h-1.5 rounded-full bg-orange-400 flex-shrink-0"></div>
-                <p className="text-odara-dark truncate flex-1">{item.alimento}</p>
-                <span className="text-xs text-gray-500 flex-shrink-0">{item.refeicao}</span>
-              </div>
-            ))}
-            {cardapioView.length === 0 && (
-              <p className="text-sm text-gray-400 text-center py-4">Sem registros hoje.</p>
-            )}
-          </div>
-        </div>
 
-        {/* Consultas */}
-        <div 
-          onClick={() => setModalAberto('CONSULTAS')}
-          className="bg-white p-4 sm:p-5 rounded-xl shadow hover:shadow-md transition cursor-pointer border border-gray-200 group"
-        >
-          <div className="flex justify-between items-center mb-3">
-            <h3 className="font-semibold text-odara-dark flex items-center gap-2 text-base">
-              <div className="p-2 bg-odara-primary/10 rounded-lg">
-                <WrapperIcone icone={CalendarIcon} tamanho={18} className="text-odara-primary"/>
-              </div>
-              <span>Próximas Consultas</span>
-            </h3>
-            <Eye size={16} className="text-gray-400 group-hover:text-odara-primary transition-colors"/>
-          </div>
-          <div className="space-y-3">
-            {consultasView.slice(0, 2).map(con => (
-              <div key={con.id} className="bg-indigo-50 p-3 rounded-lg flex items-center gap-3">
-                <div className="bg-white p-1.5 rounded text-indigo-600 font-bold text-xs flex flex-col items-center leading-tight min-w-9 flex-shrink-0">
-                  <span>{new Date(con.data_consulta).getDate()}</span>
-                  <span className="text-[9px] uppercase">
-                    {new Date(con.data_consulta).toLocaleString('pt-BR', {month:'short'}).slice(0,3)}
-                  </span>
-                </div>
-                <div className="min-w-0 flex-1">
-                  <p className="text-sm font-bold text-odara-dark truncate">{con.motivo_consulta || "Consulta"}</p>
-                  <p className="text-xs text-gray-500 truncate">{con.medico}</p>
-                </div>
-              </div>
-            ))}
-            {consultasView.length === 0 && (
-              <p className="text-sm text-gray-400 text-center py-4">Nenhuma consulta agendada.</p>
+          <div className="space-y-4 pt-2 max-h-80 overflow-y-auto">
+            {dados.length === 0 ? (
+              <p className="text-sm text-gray-400 text-center py-4">Nenhum residente vinculado.</p>
+            ) : (
+              dados.map((residenteData, index) => {
+                const cardapioResidente = residenteData.alimentacao_dia;
+
+                return (
+                  <div
+                    key={residenteData.residente.id}
+                    className={`pb-4 ${index < dados.length - 1 ? 'border-b border-gray-200' : ''}`}
+                  >
+                    <div className="mb-3">
+                      <h4 className="font-medium text-sm text-odara-dark font-semibold flex items-center gap-2">
+                        <RockingChair size={14} className="text-odara-accent" />
+                        {residenteData.residente.nome}
+                      </h4>
+                    </div>
+
+                    <div className="space-y-2">
+                      {cardapioResidente.length === 0 ? (
+                        <p className="text-xs text-gray-400 text-center py-2">
+                          Sem refeições hoje.
+                        </p>
+                      ) : (
+                        cardapioResidente.slice(0, 3).map(item => (
+                          <div key={item.id} className="flex gap-2 items-center text-sm bg-gray-50 p-2 rounded-lg">
+                            <div className="min-w-0 flex-1">
+                              <p className="text-odara-dark truncate">{item.alimento}</p>
+                            </div>
+
+                            <span className="text-xs text-gray-400 flex-shrink-0 bg-white px-2 py-0.5 rounded-full border border-gray-200">
+                              {REFEICOES_CONFIG.find(ref => ref.key === item.refeicao)?.label}
+                            </span>
+                          </div>
+                        ))
+                      )}
+
+                      {cardapioResidente.length > 3 && (
+                        <p className="text-xs text-odara-primary text-center">
+                          +{cardapioResidente.length - 3} refeições
+                        </p>
+                      )}
+                    </div>
+                  </div>
+                );
+              })
             )}
           </div>
         </div>
 
         {/* Atividades */}
-        <div 
-          onClick={() => setModalAberto('ATIVIDADES')}
-          className="bg-white p-4 sm:p-5 rounded-xl shadow hover:shadow-md transition cursor-pointer border border-gray-200 group"
+        <div
+          // onClick={() => setModalAberto('ATIVIDADES')} // COMENTADO PARA DESATIVAR
+          className="bg-white p-4 sm:p-5 rounded-xl shadow border border-gray-200"
         >
           <div className="flex justify-between items-center mb-3">
             <h3 className="font-semibold text-odara-dark flex items-center gap-2 text-base">
               <div className="p-2 bg-odara-primary/10 rounded-lg">
-                <WrapperIcone icone={Palette} tamanho={18} className="text-odara-primary"/>
+                <WrapperIcone icone={Palette} tamanho={18} className="text-odara-primary" />
               </div>
-              <span>Atividades (Hoje)</span>
+              <span>Atividades do Dia</span>
             </h3>
-            <Eye size={16} className="text-gray-400 group-hover:text-odara-primary transition-colors"/>
           </div>
-          <div className="space-y-2">
-            {atividadesView.slice(0, 3).map(atv => (
-              <div key={atv.id} className="flex items-center justify-between text-sm p-2 bg-gray-50 rounded-lg">
-                <span className="font-medium text-odara-dark truncate">{atv.nome}</span>
-                <span className="text-xs font-bold text-green-600 bg-green-100 px-2 py-0.5 rounded flex-shrink-0">
-                  {atv.horario_inicio.slice(0,5)}
-                </span>
+
+          <div className="space-y-4 pt-2 max-h-80 overflow-y-auto">
+            {dados.length === 0 ? (
+              <p className="text-sm text-gray-400 text-center py-4">Nenhum residente vinculado.</p>
+            ) : (
+              dados.map((residenteData, index) => {
+                const atividadesResidente = residenteData.atividades_dia;
+
+                return (
+                  <div
+                    key={residenteData.residente.id}
+                    className={`pb-4 ${index < dados.length - 1 ? 'border-b border-gray-200' : ''}`}
+                  >
+                    <div className="mb-3">
+                      <h4 className="font-medium text-sm text-odara-dark font-semibold flex items-center gap-2">
+                        <RockingChair size={14} className="text-odara-accent" />
+                        {residenteData.residente.nome}
+                      </h4>
+                    </div>
+
+                    <div className="space-y-2">
+                      {atividadesResidente.length === 0 ? (
+                        <p className="text-xs text-gray-400 text-center py-2">
+                          Sem atividades hoje.
+                        </p>
+                      ) : (
+                        atividadesResidente.slice(0, 3).map(atividade => (
+                          <div key={atividade.id} className="flex gap-2 items-center text-sm bg-gray-50 p-2 rounded-lg">
+                            <div className="min-w-0 flex-1">
+                              <p className="text-odara-dark truncate">{atividade.nome}</p>
+                              {atividade.local && (
+                                <p className="text-xs text-gray-500 truncate mt-0.5">
+                                  {atividade.local}
+                                </p>
+                              )}
+                            </div>
+                            
+                            <span className="text-xs text-gray-400 flex-shrink-0 bg-white px-2 py-0.5 rounded-full border border-gray-200 whitespace-nowrap">
+                              {atividade.horario_inicio.slice(0, 5)}
+                            </span>
+                          </div>
+                        ))
+                      )}
+
+                      {atividadesResidente.length > 3 && (
+                        <p className="text-xs text-odara-primary text-center">
+                          +{atividadesResidente.length - 3} atividades
+                        </p>
+                      )}
+                    </div>
+                  </div>
+                );
+              })
+            )}
+          </div>
+        </div>
+
+        {/* Consultas */}
+        <div
+          // onClick={() => setModalAberto('CONSULTAS')} // COMENTADO PARA DESATIVAR
+          className="bg-white p-4 sm:p-5 rounded-xl shadow border border-gray-200"
+        >
+          <div className="flex justify-between items-center mb-3">
+            <h3 className="font-semibold text-odara-dark flex items-center gap-2 text-base">
+              <div className="p-2 bg-odara-primary/10 rounded-lg">
+                <WrapperIcone icone={CalendarIcon} tamanho={18} className="text-odara-primary" />
               </div>
-            ))}
-            {atividadesView.length === 0 && (
-              <p className="text-sm text-gray-400 text-center py-4">Sem atividades hoje.</p>
+              <span>Próximas Consultas</span>
+            </h3>
+          </div>
+
+          <div className="space-y-4 pt-2 max-h-80 overflow-y-auto">
+            {dados.length === 0 ? (
+              <p className="text-sm text-gray-400 text-center py-4">Nenhum residente vinculado.</p>
+            ) : (
+              dados.map((residenteData, index) => {
+                // Filtrar apenas consultas hoje e futuras
+                const consultasFuturas = (residenteData.consultas_semana || [])
+                  .filter(c => isDataHojeOuFutura(c.data_consulta));
+
+                return (
+                  <div
+                    key={residenteData.residente.id}
+                    className={`pb-4 ${index < dados.length - 1 ? 'border-b border-gray-200' : ''}`}
+                  >
+                    <div className="mb-3">
+                      <h4 className="font-medium text-sm text-odara-dark font-semibold flex items-center gap-2">
+                        <RockingChair size={14} className="text-odara-accent" />
+                        {residenteData.residente.nome}
+                      </h4>
+                    </div>
+
+                    <div className="space-y-2">
+                      {consultasFuturas.length === 0 ? (
+                        <p className="text-xs text-gray-400 text-center py-2">
+                          Nenhuma consulta agendada.
+                        </p>
+                      ) : (
+                        consultasFuturas.slice(0, 3).map(consulta => {
+                          const { formatted, color, bg } = formatarDataComCor(consulta.data_consulta);
+
+                          return (
+                            <div key={consulta.id} className="flex gap-2 items-center text-sm bg-gray-50 p-2 rounded-lg">
+                              <div className="min-w-0 flex-1">
+                                <p className="font-medium text-odara-dark truncate">
+                                  {consulta.motivo_consulta || "Consulta"}
+                                </p>
+                                <div className="flex items-center gap-1 mt-0.5">
+                                  <p className="text-xs text-gray-500 truncate">{consulta.medico}</p>
+                                </div>
+                              </div>
+                              
+                              <span className={`text-xs flex-shrink-0 ${bg} px-2 py-0.5 rounded-full border ${color} border-gray-200 whitespace-nowrap`}>
+                                {formatted}
+                                <span className="mx-1">•</span>
+                                {consulta.horario.slice(0, 5)}
+                              </span>
+                            </div>
+                          );
+                        })
+                      )}
+
+                      {consultasFuturas.length > 3 && (
+                        <p className="text-xs text-odara-primary text-center">
+                          +{consultasFuturas.length - 3} consultas
+                        </p>
+                      )}
+                    </div>
+                  </div>
+                );
+              })
+            )}
+          </div>
+        </div>
+
+        {/* Exames */}
+        <div
+          // onClick={() => setModalAberto('EXAMES')} // COMENTADO PARA DESATIVAR
+          className="bg-white p-4 sm:p-5 rounded-xl shadow border border-gray-200"
+        >
+          <div className="flex justify-between items-center mb-3">
+            <h3 className="font-semibold text-odara-dark flex items-center gap-2 text-base">
+              <div className="p-2 bg-odara-primary/10 rounded-lg">
+                <WrapperIcone icone={Microscope} tamanho={18} className="text-odara-primary" />
+              </div>
+              <span>Próximos Exames</span>
+            </h3>
+          </div>
+
+          <div className="space-y-4 pt-2 max-h-80 overflow-y-auto">
+            {dados.length === 0 ? (
+              <p className="text-sm text-gray-400 text-center py-4">Nenhum residente vinculado.</p>
+            ) : (
+              dados.map((residenteData, index) => {
+                // Filtrar apenas exames hoje e futuros
+                const examesFuturos = (residenteData.exames_semana || [])
+                  .filter(e => isDataHojeOuFutura(e.data_prevista));
+
+                return (
+                  <div
+                    key={residenteData.residente.id}
+                    className={`pb-4 ${index < dados.length - 1 ? 'border-b border-gray-200' : ''}`}
+                  >
+                    <div className="mb-3">
+                      <h4 className="font-medium text-sm text-odara-dark font-semibold flex items-center gap-2">
+                        <RockingChair size={14} className="text-odara-accent" />
+                        {residenteData.residente.nome}
+                      </h4>
+                    </div>
+
+                    <div className="space-y-2">
+                      {examesFuturos.length === 0 ? (
+                        <p className="text-xs text-gray-400 text-center py-2">
+                          Nenhum exame agendado.
+                        </p>
+                      ) : (
+                        examesFuturos.slice(0, 3).map(exame => {
+                          const { formatted, color, bg } = formatarDataComCor(exame.data_prevista);
+                          
+                          // Determinar cor baseada no status
+                          let statusColor = "text-gray-600";
+                          let statusBg = "bg-gray-100";
+                          
+                          if (exame.status === 'realizado') {
+                            statusColor = "text-green-600";
+                            statusBg = "bg-green-100";
+                          } else if (exame.status === 'agendado') {
+                            statusColor = "text-purple-600";
+                            statusBg = "bg-purple-100";
+                          } else if (exame.status === 'cancelado') {
+                            statusColor = "text-red-600";
+                            statusBg = "bg-red-100";
+                          }
+
+                          return (
+                            <div key={exame.id} className="flex gap-2 items-center text-sm bg-gray-50 p-2 rounded-lg">
+                              <div className="min-w-0 flex-1">
+                                <p className="font-medium text-odara-dark truncate">
+                                  {exame.tipo}
+                                </p>
+                                <div className="flex items-center gap-1 mt-0.5">
+                                  <p className="text-xs text-gray-500 truncate">
+                                    {exame.laboratorio || "Laboratório"}
+                                  </p>
+                                </div>
+                              </div>
+                              
+                              <span className={`text-xs flex-shrink-0 ${bg} px-2 py-0.5 rounded-full border ${color} border-gray-200 whitespace-nowrap`}>
+                                {formatted}
+                                <span className="mx-1">•</span>
+                                {exame.horario_previsto.slice(0, 5)}
+                              </span>
+                            </div>
+                          );
+                        })
+                      )}
+
+                      {examesFuturos.length > 3 && (
+                        <p className="text-xs text-odara-primary text-center">
+                          +{examesFuturos.length - 3} exames
+                        </p>
+                      )}
+                    </div>
+                  </div>
+                );
+              })
             )}
           </div>
         </div>

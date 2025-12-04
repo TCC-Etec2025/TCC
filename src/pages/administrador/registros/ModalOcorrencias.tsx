@@ -224,7 +224,7 @@ const ModalOcorrencias = ({ ocorrencia, isOpen, onClose }: ModalOcorrenciasProps
     if (!isOpen) return null;
 
     return (
-        <div className="fixed inset-0 bg-odara-offwhite/80 flex items-center justify-center p-4 z-50">
+        <div className="fixed inset-0 bg-odara-offwhite/50 backdrop-blur-sm flex items-center justify-center p-4 z-50">
             <Toaster
                 position="top-center"
                 toastOptions={{

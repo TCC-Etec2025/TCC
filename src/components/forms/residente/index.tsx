@@ -55,24 +55,18 @@ export default function CadastroResidente({ residente }: Props) {
 
   // Função para selecionar arquivo
   const selecionarArquivo = async (event: React.ChangeEvent<HTMLInputElement>) => {
-    const arquivo = event.target.files?.[0];
-    if (!arquivo) return;
-
-    // Verificar se é uma imagem
-    if (!arquivo.type.startsWith("image/")) {
-      alert("Por favor, selecione um arquivo de imagem válido.");
+    const fileList = event.target.files;
+    if (!fileList || fileList.length === 0) {
+      setPreviewUrl(null);
+      setArquivoSelecionado(null);
+      setValue("imagem", null);
       return;
     }
+    setValue("imagem", fileList);
 
-    // Verificar tamanho do arquivo (máximo 5MB)
-    if (arquivo.size > 5 * 1024 * 1024) {
-      alert("A imagem deve ter no máximo 5MB.");
-      return;
-    }
-
+    const arquivo = fileList[0];
     setArquivoSelecionado(arquivo);
 
-    // Criar preview
     const leitor = new FileReader();
     leitor.onload = (e) => {
       setPreviewUrl(e.target?.result as string);
@@ -80,36 +74,39 @@ export default function CadastroResidente({ residente }: Props) {
     leitor.readAsDataURL(arquivo);
   };
 
-  // Função para upload de imagem
   const enviarImagem = async (arquivo: File): Promise<string | null> => {
     setEnviandoImagem(true);
     try {
-      const extensaoArquivo = arquivo.name.split(".").pop();
-      const nomeArquivo = `${Math.random()}.${extensaoArquivo}`;
-      const caminhoArquivo = `fotos-perfil/${nomeArquivo}`;
+        const hashAleatorio = Math.random().toString(36).substring(2) + Date.now().toString(36);
+        const extensaoArquivo = arquivo.name.split(".").pop();
+        const nomeArquivo = `${hashAleatorio}.${extensaoArquivo}`; 
+        
+        const caminhoArquivo = `odara/${nomeArquivo}`;
 
-      const { error: erroUpload } = await supabase.storage
-        .from("residentes-fotos")
-        .upload(caminhoArquivo, arquivo);
+        const { error: erroUpload } = await supabase.storage
+            .from("odara")
+            .upload(caminhoArquivo, arquivo, {
+                upsert: true 
+            });
 
-      if (erroUpload) {
-        throw erroUpload;
-      }
+        if (erroUpload) {
+            throw erroUpload;
+        }
 
-      // Obter URL pública
-      const { data: { publicUrl } } = supabase.storage
-        .from("residentes-fotos")
-        .getPublicUrl(caminhoArquivo);
+        const { data: { publicUrl } } = supabase.storage
+            .from("odara")
+            .getPublicUrl(caminhoArquivo);
 
-      return publicUrl;
+        return publicUrl;
     } catch (erro) {
-      console.error("Erro ao fazer upload:", erro);
-      alert("Erro ao fazer upload da imagem. Tente novamente.");
-      return null;
+        console.error("Erro ao fazer upload:", erro);
+        const mensagemErro = erro instanceof Error ? erro.message : 'Erro desconhecido ao fazer upload.';
+        alert(`Erro ao fazer upload da imagem: ${mensagemErro}`);
+        return null;
     } finally {
-      setEnviandoImagem(false);
+        setEnviandoImagem(false);
     }
-  };
+};
 
   // Buscar responsáveis
   useEffect(() => {
@@ -133,7 +130,7 @@ export default function CadastroResidente({ residente }: Props) {
         console.error("Erro ao buscar responsáveis:", erro);
       }
     };
-    
+
     buscarResponsaveis();
   }, [residente, setValue]);
 
@@ -163,9 +160,8 @@ export default function CadastroResidente({ residente }: Props) {
     setCarregando(true);
 
     try {
-      let urlFoto = dados.foto;
+      let urlFoto = residente.foto || null;
 
-      // Fazer upload da imagem se uma foi selecionada
       if (arquivoSelecionado) {
         const urlEnviada = await enviarImagem(arquivoSelecionado);
         if (urlEnviada) {
@@ -224,26 +220,26 @@ export default function CadastroResidente({ residente }: Props) {
           },
           ...(!residente
             ? [
-                {
-                  rotulo: "Novo Cadastro",
-                  className: "bg-odara-accent text-odara-contorno hover:bg-odara-secondary",
-                  aoClicar: () => {
-                    reset();
-                    setModalAberto(false);
-                    setPreviewUrl(null);
-                    setArquivoSelecionado(null);
-                  }
-                },
-              ]
-            : [
-                {
-                  rotulo: "Continuar Editando",
-                  className: "bg-odara-accent text-odara-contorno hover:bg-odara-secondary",
-                  aoClicar: () => {
-                    setModalAberto(false);
-                  }
+              {
+                rotulo: "Novo Cadastro",
+                className: "bg-odara-accent text-odara-contorno hover:bg-odara-secondary",
+                aoClicar: () => {
+                  reset();
+                  setModalAberto(false);
+                  setPreviewUrl(null);
+                  setArquivoSelecionado(null);
                 }
-              ]
+              },
+            ]
+            : [
+              {
+                rotulo: "Continuar Editando",
+                className: "bg-odara-accent text-odara-contorno hover:bg-odara-secondary",
+                aoClicar: () => {
+                  setModalAberto(false);
+                }
+              }
+            ]
           ),
         ],
       });
@@ -557,7 +553,7 @@ export default function CadastroResidente({ residente }: Props) {
                     onClick={() => {
                       setPreviewUrl(null);
                       setArquivoSelecionado(null);
-                      setValue("foto", "");
+                      setValue("imagem", null);
                     }}
                     className="absolute -top-1 -right-1 bg-odara-alerta text-white rounded-full p-1 hover:bg-red-600 transition-colors"
                   >
@@ -565,9 +561,9 @@ export default function CadastroResidente({ residente }: Props) {
                   </button>
                 </div>
               ) : (
-                  <div className="w-16 h-16 rounded-full bg-odara-primary/10 flex items-center justify-center">
-                    <User size={24} className="text-odara-primary" />
-                  </div>
+                <div className="w-16 h-16 rounded-full bg-odara-primary/10 flex items-center justify-center">
+                  <User size={24} className="text-odara-primary" />
+                </div>
               )}
 
               <div className="flex-1">
@@ -584,7 +580,7 @@ export default function CadastroResidente({ residente }: Props) {
                 <p className="text-xs text-odara-dark/60 mt-1">PNG, JPG até 5MB</p>
               </div>
             </div>
-            <input type="hidden" {...register("foto")} />
+            <input type="hidden" {...register("imagem")} />
           </div>
 
           {/* Seção: Observações */}

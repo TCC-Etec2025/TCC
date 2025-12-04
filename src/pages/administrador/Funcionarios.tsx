@@ -1,9 +1,10 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Search, Plus, Edit, Trash2, User, Mail, Phone, AlertTriangle, MoreVertical } from 'lucide-react';
+import { Search, Plus, Edit, Trash2, User, Mail, Phone, AlertTriangle, MoreVertical, Users } from 'lucide-react';
 import { supabase } from '../../lib/supabaseClient';
 import type { Funcionario } from '../../Modelos';
 import toast, { Toaster } from 'react-hot-toast';
+import ModalAtribuicaoResidentes from './AtribuirResidentes';
 
 // Tipos de status disponíveis para funcionários
 type StatusFuncionario = 'ativo' | 'licença' | 'afastado' | 'inativo';
@@ -19,6 +20,8 @@ const Funcionarios: React.FC = () => {
   const [funcionarioParaExcluir, setFuncionarioParaExcluir] = useState<number | null>(null);
   const [atualizandoStatus, setAtualizandoStatus] = useState<number | null>(null);
   const [menuAberto, setMenuAberto] = useState<number | null>(null);
+  const [modalAberto, setModalAberto] = useState(false);
+  const [funcionarioSelecionado, setFuncionarioSelecionado] = useState<Funcionario | null>(null);
 
   // Busca todos os funcionários do banco de dados
   const buscarFuncionarios = async () => {
@@ -204,6 +207,17 @@ const Funcionarios: React.FC = () => {
                   >
                     <Edit className="h-4 w-4" />
                     Editar funcionário
+                  </button>
+                  <button
+                    onClick={() => {
+                      setFuncionarioSelecionado(funcionario);
+                      setModalAberto(true);
+                      setMenuAberto(null);
+                    }}
+                    className="flex items-center gap-2 w-full text-left px-4 py-3 text-sm hover:bg-odara-primary/10"
+                  >
+                    <Users className="h-4 w-4" />
+                    Atribuir residentes
                   </button>
                   <button
                     onClick={() => {
@@ -444,6 +458,17 @@ const Funcionarios: React.FC = () => {
                           >
                             <Edit className="h-4 w-4" />
                           </button>
+                          {/* Atribuir residentes */}
+                          <button
+                            className="p-1 text-odara-dropdown-accent transition hover:text-odara-secondary rounded"
+                            title="Atribuir residentes"
+                            onClick={() => {
+                              setFuncionarioSelecionado(funcionario);
+                              setModalAberto(true);
+                            }}
+                          >
+                            <Users className="h-4 w-4" />
+                          </button>
 
                           {/* Botão Excluir */}
                           <button
@@ -500,6 +525,12 @@ const Funcionarios: React.FC = () => {
           Total de {funcionariosFiltrados.length} funcionário(s) encontrado(s) de {listaFuncionarios.length}
         </div>
       </div>
+      <ModalAtribuicaoResidentes
+        isOpen={modalAberto}
+        onClose={() => setModalAberto(false)}
+        funcionarioId={funcionarioSelecionado?.id || null}
+        funcionarioNome={funcionarioSelecionado?.nome || null}
+      />
     </div>
   );
 };

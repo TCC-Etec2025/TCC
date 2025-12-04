@@ -4,6 +4,8 @@ import { Pill, Microscope, ClipboardPlus, HeartPulse, AlertTriangle, Siren, User
 import toast, { Toaster } from 'react-hot-toast';
 
 import DataFormatada from '../../components/DataFormatada';
+import { supabase } from '../../lib/supabaseClient';
+import { useUser } from '../../context/UserContext';
 
 // Interfaces para tipagem
 interface DetalhesItem {
@@ -29,6 +31,11 @@ interface BotaoAcao {
   acao: () => void;
 }
 
+interface DadosDashboard {
+  checklists: number;
+  residentes: number;
+}
+
 const FuncionarioDashboard = () => {
   const navigate = useNavigate();
 
@@ -36,12 +43,10 @@ const FuncionarioDashboard = () => {
   const [acaoSelecionada, setAcaoSelecionada] = useState<BotaoAcao | null>(null);
   const [modalAberto, setModalAberto] = useState<boolean>(false);
   const [itemSelecionado, setItemSelecionado] = useState<ItemAlertaNotificacao | null>(null);
-  const [dadosDashboard, setDadosDashboard] = useState({
-    checklistDia: 15,
-    residentesAtribuidos: 8,
-  });
+  const [dadosDashboard, setDadosDashboard] = useState<DadosDashboard | null>(null);
   const [carregando, setCarregando] = useState<boolean>(false);
-  
+  const { usuario } = useUser();
+
   // Estados para notificações
   const [notificacoesAbertas, setNotificacoesAbertas] = useState<boolean>(false);
   const [alertas, setAlertas] = useState<ItemAlertaNotificacao[]>([
@@ -79,7 +84,7 @@ const FuncionarioDashboard = () => {
       lido: false
     },
   ]);
-  
+
   const [notificacoes, setNotificacoes] = useState<ItemAlertaNotificacao[]>([
     {
       id: 2,
@@ -199,23 +204,29 @@ const FuncionarioDashboard = () => {
   const totalNaoLidas = alertasNaoLidos + notificacoesNaoLidas;
 
   // Efeito para simular carregamento de dados
-  useEffect(() => {
-    const carregarDadosDashboard = async () => {
-      try {
+    useEffect(() => {
+      const carregarDadosDashboard = async () => {
         setCarregando(true);
-        // Simular carregamento de dados
-        await new Promise(resolve => setTimeout(resolve, 500));
-        toast.success('Dashboard carregado com sucesso!');
-      } catch (erro: any) {
-        console.error('Erro ao carregar dashboard:', erro);
-        toast.error('Erro ao carregar dados do dashboard');
-      } finally {
-        setCarregando(false);
-      }
-    };
-
-    carregarDadosDashboard();
-  }, []);
+        try {
+          const { data, error } = await supabase
+            .rpc('resumo_checklist_funcionario', {
+              p_id_funcionario: usuario?.id,
+              p_data: new Date().toISOString().split('T')[0]
+            });
+  
+          if (error) throw error;
+          setDadosDashboard(data?.[0] || null);
+        } catch (erro) {
+          console.error('Erro ao buscar dados do dashboard:', erro);
+          toast.error('Erro ao buscar dados do dashboard');
+        } finally {
+          setCarregando(false);
+        }
+      };
+  
+      // Chama a função depois de declará-la
+      carregarDadosDashboard();
+    }, []);
 
   // Componente de Cabeçalho COM ÍCONE DE NOTIFICAÇÕES
   const CabecalhoDashboard = () => {
@@ -231,7 +242,7 @@ const FuncionarioDashboard = () => {
             <WrapperIcone icone={Calendar} tamanho={20} className="text-odara-primary" />
             <span><DataFormatada /></span>
           </div>
-          
+
           {/* Botão de Notificações no Cabeçalho */}
           <button
             onClick={() => setNotificacoesAbertas(true)}
@@ -239,10 +250,10 @@ const FuncionarioDashboard = () => {
             aria-label="Notificações"
           >
             <div className="p-2 bg-odara-primary/10 rounded-lg group-hover:bg-odara-primary/20 transition-colors">
-              <WrapperIcone 
-                icone={Bell} 
-                tamanho={20} 
-                className="text-odara-primary" 
+              <WrapperIcone
+                icone={Bell}
+                tamanho={20}
+                className="text-odara-primary"
               />
             </div>
             {totalNaoLidas > 0 && (
@@ -258,11 +269,11 @@ const FuncionarioDashboard = () => {
 
   // Componente de Cartões de Estatísticas - RESPONSIVO
   const CartoesEstatisticas = ({
-    checklistDia,
-    residentesAtribuidos
+    checklists,
+    residentes
   }: {
-    checklistDia: number;
-    residentesAtribuidos: number;
+    checklists: number;
+    residentes: number;
   }) => {
     return (
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
@@ -272,7 +283,7 @@ const FuncionarioDashboard = () => {
             <div>
               <h3 className="text-sm font-medium text-gray-500">Checklists do Dia</h3>
               <p className="text-2xl sm:text-3xl font-bold text-odara-dark mt-1 sm:mt-2">
-                {carregando ? '...' : checklistDia}
+                {carregando ? '...' : checklists}
               </p>
               <p className="text-xs sm:text-sm font-medium text-gray-400 mt-1">+5 Pendentes</p>
             </div>
@@ -288,7 +299,7 @@ const FuncionarioDashboard = () => {
             <div>
               <h3 className="text-sm font-medium text-gray-500">Residentes Atribuídos</h3>
               <p className="text-2xl sm:text-3xl font-bold text-odara-dark mt-1 sm:mt-2">
-                {carregando ? '...' : residentesAtribuidos}
+                {carregando ? '...' : residentes}
               </p>
               <p className="text-xs text-gray-500 mt-1">Total: 12 residentes</p>
             </div>
@@ -436,13 +447,13 @@ const FuncionarioDashboard = () => {
     return (
       <>
         {/* Overlay para mobile */}
-        <div 
+        <div
           className="fixed inset-0 z-40 bg-black/20"
           onClick={() => setNotificacoesAbertas(false)}
         />
-        
+
         {/* Painel de Notificações */}
-        <div 
+        <div
           className="fixed z-50 bg-white rounded-lg shadow-xl border border-gray-200
             // Mobile: tela cheia no fundo
             inset-x-0 bottom-0 top-16
@@ -462,7 +473,7 @@ const FuncionarioDashboard = () => {
                 <div>
                   <h3 className="text-lg font-semibold text-odara-dark">Notificações</h3>
                   <p className="text-sm text-gray-500">
-                    {totalNaoLidas > 0 
+                    {totalNaoLidas > 0
                       ? `${totalNaoLidas} não lida${totalNaoLidas !== 1 ? 's' : ''}`
                       : 'Todas lidas'}
                   </p>
@@ -581,14 +592,14 @@ const FuncionarioDashboard = () => {
     return (
       <>
         {/* Overlay */}
-        <div 
+        <div
           className="fixed inset-0 bg-black/30 z-50"
           onClick={fecharModal}
         />
-        
+
         {/* Modal */}
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-          <div 
+          <div
             className="bg-white rounded-xl shadow-lg w-full max-w-md max-h-[90vh] overflow-hidden flex flex-col"
             onClick={(e) => e.stopPropagation()}
           >
@@ -712,8 +723,8 @@ const FuncionarioDashboard = () => {
 
         <div className="space-y-4 sm:space-y-6">
           <CartoesEstatisticas
-            checklistDia={dadosDashboard.checklistDia}
-            residentesAtribuidos={dadosDashboard.residentesAtribuidos}
+            checklists={dadosDashboard?.checklists}
+            residentes={dadosDashboard?.residentes}
           />
 
           <AcoesFuncionario />

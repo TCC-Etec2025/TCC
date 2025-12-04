@@ -22,7 +22,7 @@ export const useCadastroForm = (residente: Residente) => {
             plano_saude: '',
             numero_carteirinha: '',
             observacoes: '',
-            foto: '',
+            imagem: null
         },
     });
 
@@ -44,7 +44,7 @@ export const useCadastroForm = (residente: Residente) => {
                 plano_saude: residente.plano_saude || '',
                 numero_carteirinha: residente.numero_carteirinha || '',
                 observacoes: residente.observacoes || '',
-                foto: residente.foto || '',
+                imagem: null
             });
         }
     }, [residente, reset]);

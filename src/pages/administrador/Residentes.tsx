@@ -241,7 +241,15 @@ const Residentes: React.FC = () => {
           <div className="flex items-start justify-between">
             <div className="flex items-center gap-3">
               <div className="bg-odara-primary/20 rounded-full p-2 flex-shrink-0">
-                <User className="h-5 w-5 text-odara-primary" />
+                {residente.foto ? (
+                  <img
+                    src={residente.foto}
+                    alt={residente.nome}
+                    className="h-5 w-5 text-odara-primary rounded-full"
+                  />
+                ) : (
+                  <User className="h-5 w-5 text-odara-primary" />
+                )}
               </div>
               <div className="flex-1 min-w-0">
                 <p className="font-medium text-odara-dark truncate">{residente.nome}</p>
@@ -464,7 +472,15 @@ const Residentes: React.FC = () => {
                         <div className="flex items-center gap-3 min-w-[200px]">
                           {/* Ícone */}
                           <div className="bg-odara-primary/20 rounded-full p-2 flex-shrink-0">
-                            <User className="h-4 w-4 text-odara-primary" />
+                            {residente.foto ? (
+                              <img
+                                src={residente.foto}
+                                alt={residente.nome}
+                                className="h-4 w-4 text-odara-primary rounded-full"
+                              />
+                            ) : (
+                              <User className="h-4 w-4 text-odara-primary" />
+                            )}
                           </div>
 
                           {/* Nome */}

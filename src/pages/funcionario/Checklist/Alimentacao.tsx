@@ -1,17 +1,29 @@
-import { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useCallback, useRef } from 'react';
 import {
-  FaExclamationCircle,
-  FaFilter,
-  FaChevronDown,
-  FaChevronRight,
-  FaClock,
-  FaUser,
-  FaUtensils,
-  FaRegCommentAlt
-} from 'react-icons/fa';
+  Info,
+  Filter,
+  ChevronDown,
+  ChevronRight,
+  MessageCircleMore,
+  Clock,
+  Search,
+  Edit,
+  Check,
+  CircleCheck,
+  CircleMinus,
+  XCircle,
+  Loader,
+  X,
+  Apple,
+  RockingChair
+} from 'lucide-react';
+import * as yup from 'yup';
+import { yupResolver } from '@hookform/resolvers/yup';
+import { useForm } from 'react-hook-form';
+
 import { supabase } from '../../../lib/supabaseClient';
 import { useUser } from '../../../context/UserContext';
-import { useObservacaoModal } from '../../../hooks/useObservacaoModal';
+import toast, { Toaster } from 'react-hot-toast';
 
 type Refeicao = "cafe-da-manha" | "lanche-manha" | "almoco" | "lanche-tarde" | "jantar" | "ceia";
 
@@ -30,13 +42,77 @@ type RegistroAlimentar = {
 type Residente = {
   id: number;
   nome: string;
+  quarto?: string | null;
 };
 
 type RegistroComDetalhes = RegistroAlimentar & {
   residente: Residente;
 };
 
-const getTodayString = () => {
+/* Constantes */
+const COR_STATUS: Record<string, {
+  bola: string;
+  bg: string;
+  text: string;
+  border: string;
+  icon: any;
+}> = {
+  aceitou: {
+    bola: 'bg-green-500',
+    bg: 'bg-green-50',
+    text: 'text-odara-dark font-semibold',
+    border: 'border-b border-green-200',
+    icon: CircleCheck
+  },
+  parcial: {
+    bola: 'bg-orange-400',
+    bg: 'bg-orange-50',
+    text: 'text-odara-dark font-semibold',
+    border: 'border-b border-orange-200',
+    icon: CircleMinus
+  },
+  recusou: {
+    bola: 'bg-odara-alerta',
+    bg: 'bg-odara-alerta/10',
+    text: 'text-odara-dark font-semibold',
+    border: 'border-b border-odara-alerta/20',
+    icon: XCircle
+  },
+  pendente: {
+    bola: 'bg-yellow-400',
+    bg: 'bg-yellow-50',
+    text: 'text-odara-dark font-semibold',
+    border: 'border-b border-yellow-200',
+    icon: Clock
+  }
+};
+
+const STATUS_OPTIONS = [
+  { value: 'pendente', label: 'Pendente', icon: Clock },
+  { value: 'aceitou', label: 'Aceitou', icon: CircleCheck },
+  { value: 'parcial', label: 'Parcial', icon: CircleMinus },
+  { value: 'recusou', label: 'Recusou', icon: XCircle }
+];
+
+const FILTRO_STATUS_OPTIONS = [
+  { value: 'todos', label: 'Todos os status' },
+  { value: 'pendente', label: 'Pendente' },
+  { value: 'aceitou', label: 'Aceitou' },
+  { value: 'parcial', label: 'Parcial' },
+  { value: 'recusou', label: 'Recusou' }
+];
+
+const REFEICAO_MAP: Record<Refeicao, string> = {
+  "cafe-da-manha": "Café da Manhã",
+  "lanche-manha": "Lanche da Manhã",
+  "almoco": "Almoço",
+  "lanche-tarde": "Lanche da Tarde",
+  "jantar": "Jantar",
+  "ceia": "Ceia"
+};
+
+/* Utilitários */
+const getTodayString = (): string => {
   const date = new Date();
   const year = date.getFullYear();
   const month = String(date.getMonth() + 1).padStart(2, '0');
@@ -44,72 +120,773 @@ const getTodayString = () => {
   return `${year}-${month}-${day}`;
 };
 
-const Alimentacao = () => {
-  const [registros, setRegistros] = useState<RegistroComDetalhes[]>([]);
-  const [residentes, setResidentes] = useState<Residente[]>([]);
-  
-  const [datesExpanded, setDatesExpanded] = useState<Record<string, boolean>>({});
-  const [dateError, setDateError] = useState<string | null>(null);
+const formatarData = (data: string): string => {
+  return data.split('-').reverse().join('/');
+};
 
-  const { usuario } = useUser();
-  const { openModal, ObservacaoModal } = useObservacaoModal();
+/* Componente: Dropdown de Filtro */
+interface FiltroDropdownProps {
+  titulo: string;
+  aberto: boolean;
+  setAberto: (aberto: boolean) => void;
+  valorSelecionado: string | number | null;
+  onSelecionar: (value: any) => void;
+  tipo: 'residente' | 'status';
+  residentesUnicos?: [number, string][];
+  ref?: React.Ref<HTMLDivElement>;
+}
 
-  const [filtros, setFiltros] = useState({
-    residente: null as number | null,
-    status: 'pendente' as string | null,
-    startDate: getTodayString() as string | null,
-    endDate: getTodayString() as string | null,
+const FiltroDropdown = React.forwardRef<HTMLDivElement, FiltroDropdownProps>(
+  ({ titulo, aberto, setAberto, valorSelecionado, onSelecionar, tipo, residentesUnicos = [] }, ref) => {
+    return (
+      <div className="relative" ref={ref}>
+        <button
+          type="button"
+          onClick={() => setAberto(!aberto)}
+          className="flex items-center justify-between w-full h-9 sm:h-10 border border-gray-300 rounded-lg px-3 text-xs sm:text-sm hover:bg-gray-50 transition-colors"
+        >
+          <span className="text-odara-dark truncate">
+            {tipo === 'residente'
+              ? valorSelecionado
+                ? residentesUnicos.find(([id]) => id === valorSelecionado)?.[1] || titulo
+                : titulo
+              : valorSelecionado
+                ? FILTRO_STATUS_OPTIONS.find(opt => opt.value === valorSelecionado)?.label || titulo
+                : titulo
+            }
+          </span>
+          <ChevronDown size={10} className="sm:w-3 sm:h-3 text-gray-500 flex-shrink-0" />
+        </button>
+
+        {aberto && (
+          <div className="absolute top-full left-0 right-0 mt-1 bg-white rounded-lg shadow-lg border border-gray-200 z-30 max-h-60 overflow-y-auto">
+            {tipo === 'residente' ? (
+              <>
+                <button
+                  onClick={() => onSelecionar(null)}
+                  className={`flex items-center gap-2 sm:gap-3 w-full text-left px-3 sm:px-4 py-2 sm:py-3 text-xs sm:text-sm hover:bg-odara-primary/10 transition ${!valorSelecionado
+                    ? 'bg-odara-primary/20 text-odara-primary font-semibold'
+                    : 'text-gray-700'
+                    }`}
+                >
+                  <span>Todos os residentes</span>
+                  {!valorSelecionado && <Check className="ml-auto text-odara-primary w-3 h-3 sm:w-3.5 sm:h-3.5" />}
+                </button>
+                {residentesUnicos.map(([id, nome]) => (
+                  <button
+                    key={id}
+                    onClick={() => onSelecionar(id)}
+                    className={`flex items-center gap-2 sm:gap-3 w-full text-left px-3 sm:px-4 py-2 sm:py-3 text-xs sm:text-sm hover:bg-odara-primary/10 transition ${valorSelecionado === id
+                      ? 'bg-odara-primary/20 text-odara-primary font-semibold'
+                      : 'text-gray-700'
+                      }`}
+                  >
+                    <span className="truncate">{nome}</span>
+                    {valorSelecionado === id && <Check className="ml-auto text-odara-primary w-3 h-3 sm:w-3.5 sm:h-3.5" />}
+                  </button>
+                ))}
+              </>
+            ) : (
+              FILTRO_STATUS_OPTIONS.map((opcao) => (
+                <button
+                  key={opcao.value}
+                  onClick={() => onSelecionar(opcao.value)}
+                  className={`flex items-center gap-2 sm:gap-3 w-full text-left px-3 sm:px-4 py-2 sm:py-3 text-xs sm:text-sm hover:bg-odara-primary/10 transition ${(opcao.value === 'todos' && !valorSelecionado) || valorSelecionado === opcao.value
+                    ? 'bg-odara-primary/20 text-odara-primary font-semibold'
+                    : 'text-gray-700'
+                    }`}
+                >
+                  <span>{opcao.label}</span>
+                  {((opcao.value === 'todos' && !valorSelecionado) || valorSelecionado === opcao.value) && (
+                    <Check className="ml-auto text-odara-primary w-3 h-3 sm:w-3.5 sm:h-3.5" />
+                  )}
+                </button>
+              ))
+            )}
+          </div>
+        )}
+      </div>
+    );
+  }
+);
+
+FiltroDropdown.displayName = 'FiltroDropdown';
+
+/* Schema de validação */
+const observacaoSchema = yup.object({
+  observacao: yup
+    .string()
+    .when('$status', ([status], schema) => {
+      if (status === 'parcial' || status === 'recusou') {
+        return schema.required('A observação é obrigatória para este status');
+      }
+      return schema.nullable();
+    })
+    .max(100, 'A observação deve ter no máximo 100 caracteres')
+    .default('')
+});
+
+type ObservacaoFormData = {
+  observacao: string;
+};
+
+/* Modal de Observação */
+interface ObservacaoModalProps {
+  isOpen: boolean;
+  observacaoInicial: string;
+  status: string;
+  onConfirm: (observacao: string) => void;
+  onCancel: () => void;
+  onClose: () => void;
+}
+
+const ObservacaoModal: React.FC<ObservacaoModalProps> = ({
+  isOpen,
+  observacaoInicial,
+  status,
+  onConfirm,
+  onCancel,
+  onClose
+}) => {
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const {
+    register,
+    handleSubmit,
+    formState: { errors },
+    setValue,
+    setError,
+    clearErrors
+  } = useForm<ObservacaoFormData>({
+    resolver: yupResolver(observacaoSchema),
+    context: { status },
+    defaultValues: {
+      observacao: observacaoInicial || ''
+    }
   });
 
-  const refeicaoMap: Record<Refeicao, string> = {
-    "cafe-da-manha": "Café da Manhã",
-    "lanche-manha": "Lanche da Manhã",
-    "almoco": "Almoço",
-    "lanche-tarde": "Lanche da Tarde",
-    "jantar": "Jantar",
-    "ceia": "Ceia"
+  const isObservacaoObrigatoria = status === 'parcial' || status === 'recusou';
+  const isEdicao = !!observacaoInicial;
+  const tituloModal = isEdicao ? 'Editar Observação' : 'Adicionar Observação';
+  const descricaoModal = isEdicao
+    ? 'Atualize a observação da refeição'
+    : 'Informe a observação para a refeição';
+
+  const onSubmit = async (values: ObservacaoFormData) => {
+    setIsSubmitting(true);
+
+    try {
+      if ((status === 'parcial' || status === 'recusou') && !values.observacao?.trim()) {
+        setError('observacao', {
+          type: 'manual',
+          message: 'A observação é obrigatória para este status'
+        });
+        setIsSubmitting(false);
+        return;
+      }
+
+      onConfirm(values.observacao || '');
+
+    } catch (err: any) {
+      console.error("Erro ao salvar observação:", err);
+      toast.error("Erro ao salvar observação");
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const { data: foodData, error: foodErr } = await supabase
-          .from("registro_alimentar")
-          .select("*");
+  React.useEffect(() => {
+    if (isOpen) {
+      setIsSubmitting(false);
+    }
+  }, [isOpen]);
 
-        if (foodErr) throw foodErr;
+  if (!isOpen) return null;
 
-        const { data: resData, error: resErr } = await supabase
-          .from("residente")
-          .select("id, nome");
+  return (
+    <div className="fixed inset-0 bg-odara-offwhite/80 flex items-center justify-center p-4 z-50">
+      <div className="w-full max-w-md bg-white rounded-2xl shadow-lg overflow-hidden border-l-4 border-odara-primary">
+        {/* Header do Modal */}
+        <div className="border-b-1 border-odara-primary bg-odara-primary/70 text-odara-accent p-6">
+          <div className="flex justify-between items-center">
+            <h2 className="text-2xl font-bold">
+              {tituloModal}
+            </h2>
 
-        if (resErr) throw resErr;
+            <button
+              onClick={onClose}
+              className="text-odara-accent transition-colors duration-200 p-1 rounded-full hover:text-odara-secondary"
+              aria-label="Fechar modal"
+            >
+              <X size={20} />
+            </button>
+          </div>
 
-        const allResidentes = resData || [];
-        setResidentes(allResidentes);
+          <p className="text-odara-white mt-1 text-sm">
+            {descricaoModal}
+          </p>
+        </div>
 
-        const combinedData: RegistroComDetalhes[] = (foodData || []).map((item: RegistroAlimentar) => {
-          const res = allResidentes.find(r => r.id === item.id_residente);
-          return res ? { ...item, residente: res } : null;
-        }).filter((item): item is RegistroComDetalhes => item !== null);
+        {/* Corpo do Modal */}
+        <div className="p-6 bg-odara-offwhite/30">
+          <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+            <div className="mb-4">
+              <div className="flex justify-between items-center mb-2">
+                <label className="block text-medium text-odara-dark">
+                  {isObservacaoObrigatoria ? 'Observação *' : ' Observação (opcional)'}
+                </label>
+              </div>
 
-        setRegistros(combinedData);
+              <textarea
+                {...register('observacao')}
+                onChange={(e) => {
+                  setValue('observacao', e.target.value);
+                  clearErrors('observacao');
+                }}
+                className={'w-full px-4 py-2 border border-odara-primary rounded-lg focus:border-transparent focus:outline-none focus:ring-odara-secondary focus:ring-2 text-odara-secondary text-sm sm:text-base mb-2'}
+                rows={4}
+                placeholder={
+                  isObservacaoObrigatoria
+                    ? "Descreva a observação (campo obrigatório)..."
+                    : "Descreva a observação (opcional)..."
+                }
+                autoFocus
+              />
 
-      } catch (err) {
-        console.error("Erro ao buscar dados de alimentação:", err);
-      }
-    };
+              {errors.observacao && (
+                <p className="text-sm text-red-600 flex items-center gap-1">
+                  <Info size={14} /> {errors.observacao.message}
+                </p>
+              )}
+            </div>
 
-    fetchData();
+            {/* Ações */}
+            <div className="flex justify-end gap-3 pt-4 border-t border-gray-200">
+              <button
+                type="button"
+                onClick={onCancel}
+                className="px-6 py-2.5 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors duration-200 text-sm sm:text-base font-medium"
+              >
+                Cancelar
+              </button>
+
+              <button
+                type="submit"
+                disabled={isSubmitting}
+                className='w-max px-6 py-2 bg-odara-accent text-white rounded-lg hover:bg-odara-secondary transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed text-sm sm:text-base'
+              >
+                {isSubmitting ? (
+                  <>
+                    <Loader className="animate-spin inline mr-2" size={16} />
+                    {isEdicao ? 'Salvando...' : 'Adicionando...'}
+                  </>
+                ) : (
+                  <>
+                    {isEdicao ? 'Salvar Alterações' : 'Adicionar Observação'}
+                  </>
+                )}
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+/* Componente: Card de Alimentação */
+interface CardAlimentacaoProps {
+  registro: RegistroComDetalhes;
+  onStatusClick: (registroId: number, status: string) => Promise<void>;
+  onEditObservation: (registro: RegistroComDetalhes) => Promise<void>;
+}
+
+const CardAlimentacao: React.FC<CardAlimentacaoProps> = ({
+  registro,
+  onStatusClick,
+  onEditObservation
+}) => {
+  const cores = COR_STATUS[registro.status] || COR_STATUS.pendente;
+
+  return (
+    <div className="bg-white rounded-lg shadow border overflow-hidden border-gray-200 hover:shadow-md transition-shadow duration-200 flex flex-col h-full">
+      {/* Header */}
+      <div className={`flex flex-wrap justify-center sm:justify-between gap-2 items-center p-2 sm:p-3 ${cores.border} ${cores.bg}`}>
+        {/* Coluna Esquerda - Data e Hora */}
+        <div className="flex items-center">
+          <div className={`w-2 h-2 sm:w-3 sm:h-3 rounded-full mr-2 ${cores.bola}`}></div>
+          <div className="flex flex-col sm:flex-row sm:items-center gap-0 sm:gap-2">
+            <p className={`text-xs sm:text-sm md:text-base ${cores.text} whitespace-nowrap`}>
+              {formatarData(registro.data)}
+            </p>
+            <span className="text-odara-accent mx-1 hidden sm:inline">•</span>
+            <span className="text-xs sm:text-sm md:text-base text-odara-accent whitespace-nowrap">
+              {registro.horario.slice(0, 5)}
+            </span>
+          </div>
+        </div>
+
+        {/* Status */}
+        <div className="flex items-center gap-2 px-2 sm:px-3 py-1 text-xs sm:text-sm">
+          <Clock size={12} className="sm:w-3.5 sm:h-3.5 text-odara-accent" />
+          <span className="text-odara-dark capitalize">{registro.status}</span>
+        </div>
+      </div>
+
+      {/* Corpo do Card */}
+      <div className="p-3 sm:p-4 flex-1 flex flex-col">
+        <div className="flex items-start justify-between mb-2 sm:mb-3">
+          <h3 className="text-sm sm:text-base md:text-lg font-bold text-odara-dark line-clamp-1 flex-1">
+            {REFEICAO_MAP[registro.refeicao]}
+          </h3>
+        </div>
+
+        <div className="grid grid-cols-1 gap-2 sm:gap-3 sm:grid-cols-2 flex-1">
+          {/* Coluna Esquerda */}
+          <div className="space-y-2 sm:space-y-3">
+            <div>
+              <strong className="text-odara-dark text-xs sm:text-sm">Alimento:</strong>
+              <span className="text-odara-name mt-0.5 sm:mt-1 text-xs sm:text-sm block">
+                {registro.alimento || 'Não informado'}
+              </span>
+            </div>
+
+            <div>
+              <strong className="text-odara-dark text-xs sm:text-sm">Horário:</strong>
+              <span className="text-odara-name mt-0.5 sm:mt-1 text-xs sm:text-sm block">
+                {registro.horario.slice(0, 5)}
+              </span>
+            </div>
+          </div>
+
+{/* Coluna Direita */}
+<div className="space-y-2 sm:space-y-3">
+  {/* Residente */}
+  <div className="flex items-start gap-2">
+    {/* Mobile: mostra o label "Residente:" e o nome */}
+    <div className="sm:hidden flex-1 min-w-0">
+      <strong className="text-odara-dark text-xs sm:text-sm">Residente:</strong>
+      <div className="mt-0.5">
+        <span className="text-odara-name text-xs sm:text-sm">
+          {registro.residente.nome}
+        </span>
+      </div>
+    </div>
+    
+    {/* Desktop: mostra ícone e conteúdo */}
+    <div className="hidden sm:flex sm:items-start sm:gap-2">
+      <RockingChair className="text-odara-accent flex-shrink-0 mt-0.5" size={12} />
+      <div className="flex flex-col">
+        <strong className="text-odara-dark text-xs sm:text-sm">Residente:</strong>
+        <span className="text-odara-name text-xs sm:text-sm mt-0.5">
+          {registro.residente.nome}
+        </span>
+      </div>
+    </div>
+  </div>
+
+            {/* Observação */}
+            <div className="flex items-start gap-2">
+              {/* Mobile: mostra apenas o conteúdo */}
+              <div className="sm:hidden flex-1 min-w-0">
+                <strong className="text-odara-dark text-xs sm:text-sm">Observação:</strong>
+                <div className="mt-0.5 flex items-start justify-between gap-2">
+                  <span className="text-odara-name text-xs sm:text-sm flex-1 line-clamp-2">
+                    {registro.observacao || 'Nenhuma observação'}
+                  </span>
+                  {registro.observacao && (
+                    <button
+                      onClick={() => onEditObservation(registro)}
+                      className="text-odara-dropdown-accent hover:text-odara-white transition-colors duration-200 p-1.5 rounded-full hover:bg-odara-dropdown-accent flex-shrink-0"
+                      title="Editar observação"
+                    >
+                      <Edit size={12} />
+                    </button>
+                  )}
+                </div>
+              </div>
+              
+              {/* Desktop: mostra com estrutura similar ao residente */}
+              <div className="hidden sm:flex sm:items-start sm:gap-2">
+                {/* Espaço reservado para alinhamento (substitui o ícone da cadeira) */}
+                <div className="w-3 flex-shrink-0" /> {/* 12px = tamanho do ícone + gap */}
+                <div className="flex flex-col flex-1 min-w-0">
+                  <strong className="text-odara-dark text-xs sm:text-sm">Observação:</strong>
+                  <div className="flex items-start justify-between gap-2 mt-0.5">
+                    <span className="text-odara-name text-xs sm:text-sm flex-1 line-clamp-2">
+                      {registro.observacao || 'Nenhuma observação'}
+                    </span>
+                    {registro.observacao && (
+                      <button
+                        onClick={() => onEditObservation(registro)}
+                        className="text-odara-dropdown-accent hover:text-odara-white transition-colors duration-200 p-2 rounded-full hover:bg-odara-dropdown-accent flex-shrink-0"
+                        title="Editar observação"
+                      >
+                        <Edit size={14} className="w-3.5 h-3.5" />
+                      </button>
+                    )}
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Footer do Card */}
+      <div className="px-3 sm:px-4 py-2 sm:py-3 bg-gray-50 rounded-b-lg border-t border-gray-200 mt-auto">
+        <div className="flex flex-col gap-2">
+          <div className="grid grid-cols-3 gap-2">
+            <button
+              onClick={() => onStatusClick(registro.id, "aceitou")}
+              className={`flex flex-col items-center justify-center py-2 rounded-lg text-xs font-medium transition-colors ${registro.status === "aceitou"
+                ? 'bg-green-100 text-green-500 border border-green-500'
+                : 'bg-white text-gray-400 border border-gray-400 hover:bg-green-50 hover:text-green-600 hover:border-green-600'
+                }`}
+            >
+              <CircleCheck size={14} className="mb-1 sm:w-3.5 sm:h-3.5" />
+              <span className="hidden xs:inline">Ok</span>
+            </button>
+
+            <button
+              onClick={() => onStatusClick(registro.id, "parcial")}
+              className={`flex flex-col items-center justify-center py-2 rounded-lg text-xs font-medium transition-colors ${registro.status === "parcial"
+                ? 'bg-yellow-50 text-yellow-500 border border-yellow-500'
+                : 'bg-white text-gray-400 border border-gray-400 hover:bg-yellow-50 hover:text-yellow-500 hover:border-yellow-500'
+                }`}
+            >
+              <CircleMinus size={14} className="mb-1 sm:w-3.5 sm:h-3.5" />
+              <span className="hidden xs:inline">Parcial</span>
+            </button>
+
+            <button
+              onClick={() => onStatusClick(registro.id, "recusou")}
+              className={`flex flex-col items-center justify-center py-2 rounded-lg text-xs font-medium transition-colors ${registro.status === "recusou"
+                ? 'bg-odara-alerta/10 text-odara-alerta border border-odara-alerta'
+                : 'bg-white text-gray-400 border border-gray-400 hover:bg-odara-alerta/10 hover:text-odara-alerta hover:border-odara-alerta'
+                }`}
+            >
+              <Clock size={14} className="mb-1 sm:w-3.5 sm:h-3.5" />
+              <span className="hidden xs:inline">Não</span>
+            </button>
+          </div>
+
+          <button
+            onClick={() => onEditObservation(registro)}
+            className={`w-full flex items-center justify-center gap-2 py-2 rounded-lg text-xs font-medium transition-colors ${registro.observacao
+              ? 'bg-blue-50 text-blue-500 border border-blue-500'
+              : 'bg-white text-gray-400 border border-gray-400 hover:bg-blue-50 hover:text-blue-500 hover:border-blue-500'
+              }`}
+          >
+            <MessageCircleMore size={12} className="sm:w-3.5 sm:h-3.5" />
+            {registro.observacao ? 'Editar Observação' : 'Adicionar Observação'}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+/* Componente: Seção de Filtros */
+interface SecaoFiltrosProps {
+  filtros: {
+    residenteId: number | null;
+    status: string | null;
+    startDate: string | null;
+    endDate: string | null;
+  };
+  setFiltros: (filtros: any) => void;
+  filtrosAberto: boolean;
+  filtroResidenteAberto: boolean;
+  setFiltroResidenteAberto: (aberto: boolean) => void;
+  filtroStatusAberto: boolean;
+  setFiltroStatusAberto: (aberto: boolean) => void;
+  onLimparFiltros: () => void;
+  residentesUnicos: [number, string][];
+  dateError: string | null;
+  setDateError: (error: string | null) => void;
+}
+
+const SecaoFiltros: React.FC<SecaoFiltrosProps> = ({
+  filtros,
+  setFiltros,
+  filtrosAberto,
+  filtroResidenteAberto,
+  setFiltroResidenteAberto,
+  filtroStatusAberto,
+  setFiltroStatusAberto,
+  onLimparFiltros,
+  residentesUnicos,
+  dateError,
+  setDateError
+}) => {
+  const filtroResidenteRef = useRef<HTMLDivElement>(null);
+  const filtroStatusRef = useRef<HTMLDivElement>(null);
+
+  const selecionarResidente = useCallback((residenteId: number | null) => {
+    setFiltros((prev: any) => ({ ...prev, residenteId }));
+    setFiltroResidenteAberto(false);
+  }, [setFiltros, setFiltroResidenteAberto]);
+
+  const selecionarStatus = useCallback((status: string | null) => {
+    setFiltros((prev: any) => ({ ...prev, status: status === 'todos' ? null : status }));
+    setFiltroStatusAberto(false);
+  }, [setFiltros, setFiltroStatusAberto]);
+
+  if (!filtrosAberto) return null;
+
+  return (
+    <div className="mb-6 bg-white p-4 sm:p-5 rounded-xl shadow border border-gray-200 animate-fade-in">
+      {/* Primeira Linha */}
+      <div className="flex flex-col md:flex-row gap-4 sm:gap-5 w-full">
+        <div className='flex flex-col md:flex-row flex-1 gap-4 sm:gap-5 w-full'>
+          {/* Filtro de Residente */}
+          <div className="flex-1 min-w-0">
+            <div className='flex gap-1 items-center ml-1 mb-1'>
+              <Filter size={9} className="sm:w-2.5 sm:h-2.5 text-odara-accent" />
+              <label className="block text-xs sm:text-sm font-semibold text-odara-secondary">Residente</label>
+            </div>
+
+            <FiltroDropdown
+              titulo="Todos os residentes"
+              aberto={filtroResidenteAberto}
+              setAberto={setFiltroResidenteAberto}
+              valorSelecionado={filtros.residenteId}
+              onSelecionar={selecionarResidente}
+              tipo="residente"
+              residentesUnicos={residentesUnicos}
+              ref={filtroResidenteRef}
+            />
+          </div>
+
+          {/* Filtro de Status */}
+          <div className="flex-1 min-w-0">
+            <div className='flex gap-1 items-center ml-1 mb-1'>
+              <Filter size={9} className="sm:w-2.5 sm:h-2.5 text-odara-accent" />
+              <label className="block text-xs sm:text-sm font-semibold text-odara-secondary">Status</label>
+            </div>
+
+            <FiltroDropdown
+              titulo="Todos os status"
+              aberto={filtroStatusAberto}
+              setAberto={setFiltroStatusAberto}
+              valorSelecionado={filtros.status || 'todos'}
+              onSelecionar={selecionarStatus}
+              tipo="status"
+              ref={filtroStatusRef}
+            />
+          </div>
+        </div>
+
+        {/* Botão Limpar Filtros/Busca */}
+        <div className="flex md:items-end gap-2 pt-1 md:pt-0 md:flex-shrink-0">
+          <button
+            onClick={onLimparFiltros}
+            className="bg-odara-accent hover:bg-odara-secondary text-white font-semibold py-2 px-3 sm:px-4 rounded-lg flex items-center transition text-xs sm:text-sm h-9 sm:h-10 w-full md:w-auto justify-center"
+          >
+            Limpar Filtros/Busca
+          </button>
+        </div>
+      </div>
+
+      {/* Segunda Linha (Filtro de Data) */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-5 mt-4 sm:mt-5 pt-4 sm:pt-5 border-t border-gray-200">
+        {/* A Partir da Data */}
+        <div>
+          <div className='flex gap-1 items-center ml-1 mb-1'>
+            <Filter size={9} className="sm:w-2.5 sm:h-2.5 text-odara-accent" />
+            <label className="block text-xs sm:text-sm font-semibold text-odara-secondary">A Partir da Data</label>
+          </div>
+          <input
+            type="date"
+            value={filtros.startDate || ''}
+            onChange={(e) => {
+              setFiltros((prev: any) => ({ ...prev, startDate: e.target.value || null }));
+              setDateError(null);
+            }}
+            className={`w-full h-9 sm:h-10 border border-gray-300 rounded-lg px-3 text-xs sm:text-sm focus:ring-2 focus:ring-odara-primary focus:outline-none ${dateError ? 'border-red-500 bg-red-50' : 'border-gray-300'
+              }`}
+          />
+        </div>
+
+        {/* Até a Data */}
+        <div>
+          <div className='flex gap-1 items-center ml-1 mb-1'>
+            <Filter size={9} className="sm:w-2.5 sm:h-2.5 text-odara-accent" />
+            <label className="block text-xs sm:text-sm font-semibold text-odara-secondary">Até a Data</label>
+          </div>
+          <input
+            type="date"
+            value={filtros.endDate || ''}
+            onChange={(e) => {
+              setFiltros((prev: any) => ({ ...prev, endDate: e.target.value || null }));
+              setDateError(null);
+            }}
+            className={`w-full h-9 sm:h-10 border border-gray-300 rounded-lg px-3 text-xs sm:text-sm focus:ring-2 focus:ring-odara-primary focus:outline-none ${dateError ? 'border-red-500 bg-red-50' : 'border-gray-300'
+              }`}
+          />
+        </div>
+
+        {dateError && (
+          <div className="flex items-center mt-1 text-red-600 text-xs">
+            <Info className="mr-1" size={14} />
+            {dateError}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+};
+
+/* Componente Principal */
+const Alimentacao = () => {
+  /* Estados */
+  const [registros, setRegistros] = useState<RegistroComDetalhes[]>([]);
+  const [residentes, setResidentes] = useState<Residente[]>([]);
+  const [datesExpanded, setDatesExpanded] = useState<Record<string, boolean>>({});
+  const [dateError, setDateError] = useState<string | null>(null);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [filtrosAberto, setFiltrosAberto] = useState(false);
+  const [filtroResidenteAberto, setFiltroResidenteAberto] = useState(false);
+  const [filtroStatusAberto, setFiltroStatusAberto] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [observacaoModal, setObservacaoModal] = useState({
+    isOpen: false,
+    observacaoInicial: '',
+    status: '',
+    registroId: null as number | null,
+    onConfirm: null as ((obs: string) => void) | null
+  });
+
+  const { usuario } = useUser();
+
+  const [filtros, setFiltros] = useState({
+    residenteId: null as number | null,
+    status: null as string | null,
+    startDate: getTodayString(),
+    endDate: getTodayString(),
+  });
+
+  /* Componente: Cabecalho */
+  const Cabecalho: React.FC = () => {
+    const [infoVisivel, setInfoVisivel] = useState(false);
+
+    return (
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
+        <div className="flex items-start sm:items-center gap-3 w-full">
+          <Apple size={24} className='sm:w-7 sm:h-7 lg:w-8 lg:h-8 text-odara-accent flex-shrink-0 mt-1 sm:mt-0' />
+          
+          <div className="flex-1 min-w-0 relative">
+            <div className="flex items-center gap-0.1 sm:gap-2">
+              <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold text-odara-dark flex-1 truncate">
+                Checklist de Alimentação
+              </h1>
+              
+              <button
+                onClick={() => setInfoVisivel(!infoVisivel)}
+                className="flex-shrink-0 w-5 h-5 sm:w-6 sm:h-6 lg:w-7 lg:h-7 flex items-center justify-center rounded-full hover:bg-gray-100 transition-colors ml-1"
+                aria-label="Informações"
+              >
+                <Info size={12} className="sm:w-3.5 sm:h-3.5 lg:w-4 lg:h-4 text-odara-accent" />
+              </button>
+            </div>
+            
+            {infoVisivel && (
+              <div className="absolute z-10 top-full left-0 sm:left-auto sm:right-0 mt-2 w-full sm:w-80 bg-blue-50 border border-blue-100 rounded-lg shadow-lg animate-fade-in">
+                <div className="p-3 sm:p-4">
+                  <p className="text-xs sm:text-sm text-odara-dark">
+                    <strong className="font-semibold">Como usar:</strong> Controle diário da alimentação dos residentes.
+                  </p>
+                  <button
+                    onClick={() => setInfoVisivel(false)}
+                    className="mt-2 text-xs sm:text-sm text-odara-accent hover:text-odara-secondary font-medium"
+                  >
+                    Entendi
+                  </button>
+                </div>
+                <div className="hidden sm:block absolute -top-2 right-4 w-4 h-4 bg-blue-50 border-t border-l border-blue-100 transform rotate-45"></div>
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+    );
+  };
+
+  /* Carregar Dados */
+  const fetchData = useCallback(async () => {
+    setLoading(true);
+    try {
+      // Buscar registros alimentares
+      const { data: foodData, error: foodErr } = await supabase
+        .from("registro_alimentar")
+        .select("*")
+        .order('data', { ascending: true })
+        .order('horario', { ascending: true });
+
+      if (foodErr) throw foodErr;
+
+      // Buscar residentes
+      const { data: resData, error: resErr } = await supabase
+        .from("residente")
+        .select("id, nome, quarto")
+        .order('nome', { ascending: true });
+
+      if (resErr) throw resErr;
+
+      setResidentes(resData || []);
+
+      // Combinar dados
+      const combinedData: RegistroComDetalhes[] = (foodData || []).map((item: RegistroAlimentar) => {
+        const res = resData?.find(r => r.id === item.id_residente);
+        return res ? { ...item, residente: res } : null;
+      }).filter((item): item is RegistroComDetalhes => item !== null);
+
+      setRegistros(combinedData);
+
+    } catch (err) {
+      console.error("Erro ao buscar dados de alimentação:", err);
+      toast.error('Erro ao carregar registros alimentares');
+    } finally {
+      setLoading(false);
+    }
   }, []);
 
+  React.useEffect(() => {
+    fetchData();
+  }, [fetchData]);
+
+  /* Utilitários */
+  const obterResidentesUnicos = useMemo(() => {
+    const residentesMap = new Map<number, string>();
+    registros.forEach(r => {
+      if (r.residente) {
+        residentesMap.set(r.residente.id, r.residente.nome);
+      }
+    });
+    return Array.from(residentesMap.entries());
+  }, [registros]);
+
+  /* Filtragem e Agrupamento */
   const gruposRenderizaveis = useMemo(() => {
-    const { residente, status, startDate, endDate } = filtros;
+    const { residenteId, status, startDate, endDate } = filtros;
 
     const filtradas = registros.filter(reg => {
-      if (residente && reg.residente.id !== residente) return false;
-      if (status && reg.status !== status) return false;
+      // Filtro por busca
+      if (searchTerm.trim() &&
+        !reg.alimento.toLowerCase().includes(searchTerm.toLowerCase()) &&
+        !REFEICAO_MAP[reg.refeicao].toLowerCase().includes(searchTerm.toLowerCase()) &&
+        !reg.residente.nome.toLowerCase().includes(searchTerm.toLowerCase())) {
+        return false;
+      }
 
+      // Filtro por residente
+      if (residenteId && reg.residente.id !== residenteId) return false;
+
+      // Filtro por status
+      if (status && status !== 'todos' && reg.status !== status) return false;
+
+      // Filtro por data
       if (startDate && endDate) {
         if (reg.data < startDate || reg.data > endDate) return false;
       } else if (startDate) {
@@ -121,11 +898,13 @@ const Alimentacao = () => {
       return true;
     });
 
+    // Ordenar por data e horário
     filtradas.sort((a, b) => {
       if (a.data !== b.data) return a.data.localeCompare(b.data);
       return a.horario.localeCompare(b.horario);
     });
 
+    // Agrupar por data
     const grupos: Record<string, RegistroComDetalhes[]> = {};
     filtradas.forEach(item => {
       if (!grupos[item.data]) grupos[item.data] = [];
@@ -135,16 +914,15 @@ const Alimentacao = () => {
     return Object.keys(grupos).sort().map(data => ({
       dataFormatada: data,
       itens: grupos[data],
-      isExpandido: datesExpanded[data] !== false 
+      isExpandido: datesExpanded[data] !== false
     }));
+  }, [registros, filtros, datesExpanded, searchTerm]);
 
-  }, [registros, filtros, datesExpanded]);
-
-  // Atualizar Status e Observação
-  const updateStatus = async (id: number, newStatus: string, observacao?: string) => {
+  /* Handlers */
+  const updateStatus = useCallback(async (registroId: number, newStatus: string, observacao?: string) => {
     try {
       const now = new Date();
-      
+
       const { error } = await supabase
         .from("registro_alimentar")
         .update({
@@ -153,370 +931,325 @@ const Alimentacao = () => {
           observacao: observacao ?? null,
           atualizado_em: now.toISOString()
         })
-        .eq("id", id);
+        .eq("id", registroId);
 
       if (error) throw error;
 
+      // Atualizar estado local
       setRegistros(prev =>
         prev.map(r =>
-          r.id === id ? { ...r, status: newStatus, observacao: observacao !== undefined ? observacao : r.observacao } : r
+          r.id === registroId
+            ? {
+              ...r,
+              status: newStatus,
+              observacao: observacao ?? r.observacao
+            }
+            : r
         )
       );
 
+      toast.success(`Status atualizado para "${newStatus}"`);
     } catch (err) {
       console.error("Erro ao atualizar status:", err);
+      toast.error('Erro ao atualizar status');
     }
-  };
+  }, [usuario?.id]);
 
-  // --- LÓGICA CORRIGIDA (IGUAL MEDICAMENTOS) ---
-
-  const handleStatusClick = async (regId: number, status: string) => {
-    try {
-      // Passamos string vazia "" para garantir que o botão seja "Salvar"
-      const obs = await openModal("");
-      
-      if (obs) {
-        // Se digitou algo e salvou
-        updateStatus(regId, status, obs);
-      } else if (status === "aceitou") {
-        // Se cancelou ou deixou vazio, mas era "aceitou" (não obriga obs)
-        updateStatus(regId, status);
-      }
-      // Se era parcial/recusou e não digitou, não faz nada (obrigatoriedade implícita pelo fluxo)
-    } catch {
-      // cancelado
-    }
-  };
-
-  const handleEditObservation = async (reg: RegistroComDetalhes) => {
-    try {
-      // Aqui passamos a obs existente, então se tiver texto, botão vira "Editar"
-      const novaObs = await openModal(reg.observacao || "");
-
-      if (novaObs !== null && novaObs !== reg.observacao) {
-        updateStatus(reg.id, reg.status, novaObs);
-      }
-    } catch {
-      // cancelado
-    }
-  };
-
-  const toggleDate = (date: string) => {
-    setDatesExpanded(prev => {
-        const isCurrentlyExpanded = prev[date] !== false; 
-        return { ...prev, [date]: !isCurrentlyExpanded };
+  const openObservacaoModal = useCallback((
+    observacaoInicial: string,
+    registroId: number,
+    status: string,
+    onConfirm: (obs: string) => void
+  ) => {
+    setObservacaoModal({
+      isOpen: true,
+      observacaoInicial,
+      status,
+      registroId,
+      onConfirm
     });
+  }, []);
+
+  const closeObservacaoModal = useCallback(() => {
+    setObservacaoModal({
+      isOpen: false,
+      observacaoInicial: '',
+      status: '',
+      registroId: null,
+      onConfirm: null
+    });
+  }, []);
+
+  const handleStatusClick = useCallback(async (registroId: number, status: string) => {
+    try {
+      if (status === "aceitou") {
+        await updateStatus(registroId, status);
+      } else {
+        const registro = registros.find(r => r.id === registroId);
+        openObservacaoModal(
+          registro?.observacao || "",
+          registroId,
+          status,
+          async (obs: string) => {
+            await updateStatus(registroId, status, obs);
+            closeObservacaoModal();
+          }
+        );
+      }
+    } catch {
+      // cancelado pelo usuário
+    }
+  }, [registros, updateStatus, openObservacaoModal, closeObservacaoModal]);
+
+  const handleEditObservation = useCallback(async (registro: RegistroComDetalhes) => {
+    openObservacaoModal(
+      registro.observacao || "",
+      registro.id,
+      registro.status,
+      async (obs: string) => {
+        await updateStatus(registro.id, registro.status, obs);
+        closeObservacaoModal();
+      }
+    );
+  }, [openObservacaoModal, updateStatus, closeObservacaoModal]);
+
+  const toggleDate = useCallback((date: string) => {
+    setDatesExpanded(prev => {
+      const isCurrentlyExpanded = prev[date] !== false;
+      return { ...prev, [date]: !isCurrentlyExpanded };
+    });
+  }, []);
+
+  const toggleFiltros = useCallback(() => {
+    setFiltrosAberto(prev => !prev);
+  }, []);
+
+  const limparFiltros = useCallback(() => {
+    setFiltros({
+      residenteId: null,
+      status: null,
+      startDate: getTodayString(),
+      endDate: getTodayString()
+    });
+    setSearchTerm('');
+    setFiltroResidenteAberto(false);
+    setFiltroStatusAberto(false);
+  }, []);
+
+  /* Componente: Lista de Registros */
+  const ListaRegistros = () => {
+    const totalFiltrado = gruposRenderizaveis.reduce((acc, grupo) => acc + grupo.itens.length, 0);
+    const totalGeral = registros.length;
+
+    return (
+      <div className="bg-white border-l-4 border-odara-primary rounded-xl sm:rounded-2xl shadow-lg p-3 sm:p-6">
+        <div className="flex flex-col sm:flex-row items-center justify-between gap-2 mb-3 sm:mb-4">
+          <h2 className="text-lg sm:text-xl lg:text-2xl font-bold text-odara-dark">Registros Alimentares</h2>
+          <span className="bg-gray-200 text-gray-700 px-2 py-1 rounded-full text-xs font-medium">
+            Total: {totalFiltrado}
+          </span>
+        </div>
+
+        {/* Tags de filtros ativos */}
+        {(filtros.residenteId || filtros.status || searchTerm || filtros.startDate || filtros.endDate) && (
+          <div className="mb-3 flex flex-wrap justify-center sm:justify-start gap-1 text-xs">
+            {searchTerm && (
+              <span className="bg-odara-secondary text-white px-2 py-1 rounded-full text-xs">
+                Busca: {searchTerm}
+              </span>
+            )}
+            {filtros.residenteId && (
+              <span className="bg-odara-secondary text-white px-2 py-1 rounded-full text-xs">
+                Residente: {residentes.find(r => r.id === filtros.residenteId)?.nome}
+              </span>
+            )}
+            {filtros.status && filtros.status !== 'todos' && (
+              <span className="bg-odara-secondary text-white px-2 py-1 rounded-full text-xs">
+                Status: {filtros.status}
+              </span>
+            )}
+            {(filtros.startDate || filtros.endDate) && (
+              <span className="bg-odara-secondary text-white px-2 py-1 rounded-full text-xs">
+                Data: {filtros.startDate ? ` ${formatarData(filtros.startDate)}` : ''}
+                {filtros.endDate ? ' até' + ` ${formatarData(filtros.endDate)}` : ''}
+              </span>
+            )}
+          </div>
+        )}
+
+        {/* Lista de registros */}
+        {loading ? (
+          <div className="p-6 text-center">
+            <p className="text-odara-dark/60 text-sm sm:text-lg">Carregando registros...</p>
+          </div>
+        ) : gruposRenderizaveis.length === 0 ? (
+          <div className="p-6 rounded-lg sm:rounded-xl bg-odara-name/10 text-center">
+            <Apple className="mx-auto text-gray-300 mb-3" size={32} />
+            <p className="text-odara-dark/60 text-sm sm:text-lg">
+              Nenhum registro alimentar encontrado
+            </p>
+            <p className="text-odara-dark/40 text-xs sm:text-sm mt-1 sm:mt-2">
+              Tente ajustar os termos da busca ou os filtros
+            </p>
+          </div>
+        ) : (
+          <div className="space-y-4 sm:space-y-6">
+            {gruposRenderizaveis.map(grupo => {
+              const pendentes = grupo.itens.filter(item => item.status === 'pendente').length;
+              const totalGrupo = grupo.itens.length;
+
+              return (
+                <div key={`group-${grupo.dataFormatada}`} className="bg-gray-50 rounded-xl overflow-hidden border-l-2 border-odara-primary">
+                  {/* Cabeçalho da Data */}
+                  <div
+                    className="bg-odara-primary/20 border-b border-odara-primary/60 p-3 sm:p-4 flex flex-col sm:flex-row items-center justify-between cursor-pointer select-none"
+                    onClick={() => toggleDate(grupo.dataFormatada)}
+                  >
+                    <div className="flex items-center gap-2 sm:gap-3 min-w-0 w-full sm:w-auto justify-center sm:justify-start mb-2 sm:mb-0">
+                      {grupo.isExpandido ? (
+                        <ChevronDown className="text-odara-accent flex-shrink-0" size={16} />
+                      ) : (
+                        <ChevronRight className="text-odara-accent flex-shrink-0" size={16} />
+                      )}
+                      <h2 className="text-base sm:text-lg md:text-xl font-bold text-odara-dark truncate">
+                        {formatarData(grupo.dataFormatada)}
+                      </h2>
+                    </div>
+                    <div className="flex items-center gap-2 flex-shrink-0">
+                      <span className={`px-2 py-0.5 sm:px-2.5 sm:py-1 rounded-full border text-xs font-medium ${pendentes > 0
+                        ? 'bg-yellow-50 text-yellow-600 border-yellow-600'
+                        : 'bg-gray-50 text-gray-500 border-gray-500'
+                        }`}>
+                        {pendentes > 0
+                          ? `Pendentes: ${pendentes} de ${totalGrupo}`
+                          : `Total: ${totalGrupo}`
+                        }
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* Lista de Registros */}
+                  {grupo.isExpandido && (
+                    <div className="p-3 sm:p-4">
+                      <div className="flex flex-col lg:grid lg:grid-cols-2 gap-4 sm:gap-6">
+                        {grupo.itens.map(registro => (
+                          <CardAlimentacao
+                            key={registro.id}
+                            registro={registro}
+                            onStatusClick={handleStatusClick}
+                            onEditObservation={handleEditObservation}
+                          />
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        )}
+      </div>
+    );
   };
 
   return (
-    <div className="flex min-h-screen bg-odara-offwhite">
-      <div className="flex-1 flex flex-col items-center px-2 py-4 lg:px-10 lg:py-10">
+    <div className="min-h-screen bg-odara-offwhite overflow-x-hidden">
+      <Toaster
+        position="top-center"
+        toastOptions={{
+          duration: 4000,
+          style: {
+            background: '#e4edfdff',
+            color: '#52323a',
+            border: '1px solid #0036caff',
+            borderRadius: '12px',
+            fontSize: '14px',
+            fontWeight: '500',
+          },
+          success: {
+            style: {
+              background: '#f0fdf4',
+              color: '#52323a',
+              border: '1px solid #00c950',
+            },
+          },
+          error: {
+            style: {
+              background: '#fce7e7ff',
+              color: '#52323a',
+              border: '1px solid #c90d00ff',
+            },
+          },
+        }}
+      />
 
-        <h1 className="text-2xl lg:text-3xl font-bold mb-2 text-center">Checklist de Alimentação</h1>
+      <div className="p-3 sm:p-6 lg:p-8 max-w-full overflow-hidden">
+        {/* Cabeçalho */}
+        <Cabecalho />
 
-        <div className="w-full max-w-4xl mb-4 text-center">
-          <div className="mt-1 text-sm lg:text-md text-gray-700">
-            {filtros.startDate && filtros.endDate
-              ? filtros.startDate === filtros.endDate
-                ? `Data: ${filtros.startDate.split('-').reverse().join('/')}`
-                : `${filtros.startDate.split('-').reverse().join('/')} até ${filtros.endDate.split('-').reverse().join('/')}`
-              : "Todas as datas"}
+        {/* Barra de Busca e Filtros */}
+        <div className="flex flex-col sm:flex-row gap-3 mb-4 sm:mb-6">
+          {/* Barra de Busca */}
+          <div className="flex-1 relative min-w-0">
+            <div className="absolute inset-y-0 left-0 pl-2 sm:pl-3 flex items-center pointer-events-none">
+              <Search className="text-odara-primary h-3 w-3 sm:h-4 sm:w-4" />
+            </div>
+            <input
+              type="text"
+              placeholder="Buscar por alimento, refeição ou residente..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="w-full pl-7 sm:pl-10 pr-3 sm:pr-4 py-2 bg-white rounded-lg border border-gray-200 text-odara-dark placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-odara-primary focus:border-transparent text-xs sm:text-sm"
+            />
+          </div>
+
+          {/* Botão ativador do modal de filtros */}
+          <div className="flex gap-2">
+            <button
+              onClick={toggleFiltros}
+              className="flex items-center gap-1 sm:gap-2 bg-white rounded-lg px-2 sm:px-4 py-2 border border-gray-200 text-odara-dark font-medium hover:bg-odara-primary/10 transition w-full sm:w-max justify-center text-xs sm:text-sm"
+            >
+              <Filter size={16} className="sm:w-5 sm:h-5 text-odara-accent" />
+              <span>
+                {!filtrosAberto ? 'Filtros' : 'Fechar'}
+              </span>
+            </button>
           </div>
         </div>
 
-        {/* FILTROS */}
-        <details className="mb-4 w-full max-w-4xl">
-          <summary className="inline-flex items-center px-4 py-2 bg-odara-dark text-white rounded cursor-pointer">
-            <FaFilter className="mr-2" /> Filtrar
-          </summary>
+        {/* Seção de Filtros */}
+        <SecaoFiltros
+          filtros={filtros}
+          setFiltros={setFiltros}
+          filtrosAberto={filtrosAberto}
+          filtroResidenteAberto={filtroResidenteAberto}
+          setFiltroResidenteAberto={setFiltroResidenteAberto}
+          filtroStatusAberto={filtroStatusAberto}
+          setFiltroStatusAberto={setFiltroStatusAberto}
+          onLimparFiltros={limparFiltros}
+          residentesUnicos={obterResidentesUnicos}
+          dateError={dateError}
+          setDateError={setDateError}
+        />
 
-          <form
-            className="mt-3 bg-white p-4 rounded shadow-sm border"
-            onSubmit={e => {
-              e.preventDefault();
-              const form = new FormData(e.target as HTMLFormElement);
+        {/* Lista de Registros */}
+        <ListaRegistros />
 
-              const startStr = form.get("startDate") as string;
-              const endStr = form.get("endDate") as string;
-
-              if (startStr && endStr && startStr > endStr) {
-                setDateError("A data final não pode ser antes que a inicial.");
-                return;
-              }
-
-              setDateError(null);
-              setFiltros({
-                residente: form.get("residente") ? Number(form.get("residente")) : null,
-                status: (form.get("status") as string) || null,
-                startDate: startStr || null,
-                endDate: endStr || null,
-              });
-              
-              setDatesExpanded({}); 
-            }}
-          >
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Residente</label>
-                <select name="residente" className="w-full border rounded px-2 py-1">
-                  <option value="">Todos</option>
-                  {residentes.map(r => (
-                    <option key={r.id} value={r.id}>{r.nome}</option>
-                  ))}
-                </select>
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Status</label>
-                <select name="status" className="w-full border rounded px-2 py-1" defaultValue="pendente">
-                  <option value="">Todos</option>
-                  <option value="pendente">Pendente</option>
-                  <option value="aceitou">Aceitou</option>
-                  <option value="parcial">Parcial</option>
-                  <option value="recusou">Recusou</option>
-                </select>
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Intervalo de datas</label>
-                <div className="flex gap-2">
-                  <input
-                    type="date"
-                    name="startDate"
-                    className={`w-1/2 border rounded px-2 py-1 ${dateError ? 'border-red-500 bg-red-50' : 'border-gray-300'}`}
-                    defaultValue={getTodayString()}
-                    onChange={() => setDateError(null)}
-                  />
-                  <input
-                    type="date"
-                    name="endDate"
-                    className={`w-1/2 border rounded px-2 py-1 ${dateError ? 'border-red-500 bg-red-50' : 'border-gray-300'}`}
-                    defaultValue={getTodayString()}
-                    onChange={() => setDateError(null)}
-                  />
-                </div>
-                {dateError && (
-                  <div className="flex items-center mt-1 text-red-600 text-xs">
-                    <FaExclamationCircle className="mr-1" />
-                    {dateError}
-                  </div>
-                )}
-              </div>
-            </div>
-
-            <div className="mt-3 flex gap-2">
-              <button type="submit" className="px-4 py-2 bg-odara-dark text-white rounded">Aplicar</button>
-              <button
-                type="button"
-                className="px-4 py-2 bg-gray-200 rounded"
-                onClick={() => {
-                  setFiltros({ residente: null, status: null, startDate: null, endDate: null });
-                  setDateError(null);
-                  (document.querySelector("form") as HTMLFormElement)?.reset();
-                }}
-              >
-                Limpar
-              </button>
-            </div>
-          </form>
-        </details>
-
-        <div className="w-full max-w-5xl">
-          {gruposRenderizaveis.length === 0 ? (
-            <div className="bg-white p-8 rounded-lg shadow text-center text-gray-500">
-              <FaUtensils className="mx-auto text-gray-300 mb-2" size={32} />
-              <p>Nenhum registro alimentar encontrado.</p>
-            </div>
-          ) : (
-            <div className="space-y-4">
-              {gruposRenderizaveis.map(grupo => (
-                <div key={`group-${grupo.dataFormatada}`} className="bg-white md:bg-transparent rounded-lg md:rounded-none shadow md:shadow-none overflow-hidden">
-                  
-                  {/* Cabeçalho da Data */}
-                  <div 
-                    className="bg-gray-100 p-3 md:bg-gray-200 md:rounded-t-lg border-b md:border border-gray-300 flex items-center justify-between cursor-pointer select-none"
-                    onClick={() => toggleDate(grupo.dataFormatada)}
-                  >
-                    <div className="flex items-center gap-2 font-bold text-gray-700">
-                      {grupo.isExpandido ? <FaChevronDown size={14} /> : <FaChevronRight size={14} />}
-                      <span>{grupo.dataFormatada.split('-').reverse().join('/')}</span>
-                    </div>
-                    <span className="text-xs font-semibold text-gray-500 bg-white px-2 py-0.5 rounded-full border border-gray-200 shadow-sm">
-                      {grupo.itens.length}
-                    </span>
-                  </div>
-
-                  {grupo.isExpandido && (
-                    <>
-                      {/* Tabela Desktop */}
-                      <div className="hidden md:block bg-white border-x border-gray-300">
-                        <table className="min-w-full text-sm">
-                          <thead className="bg-gray-50 text-gray-500 border-b">
-                            <tr>
-                              <th className="px-4 py-2 text-center w-32">Horário</th>
-                              <th className="px-4 py-2 text-left w-56">Residente</th>
-                              <th className="px-4 py-2 text-left">Refeição / Alimento</th>
-                              <th className="px-4 py-2 text-center w-56">Aceitação</th>
-                            </tr>
-                          </thead>
-                        </table>
-                      </div>
-
-                      <div className="md:border-x md:border-b md:border-gray-300 md:bg-white md:rounded-b-lg">
-                        {grupo.itens.map(reg => (
-                          <div key={reg.id} className="contents">
-                            
-                            {/* Linha Desktop */}
-                            <table className="hidden md:table min-w-full text-sm">
-                              <tbody>
-                                <tr className="hover:bg-gray-50 transition-colors border-t border-gray-100">
-                                  <td className="px-4 py-3 text-center align-middle w-32">
-                                    <span className={`font-bold ${reg.status === 'pendente' ? 'text-gray-800' : 'text-gray-600'}`}>
-                                      {reg.horario.slice(0, 5)}
-                                    </span>
-                                  </td>
-                                  <td className="px-4 py-3 align-middle font-medium text-gray-800 w-56">
-                                    {reg.residente.nome}
-                                  </td>
-                                  <td className="px-4 py-3 align-middle">
-                                    <div className="font-semibold text-gray-900">{refeicaoMap[reg.refeicao]}</div>
-                                    <div className="text-gray-500 text-xs italic">{reg.alimento}</div>
-                                  </td>
-                                  <td className="px-4 py-3 align-middle text-center w-56">
-                                    <div className="flex justify-center gap-4 items-center">
-                                      {/* RADIO: ACEITOU */}
-                                      <label className="flex items-center gap-1.5 cursor-pointer select-none">
-                                        <input
-                                          type="radio"
-                                          name={`status-${reg.id}-desk`}
-                                          onChange={() => handleStatusClick(reg.id, "aceitou")}
-                                          checked={reg.status === "aceitou"}
-                                          className="cursor-pointer"
-                                        />
-                                        <span className="text-sm text-gray-700">Ok</span>
-                                      </label>
-
-                                      {/* RADIO: PARCIAL */}
-                                      <label className="flex items-center gap-1.5 cursor-pointer select-none">
-                                        <input
-                                          type="radio"
-                                          name={`status-${reg.id}-desk`}
-                                          onChange={() => handleStatusClick(reg.id, "parcial")}
-                                          checked={reg.status === "parcial"}
-                                          className="cursor-pointer"
-                                        />
-                                        <span className="text-sm text-gray-700">Parcial</span>
-                                      </label>
-
-                                      {/* RADIO: RECUSOU */}
-                                      <label className="flex items-center gap-1.5 cursor-pointer select-none">
-                                        <input
-                                          type="radio"
-                                          name={`status-${reg.id}-desk`}
-                                          onChange={() => handleStatusClick(reg.id, "recusou")}
-                                          checked={reg.status === "recusou"}
-                                          className="cursor-pointer"
-                                        />
-                                        <span className="text-sm text-gray-700">Não</span>
-                                      </label>
-                                      
-                                      {/* BOTÃO DE OBSERVAÇÃO */}
-                                      { reg.status !== 'pendente' && (
-                                      <button
-                                          type="button"
-                                          onClick={() => handleEditObservation(reg)}
-                                          className={`ml-1 ${reg.observacao ? "text-blue-600 hover:text-blue-800" : "text-gray-400 hover:text-gray-600"} transition-colors`}
-                                          title="Ver observação"
-                                      >
-                                          <FaRegCommentAlt size={16} />
-                                      </button>
-                                      ) }
-                                    </div>
-                                  </td>
-                                </tr>
-                              </tbody>
-                            </table>
-
-                            {/* Card Mobile */}
-                            <div className="md:hidden bg-white p-4 border-t border-gray-200 first:border-t-0">
-                              
-                              <div className="flex justify-between items-start mb-3 border-b border-gray-100 pb-2">
-                                <div className="flex items-center gap-1.5 text-gray-700 text-sm">
-                                  <FaClock className="text-gray-400" size={13}/>
-                                  <span className="font-bold text-gray-800">{reg.horario.slice(0, 5)}</span>
-                                </div>
-                                <div className="flex items-center gap-1.5 text-gray-800 font-semibold text-sm">
-                                  <FaUser className="text-gray-400" size={13}/>
-                                  <span>{reg.residente.nome}</span>
-                                </div>
-                              </div>
-
-                              <div className="mb-4">
-                                <div className="text-lg font-bold text-gray-900 leading-tight">
-                                  {refeicaoMap[reg.refeicao]}
-                                </div>
-                                <div className="text-sm text-gray-500 mt-0.5">
-                                  {reg.alimento}
-                                </div>
-                              </div>
-
-                              <div className="flex justify-start gap-4 items-center">
-                                <label className="flex items-center gap-1.5 cursor-pointer select-none">
-                                  <input
-                                    type="radio"
-                                    name={`status-${reg.id}-mob`}
-                                    onChange={() => handleStatusClick(reg.id, "aceitou")}
-                                    checked={reg.status === "aceitou"}
-                                    className="cursor-pointer"
-                                  />
-                                  <span className="text-sm text-gray-700">Ok</span>
-                                </label>
-                                <label className="flex items-center gap-1.5 cursor-pointer select-none">
-                                  <input
-                                    type="radio"
-                                    name={`status-${reg.id}-mob`}
-                                    onChange={() => handleStatusClick(reg.id, "parcial")}
-                                    checked={reg.status === "parcial"}
-                                    className="cursor-pointer"
-                                  />
-                                  <span className="text-sm text-gray-700">Parcial</span>
-                                </label>
-                                <label className="flex items-center gap-1.5 cursor-pointer select-none">
-                                  <input
-                                    type="radio"
-                                    name={`status-${reg.id}-mob`}
-                                    onChange={() => handleStatusClick(reg.id, "recusou")}
-                                    checked={reg.status === "recusou"}
-                                    className="cursor-pointer"
-                                  />
-                                  <span className="text-sm text-gray-700">Não</span>
-                                </label>
-
-                                {/* BALÃOZINHO MOBILE */}
-                                { reg.status !== 'pendente' && (
-                                <button
-                                    type="button"
-                                    onClick={() => handleEditObservation(reg)}
-                                    className={`ml-1 ${reg.observacao ? "text-blue-600 hover:text-blue-800" : "text-gray-400 hover:text-gray-600"} transition-colors`}
-                                    title="Ver observação"
-                                >
-                                    <FaRegCommentAlt size={16} />
-                                </button>
-                                )}
-                              </div>
-                            </div>
-
-                          </div>
-                        ))}
-                      </div>
-                    </>
-                  )}
-                </div>
-              ))}
-            </div>
-          )}
+        {/* Contador de resultados */}
+        <div className="mt-3 text-xs sm:text-sm text-gray-400">
+          Total de {gruposRenderizaveis.reduce((acc, grupo) => acc + grupo.itens.length, 0)} registro(s) encontrado(s) de {registros.length}
+          {searchTerm && <span> para "{searchTerm}"</span>}
         </div>
-        
-        {ObservacaoModal}
 
+        {/* Modal de Observação */}
+        <ObservacaoModal
+          isOpen={observacaoModal.isOpen}
+          observacaoInicial={observacaoModal.observacaoInicial}
+          status={observacaoModal.status}
+          onConfirm={observacaoModal.onConfirm || (() => {})}
+          onCancel={closeObservacaoModal}
+          onClose={closeObservacaoModal}
+        />
       </div>
     </div>
   );

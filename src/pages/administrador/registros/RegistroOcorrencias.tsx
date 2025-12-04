@@ -392,9 +392,9 @@ const RegistroOcorrencias: React.FC = () => {
 				<button
 					type="button"
 					onClick={() => setAberto(!aberto)}
-					className="flex items-center justify-between w-full h-10 border border-gray-300 rounded-lg px-3 text-sm hover:bg-gray-50 transition-colors text-odara-dark"
+					className="flex items-center justify-between w-full h-9 sm:h-10 border border-gray-300 rounded-lg px-3 text-xs sm:text-sm hover:bg-gray-50 transition-colors text-odara-dark"
 				>
-					<span>
+					<span className="truncate">
 						{tipo === 'residente'
 							? valorSelecionado
 								? residentesUnicos.find(r => r.id === valorSelecionado)?.nome
@@ -410,7 +410,7 @@ const RegistroOcorrencias: React.FC = () => {
 									: titulo
 						}
 					</span>
-					<ChevronDown size={12} className="text-gray-500" />
+					<ChevronDown size={10} className="sm:w-3 sm:h-3 text-gray-500 flex-shrink-0" />
 				</button>
 
 				{aberto && (
@@ -419,25 +419,25 @@ const RegistroOcorrencias: React.FC = () => {
 							<>
 								<button
 									onClick={() => onSelecionar(null)}
-									className={`flex items-center gap-3 w-full text-left px-4 py-3 text-sm hover:bg-odara-primary/10 transition ${!valorSelecionado
+									className={`flex items-center gap-2 sm:gap-3 w-full text-left px-3 sm:px-4 py-2 sm:py-3 text-xs sm:text-sm hover:bg-odara-primary/10 transition ${!valorSelecionado
 										? 'bg-odara-primary/20 text-odara-primary font-semibold'
 										: 'text-gray-700'
 										}`}
 								>
 									<span>Todos os residentes</span>
-									{!valorSelecionado && <Check className="ml-auto text-odara-primary" size={14} />}
+									{!valorSelecionado && <Check className="ml-auto text-odara-primary w-3 h-3 sm:w-3.5 sm:h-3.5" />}
 								</button>
 								{residentesUnicos.map((residente) => (
 									<button
 										key={residente.id}
 										onClick={() => onSelecionar(residente.id)}
-										className={`flex items-center gap-3 w-full text-left px-4 py-3 text-sm hover:bg-odara-primary/10 transition ${valorSelecionado === residente.id
+										className={`flex items-center gap-2 sm:gap-3 w-full text-left px-3 sm:px-4 py-2 sm:py-3 text-xs sm:text-sm hover:bg-odara-primary/10 transition ${valorSelecionado === residente.id
 											? 'bg-odara-primary/20 text-odara-primary font-semibold'
 											: 'text-gray-700'
 											}`}
 									>
-										<span>{residente.nome} {residente.quarto ? `(Q ${residente.quarto})` : ''}</span>
-										{valorSelecionado === residente.id && <Check className="ml-auto text-odara-primary" size={14} />}
+										<span className="truncate">{residente.nome} {residente.quarto ? `(Q ${residente.quarto})` : ''}</span>
+										{valorSelecionado === residente.id && <Check className="ml-auto text-odara-primary w-3 h-3 sm:w-3.5 sm:h-3.5" />}
 									</button>
 								))}
 							</>
@@ -446,14 +446,14 @@ const RegistroOcorrencias: React.FC = () => {
 								<button
 									key={opcao.value}
 									onClick={() => onSelecionar(opcao.value)}
-									className={`flex items-center gap-3 w-full text-left px-4 py-3 text-sm hover:bg-odara-primary/10 transition ${(opcao.value === 'todos' && !valorSelecionado) || valorSelecionado === opcao.value
+									className={`flex items-center gap-2 sm:gap-3 w-full text-left px-3 sm:px-4 py-2 sm:py-3 text-xs sm:text-sm hover:bg-odara-primary/10 transition ${(opcao.value === 'todos' && !valorSelecionado) || valorSelecionado === opcao.value
 										? 'bg-odara-primary/20 text-odara-primary font-semibold'
 										: 'text-gray-700'
 										}`}
 								>
 									<span>{opcao.label}</span>
 									{((opcao.value === 'todos' && !valorSelecionado) || valorSelecionado === opcao.value) && (
-										<Check className="ml-auto text-odara-primary" size={14} />
+										<Check className="ml-auto text-odara-primary w-3 h-3 sm:w-3.5 sm:h-3.5" />
 									)}
 								</button>
 							))
@@ -468,68 +468,70 @@ const RegistroOcorrencias: React.FC = () => {
 		if (!filtrosAberto) return null;
 
 		return (
-			<div className="mb-8 bg-white p-5 rounded-xl shadow border border-gray-200 animate-fade-in">
+			<div className="mb-6 bg-white p-4 sm:p-5 rounded-xl shadow border border-gray-200 animate-fade-in">
 				{/* Primeira Linha */}
-				<div className="flex flex-col md:flex-row gap-5 w-full">
-					{/* Filtro de Categoria */}
-					<div className="flex-1">
-						<div className='flex gap-1 items-center ml-1 mb-1'>
-							<Filter size={10} className="text-odara-accent" />
-							<label className="block text-sm font-semibold text-odara-secondary">Categoria</label>
+				<div className="flex flex-col md:flex-row gap-4 sm:gap-5 w-full">
+					<div className='flex flex-col md:flex-row flex-1 gap-4 sm:gap-5 w-full'>
+						{/* Filtro de Categoria */}
+						<div className="flex-1 min-w-0">
+							<div className='flex gap-1 items-center ml-1 mb-1'>
+								<Filter size={9} className="sm:w-2.5 sm:h-2.5 text-odara-accent" />
+								<label className="block text-xs sm:text-sm font-semibold text-odara-secondary">Categoria</label>
+							</div>
+
+							<FiltroDropdown
+								titulo="Todas as categorias"
+								aberto={filtroCategoriaAberto}
+								setAberto={setFiltroCategoriaAberto}
+								ref={filtroCategoriaRef}
+								valorSelecionado={filtros.categoria || 'todos'}
+								onSelecionar={selecionarCategoria}
+								tipo="categoria"
+							/>
 						</div>
 
-						<FiltroDropdown
-							titulo="Todas as categorias"
-							aberto={filtroCategoriaAberto}
-							setAberto={setFiltroCategoriaAberto}
-							ref={filtroCategoriaRef}
-							valorSelecionado={filtros.categoria || 'todos'}
-							onSelecionar={selecionarCategoria}
-							tipo="categoria"
-						/>
-					</div>
+						{/* Filtro de Status */}
+						<div className="flex-1 min-w-0">
+							<div className='flex gap-1 items-center ml-1 mb-1'>
+								<Filter size={9} className="sm:w-2.5 sm:h-2.5 text-odara-accent" />
+								<label className="block text-xs sm:text-sm font-semibold text-odara-secondary">Status</label>
+							</div>
 
-					{/* Filtro de Status */}
-					<div className="flex-1">
-						<div className='flex gap-1 items-center ml-1 mb-1'>
-							<Filter size={10} className="text-odara-accent" />
-							<label className="block text-sm font-semibold text-odara-secondary">Status</label>
+							<FiltroDropdown
+								titulo="Todos os status"
+								aberto={filtroStatusAberto}
+								setAberto={setFiltroStatusAberto}
+								ref={filtroStatusRef}
+								valorSelecionado={filtros.status || 'todos'}
+								onSelecionar={selecionarStatus}
+								tipo="status"
+							/>
 						</div>
 
-						<FiltroDropdown
-							titulo="Todos os status"
-							aberto={filtroStatusAberto}
-							setAberto={setFiltroStatusAberto}
-							ref={filtroStatusRef}
-							valorSelecionado={filtros.status || 'todos'}
-							onSelecionar={selecionarStatus}
-							tipo="status"
-						/>
-					</div>
+						{/* Filtro de Residente */}
+						<div className="flex-1 min-w-0">
+							<div className='flex gap-1 items-center ml-1 mb-1'>
+								<Filter size={9} className="sm:w-2.5 sm:h-2.5 text-odara-accent" />
+								<label className="block text-xs sm:text-sm font-semibold text-odara-secondary">Residente</label>
+							</div>
 
-					{/* Filtro de Residente */}
-					<div className="flex-1">
-						<div className='flex gap-1 items-center ml-1 mb-1'>
-							<Filter size={10} className="text-odara-accent" />
-							<label className="block text-sm font-semibold text-odara-secondary">Residente</label>
+							<FiltroDropdown
+								titulo="Todos os residentes"
+								aberto={filtroResidenteAberto}
+								setAberto={setFiltroResidenteAberto}
+								ref={filtroResidenteRef}
+								valorSelecionado={filtros.residenteId}
+								onSelecionar={selecionarResidente}
+								tipo="residente"
+							/>
 						</div>
-
-						<FiltroDropdown
-							titulo="Todos os residentes"
-							aberto={filtroResidenteAberto}
-							setAberto={setFiltroResidenteAberto}
-							ref={filtroResidenteRef}
-							valorSelecionado={filtros.residenteId}
-							onSelecionar={selecionarResidente}
-							tipo="residente"
-						/>
 					</div>
 
 					{/* Botões de ação dos filtros */}
-					<div className="flex md:items-end gap-2 pt-1 md:pt-0 md:w-auto w-full">
+					<div className="flex md:items-end gap-2 pt-1 md:pt-0 md:flex-shrink-0">
 						<button
 							onClick={limparFiltros}
-							className="bg-odara-accent hover:bg-odara-secondary text-white font-semibold py-2 px-4 rounded-lg flex items-center transition text-sm h-10 md:w-auto w-full justify-center"
+							className="bg-odara-accent hover:bg-odara-secondary text-white font-semibold py-2 px-3 sm:px-4 rounded-lg flex items-center transition text-xs sm:text-sm h-9 sm:h-10 w-full md:w-auto justify-center"
 						>
 							Limpar Filtros
 						</button>
@@ -538,34 +540,34 @@ const RegistroOcorrencias: React.FC = () => {
 
 				{/* Segunda Linha */}
 				{/* Filtros de data */}
-				<div className="grid grid-cols-1 md:grid-cols-2 gap-5 mt-5 pt-5 border-t border-gray-200">
+				<div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-5 mt-4 sm:mt-5 pt-4 sm:pt-5 border-t border-gray-200">
 					{/* A Partir da Data */}
 					<div>
 						<div className='flex gap-1 items-center ml-1 mb-1'>
-							<Filter size={10} className="text-odara-accent" />
-							<label className="block text-sm font-semibold text-odara-secondary">A Partir da Data</label>
+							<Filter size={9} className="sm:w-2.5 sm:h-2.5 text-odara-accent" />
+							<label className="block text-xs sm:text-sm font-semibold text-odara-secondary">A Partir da Data</label>
 						</div>
 
 						<input
 							type="date"
 							value={filtros.startDate || ''}
 							onChange={(e) => setFiltros(prev => ({ ...prev, startDate: e.target.value || null }))}
-							className="w-full h-10 border border-gray-300 rounded-lg px-3 text-sm focus:ring-2 focus:ring-odara-primary focus:outline-none"
+							className="w-full h-9 sm:h-10 border border-gray-300 rounded-lg px-3 text-xs sm:text-sm focus:ring-2 focus:ring-odara-primary focus:outline-none"
 						/>
 					</div>
 
 					{/* Até a Data */}
 					<div>
 						<div className='flex gap-1 items-center ml-1 mb-1'>
-							<Filter size={10} className="text-odara-accent" />
-							<label className="block text-sm font-semibold text-odara-secondary">Até a Data</label>
+							<Filter size={9} className="sm:w-2.5 sm:h-2.5 text-odara-accent" />
+							<label className="block text-xs sm:text-sm font-semibold text-odara-secondary">Até a Data</label>
 						</div>
 
 						<input
 							type="date"
 							value={filtros.endDate || ''}
 							onChange={(e) => setFiltros(prev => ({ ...prev, endDate: e.target.value || null }))}
-							className="w-full h-10 border border-gray-300 rounded-lg px-3 text-sm focus:ring-2 focus:ring-odara-primary focus:outline-none"
+							className="w-full h-9 sm:h-10 border border-gray-300 rounded-lg px-3 text-xs sm:text-sm focus:ring-2 focus:ring-odara-primary focus:outline-none"
 						/>
 					</div>
 				</div>
@@ -584,22 +586,22 @@ const RegistroOcorrencias: React.FC = () => {
 
 		return (
 			<div className="fixed inset-0 bg-black/50 flex items-center justify-center z-[100] p-4 animate-fade-in">
-				<div className="bg-white rounded-2xl shadow-xl p-6 max-w-md w-full animate-scale-in">
+				<div className="bg-white rounded-2xl shadow-xl p-4 sm:p-6 max-w-md w-full animate-scale-in">
 					<div className="text-center">
 						{/* Ícone de alerta */}
-						<div className="mx-auto flex items-center justify-center h-14 w-14 rounded-full bg-odara-alerta/10 mb-4">
-							<AlertTriangle className="h-7 w-7 text-odara-alerta" />
+						<div className="mx-auto flex items-center justify-center h-12 sm:h-14 w-12 sm:w-14 rounded-full bg-odara-alerta/10 mb-3 sm:mb-4">
+							<AlertTriangle className="h-6 w-6 sm:h-7 sm:w-7 text-odara-alerta" />
 						</div>
 
 						{/* Textos do modal */}
-						<h3 className="text-xl font-bold text-odara-dark mb-2">Confirmar exclusão</h3>
-						<p className="text-odara-name mb-4">
+						<h3 className="text-lg sm:text-xl font-bold text-odara-dark mb-2">Confirmar exclusão</h3>
+						<p className="text-odara-name text-sm sm:text-base mb-3 sm:mb-4">
 							Tem certeza que deseja excluir esta ocorrência?
 						</p>
 
 						{/* Detalhes da ocorrência */}
 						{tituloOcorrencia && (
-							<div className="bg-odara-offwhite rounded-lg p-3 mb-4 border border-gray-200">
+							<div className="bg-odara-offwhite rounded-lg p-3 mb-3 sm:mb-4 border border-gray-200">
 								<p className="text-sm font-medium text-odara-dark">Ocorrência:</p>
 								<p className="text-sm font-semibold text-odara-name truncate" title={tituloOcorrencia}>
 									{tituloOcorrencia}
@@ -607,15 +609,15 @@ const RegistroOcorrencias: React.FC = () => {
 							</div>
 						)}
 
-						<p className="text-sm text-odara-alerta mb-6 font-medium">
+						<p className="text-xs sm:text-sm text-odara-alerta mb-4 sm:mb-6 font-medium">
 							Esta ação não pode ser desfeita.
 						</p>
 
 						{/* Botões de ação */}
-						<div className="flex gap-3 justify-center">
+						<div className="flex gap-2 sm:gap-3 justify-center">
 							<button
 								onClick={fecharModalExclusao}
-								className="px-6 py-2 border border-odara-primary text-odara-primary rounded-lg hover:bg-odara-primary/10 transition-colors duration-200 flex-1"
+								className="px-4 sm:px-6 py-2 border border-odara-primary text-odara-primary rounded-lg hover:bg-odara-primary/10 transition-colors duration-200 flex-1 text-sm"
 								autoFocus
 							>
 								Cancelar
@@ -623,7 +625,7 @@ const RegistroOcorrencias: React.FC = () => {
 							
 							<button
 								onClick={executarExclusao}
-								className="px-5 py-2.5 bg-odara-alerta text-white rounded-lg hover:bg-red-700 transition-colors duration-200 font-medium flex-1"
+								className="px-4 sm:px-5 py-2 bg-odara-alerta text-white rounded-lg hover:bg-red-700 transition-colors duration-200 font-medium flex-1 text-sm"
 							>
 								Excluir
 							</button>
@@ -646,14 +648,14 @@ const RegistroOcorrencias: React.FC = () => {
 		return (
 			<div className="bg-white rounded-lg shadow-md border border-gray-200 hover:shadow-lg transition-shadow duration-200 flex flex-col h-full">
 				{/* Header do Card */}
-				<div className={`flex items-center justify-between p-3 rounded-t-lg ${coresStatus.border} ${coresStatus.bg}`}>
+				<div className={`flex flex-wrap justify-center sm:justify-between gap-2 items-center p-2 sm:p-3 rounded-t-lg ${coresStatus.border} ${coresStatus.bg}`}>
 					<div className="flex items-center">
-						<div className={`w-3 h-3 rounded-full mr-3 ${coresStatus.bola}`}></div>
-						<p className="text-sm sm:text-base text-odara-dark">
+						<div className={`w-2 h-2 sm:w-3 sm:h-3 rounded-full mr-2 sm:mr-3 ${coresStatus.bola}`}></div>
+						<p className="text-xs sm:text-sm md:text-base text-odara-dark">
 							<span className='font-semibold'>
 								{data}
 							</span>
-							<span className="text-odara-accent ml-2">• {' ' + hora}
+							<span className="text-odara-accent ml-1 sm:ml-2">• {' ' + hora}
 							</span>
 						</p>
 					</div>
@@ -661,22 +663,22 @@ const RegistroOcorrencias: React.FC = () => {
 					{/* Status */}
 					<button
 						onClick={() => alternarStatusResolvido(ocorrencia)}
-						className="flex items-center gap-2 px-3 py-1 text-sm border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
+						className="flex items-center gap-2 px-2 sm:px-3 py-1 text-xs sm:text-sm border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
 					>
-						<IconeStatus size={14} className="text-odara-accent" />
-						<span className={coresStatus.text}>
+						<IconeStatus size={12} className="sm:w-3.5 sm:h-3.5 text-odara-accent" />
+						<span className="text-odara-dark capitalize">
 							{ocorrencia.status ? "Resolvido" : "Pendente"}
 						</span>
-						<ChevronDown size={12} className="text-gray-500" />
+						<ChevronDown size={10} className="sm:w-3 sm:h-3 text-gray-500" />
 					</button>
 				</div>
 
 				{/* Corpo do Card */}
-				<div className="p-4 flex-1 flex flex-col">
+				<div className="p-3 sm:p-4 flex-1 flex flex-col">
 					{/* Título e Data/Hora */}
-					<div className="flex items-start justify-between mb-3">
+					<div className="flex items-start justify-between mb-2 sm:mb-3">
 						<div className="flex-1">
-							<h3 className="text-lg sm:text-xl font-bold text-odara-dark line-clamp-2">
+							<h3 className="text-sm sm:text-base md:text-lg font-bold text-odara-dark line-clamp-2">
 								{ocorrencia.titulo}
 							</h3>
 						</div>
@@ -685,59 +687,59 @@ const RegistroOcorrencias: React.FC = () => {
 						<div className="flex items-center gap-1 ml-2">
 							<button
 								onClick={() => abrirModalEdicao(ocorrencia)}
-								className="text-odara-dropdown-accent hover:text-odara-white transition-colors duration-200 p-2 rounded-full hover:bg-odara-dropdown-accent"
+								className="text-odara-dropdown-accent hover:text-odara-white transition-colors duration-200 p-1.5 sm:p-2 rounded-full hover:bg-odara-dropdown-accent"
 								title="Editar ocorrência"
 							>
-								<Edit size={14} />
+								<Edit size={12} className="sm:w-3.5 sm:h-3.5" />
 							</button>
 							<button
 								onClick={() => abrirModalExclusao(ocorrencia.id)}
-								className="text-odara-alerta hover:text-odara-white transition-colors duration-200 p-2 rounded-full hover:bg-odara-alerta"
+								className="text-odara-alerta hover:text-odara-white transition-colors duration-200 p-1.5 sm:p-2 rounded-full hover:bg-odara-alerta"
 								title="Excluir ocorrência"
 							>
-								<Trash size={14} />
+								<Trash size={12} className="sm:w-3.5 sm:h-3.5" />
 							</button>
 						</div>
 					</div>
 
 					{/* Categoria */}
 					{ocorrencia.categoria && (
-						<div className="mb-3">
-							<strong className="text-odara-dark text-sm">Categoria:</strong>
-							<span className="text-odara-name mt-1 text-sm">
-								{' ' + categoriaLabel}
+						<div className="mb-2 sm:mb-3">
+							<strong className="text-odara-dark text-xs sm:text-sm">Categoria:</strong>
+							<span className="text-odara-name mt-0.5 sm:mt-1 text-xs sm:text-sm block">
+								{categoriaLabel}
 							</span>
 						</div>
 					)}
 
 					{/* Descrição */}
-					<div className="mb-3">
-						<strong className="text-odara-dark text-sm">Descrição:</strong>
-						<span className="text-odara-name mt-1 text-sm">
-							{' ' + ocorrencia.descricao}
+					<div className="mb-2 sm:mb-3">
+						<strong className="text-odara-dark text-xs sm:text-sm">Descrição:</strong>
+						<span className="text-odara-name mt-0.5 sm:mt-1 text-xs sm:text-sm block">
+							{ocorrencia.descricao}
 						</span>
 					</div>
 
 					{/* Providências */}
 					{ocorrencia.providencias && (
 						<div>
-							<strong className="text-odara-dark text-sm">Providências:</strong>
-							<span className="text-odara-name mt-1 text-sm">
-								{' ' + ocorrencia.providencias}
+							<strong className="text-odara-dark text-xs sm:text-sm">Providências:</strong>
+							<span className="text-odara-name mt-0.5 sm:mt-1 text-xs sm:text-sm block">
+								{ocorrencia.providencias}
 							</span>
 						</div>
 					)}
 				</div>
 
 				{/* Footer */}
-				<div className="p-4 flex-1 flex flex-col bg-gray-50 rounded-b-lg border-t border-gray-200">
-					<div className="flex flex-col sm:flex-row justify-between items-center gap-2">
+				<div className="px-3 sm:px-4 py-2 sm:py-3 bg-gray-50 rounded-b-lg border-t border-gray-200">
+					<div className="flex flex-col sm:flex-row justify-between items-center gap-1 sm:gap-2 text-xs">
 						{/* Lado esquerdo: Residente e Funcionário*/}
-						<div className="flex items-center justify-start flex-wrap gap-1">
+						<div className="flex items-center flex-wrap gap-1 justify-center sm:justify-start">
 							{ocorrencia.residente?.nome ? (
 								<>
-									<span className="inline-flex items-center gap-1 bg-odara-accent text-white rounded-full px-3 py-1 text-xs font-medium">
-										<RockingChair size={12} />
+									<span className="inline-flex items-center gap-1 bg-odara-accent text-white px-2 py-1 rounded-full text-xs font-medium">
+										<RockingChair size={10} className="sm:w-3 sm:h-3" />
 										{ocorrencia.residente.nome}
 										{ocorrencia.residente?.quarto && (
 											<span className="ml-1 text-xs opacity-75">
@@ -745,20 +747,20 @@ const RegistroOcorrencias: React.FC = () => {
 											</span>
 										)}
 									</span>
-									<span className="text-odara-accent mx-1">•</span>
+									<span className="text-odara-accent mx-1 hidden sm:inline">•</span>
 								</>
 							) : ''}
 
 							<span className="text-xs text-odara-dark inline-flex items-center gap-1">
-								<UsersRound size={12} className="text-odara-accent" />
+								<UsersRound size={9} className="sm:w-2.5 sm:h-2.5 text-odara-accent" />
 								{ocorrencia.funcionario?.nome || "Não informado"}
 							</span>
 						</div>
 
 						{/* Lado direito: Data de criação - alinhado à direita */}
-						<div className="text-xs text-odara-name flex items-center gap-1 ml-auto sm:ml-0">
-							<Clock size={10} />
-							Criado em: {ocorrencia.criado_em ? new Date(ocorrencia.criado_em).toLocaleDateString('pt-BR') : 'N/A'}
+						<div className="text-xs text-odara-name flex items-center gap-1 justify-center sm:justify-start mt-1 sm:mt-0">
+							<Clock size={9} className="sm:w-2.5 sm:h-2.5" />
+							Criado: {ocorrencia.criado_em ? new Date(ocorrencia.criado_em).toLocaleDateString('pt-BR') : 'N/A'}
 						</div>
 					</div>
 				</div>
@@ -767,26 +769,43 @@ const RegistroOcorrencias: React.FC = () => {
 	};
 
 	const Cabecalho = () => {
+		const [infoVisivel, setInfoVisivel] = useState(false);
+
 		return (
 			<div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
-				<div className="flex items-center">
-					<Siren size={30} className='text-odara-accent mr-2' />
-					<h1 className="text-2xl sm:text-3xl font-bold text-odara-dark mr-2">
-						Registro de Ocorrências
-					</h1>
-					<div className="relative">
-						<button
-							onMouseEnter={() => setInfoVisivel(true)}
-							onMouseLeave={() => setInfoVisivel(false)}
-							className="transition-colors duration-200"
-						>
-							<Info size={20} className="text-odara-accent hover:text-odara-secondary" />
-						</button>
+				<div className="flex items-start sm:items-center gap-3 w-full">
+					<Siren size={24} className='sm:w-7 sm:h-7 lg:w-8 lg:h-8 text-odara-accent flex-shrink-0 mt-1 sm:mt-0' />
+					
+					<div className="flex-1 min-w-0 relative">
+						<div className="flex items-center gap-0.1 sm:gap-2">
+							<h1 className="text-xl sm:text-2xl lg:text-3xl font-bold text-odara-dark flex-1 truncate">
+								Registro de Ocorrências
+							</h1>
+							
+							<button
+								onClick={() => setInfoVisivel(!infoVisivel)}
+								className="flex-shrink-0 w-5 h-5 sm:w-6 sm:h-6 lg:w-7 lg:h-7 flex items-center justify-center rounded-full hover:bg-gray-100 transition-colors ml-1"
+								aria-label="Informações"
+							>
+								<Info size={12} className="sm:w-3.5 sm:h-3.5 lg:w-4 lg:h-4 text-odara-accent" />
+							</button>
+						</div>
+						
 						{infoVisivel && (
-							<div className="absolute z-10 left-0 top-full mt-2 w-72 p-3 bg-odara-dropdown text-odara-name text-sm rounded-lg shadow-lg">
-								<h3 className="font-bold mb-2">Registro de Ocorrências</h3>
-								<p>Documenta incidentes, acidentes, complicações e situações relevantes para acompanhamento.</p>
-								<div className="absolute bottom-full left-4 border-4 border-transparent border-b-odara-dropdown"></div>
+							<div className="absolute z-10 top-full left-0 sm:left-auto sm:right-0 mt-2 w-full sm:w-80 bg-blue-50 border border-blue-100 rounded-lg shadow-lg animate-fade-in">
+								<div className="p-3 sm:p-4">
+									<p className="text-xs sm:text-sm text-odara-dark">
+										<strong className="font-semibold">Como usar:</strong> Documenta incidentes, acidentes, complicações e situações relevantes para acompanhamento.
+									</p>
+									<button
+										onClick={() => setInfoVisivel(false)}
+										className="mt-2 text-xs sm:text-sm text-odara-accent hover:text-odara-secondary font-medium"
+									>
+										Entendi
+									</button>
+								</div>
+								{/* Seta do tooltip para desktop */}
+								<div className="hidden sm:block absolute -top-2 right-4 w-4 h-4 bg-blue-50 border-t border-l border-blue-100 transform rotate-45"></div>
 							</div>
 						)}
 					</div>
@@ -799,48 +818,49 @@ const RegistroOcorrencias: React.FC = () => {
 		return (
 			<button
 				onClick={abrirModalNova}
-				className="bg-odara-accent hover:bg-odara-secondary text-white font-semibold py-2 px-4 rounded-lg flex items-center transition text-sm h-10 mb-6"
+				className="bg-odara-accent hover:bg-odara-secondary text-white font-semibold py-2 px-3 sm:px-4 rounded-lg flex items-center transition text-xs sm:text-sm h-9 sm:h-10 w-full sm:w-max justify-center"
 			>
-				<Plus className="mr-2" /> Nova Ocorrência
+				<Plus className="mr-1 sm:mr-2 w-3 h-3 sm:w-4 sm:h-4" /> Nova Ocorrência
 			</button>
 		);
 	};
 
 	const ListaOcorrencias = () => {
 		return (
-			<div className="bg-white border-l-4 border-odara-primary rounded-2xl shadow-lg p-4 sm:p-6">
-				<div className="flex flex-col sm:flex-row items-center justify-between gap-2 mb-4">
-					<h2 className="text-2xl lg:text-3xl font-bold text-odara-dark">Ocorrências</h2>
-					<span className="bg-gray-200 text-gray-700 px-3 py-1 rounded-full text-sm font-medium">
+			<div className="bg-white border-l-4 border-odara-primary rounded-xl sm:rounded-2xl shadow-lg p-3 sm:p-6">
+				<div className="flex flex-col sm:flex-row items-center justify-between gap-2 mb-3 sm:mb-4">
+					<h2 className="text-lg sm:text-xl lg:text-2xl font-bold text-odara-dark">Ocorrências</h2>
+					<span className="bg-gray-200 text-gray-700 px-2 py-1 rounded-full text-xs font-medium">
 						Total: {ocorrenciasFiltradas.length} de {ocorrencias.length}
 					</span>
 				</div>
 
 				{/* Tags de filtros ativos */}
 				{(filtros.categoria || filtros.status || filtros.residenteId || filtros.startDate || filtros.endDate || searchTerm) && (
-					<div className="mb-4 flex flex-wrap gap-2 text-xs justify-center">
+					<div className="mb-3 flex flex-wrap justify-center sm:justify-start gap-1 text-xs">
 						{searchTerm && (
-							<span className="bg-odara-secondary text-white px-2 py-1 rounded-full">
+							<span className="bg-odara-secondary text-white px-2 py-1 rounded-full text-xs">
 								Busca: "{searchTerm}"
 							</span>
 						)}
 						{filtros.categoria && (
-							<span className="bg-odara-secondary text-white px-2 py-1 rounded-full">
+							<span className="bg-odara-secondary text-white px-2 py-1 rounded-full text-xs">
 								Categoria: {filtros.categoria}
 							</span>
 						)}
 						{filtros.status && (
-							<span className="bg-odara-secondary text-white px-2 py-1 rounded-full">
+							<span className="bg-odara-secondary text-white px-2 py-1 rounded-full text-xs">
 								Status: {filtros.status === 'pendente' ? 'Pendentes' : 'Resolvidas'}
 							</span>
 						)}
 						{filtros.residenteId && (
-							<span className="bg-odara-secondary text-white px-2 py-1 rounded-full">
+							<span className="bg-odara-secondary text-white px-2 py-1 rounded-full text-xs flex items-center gap-1">
+								<RockingChair size={10} />
 								Residente: {residentes.find(r => r.id === filtros.residenteId)?.nome}
 							</span>
 						)}
 						{(filtros.startDate || filtros.endDate) && (
-							<span className="bg-odara-secondary text-white px-2 py-1 rounded-full">
+							<span className="bg-odara-secondary text-white px-2 py-1 rounded-full text-xs">
 								Data: {filtros.startDate ? ` ${formatarDataParaExibicao(filtros.startDate)}` : ''}
 								{filtros.endDate ? ' até' + ` ${formatarDataParaExibicao(filtros.endDate)}` : ''}
 							</span>
@@ -850,22 +870,22 @@ const RegistroOcorrencias: React.FC = () => {
 
 				{/* Lista ou mensagem de vazio */}
 				{loading ? (
-					<div className="p-8 text-center">
-						<p className="text-odara-dark/60 text-lg">Carregando ocorrências...</p>
+					<div className="p-6 text-center">
+						<p className="text-odara-dark/60 text-sm sm:text-lg">Carregando ocorrências...</p>
 					</div>
 				) : ocorrenciasFiltradas.length === 0 ? (
-					<div className="p-8 rounded-xl bg-odara-name/10 text-center">
-						<p className="text-odara-dark/60 text-lg">
+					<div className="p-6 rounded-lg sm:rounded-xl bg-odara-name/10 text-center">
+						<p className="text-odara-dark/60 text-sm sm:text-lg">
 							{ocorrencias.length === 0 ? 'Nenhuma ocorrência registrada' : 'Nenhuma ocorrência encontrada'}
 						</p>
 						{ocorrencias.length > 0 && (
-							<p className="text-odara-dark/40 text-sm mt-2">
+							<p className="text-odara-dark/40 text-xs sm:text-sm mt-1 sm:mt-2">
 								Tente ajustar os termos da busca ou os filtros
 							</p>
 						)}
 					</div>
 				) : (
-					<div className="grid grid-cols-1 xl:grid-cols-2 gap-6 max-h-[800px] overflow-y-auto p-2">
+					<div className="flex flex-col lg:grid lg:grid-cols-2 gap-4 sm:gap-6">
 						{ocorrenciasFiltradas.map(ocorrencia => (
 							<CardOcorrencia
 								key={ocorrencia.id}
@@ -880,7 +900,7 @@ const RegistroOcorrencias: React.FC = () => {
 
 	/* Renderização Principal */
 	return (
-		<div className="flex min-h-screen bg-odara-offwhite">
+		<div className="min-h-screen bg-odara-offwhite overflow-x-hidden">
 			{/* Modal de Ocorrências */}
 			<ModalOcorrencias
 				ocorrencia={ocorrenciaSelecionada}
@@ -921,21 +941,21 @@ const RegistroOcorrencias: React.FC = () => {
 				}}
 			/>
 
-			<div className="flex-1 p-4 sm:p-6 lg:p-8">
+			<div className="p-3 sm:p-6 lg:p-8 max-w-full overflow-hidden">
 				{/* Cabeçalho e Botão Novo */}
-				<div className='flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6'>
+				<div className='flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 mb-4 sm:mb-6'>
 					<Cabecalho />
-					<div className="flex justify-end">
+					<div className="w-full sm:w-auto">
 						<BotaoNovaOcorrencia />
 					</div>
 				</div>
 
 				{/* Barra de Busca e Filtros */}
-				<div className="flex flex-col sm:flex-row gap-4 mb-6">
+				<div className="flex flex-col sm:flex-row gap-3 mb-4 sm:mb-6">
 					{/* Barra de Busca */}
-					<div className="flex-1 relative min-w-[300px]">
-						<div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-							<Search className="text-odara-primary h-4 w-4" />
+					<div className="flex-1 relative min-w-0">
+						<div className="absolute inset-y-0 left-0 pl-2 sm:pl-3 flex items-center pointer-events-none">
+							<Search className="text-odara-primary h-3 w-3 sm:h-4 sm:w-4" />
 						</div>
 
 						<input
@@ -943,7 +963,7 @@ const RegistroOcorrencias: React.FC = () => {
 							placeholder="Buscar por título, descrição, residente ou categoria..."
 							value={searchTerm}
 							onChange={(e) => setSearchTerm(e.target.value)}
-							className="w-full pl-10 pr-4 py-3 bg-white rounded-xl border border-gray-200 text-odara-dark placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-odara-primary focus:border-transparent"
+							className="w-full pl-7 sm:pl-10 pr-3 sm:pr-4 py-2 bg-white rounded-lg border border-gray-200 text-odara-dark placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-odara-primary focus:border-transparent text-xs sm:text-sm"
 						/>
 					</div>
 
@@ -951,9 +971,9 @@ const RegistroOcorrencias: React.FC = () => {
 					<div className="flex gap-2">
 						<button
 							onClick={toggleFiltros}
-							className="flex items-center gap-2 bg-white rounded-xl px-4 py-3 border border-gray-200 text-odara-dark font-medium hover:bg-odara-primary/10 transition w-max justify-between"
+							className="flex items-center gap-1 sm:gap-2 bg-white rounded-lg px-2 sm:px-4 py-2 border border-gray-200 text-odara-dark font-medium hover:bg-odara-primary/10 transition w-full sm:w-max justify-center text-xs sm:text-sm"
 						>
-							<Filter size={20} className="text-odara-accent" />
+							<Filter size={16} className="sm:w-5 sm:h-5 text-odara-accent" />
 							<span>
 								{!filtrosAberto ? 'Abrir ' : 'Fechar '} Filtros
 							</span>
@@ -968,7 +988,7 @@ const RegistroOcorrencias: React.FC = () => {
 				<ListaOcorrencias />
 
 				{/* Contador de resultados */}
-				<div className="my-4 text-sm text-gray-400">
+				<div className="mt-3 text-xs sm:text-sm text-gray-400">
 					Total de {ocorrenciasFiltradas.length} ocorrência(s) encontrada(s) de {ocorrencias.length}
 					{searchTerm && <span> para "{searchTerm}"</span>}
 				</div>

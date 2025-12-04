@@ -368,9 +368,9 @@ const RegistroAlimentar = () => {
         <button
           type="button"
           onClick={() => setAberto(!aberto)}
-          className="flex items-center justify-between w-full h-10 border border-gray-300 rounded-lg px-3 text-sm hover:bg-gray-50 transition-colors"
+          className="flex items-center justify-between w-full h-9 sm:h-10 border border-gray-300 rounded-lg px-3 text-xs sm:text-sm hover:bg-gray-50 transition-colors"
         >
-          <span className="text-odara-dark">
+          <span className="text-odara-dark truncate">
             {tipo === 'residente'
               ? valorSelecionado
                 ? residentes.find(r => r.id === valorSelecionado)?.nome
@@ -380,7 +380,7 @@ const RegistroAlimentar = () => {
                 : titulo
             }
           </span>
-          <ChevronDown size={12} className="text-gray-500" />
+          <ChevronDown size={10} className="sm:w-3 sm:h-3 text-gray-500 flex-shrink-0" />
         </button>
 
         {aberto && (
@@ -389,26 +389,26 @@ const RegistroAlimentar = () => {
               <>
                 <button
                   onClick={() => onSelecionar(null)}
-                  className={`flex items-center gap-3 w-full text-left px-4 py-3 text-sm hover:bg-odara-primary/10 transition ${!valorSelecionado
+                  className={`flex items-center gap-2 sm:gap-3 w-full text-left px-3 sm:px-4 py-2 sm:py-3 text-xs sm:text-sm hover:bg-odara-primary/10 transition ${!valorSelecionado
                     ? 'bg-odara-primary/20 text-odara-primary font-semibold'
                     : 'text-gray-700'
                     }`}
                 >
                   <span>Todos os residentes</span>
-                  {!valorSelecionado && <Check className="ml-auto text-odara-primary" size={14} />}
+                  {!valorSelecionado && <Check className="ml-auto text-odara-primary w-3 h-3 sm:w-3.5 sm:h-3.5" />}
                 </button>
 
                 {residentes.map(residente => (
                   <button
                     key={residente.id}
                     onClick={() => onSelecionar(residente.id)}
-                    className={`flex items-center gap-3 w-full text-left px-4 py-3 text-sm hover:bg-odara-primary/10 transition ${valorSelecionado === residente.id
+                    className={`flex items-center gap-2 sm:gap-3 w-full text-left px-3 sm:px-4 py-2 sm:py-3 text-xs sm:text-sm hover:bg-odara-primary/10 transition ${valorSelecionado === residente.id
                       ? 'bg-odara-primary/20 text-odara-primary font-semibold'
                       : 'text-gray-700'
                       }`}
                   >
-                    <span>{residente.nome}</span>
-                    {valorSelecionado === residente.id && <Check className="ml-auto text-odara-primary" size={14} />}
+                    <span className="truncate">{residente.nome}</span>
+                    {valorSelecionado === residente.id && <Check className="ml-auto text-odara-primary w-3 h-3 sm:w-3.5 sm:h-3.5" />}
                   </button>
                 ))}
               </>
@@ -417,14 +417,14 @@ const RegistroAlimentar = () => {
                 <button
                   key={opcao.value}
                   onClick={() => onSelecionar(opcao.value)}
-                  className={`flex items-center gap-3 w-full text-left px-4 py-3 text-sm hover:bg-odara-primary/10 transition ${(opcao.value === 'todas' && !valorSelecionado) || valorSelecionado === opcao.value
+                  className={`flex items-center gap-2 sm:gap-3 w-full text-left px-3 sm:px-4 py-2 sm:py-3 text-xs sm:text-sm hover:bg-odara-primary/10 transition ${(opcao.value === 'todas' && !valorSelecionado) || valorSelecionado === opcao.value
                     ? 'bg-odara-primary/20 text-odara-primary font-semibold'
                     : 'text-gray-700'
                     }`}
                 >
                   <span>{opcao.label}</span>
                   {((opcao.value === 'todas' && !valorSelecionado) || valorSelecionado === opcao.value) && (
-                    <Check className="ml-auto text-odara-primary" size={14} />
+                    <Check className="ml-auto text-odara-primary w-3 h-3 sm:w-3.5 sm:h-3.5" />
                   )}
                 </button>
               ))
@@ -440,15 +440,15 @@ const RegistroAlimentar = () => {
     if (!filtrosAberto) return null;
 
     return (
-      <div className="mb-8 bg-white p-5 rounded-xl shadow border border-gray-200 animate-fade-in">
+      <div className="mb-6 bg-white p-4 sm:p-5 rounded-xl shadow border border-gray-200 animate-fade-in">
         {/* Primeira Linha */}
-        <div className="flex flex-col md:flex-row gap-5 w-full">
-          <div className='flex flex-col md:flex-row flex-1 gap-5'>
+        <div className="flex flex-col md:flex-row gap-4 sm:gap-5 w-full">
+          <div className='flex flex-col md:flex-row flex-1 gap-4 sm:gap-5 w-full'>
             {/* Filtro de Residente */}
             <div className="flex-1 min-w-0">
               <div className='flex gap-1 items-center ml-1 mb-1'>
-                <Filter size={10} className="text-odara-accent" />
-                <label className="block text-sm font-semibold text-odara-secondary">Residente</label>
+                <Filter size={9} className="sm:w-2.5 sm:h-2.5 text-odara-accent" />
+                <label className="block text-xs sm:text-sm font-semibold text-odara-secondary">Residente</label>
               </div>
 
               <FiltroDropdown
@@ -465,8 +465,8 @@ const RegistroAlimentar = () => {
             {/* Filtro de Refeição */}
             <div className="flex-1 min-w-0">
               <div className='flex gap-1 items-center ml-1 mb-1'>
-                <Filter size={10} className="text-odara-accent" />
-                <label className="block text-sm font-semibold text-odara-secondary">Refeição</label>
+                <Filter size={9} className="sm:w-2.5 sm:h-2.5 text-odara-accent" />
+                <label className="block text-xs sm:text-sm font-semibold text-odara-secondary">Refeição</label>
               </div>
 
               <FiltroDropdown
@@ -485,7 +485,7 @@ const RegistroAlimentar = () => {
           <div className="flex md:items-end gap-2 pt-1 md:pt-0 md:flex-shrink-0">
             <button
               onClick={limparFiltros}
-              className="bg-odara-accent hover:bg-odara-secondary text-white font-semibold py-2 px-4 rounded-lg flex items-center transition text-sm h-10 w-full md:w-auto justify-center"
+              className="bg-odara-accent hover:bg-odara-secondary text-white font-semibold py-2 px-3 sm:px-4 rounded-lg flex items-center transition text-xs sm:text-sm h-9 sm:h-10 w-full md:w-auto justify-center"
             >
               Limpar Filtros/Busca
             </button>
@@ -493,34 +493,34 @@ const RegistroAlimentar = () => {
         </div>
 
         {/* Segunda Linha (Filtro de Data) */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-5 mt-5 pt-5 border-t border-gray-200">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-5 mt-4 sm:mt-5 pt-4 sm:pt-5 border-t border-gray-200">
           {/* A Partir da Data */}
           <div>
             <div className='flex gap-1 items-center ml-1 mb-1'>
-              <Filter size={10} className="text-odara-accent" />
-              <label className="block text-sm font-semibold text-odara-secondary">A Partir da Data</label>
+              <Filter size={9} className="sm:w-2.5 sm:h-2.5 text-odara-accent" />
+              <label className="block text-xs sm:text-sm font-semibold text-odara-secondary">A Partir da Data</label>
             </div>
 
             <input
               type="date"
               value={filtros.startDate || ''}
               onChange={(e) => setFiltros(prev => ({ ...prev, startDate: e.target.value || null }))}
-              className="w-full h-10 border border-gray-300 rounded-lg px-3 text-sm focus:ring-2 focus:ring-odara-primary focus:outline-none"
+              className="w-full h-9 sm:h-10 border border-gray-300 rounded-lg px-3 text-xs sm:text-sm focus:ring-2 focus:ring-odara-primary focus:outline-none"
             />
           </div>
 
           {/* Até a Data */}
           <div>
             <div className="flex gap-1 items-center ml-1 mb-1">
-              <Filter size={10} className="text-odara-accent" />
-              <label className="block text-sm font-semibold text-odara-secondary">Até a Data</label>
+              <Filter size={9} className="sm:w-2.5 sm:h-2.5 text-odara-accent" />
+              <label className="block text-xs sm:text-sm font-semibold text-odara-secondary">Até a Data</label>
             </div>
 
             <input
               type="date"
               value={filtros.endDate || ''}
               onChange={(e) => setFiltros(prev => ({ ...prev, endDate: e.target.value || null }))}
-              className="w-full h-10 border border-gray-300 rounded-lg px-3 text-sm focus:ring-2 focus:ring-odara-primary focus:outline-none"
+              className="w-full h-9 sm:h-10 border border-gray-300 rounded-lg px-3 text-xs sm:text-sm focus:ring-2 focus:ring-odara-primary focus:outline-none"
             />
           </div>
         </div>
@@ -540,21 +540,21 @@ const RegistroAlimentar = () => {
 
     return (
       <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-[100] p-4 animate-fade-in">
-        <div className="bg-white rounded-2xl shadow-xl p-6 max-w-md w-full animate-scale-in">
+        <div className="bg-white rounded-2xl shadow-xl p-4 sm:p-6 max-w-md w-full animate-scale-in">
           <div className="text-center">
             {/* Ícone de alerta */}
-            <div className="mx-auto flex items-center justify-center h-14 w-14 rounded-full bg-odara-alerta/10 mb-4">
-              <AlertTriangle className="h-7 w-7 text-odara-alerta" />
+            <div className="mx-auto flex items-center justify-center h-12 sm:h-14 w-12 sm:w-14 rounded-full bg-odara-alerta/10 mb-3 sm:mb-4">
+              <AlertTriangle className="h-6 w-6 sm:h-7 sm:w-7 text-odara-alerta" />
             </div>
 
             {/* Textos do modal */}
-            <h3 className="text-xl font-bold text-odara-dark mb-2">Confirmar exclusão</h3>
-            <p className="text-odara-name mb-4">
+            <h3 className="text-lg sm:text-xl font-bold text-odara-dark mb-2">Confirmar exclusão</h3>
+            <p className="text-odara-name text-sm sm:text-base mb-3 sm:mb-4">
               Tem certeza que deseja excluir este registro alimentar?
             </p>
 
             {/* Detalhes do registro */}
-            <div className="bg-odara-offwhite rounded-lg p-3 mb-4 border border-gray-200">
+            <div className="bg-odara-offwhite rounded-lg p-3 mb-3 sm:mb-4 border border-gray-200">
               {tituloRegistro && (
                 <div className="mb-2">
                   <p className="text-sm font-medium text-odara-dark">Alimento:</p>
@@ -571,22 +571,22 @@ const RegistroAlimentar = () => {
               )}
             </div>
 
-            <p className="text-sm text-odara-alerta mb-6 font-medium">
+            <p className="text-xs sm:text-sm text-odara-alerta mb-4 sm:mb-6 font-medium">
               Esta ação não pode ser desfeita.
             </p>
 
             {/* Botões de ação */}
-            <div className="flex gap-3 justify-center">
+            <div className="flex gap-2 sm:gap-3 justify-center">
               <button
                 onClick={fecharModalExclusao}
-                className="px-6 py-2 border border-odara-primary text-odara-primary rounded-lg hover:bg-odara-primary/10 transition-colors duration-200 flex-1"
+                className="px-4 sm:px-6 py-2 border border-odara-primary text-odara-primary rounded-lg hover:bg-odara-primary/10 transition-colors duration-200 flex-1 text-sm"
                 autoFocus
               >
                 Cancelar
               </button>
               <button
                 onClick={executarExclusao}
-                className="px-5 py-2.5 bg-odara-alerta text-white rounded-lg hover:bg-red-700 transition-colors duration-200 font-medium flex-1"
+                className="px-4 sm:px-5 py-2 bg-odara-alerta text-white rounded-lg hover:bg-red-700 transition-colors duration-200 font-medium flex-1 text-sm"
               >
                 Excluir
               </button>
@@ -602,41 +602,41 @@ const RegistroAlimentar = () => {
     return (
       <div className="bg-white rounded-lg shadow-md border border-gray-200 hover:shadow-lg transition-shadow duration-200 flex flex-col h-full">
         {/* Header do Card */}
-        <div className="flex flex-wrap justify-center sm:justify-between gap-2 items-center p-3 rounded-t-lg bg-gray-50 border-b border-gray-200">
+        <div className="flex flex-wrap justify-center sm:justify-between gap-2 items-center p-2 sm:p-3 rounded-t-lg bg-gray-50 border-b border-gray-200">
           {/* Coluna Esquerda */}
           <div className="flex items-center">
-            <div className="bg-odara-accent w-3 h-3 rounded-full mr-3"></div>
+            <div className="bg-odara-accent w-2 h-2 sm:w-3 sm:h-3 rounded-full mr-2 sm:mr-3"></div>
 
-            <p className="text-sm sm:text-base text-odara-dark">
+            <p className="text-xs sm:text-sm md:text-base text-odara-dark">
               <span className='font-semibold'>
                 {registro.data.split('-').reverse().join('/')}
               </span>
 
-              <span className="text-odara-accent ml-2">
+              <span className="text-odara-accent ml-1 sm:ml-2">
                 • {formatTime(registro.horario)}
               </span>
             </p>
           </div>
 
           {/* Coluna Direita - Tipo de Refeição */}
-          <div className="flex items-center gap-2 px-3 py-1 bg-odara-accent/10 rounded-lg">
+          <div className="flex items-center gap-2 px-2 sm:px-3 py-1 text-xs sm:text-sm bg-odara-accent/10 rounded-lg">
             {(() => {
               const refeicaoInfo = REFEICOES_ORDENADAS.find(opt => opt.key === registro.refeicao);
               const IconeComponente = refeicaoInfo?.icon || Utensils;
-              return <IconeComponente size={12} className="text-odara-accent" />;
+              return <IconeComponente size={12} className="sm:w-3.5 sm:h-3.5 text-odara-accent" />;
             })()}
 
-            <span className="text-xs font-medium text-odara-dark capitalize">
+            <span className="text-odara-dark font-medium capitalize truncate">
               {REFEICOES[registro.refeicao as keyof typeof REFEICOES] || registro.refeicao}
             </span>
           </div>
         </div>
 
         {/* Corpo do Card */}
-        <div className="p-4 flex-1 flex flex-col">
+        <div className="p-3 sm:p-4 flex-1 flex flex-col">
           {/* Título e Botões de Ação */}
-          <div className="flex items-start justify-between mb-3">
-            <h3 className="text-lg sm:text-xl font-bold text-odara-dark line-clamp-1 flex-1">
+          <div className="flex items-start justify-between mb-2 sm:mb-3">
+            <h3 className="text-sm sm:text-base md:text-lg font-bold text-odara-dark line-clamp-1 flex-1">
               {REFEICOES[registro.refeicao as keyof typeof REFEICOES] || registro.refeicao}
             </h3>
 
@@ -644,52 +644,54 @@ const RegistroAlimentar = () => {
             <div className="flex items-center gap-1 ml-2">
               <button
                 onClick={() => abrirModalEdicao(registro)}
-                className="text-odara-dropdown-accent hover:text-odara-white transition-colors duration-200 p-2 rounded-full hover:bg-odara-dropdown-accent"
+                className="text-odara-dropdown-accent hover:text-odara-white transition-colors duration-200 p-1.5 sm:p-2 rounded-full hover:bg-odara-dropdown-accent"
                 title="Editar registro"
               >
-                <Edit size={14} />
+                <Edit size={12} className="sm:w-3.5 sm:h-3.5" />
               </button>
 
               <button
                 onClick={() => abrirModalExclusao(registro.id)}
-                className="text-odara-alerta hover:text-odara-white transition-colors duration-200 p-2 rounded-full hover:bg-odara-alerta"
+                className="text-odara-alerta hover:text-odara-white transition-colors duration-200 p-1.5 sm:p-2 rounded-full hover:bg-odara-alerta"
                 title="Excluir registro"
               >
-                <Trash size={14} />
+                <Trash size={12} className="sm:w-3.5 sm:h-3.5" />
               </button>
             </div>
           </div>
 
           {/* Detalhes do Registro */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 flex-1">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4 flex-1">
             {/* Coluna Esquerda */}
-            <div className="flex flex-wrap">
-              <span className="text-odara-name text-sm ml-1 inline-block align-center">
-                <strong className="text-odara-dark">Alimentos:</strong> {' ' + registro.alimento}
+            <div>
+              <strong className="text-odara-dark text-xs sm:text-sm">Alimentos:</strong>
+              <span className="text-odara-name mt-0.5 sm:mt-1 text-xs sm:text-sm block">
+                {registro.alimento}
               </span>
             </div>
 
             {/* Coluna Direita */}
-            <div className="flex flex-wrap">
-              <span className="text-odara-name text-sm ml-1 inline-block align-center">
-                <strong className="text-odara-dark">Observações:</strong> {registro.observacao || 'Nenhuma'}
+            <div>
+              <strong className="text-odara-dark text-xs sm:text-sm">Observações:</strong>
+              <span className="text-odara-name mt-0.5 sm:mt-1 text-xs sm:text-sm block">
+                {registro.observacao || 'Nenhuma'}
               </span>
             </div>
           </div>
         </div>
 
         {/* Footer do Card */}
-        <div className="px-4 py-3 bg-gray-50 rounded-b-lg border-t border-gray-200">
-          <div className="flex flex-wrap justify-center sm:justify-between gap-2 text-xs">
-            <div className="flex items-center gap-2">
-              <span className="bg-odara-accent text-white px-3 py-1 rounded-full text-xs font-medium flex items-center gap-1">
-                <RockingChair size={12} />
+        <div className="px-3 sm:px-4 py-2 sm:py-3 bg-gray-50 rounded-b-lg border-t border-gray-200">
+          <div className="flex flex-wrap justify-center sm:justify-between gap-1 sm:gap-2 text-xs">
+            <div className="flex items-center flex-wrap gap-1 justify-center sm:justify-start">
+              <span className="bg-odara-accent text-white px-2 py-1 rounded-full text-xs font-medium flex items-center gap-1">
+                <RockingChair size={10} className="sm:w-3 sm:h-3" />
                 {registro.residente?.nome || 'Sem residente'}
               </span>
             </div>
 
-            <div className="text-xs text-odara-name flex items-center gap-1">
-              <Clock size={10} />
+            <div className="text-xs text-odara-name flex items-center gap-1 justify-center sm:justify-start">
+              <Clock size={9} className="sm:w-2.5 sm:h-2.5" />
               {registro.data.split('-').reverse().join('/')} • {formatTime(registro.horario)}
             </div>
           </div>
@@ -739,38 +741,38 @@ const RegistroAlimentar = () => {
       });
 
     return (
-      <div className="bg-white border-l-4 border-odara-primary rounded-2xl shadow-lg p-4 sm:p-6">
-        <div className="flex flex-col sm:flex-row items-center justify-between gap-2 mb-4">
-          <h2 className="text-2xl lg:text-3xl font-bold text-odara-dark">Todos os Registros</h2>
-          <span className="bg-gray-200 text-gray-700 px-3 py-1 rounded-full text-sm font-medium">
+      <div className="bg-white border-l-4 border-odara-primary rounded-xl sm:rounded-2xl shadow-lg p-3 sm:p-6">
+        <div className="flex flex-col sm:flex-row items-center justify-between gap-2 mb-3 sm:mb-4">
+          <h2 className="text-lg sm:text-xl lg:text-2xl font-bold text-odara-dark">Todos os Registros</h2>
+          <span className="bg-gray-200 text-gray-700 px-2 py-1 rounded-full text-xs font-medium">
             Total: {registrosFiltradosLista.length} de {registros.length}
           </span>
         </div>
 
-        {/* Tags de filtros ativos - incluindo residente selecionado se houver */}
+        {/* Tags de filtros ativos */}
         {(filtros.residenteId || filtros.refeicao || filtros.startDate || filtros.endDate || searchTerm) && (
-          <div className="mb-4 flex flex-wrap justify-center sm:justify-start gap-2 text-xs">
+          <div className="mb-3 flex flex-wrap justify-center sm:justify-start gap-1 text-xs">
             {searchTerm && (
-              <span className="bg-odara-secondary text-white px-2 py-1 rounded-full">
+              <span className="bg-odara-secondary text-white px-2 py-1 rounded-full text-xs">
                 Busca: {searchTerm}
               </span>
             )}
 
             {filtros.residenteId && (
-              <span className="bg-odara-secondary text-white px-3 py-1.5 rounded-full flex items-center gap-1">
+              <span className="bg-odara-secondary text-white px-2 py-1 rounded-full text-xs flex items-center gap-1">
                 <RockingChair size={10} />
                 Residente: {residentes.find(r => r.id === filtros.residenteId)?.nome}
               </span>
             )}
 
             {filtros.refeicao && (
-              <span className="bg-odara-secondary text-white px-2 py-1 rounded-full">
+              <span className="bg-odara-secondary text-white px-2 py-1 rounded-full text-xs">
                 Refeição: {REFEICOES[filtros.refeicao as keyof typeof REFEICOES]}
               </span>
             )}
 
             {(filtros.startDate || filtros.endDate) && (
-              <span className="bg-odara-secondary text-white px-2 py-1 rounded-full">
+              <span className="bg-odara-secondary text-white px-2 py-1 rounded-full text-xs">
                 Data: {filtros.startDate ? ` ${filtros.startDate.split('-').reverse().join('/')}` : ''}
                 {filtros.endDate ? ' até' + ` ${filtros.endDate.split('-').reverse().join('/')}` : ''}
               </span>
@@ -780,22 +782,22 @@ const RegistroAlimentar = () => {
 
         {/* Lista ou mensagem de vazio */}
         {loading ? (
-          <div className="p-8 text-center">
-            <p className="text-odara-dark/60 text-lg">Carregando registros...</p>
+          <div className="p-6 text-center">
+            <p className="text-odara-dark/60 text-sm sm:text-lg">Carregando registros...</p>
           </div>
         ) : registrosFiltradosLista.length === 0 ? (
-          <div className="p-8 rounded-xl bg-odara-name/10 text-center">
-            <p className="text-odara-dark/60 text-lg">
+          <div className="p-6 rounded-lg sm:rounded-xl bg-odara-name/10 text-center">
+            <p className="text-odara-dark/60 text-sm sm:text-lg">
               {registros.length === 0 ? 'Nenhum registro alimentar' : 'Nenhum registro encontrado'}
             </p>
             {registros.length > 0 && (
-              <p className="text-odara-dark/40 text-sm mt-2">
+              <p className="text-odara-dark/40 text-xs sm:text-sm mt-1 sm:mt-2">
                 Tente ajustar os termos da busca ou os filtros
               </p>
             )}
           </div>
         ) : (
-          <div className="grid grid-cols-1 xl:grid-cols-2 gap-6 max-h-[800px] overflow-y-auto p-2">
+          <div className="flex flex-col lg:grid lg:grid-cols-2 gap-4 sm:gap-6 max-h-[800px] overflow-y-auto p-2">
             {registrosFiltradosLista.map(registro => (
               <CardRegistro
                 key={registro.id}
@@ -844,30 +846,30 @@ const RegistroAlimentar = () => {
     }, {} as Record<string, Record<string, RegistroAlimentar[]>>);
 
     return (
-      <div className="bg-white rounded-2xl shadow-xl p-4 sm:p-6 border-l-4 border-odara-primary">
-        {/* Seletor de residente - estilizado igual ao da lista */}
-        <div className="mb-8 bg-white p-5 rounded-xl shadow border border-gray-200 animate-fade-in shadow-sm">
-          <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
+      <div className="bg-white rounded-xl sm:rounded-2xl shadow-xl p-3 sm:p-6 border-l-4 border-odara-primary">
+        {/* Seletor de residente */}
+        <div className="mb-6 bg-white p-4 sm:p-5 rounded-xl shadow border border-gray-200 animate-fade-in">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3">
             <div className="flex items-center gap-2">
-              <RockingChair size={14} className="text-odara-accent text-lg" />
-              <label className="block text-sm font-semibold text-odara-secondary">
+              <RockingChair size={12} className="sm:w-3.5 sm:h-3.5 text-odara-accent" />
+              <label className="block text-xs sm:text-sm font-semibold text-odara-secondary">
                 Selecione um residente para visualizar a semana:
               </label>
             </div>
 
-            {/* Filtro de Residente estilizado igual ao da lista */}
+            {/* Filtro de Residente */}
             <div className="relative flex-1 z-30" ref={filtroSemanalResidenteRef}>
               <button
                 type="button"
                 onClick={() => setFiltroSemanalResidenteAberto(!filtroSemanalResidenteAberto)}
-                className="flex items-center justify-between w-full h-10 border border-gray-300 rounded-lg px-3 text-sm hover:bg-gray-50 transition-colors"
+                className="flex items-center justify-between w-full h-9 sm:h-10 border border-gray-300 rounded-lg px-3 text-xs sm:text-sm hover:bg-gray-50 transition-colors"
               >
-                <span className="text-odara-dark">
+                <span className="text-odara-dark truncate">
                   {residenteSelecionadoFiltro
                     ? residentes.find(r => r.id === residenteSelecionadoFiltro)?.nome
                     : "Selecione um residente..."}
                 </span>
-                <ChevronDown size={12} className="text-gray-500" />
+                <ChevronDown size={10} className="sm:w-3 sm:h-3 text-gray-500 flex-shrink-0" />
               </button>
 
               {filtroSemanalResidenteAberto && (
@@ -877,13 +879,13 @@ const RegistroAlimentar = () => {
                       setResidenteSelecionadoFiltro(null);
                       setFiltroSemanalResidenteAberto(false);
                     }}
-                    className={`flex items-center gap-3 w-full text-left px-4 py-3 text-sm hover:bg-odara-primary/10 transition ${!residenteSelecionadoFiltro
+                    className={`flex items-center gap-2 sm:gap-3 w-full text-left px-3 sm:px-4 py-2 sm:py-3 text-xs sm:text-sm hover:bg-odara-primary/10 transition ${!residenteSelecionadoFiltro
                       ? 'bg-odara-primary/20 text-odara-primary font-semibold'
                       : 'text-gray-700'
                       }`}
                   >
                     <span>Selecione um residente...</span>
-                    {!residenteSelecionadoFiltro && <Check className="ml-auto text-odara-primary" size={14} />}
+                    {!residenteSelecionadoFiltro && <Check className="ml-auto text-odara-primary w-3 h-3 sm:w-3.5 sm:h-3.5" />}
                   </button>
 
                   {residentes.map(residente => (
@@ -893,13 +895,13 @@ const RegistroAlimentar = () => {
                         setResidenteSelecionadoFiltro(residente.id);
                         setFiltroSemanalResidenteAberto(false);
                       }}
-                      className={`flex items-center gap-3 w-full text-left px-4 py-3 text-sm hover:bg-odara-primary/10 transition ${residenteSelecionadoFiltro === residente.id
+                      className={`flex items-center gap-2 sm:gap-3 w-full text-left px-3 sm:px-4 py-2 sm:py-3 text-xs sm:text-sm hover:bg-odara-primary/10 transition ${residenteSelecionadoFiltro === residente.id
                         ? 'bg-odara-primary/20 text-odara-primary font-semibold'
                         : 'text-gray-700'
                         }`}
                     >
-                      <span>{residente.nome}</span>
-                      {residenteSelecionadoFiltro === residente.id && <Check className="ml-auto text-odara-primary" size={14} />}
+                      <span className="truncate">{residente.nome}</span>
+                      {residenteSelecionadoFiltro === residente.id && <Check className="ml-auto text-odara-primary w-3 h-3 sm:w-3.5 sm:h-3.5" />}
                     </button>
                   ))}
                 </div>
@@ -909,20 +911,20 @@ const RegistroAlimentar = () => {
         </div>
 
         {!residenteSelecionadoFiltro ? (
-          <div className="text-center py-12 bg-gray-50 rounded-xl border-2 border-dashed border-gray-300">
-            <RockingChair className="text-6xl text-gray-400 mx-auto mb-4" />
-            <h3 className="text-xl font-semibold text-gray-600 mb-2">Selecione um residente</h3>
-            <p className="text-gray-500 max-w-md mx-auto">
+          <div className="text-center py-8 sm:py-12 bg-gray-50 rounded-xl border-2 border-dashed border-gray-300">
+            <RockingChair className="text-4xl sm:text-6xl text-gray-400 mx-auto mb-3 sm:mb-4" />
+            <h3 className="text-lg sm:text-xl font-semibold text-gray-600 mb-2">Selecione um residente</h3>
+            <p className="text-gray-500 text-xs sm:text-sm max-w-md mx-auto px-4">
               Escolha um residente na lista acima para visualizar o calendário semanal de refeições.
             </p>
           </div>
         ) : (
           <>
             {/* Tags de filtros ativos */}
-            <div className="mb-4 flex flex-wrap gap-2 text-xs justify-center">
+            <div className="mb-4 flex flex-wrap justify-center sm:justify-start gap-1 text-xs">
               {/* Tag do residente selecionado */}
               {residenteSelecionadoFiltro && (
-                <span className="bg-odara-secondary text-white px-3 py-1.5 rounded-full flex items-center gap-1">
+                <span className="bg-odara-secondary text-white px-2 py-1 rounded-full flex items-center gap-1">
                   <RockingChair size={10} />
                   Residente: {residentes.find(r => r.id === residenteSelecionadoFiltro)?.nome}
                 </span>
@@ -930,58 +932,42 @@ const RegistroAlimentar = () => {
 
               {/* Tag de busca se houver */}
               {searchTerm && (
-                <span className="bg-odara-secondary text-white px-3 py-1.5 rounded-full">
+                <span className="bg-odara-secondary text-white px-2 py-1 rounded-full">
                   Busca: {searchTerm}
                 </span>
-              )}
-
-              {/* Outras tags apenas se houverem filtros ativos */}
-              {(filtros.refeicao || filtros.startDate || filtros.endDate) && (
-                <>
-                  {filtros.refeicao && (
-                    <span className="bg-odara-accent text-white px-3 py-1.5 rounded-full">
-                      Refeição: {REFEICOES[filtros.refeicao as keyof typeof REFEICOES]}
-                    </span>
-                  )}
-
-                  {(filtros.startDate || filtros.endDate) && (
-                    <span className="bg-odara-accent text-white px-3 py-1.5 rounded-full">
-                      Data: {filtros.startDate ? ` ${filtros.startDate.split('-').reverse().join('/')}` : ''}
-                      {filtros.endDate ? ' até' + ` ${filtros.endDate.split('-').reverse().join('/')}` : ''}
-                    </span>
-                  )}
-                </>
               )}
             </div>
 
             {/* Controles de navegação */}
-            <div className="sticky top-0 z-10 bg-odara-white py-2 flex flex-col justify-between items-center mb-8 pb-6 border-b border-gray-200">
-              <div className="flex items-center gap-4 mt-4 sm:mt-0">
-                <input
-                  className="flex items-center gap-2 border border-odara-primary rounded-lg focus:outline-none focus:border-none focus:ring-2 focus:ring-odara-secondary shadow-sm px-3 py-2 text-odara-dark"
-                  type="date"
-                  value={formatDateKey(currentWeek)}
-                  onChange={e => setCurrentWeek(new Date(e.target.value))}
-                />
+            <div className="sticky top-0 z-10 bg-odara-white py-2 flex flex-col justify-between items-center mb-4 sm:mb-8 pb-4 sm:pb-6 border-b border-gray-200">
+              <div className="flex flex-col sm:flex-row items-center gap-3 sm:gap-4 w-full">
+                <div className="flex items-center gap-2 w-full sm:w-auto">
+                  <input
+                    className="flex items-center gap-2 border border-odara-primary rounded-lg focus:outline-none focus:border-none focus:ring-2 focus:ring-odara-secondary shadow-sm px-3 py-2 text-odara-dark text-xs sm:text-sm w-full"
+                    type="date"
+                    value={formatDateKey(currentWeek)}
+                    onChange={e => setCurrentWeek(new Date(e.target.value))}
+                  />
 
-                <button
-                  onClick={goToToday}
-                  className="px-4 py-2 bg-odara-accent text-white rounded-xl hover:bg-odara-secondary transition text-sm shadow-sm"
-                >
-                  Ir para Hoje
-                </button>
+                  <button
+                    onClick={goToToday}
+                    className="bg-odara-accent hover:bg-odara-secondary text-white rounded-lg hover:bg-odara-secondary transition text-xs sm:text-sm shadow-sm px-3 py-2 whitespace-nowrap w-full sm:w-auto"
+                  >
+                    Ir para Hoje
+                  </button>
+                </div>
 
-                <div className="flex items-center gap-2 border border-odara-primary rounded-lg focus:outline-none focus:border-none focus:ring-2 focus:ring-odara-secondary shadow-sm">
-                  <button onClick={() => navigateWeek("prev")} className="p-2 rounded-full transition">
-                    <ChevronLeft size={25} className="text-odara-primary hover:text-odara-secondary" />
+                <div className="flex items-center gap-2 border border-odara-primary rounded-lg focus:outline-none focus:border-none focus:ring-2 focus:ring-odara-secondary shadow-sm w-full sm:w-auto">
+                  <button onClick={() => navigateWeek("prev")} className="p-1 sm:p-2 rounded-full transition">
+                    <ChevronLeft size={20} className="sm:w-6 sm:h-6 text-odara-primary hover:text-odara-secondary" />
                   </button>
 
-                  <span className="text-odara-dark min-w-[100px] text-center">
+                  <span className="text-odara-dark text-xs sm:text-sm min-w-[100px] text-center px-1 sm:px-2">
                     {weekDates[0].toLocaleDateString("pt-BR", { day: "2-digit", month: "2-digit" })} - {weekDates[6].toLocaleDateString("pt-BR", { day: "2-digit", month: "2-digit" })}
                   </span>
 
-                  <button onClick={() => navigateWeek("next")} className="p-2 rounded-full transition">
-                    <ChevronRight size={25} className="text-odara-primary hover:text-odara-secondary" />
+                  <button onClick={() => navigateWeek("next")} className="p-1 sm:p-2 rounded-full transition">
+                    <ChevronRight size={20} className="sm:w-6 sm:h-6 text-odara-primary hover:text-odara-secondary" />
                   </button>
                 </div>
               </div>
@@ -989,24 +975,24 @@ const RegistroAlimentar = () => {
 
             {/* Grade semanal */}
             <div className="overflow-x-auto pb-4">
-              <div className="min-w-[1100px]">
+              <div className="min-w-[800px] sm:min-w-[1100px]">
                 {/* Cabeçalho dos dias */}
-                <div className="grid grid-cols-8 gap-2 mb-2">
-                  <div className="w-32"></div>
+                <div className="grid grid-cols-8 gap-1 sm:gap-2 mb-2">
+                  <div className="w-24 sm:w-32"></div>
                   {weekDates.map((date, index) => {
                     const isToday = formatDateKey(date) === formatDateKey(new Date());
                     return (
                       <div
                         key={index}
-                        className={`text-center shadow-sm border rounded-xl p-3 ${isToday
+                        className={`text-center shadow-sm border rounded-lg sm:rounded-xl p-2 sm:p-3 ${isToday
                           ? "bg-odara-accent text-white border-odara-accent shadow-md"
                           : "bg-transparent border border-odara-primary text-odara-primary"
                           }`}
                       >
-                        <div className="font-semibold text-md capitalize">
-                          {date.toLocaleDateString("pt-BR", { weekday: "long" })}
+                        <div className="font-semibold text-xs sm:text-sm capitalize truncate">
+                          {date.toLocaleDateString("pt-BR", { weekday: "short" })}
                         </div>
-                        <div className="text-lg font-bold">{date.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' })}</div>
+                        <div className="text-sm sm:text-lg font-bold">{date.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' })}</div>
                       </div>
                     );
                   })}
@@ -1014,17 +1000,17 @@ const RegistroAlimentar = () => {
 
                 {/* Linhas de refeições */}
                 {REFEICOES_ORDENADAS.map(ref => (
-                  <div key={ref.key} className="grid grid-cols-8 gap-2 mb-3">
+                  <div key={ref.key} className="grid grid-cols-8 gap-1 sm:gap-2 mb-2 sm:mb-3">
                     {/* Célula do tipo de refeição */}
-                    <div className="w-full flex items-center justify-center bg-transparent border border-odara-primary rounded-xl p-3 text-odara-primary shadow-sm">
-                      <div className="flex justify-center items-center gap-2 text-center">
+                    <div className="w-full flex items-center justify-center bg-transparent border border-odara-primary rounded-lg sm:rounded-xl p-2 sm:p-3 text-odara-primary shadow-sm">
+                      <div className="flex justify-center items-center gap-1 sm:gap-2 text-center">
                         {/* Icone */}
                         {(() => {
                           const IconeComponente = getIconeRefeicao(ref.key);
-                          return <IconeComponente size={25} />;
+                          return <IconeComponente size={18} className="sm:w-6 sm:h-6" />;
                         })()}
 
-                        <div className="text-md font-semibold">
+                        <div className="text-xs sm:text-sm font-semibold truncate">
                           {ref.label}
                         </div>
                       </div>
@@ -1037,22 +1023,22 @@ const RegistroAlimentar = () => {
                       return (
                         <div
                           key={i}
-                          className="bg-gray-50 rounded-xl p-2 border border-gray-200 min-h-max hover:bg-gray-100 transition-colors"
+                          className="bg-gray-50 rounded-lg sm:rounded-xl p-1 sm:p-2 border border-gray-200 min-h-max hover:bg-gray-100 transition-colors"
                         >
-                          <div className="space-y-2">
+                          <div className="space-y-1 sm:space-y-2">
                             {dayRegistros.map(registro => (
                               <div
                                 key={registro.id}
-                                className="bg-white rounded-lg p-2 shadow-sm border border-gray-300 hover:shadow-md hover:border-odara-accent/40 transition cursor-pointer group"
+                                className="bg-white rounded-lg p-1 sm:p-2 shadow-sm border border-gray-300 hover:shadow-md hover:border-odara-accent/40 transition cursor-pointer group"
                                 onClick={() => abrirModalEdicao(registro)}
                               >
-                                <div className="flex justify-between items-start mb-1">
-                                  <span className="flex text-xs font-medium text-odara-accent bg-odara-accent/10 px-1.5 py-0.5 rounded gap-2">
-                                    <Clock size={15} />
+                                <div className="flex justify-between items-start mb-0.5 sm:mb-1">
+                                  <span className="flex text-xs font-medium text-odara-accent bg-odara-accent/10 px-1 sm:px-1.5 py-0.5 rounded gap-1">
+                                    <Clock size={10} className="sm:w-3 sm:h-3" />
                                     {formatTime(registro.horario)}
                                   </span>
 
-                                  <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                                  <div className="flex gap-0.5 sm:gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
                                     <button
                                       onClick={e => {
                                         e.stopPropagation();
@@ -1061,7 +1047,7 @@ const RegistroAlimentar = () => {
                                       className="text-odara-secondary hover:text-odara-dropdown-accent transition"
                                       title="Editar"
                                     >
-                                      <Edit size={11} />
+                                      <Edit size={10} className="sm:w-3 sm:h-3" />
                                     </button>
                                     <button
                                       onClick={e => {
@@ -1071,7 +1057,7 @@ const RegistroAlimentar = () => {
                                       className="text-odara-alerta hover:text-red-700 transition"
                                       title="Excluir"
                                     >
-                                      <Trash size={11} />
+                                      <Trash size={10} className="sm:w-3 sm:h-3" />
                                     </button>
                                   </div>
                                 </div>
@@ -1095,9 +1081,9 @@ const RegistroAlimentar = () => {
                                   setRegistroSelecionado(novoRegistro as RegistroAlimentar);
                                   setModalAberto(true);
                                 }}
-                                className="w-full h-full min-h-[60px] flex items-center justify-center text-gray-400 hover:text-odara-accent hover:bg-white/50 rounded-lg border-2 border-dashed border-gray-300 hover:border-odara-accent transition-colors group"
+                                className="w-full h-full min-h-[40px] sm:min-h-[60px] flex items-center justify-center text-gray-400 hover:text-odara-accent hover:bg-white/50 rounded-lg border-2 border-dashed border-gray-300 hover:border-odara-accent transition-colors group"
                               >
-                                <Plus className="text-xs group-hover:scale-110 transition-transform" />
+                                <Plus className="text-xs sm:text-sm group-hover:scale-110 transition-transform" />
                               </button>
                             )}
                           </div>
@@ -1110,18 +1096,18 @@ const RegistroAlimentar = () => {
             </div>
 
             {/* Legenda */}
-            <div className="mt-6 p-4 bg-gray-50 rounded-xl border border-gray-200">
-              <div className="flex flex-wrap items-center gap-4 text-sm text-gray-600">
-                <div className="flex items-center gap-2">
-                  <div className="w-3 h-3 bg-odara-accent rounded"></div>
+            <div className="mt-4 sm:mt-6 p-3 sm:p-4 bg-gray-50 rounded-xl border border-gray-200">
+              <div className="flex flex-wrap items-center gap-2 sm:gap-4 text-xs sm:text-sm text-gray-600">
+                <div className="flex items-center gap-1 sm:gap-2">
+                  <div className="w-2 h-2 sm:w-3 sm:h-3 bg-odara-accent rounded"></div>
                   <span>Hoje</span>
                 </div>
-                <div className="flex items-center gap-2">
-                  <div className="w-3 h-3 bg-odara-accent/20 rounded"></div>
+                <div className="flex items-center gap-1 sm:gap-2">
+                  <div className="w-2 h-2 sm:w-3 sm:h-3 bg-odara-accent/20 rounded"></div>
                   <span>Refeição registrada</span>
                 </div>
-                <div className="flex items-center gap-2">
-                  <div className="w-3 h-3 bg-gray-200 rounded border border-dashed border-gray-400"></div>
+                <div className="flex items-center gap-1 sm:gap-2">
+                  <div className="w-2 h-2 sm:w-3 sm:h-3 bg-gray-200 rounded border border-dashed border-gray-400"></div>
                   <span>Disponível para registro</span>
                 </div>
               </div>
@@ -1134,29 +1120,46 @@ const RegistroAlimentar = () => {
 
   /* Componente: Cabeçalho */
   const Cabecalho = () => {
-    return (
-      <div className="flex items-center mb-6">
-        <Apple size={30} className='text-odara-accent mr-2' />
-        <h1 className="text-2xl sm:text-3xl font-bold text-odara-dark mr-2">
-          Registro Alimentar
-        </h1>
+    const [infoVisivel, setInfoVisivel] = useState(false);
 
-        {/* Tooltip de informações */}
-        <div className="relative">
-          <button
-            onMouseEnter={() => setInfoVisivel(true)}
-            onMouseLeave={() => setInfoVisivel(false)}
-            className="transition-colors duration-200"
-          >
-            <Info size={20} className="text-odara-accent hover:text-odara-secondary" />
-          </button>
-          {infoVisivel && (
-            <div className="absolute z-10 left-0 top-full mt-2 w-72 p-3 bg-odara-dropdown text-odara-name text-sm rounded-lg shadow-lg">
-              <h3 className="font-bold mb-2">Registro Alimentar</h3>
-              <p>Registra as refeições oferecidas aos residentes com horário, tipo, alimentos e responsável.</p>
-              <div className="absolute bottom-full left-4 border-4 border-transparent border-b-odara-dropdown"></div>
+    return (
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
+        <div className="flex items-start sm:items-center gap-3 w-full">
+          <Apple size={24} className='sm:w-7 sm:h-7 lg:w-8 lg:h-8 text-odara-accent flex-shrink-0 mt-1 sm:mt-0' />
+          
+          <div className="flex-1 min-w-0 relative">
+            <div className="flex items-center gap-0.1 sm:gap-2">
+              <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold text-odara-dark flex-1 truncate">
+                Registro Alimentar
+              </h1>
+              
+              <button
+                onClick={() => setInfoVisivel(!infoVisivel)}
+                className="flex-shrink-0 w-5 h-5 sm:w-6 sm:h-6 lg:w-7 lg:h-7 flex items-center justify-center rounded-full hover:bg-gray-100 transition-colors ml-1"
+                aria-label="Informações"
+              >
+                <Info size={12} className="sm:w-3.5 sm:h-3.5 lg:w-4 lg:h-4 text-odara-accent" />
+              </button>
             </div>
-          )}
+            
+            {infoVisivel && (
+              <div className="absolute z-10 top-full left-0 sm:left-auto sm:right-0 mt-2 w-full sm:w-80 bg-blue-50 border border-blue-100 rounded-lg shadow-lg animate-fade-in">
+                <div className="p-3 sm:p-4">
+                  <p className="text-xs sm:text-sm text-odara-dark">
+                    <strong className="font-semibold">Como usar:</strong> Registra as refeições oferecidas aos residentes com horário, tipo, alimentos e responsável.
+                  </p>
+                  <button
+                    onClick={() => setInfoVisivel(false)}
+                    className="mt-2 text-xs sm:text-sm text-odara-accent hover:text-odara-secondary font-medium"
+                  >
+                    Entendi
+                  </button>
+                </div>
+                {/* Seta do tooltip para desktop */}
+                <div className="hidden sm:block absolute -top-2 right-4 w-4 h-4 bg-blue-50 border-t border-l border-blue-100 transform rotate-45"></div>
+              </div>
+            )}
+          </div>
         </div>
       </div>
     );
@@ -1167,16 +1170,16 @@ const RegistroAlimentar = () => {
     return (
       <button
         onClick={abrirModalNovo}
-        className="bg-odara-accent hover:bg-odara-secondary text-white font-semibold py-2 px-4 rounded-lg flex items-center transition text-sm h-10 w-max"
+        className="bg-odara-accent hover:bg-odara-secondary text-white font-semibold py-2 px-3 sm:px-4 rounded-lg flex items-center transition text-xs sm:text-sm h-9 sm:h-10 w-full sm:w-max justify-center"
       >
-        <Plus className="mr-2" /> Novo Registro
+        <Plus className="mr-1 sm:mr-2 w-3 h-3 sm:w-4 sm:h-4" /> Novo Registro
       </button>
     );
   };
 
   /* Renderização Principal */
   return (
-    <div className="flex min-h-screen bg-odara-offwhite">
+    <div className="min-h-screen bg-odara-offwhite overflow-x-hidden">
       {/* Modal de Registro Alimentar */}
       <ModalAlimentar
         alimentar={registroSelecionado}
@@ -1217,66 +1220,64 @@ const RegistroAlimentar = () => {
         }}
       />
 
-      <div className="flex-1 p-4 sm:p-6 lg:p-8">
+      <div className="p-3 sm:p-6 lg:p-8 max-w-full overflow-hidden">
         {/* Cabeçalho e Botão Novo */}
-        <div className='flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6'>
+        <div className='flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 mb-4 sm:mb-6'>
           <Cabecalho />
-          <div className="flex justify-end">
+          <div className="w-full sm:w-auto">
             <BotaoNovoRegistro />
           </div>
         </div>
 
         {/* Controles de visualização */}
-        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 sm:gap-4 mb-4 sm:mb-6">
           {/* Barra de Busca */}
-          <div className="flex-1 relative min-w-[300px]">
-            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-              <Search className="text-odara-primary h-4 w-4" />
+          <div className="flex-1 relative min-w-0">
+            <div className="absolute inset-y-0 left-0 pl-2 sm:pl-3 flex items-center pointer-events-none">
+              <Search className="text-odara-primary h-3 w-3 sm:h-4 sm:w-4" />
             </div>
             <input
               type="text"
               placeholder="Buscar por alimento ou residente..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full pl-10 pr-4 py-3 bg-white rounded-xl border border-gray-200 text-odara-dark placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-odara-primary focus:border-transparent"
+              className="w-full pl-7 sm:pl-10 pr-3 sm:pr-4 py-2 bg-white rounded-lg border border-gray-200 text-odara-dark placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-odara-primary focus:border-transparent text-xs sm:text-sm"
             />
           </div>
 
           {/* Botões de modo de visualização e filtros */}
-          <div className="flex gap-4">
+          <div className="flex gap-2 sm:gap-4 w-full sm:w-auto">
 
             {/* Botão de filtros (apenas para modo lista) */}
             {viewMode === "lista" && (
               <button
                 onClick={toggleFiltros}
-                className="flex items-center gap-2 bg-white rounded-xl px-4 py-3 border border-gray-200 text-odara-dark font-medium hover:bg-odara-primary/10 transition w-max justify-between"
+                className="flex items-center gap-1 sm:gap-2 bg-white rounded-lg px-2 sm:px-4 py-2 border border-gray-200 text-odara-dark font-medium hover:bg-odara-primary/10 transition w-full sm:w-max justify-center text-xs sm:text-sm"
               >
-                <Filter size={20} className="text-odara-accent" />
+                <Filter size={16} className="sm:w-5 sm:h-5 text-odara-accent" />
                 <span>
                   {!filtrosAberto ? 'Abrir ' : 'Fechar '} Filtros
                 </span>
               </button>
             )}
 
-            {/* Botões de visualização - usando mudarViewMode */}
-            <div className="flex bg-white rounded-lg border border-gray-200 overflow-hidden items-center shadow-sm h-max">
-              <div>
-                <button
-                  onClick={() => mudarViewMode("semanal")}
-                  className={`px-6 py-4 text-md font-medium transition-colors ${viewMode === "semanal" ? "bg-odara-accent text-white" : "text-gray-600 hover:bg-gray-100"
-                    }`}
-                >
-                  Semanal
-                </button>
+            {/* Botões de visualização */}
+            <div className="flex bg-white rounded-lg border border-gray-200 overflow-hidden items-center shadow-sm h-max w-full sm:w-auto">
+              <button
+                onClick={() => mudarViewMode("semanal")}
+                className={`px-3 sm:px-6 py-2 sm:py-4 text-xs sm:text-sm font-medium transition-colors ${viewMode === "semanal" ? "bg-odara-accent text-white" : "text-gray-600 hover:bg-gray-100"
+                  }`}
+              >
+                Semanal
+              </button>
 
-                <button
-                  onClick={() => mudarViewMode("lista")}
-                  className={`px-6 py-4 text-md font-medium transition-colors ${viewMode === "lista" ? "bg-odara-accent text-white" : "text-gray-600 hover:bg-gray-100"
-                    }`}
-                >
-                  Lista
-                </button>
-              </div>
+              <button
+                onClick={() => mudarViewMode("lista")}
+                className={`px-3 sm:px-6 py-2 sm:py-4 text-xs sm:text-sm font-medium transition-colors ${viewMode === "lista" ? "bg-odara-accent text-white" : "text-gray-600 hover:bg-gray-100"
+                  }`}
+              >
+                Lista
+              </button>
             </div>
           </div>
         </div>
@@ -1287,8 +1288,8 @@ const RegistroAlimentar = () => {
         {/* Conteúdo principal */}
         {viewMode === "semanal" ? <VisualizacaoSemanal /> : <ListaRegistros />}
 
-        {/* Contador de resultados - ajustado */}
-        <div className="my-4 text-sm text-gray-400">
+        {/* Contador de resultados */}
+        <div className="mt-3 text-xs sm:text-sm text-gray-400">
           Total de {registrosFiltrados.length} registro(s) encontrado(s) de {registros.length}
           {searchTerm && <span> para "{searchTerm}"</span>}
         </div>

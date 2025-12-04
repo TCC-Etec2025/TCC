@@ -154,7 +154,7 @@ const Medicamentos: React.FC = () => {
           <button
             type="button"
             onClick={() => setAberto(!aberto)}
-            className="flex items-center justify-between w-full h-11 border border-gray-300 rounded-lg px-3 text-sm hover:bg-gray-50 transition-colors"
+            className="flex items-center justify-between w-full h-9 sm:h-10 border border-gray-300 rounded-lg px-3 text-xs sm:text-sm hover:bg-gray-50 transition-colors"
           >
             <span className="text-odara-dark truncate">
               {tipo === 'residente'
@@ -166,7 +166,7 @@ const Medicamentos: React.FC = () => {
                   : titulo
               }
             </span>
-            <ChevronDown size={12} className="text-gray-500 flex-shrink-0" />
+            <ChevronDown size={10} className="sm:w-3 sm:h-3 text-gray-500 flex-shrink-0" />
           </button>
 
           {aberto && (
@@ -175,25 +175,25 @@ const Medicamentos: React.FC = () => {
                 <>
                   <button
                     onClick={() => onSelecionar(null)}
-                    className={`flex items-center gap-3 w-full text-left px-4 py-3 text-sm hover:bg-odara-primary/10 transition ${!valorSelecionado
+                    className={`flex items-center gap-2 sm:gap-3 w-full text-left px-3 sm:px-4 py-2 sm:py-3 text-xs sm:text-sm hover:bg-odara-primary/10 transition ${!valorSelecionado
                       ? 'bg-odara-primary/20 text-odara-primary font-semibold'
                       : 'text-gray-700'
                       }`}
                   >
                     <span>Todos os residentes</span>
-                    {!valorSelecionado && <Check className="ml-auto text-odara-primary" size={14} />}
+                    {!valorSelecionado && <Check className="ml-auto text-odara-primary w-3 h-3 sm:w-3.5 sm:h-3.5" />}
                   </button>
                   {residentesUnicos.map(([id, nome]) => (
                     <button
                       key={id}
                       onClick={() => onSelecionar(id)}
-                      className={`flex items-center gap-3 w-full text-left px-4 py-3 text-sm hover:bg-odara-primary/10 transition ${valorSelecionado === id
+                      className={`flex items-center gap-2 sm:gap-3 w-full text-left px-3 sm:px-4 py-2 sm:py-3 text-xs sm:text-sm hover:bg-odara-primary/10 transition ${valorSelecionado === id
                         ? 'bg-odara-primary/20 text-odara-primary font-semibold'
                         : 'text-gray-700'
                         }`}
                     >
                       <span className="truncate">{nome}</span>
-                      {valorSelecionado === id && <Check className="ml-auto text-odara-primary" size={14} />}
+                      {valorSelecionado === id && <Check className="ml-auto text-odara-primary w-3 h-3 sm:w-3.5 sm:h-3.5" />}
                     </button>
                   ))}
                 </>
@@ -202,14 +202,14 @@ const Medicamentos: React.FC = () => {
                   <button
                     key={opcao.value}
                     onClick={() => onSelecionar(opcao.value)}
-                    className={`flex items-center gap-3 w-full text-left px-4 py-3 text-sm hover:bg-odara-primary/10 transition ${(opcao.value === 'todos' && !valorSelecionado) || valorSelecionado === opcao.value
+                    className={`flex items-center gap-2 sm:gap-3 w-full text-left px-3 sm:px-4 py-2 sm:py-3 text-xs sm:text-sm hover:bg-odara-primary/10 transition ${(opcao.value === 'todos' && !valorSelecionado) || valorSelecionado === opcao.value
                       ? 'bg-odara-primary/20 text-odara-primary font-semibold'
                       : 'text-gray-700'
                       }`}
                   >
                     <span>{opcao.label}</span>
                     {((opcao.value === 'todos' && !valorSelecionado) || valorSelecionado === opcao.value) && (
-                      <Check className="ml-auto text-odara-primary" size={14} />
+                      <Check className="ml-auto text-odara-primary w-3 h-3 sm:w-3.5 sm:h-3.5" />
                     )}
                   </button>
                 ))
@@ -244,11 +244,11 @@ const Medicamentos: React.FC = () => {
       <div className="relative">
         <button
           onClick={() => toggleDropdown(admin.id)}
-          className="flex items-center gap-2 px-3 py-1.5 text-sm border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors w-full sm:w-auto"
+          className="flex items-center gap-2 px-2 sm:px-3 py-1 text-xs sm:text-sm border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors w-full sm:w-auto"
         >
-          <IconeStatus size={14} className="text-odara-accent" />
+          <IconeStatus size={12} className="sm:w-3.5 sm:h-3.5 text-odara-accent" />
           <span className="text-odara-dark capitalize">{admin.status.replace('_', ' ')}</span>
-          <ChevronDown size={12} className="text-gray-500" />
+          <ChevronDown size={10} className="sm:w-3 sm:h-3 text-gray-500" />
         </button>
 
         {dropdownAberto === admin.id && (
@@ -257,7 +257,7 @@ const Medicamentos: React.FC = () => {
               className="fixed inset-0 z-10 cursor-default"
               onClick={() => toggleDropdown(admin.id)}
             />
-            <div className="absolute top-full left-0 right-0 sm:right-auto sm:left-0 mt-1 w-full sm:w-48 bg-white rounded-lg shadow-lg border border-gray-200 z-20 overflow-hidden">
+            <div className="absolute top-full sm:right-0 mt-2 w-40 sm:w-48 bg-white rounded-lg shadow-lg border border-gray-200 z-20 overflow-hidden">
               {STATUS_OPTIONS.map((option) => {
                 const OptionIcon = COR_STATUS[option.value].icon;
                 return (
@@ -268,15 +268,15 @@ const Medicamentos: React.FC = () => {
                       onStatusChange(admin.id, option.value);
                       toggleDropdown(admin.id);
                     }}
-                    className={`flex items-center gap-3 w-full text-left px-4 py-3 text-sm hover:bg-odara-primary/10 transition ${admin.status === option.value
+                    className={`flex items-center gap-2 sm:gap-3 w-full text-left px-3 sm:px-4 py-2 sm:py-3 text-xs sm:text-sm hover:bg-odara-primary/10 transition ${admin.status === option.value
                       ? 'bg-odara-primary/20 text-odara-primary font-semibold'
                       : 'text-gray-700'
                       }`}
                   >
-                    <OptionIcon size={14} className="text-odara-accent" />
+                    <OptionIcon size={12} className="sm:w-3.5 sm:h-3.5 text-odara-accent" />
                     <span className="capitalize">{option.label}</span>
                     {admin.status === option.value && (
-                      <Check className="ml-auto text-odara-primary" size={14} />
+                      <Check className="ml-auto text-odara-primary w-3 h-3 sm:w-3.5 sm:h-3.5" />
                     )}
                   </button>
                 );
@@ -307,34 +307,25 @@ const Medicamentos: React.FC = () => {
     const cores = COR_STATUS[admin.status] || COR_STATUS.pendente;
 
     return (
-      <div className="bg-white rounded-lg shadow border overflow-hidden border-gray-200 hover:shadow-md transition-shadow duration-200">
+      <div className="bg-white rounded-lg shadow border overflow-hidden border-gray-200 hover:shadow-md transition-shadow duration-200 flex flex-col h-full">
         {/* Header */}
-        <div className={`flex items-center justify-between p-2 sm:p-3 ${cores.border} ${cores.bg}`}>
-          <div className="flex items-center flex-1 min-w-0">
-            <div className={`w-3 h-3 rounded-full mr-3 flex-shrink-0 ${cores.bola}`} />
-            <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-2 overflow-hidden">
-              <p className={`text-md truncate ${cores.text}`}>
+        <div className={`flex flex-wrap justify-center sm:justify-between gap-2 items-center p-2 sm:p-3 ${cores.border} ${cores.bg}`}>
+          {/* Coluna Esquerda - Data e Hora */}
+          <div className="flex items-center">
+            <div className={`w-2 h-2 sm:w-3 sm:h-3 rounded-full mr-2 ${cores.bola}`}></div>
+            <div className="flex flex-col sm:flex-row sm:items-center gap-0 sm:gap-2">
+              <p className={`text-xs sm:text-sm md:text-base ${cores.text} whitespace-nowrap`}>
                 {formatarData(admin.data_prevista)}
               </p>
-              <span className="hidden sm:inline text-odara-accent">•</span>
-              <span className="text-sm text-odara-accent truncate">
+              <span className="text-odara-accent mx-1 hidden sm:inline">•</span>
+              <span className="text-xs sm:text-sm md:text-base text-odara-accent whitespace-nowrap">
                 {admin.horario_previsto.slice(0, 5)}
               </span>
             </div>
           </div>
 
-          {/* Status Desktop */}
-          <div className="hidden sm:flex items-center gap-2">
-            <DropdownStatus
-              admin={admin}
-              onStatusChange={onStatusClick}
-              dropdownAberto={dropdownAberto}
-              toggleDropdown={toggleDropdown}
-            />
-          </div>
-
-          {/* Status Mobile */}
-          <div className="sm:hidden">
+          {/* Status - Responsivo */}
+          <div className="w-full sm:w-auto">
             <DropdownStatus
               admin={admin}
               onStatusChange={onStatusClick}
@@ -345,54 +336,71 @@ const Medicamentos: React.FC = () => {
         </div>
 
         {/* Corpo do Card */}
-        <div className="p-4 flex-1 flex flex-col">
-          <div className="flex items-start justify-between mb-3">
-            <h3 className="text-base sm:text-lg font-bold text-odara-dark line-clamp-2 flex-1">
+        <div className="p-3 sm:p-4 flex-1 flex flex-col">
+          <div className="flex items-start justify-between mb-2 sm:mb-3">
+            <h3 className="text-sm sm:text-base md:text-lg font-bold text-odara-dark line-clamp-1 flex-1">
               {admin.medicamento.nome}
             </h3>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4 flex-1">
+          <div className="grid grid-cols-1 gap-2 sm:gap-3 sm:grid-cols-2 flex-1">
             {/* Coluna Esquerda */}
             <div className="space-y-2 sm:space-y-3">
-              <div className="flex items-center gap-2">
-                <strong className="text-odara-dark text-xs sm:text-sm block">Dose:</strong>
-                <span className="text-odara-name text-xs sm:text-sm mt-0.5 block">
+              <div>
+                <strong className="text-odara-dark text-xs sm:text-sm">Dose:</strong>
+                <span className="text-odara-name mt-0.5 sm:mt-1 text-xs sm:text-sm block">
                   {admin.medicamento.dose || 'Não informado'}
                 </span>
               </div>
 
-              <div className="flex items-center gap-2">
-                <strong className="text-odara-dark text-xs sm:text-sm block">Dosagem:</strong>
-                <span className="text-odara-name text-xs sm:text-sm mt-0.5 block">
+              <div>
+                <strong className="text-odara-dark text-xs sm:text-sm">Dosagem:</strong>
+                <span className="text-odara-name mt-0.5 sm:mt-1 text-xs sm:text-sm block">
                   {admin.medicamento.dosagem || 'Não informado'}
                 </span>
               </div>
             </div>
 
-            {/* Coluna Direita */}
+            {/* Coluna Direita - Estilo igual ao Exame */}
             <div className="space-y-2 sm:space-y-3">
-              <div className="flex items-center gap-2">
-                <RockingChair className="text-odara-accent" size={14} />
-                <strong className="text-odara-dark text-xs sm:text-sm block">Residente:</strong>
-                <span className="text-odara-name text-xs sm:text-sm">{admin.residente.nome}</span>
+              {/* Residente - estilo exame (nome em baixo) */}
+              <div>
+                <div className="flex items-start gap-2">
+                  <RockingChair className="text-odara-accent flex-shrink-0 mt-0.5 hidden sm:block" size={12} />
+                  <div className="flex-1 min-w-0">
+                    <strong className="text-odara-dark text-xs sm:text-sm">Residente:</strong>
+                    <div className="mt-0.5">
+                      <span className="text-odara-name text-xs sm:text-sm">
+                        {admin.residente.nome}
+                      </span>
+                    </div>
+                  </div>
+                </div>
               </div>
 
-              <div className="flex items-center gap-2">
-                <strong className="text-odara-dark text-xs sm:text-sm block">Observação:</strong>
-                <div className="flex items-center gap-2 mt-0.5">
-                  <span className="text-odara-name text-xs sm:text-sm flex-1 line-clamp-2">
-                    {admin.observacao || 'Nenhuma observação'}
-                  </span>
-                  {admin.observacao && (
-                    <button
-                      onClick={() => onEditObservation(admin)}
-                      className="text-odara-dropdown-accent hover:text-odara-white transition-colors duration-200 p-2 rounded-full hover:bg-odara-dropdown-accent flex-shrink-0"
-                      title="Editar observação"
-                    >
-                      <Edit size={14} />
-                    </button>
-                  )}
+              {/* Observação - alinhado com o nome do residente acima */}
+              <div>
+                <div className="flex gap-2">
+                  {/* Espaço reservado para alinhar com o ícone */}
+                  <div className="w-3 flex-shrink-0 hidden sm:block" />
+                  
+                  <div className="flex-1 min-w-0">
+                    <strong className="text-odara-dark text-xs sm:text-sm">Observação:</strong>
+                    <div className="flex items-center gap-2 mt-0.5 sm:mt-1">
+                      <span className="text-odara-name text-xs sm:text-sm flex-1 line-clamp-2">
+                        {admin.observacao || 'Nenhuma observação'}
+                      </span>
+                      {admin.observacao && (
+                        <button
+                          onClick={() => onEditObservation(admin)}
+                          className="text-odara-dropdown-accent hover:text-odara-white transition-colors duration-200 p-1.5 sm:p-2 rounded-full hover:bg-odara-dropdown-accent flex-shrink-0"
+                          title="Editar observação"
+                        >
+                          <Edit size={12} className="sm:w-3.5 sm:h-3.5 hidden sm:block" />
+                        </button>
+                      )}
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>
@@ -400,7 +408,7 @@ const Medicamentos: React.FC = () => {
         </div>
 
         {/* Footer do Card */}
-        <div className="px-3 py-3 bg-gray-50 rounded-b-lg border-t border-gray-200 mt-auto">
+        <div className="px-3 sm:px-4 py-2 sm:py-3 bg-gray-50 rounded-b-lg border-t border-gray-200 mt-auto">
           <div className="flex flex-col gap-2">
             <div className="grid grid-cols-3 gap-2">
               <button
@@ -410,7 +418,7 @@ const Medicamentos: React.FC = () => {
                   : 'bg-white text-gray-400 border border-gray-400 hover:bg-green-50 hover:text-green-600 hover:border-green-600'
                   }`}
               >
-                <CircleCheck size={14} className="mb-1" />
+                <CircleCheck size={14} className="mb-1 sm:w-3.5 sm:h-3.5" />
                 <span className="hidden xs:inline">Ok</span>
               </button>
 
@@ -421,7 +429,7 @@ const Medicamentos: React.FC = () => {
                   : 'bg-white text-gray-400 border border-gray-400 hover:bg-yellow-50 hover:text-yellow-500 hover:border-yellow-500'
                   }`}
               >
-                <CircleMinus size={14} className="mb-1" />
+                <CircleMinus size={14} className="mb-1 sm:w-3.5 sm:h-3.5" />
                 <span className="hidden xs:inline">Parcial</span>
               </button>
 
@@ -432,7 +440,7 @@ const Medicamentos: React.FC = () => {
                   : 'bg-white text-gray-400 border border-gray-400 hover:bg-odara-alerta/10 hover:text-odara-alerta hover:border-odara-alerta'
                   }`}
               >
-                <Clock size={14} className="mb-1" />
+                <Clock size={14} className="mb-1 sm:w-3.5 sm:h-3.5" />
                 <span className="hidden xs:inline">Não</span>
               </button>
             </div>
@@ -444,7 +452,7 @@ const Medicamentos: React.FC = () => {
                 : 'bg-white text-gray-400 border border-gray-400 hover:bg-blue-50 hover:text-blue-500 hover:border-blue-500'
                 }`}
             >
-              <MessageCircleMore size={12} />
+              <MessageCircleMore size={12} className="sm:w-3.5 sm:h-3.5" />
               {admin.observacao ? 'Editar Observação' : 'Adicionar Observação'}
             </button>
           </div>
@@ -502,16 +510,17 @@ const Medicamentos: React.FC = () => {
     if (!filtrosAberto) return null;
 
     return (
-      <div className="mb-8 bg-white p-5 rounded-xl shadow border border-gray-200 animate-fade-in">
+      <div className="mb-6 bg-white p-4 sm:p-5 rounded-xl shadow border border-gray-200 animate-fade-in">
         {/* Primeira Linha */}
-        <div className="flex flex-col md:flex-row gap-5 w-full">
-          <div className="flex flex-col md:flex-row flex-1 gap-5">
+        <div className="flex flex-col md:flex-row gap-4 sm:gap-5 w-full">
+          <div className='flex flex-col md:flex-row flex-1 gap-4 sm:gap-5 w-full'>
             {/* Filtro de Residente */}
             <div className="flex-1 min-w-0">
-              <div className="flex gap-1 items-center ml-1 mb-1">
-                <Filter size={10} className="text-odara-accent" />
-                <label className="block text-sm font-semibold text-odara-secondary">Residente</label>
+              <div className='flex gap-1 items-center ml-1 mb-1'>
+                <Filter size={9} className="sm:w-2.5 sm:h-2.5 text-odara-accent" />
+                <label className="block text-xs sm:text-sm font-semibold text-odara-secondary">Residente</label>
               </div>
+
               <FiltroDropdown
                 titulo="Todos os residentes"
                 aberto={filtroResidenteAberto}
@@ -526,9 +535,9 @@ const Medicamentos: React.FC = () => {
 
             {/* Filtro de Status */}
             <div className="flex-1 min-w-0">
-              <div className="flex gap-1 items-center ml-1 mb-1">
-                <Filter size={10} className="text-odara-accent" />
-                <label className="block text-sm font-semibold text-odara-secondary">Status</label>
+              <div className='flex gap-1 items-center ml-1 mb-1'>
+                <Filter size={9} className="sm:w-2.5 sm:h-2.5 text-odara-accent" />
+                <label className="block text-xs sm:text-sm font-semibold text-odara-secondary">Status</label>
               </div>
 
               <FiltroDropdown
@@ -547,7 +556,7 @@ const Medicamentos: React.FC = () => {
           <div className="flex md:items-end gap-2 pt-1 md:pt-0 md:flex-shrink-0">
             <button
               onClick={onLimparFiltros}
-              className="bg-odara-accent hover:bg-odara-secondary text-white font-semibold py-2 px-4 rounded-lg flex items-center transition text-sm h-10 w-full md:w-auto justify-center"
+              className="bg-odara-accent hover:bg-odara-secondary text-white font-semibold py-2 px-3 sm:px-4 rounded-lg flex items-center transition text-xs sm:text-sm h-9 sm:h-10 w-full md:w-auto justify-center"
             >
               Limpar Filtros/Busca
             </button>
@@ -555,12 +564,12 @@ const Medicamentos: React.FC = () => {
         </div>
 
         {/* Segunda Linha (Filtro de Data) */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-5 mt-5 pt-5 border-t border-gray-200">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-5 mt-4 sm:mt-5 pt-4 sm:pt-5 border-t border-gray-200">
           {/* A Partir da Data */}
           <div>
-            <div className="flex gap-1 items-center ml-1 mb-1">
-              <Filter size={10} className="text-odara-accent" />
-              <label className="block text-sm font-semibold text-odara-secondary">A Partir da Data</label>
+            <div className='flex gap-1 items-center ml-1 mb-1'>
+              <Filter size={9} className="sm:w-2.5 sm:h-2.5 text-odara-accent" />
+              <label className="block text-xs sm:text-sm font-semibold text-odara-secondary">A Partir da Data</label>
             </div>
             <input
               type="date"
@@ -569,16 +578,16 @@ const Medicamentos: React.FC = () => {
                 setFiltros((prev: any) => ({ ...prev, startDate: e.target.value || null }));
                 setDateError(null);
               }}
-              className={`w-full h-10 border rounded-lg px-3 text-sm focus:ring-2 focus:ring-odara-primary focus:outline-none ${dateError ? 'border-red-500 bg-red-50' : 'border-gray-300'
+              className={`w-full h-9 sm:h-10 border border-gray-300 rounded-lg px-3 text-xs sm:text-sm focus:ring-2 focus:ring-odara-primary focus:outline-none ${dateError ? 'border-red-500 bg-red-50' : 'border-gray-300'
                 }`}
             />
           </div>
 
           {/* Até a Data */}
           <div>
-            <div className="flex gap-1 items-center ml-1 mb-1">
-              <Filter size={10} className="text-odara-accent" />
-              <label className="block text-sm font-semibold text-odara-secondary">Até a Data</label>
+            <div className='flex gap-1 items-center ml-1 mb-1'>
+              <Filter size={9} className="sm:w-2.5 sm:h-2.5 text-odara-accent" />
+              <label className="block text-xs sm:text-sm font-semibold text-odara-secondary">Até a Data</label>
             </div>
             <input
               type="date"
@@ -587,7 +596,7 @@ const Medicamentos: React.FC = () => {
                 setFiltros((prev: any) => ({ ...prev, endDate: e.target.value || null }));
                 setDateError(null);
               }}
-              className={`w-full h-10 border rounded-lg px-3 text-sm focus:ring-2 focus:ring-odara-primary focus:outline-none ${dateError ? 'border-red-500 bg-red-50' : 'border-gray-300'
+              className={`w-full h-9 sm:h-10 border border-gray-300 rounded-lg px-3 text-xs sm:text-sm focus:ring-2 focus:ring-odara-primary focus:outline-none ${dateError ? 'border-red-500 bg-red-50' : 'border-gray-300'
                 }`}
             />
           </div>
@@ -608,28 +617,40 @@ const Medicamentos: React.FC = () => {
     const [infoVisivel, setInfoVisivel] = useState(false);
 
     return (
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 mb-12">
-        <div className="flex items-center gap-2">
-          <Pill size={28} className="text-odara-accent" />
-          <div>
-            <h1 className="text-xl sm:text-3xl font-bold text-odara-dark">
-              Checklist de Medicamentos
-            </h1>
-          </div>
-          <div className="relative">
-            <button
-              onMouseEnter={() => setInfoVisivel(true)}
-              onMouseLeave={() => setInfoVisivel(false)}
-              onTouchStart={() => setInfoVisivel(!infoVisivel)}
-              className="transition-colors duration-200"
-            >
-              <Info size={16} className="text-odara-accent hover:text-odara-secondary" />
-            </button>
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
+        <div className="flex items-start sm:items-center gap-3 w-full">
+          <Pill size={24} className='sm:w-7 sm:h-7 lg:w-8 lg:h-8 text-odara-accent flex-shrink-0 mt-1 sm:mt-0' />
+          
+          <div className="flex-1 min-w-0 relative">
+            <div className="flex items-center gap-0.1 sm:gap-2">
+              <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold text-odara-dark flex-1 truncate">
+                Checklist de Medicamentos
+              </h1>
+              
+              <button
+                onClick={() => setInfoVisivel(!infoVisivel)}
+                className="flex-shrink-0 w-5 h-5 sm:w-6 sm:h-6 lg:w-7 lg:h-7 flex items-center justify-center rounded-full hover:bg-gray-100 transition-colors ml-1"
+                aria-label="Informações"
+              >
+                <Info size={12} className="sm:w-3.5 sm:h-3.5 lg:w-4 lg:h-4 text-odara-accent" />
+              </button>
+            </div>
+            
             {infoVisivel && (
-              <div className="absolute z-10 left-0 top-full mt-2 w-64 p-3 bg-odara-dropdown text-odara-name text-xs sm:text-sm rounded-lg shadow-lg">
-                <h3 className="font-bold mb-1">Checklist de Medicamentos</h3>
-                <p>Controle diário das administrações dos medicamentos dos residentes.</p>
-                <div className="absolute bottom-full left-4 border-4 border-transparent border-b-odara-dropdown"></div>
+              <div className="absolute z-10 top-full left-0 sm:left-auto sm:right-0 mt-2 w-full sm:w-80 bg-blue-50 border border-blue-100 rounded-lg shadow-lg animate-fade-in">
+                <div className="p-3 sm:p-4">
+                  <p className="text-xs sm:text-sm text-odara-dark">
+                    <strong className="font-semibold">Como usar:</strong> Controle diário das administrações dos medicamentos dos residentes.
+                  </p>
+                  <button
+                    onClick={() => setInfoVisivel(false)}
+                    className="mt-2 text-xs sm:text-sm text-odara-accent hover:text-odara-secondary font-medium"
+                  >
+                    Entendi
+                  </button>
+                </div>
+                {/* Seta do tooltip para desktop */}
+                <div className="hidden sm:block absolute -top-2 right-4 w-4 h-4 bg-blue-50 border-t border-l border-blue-100 transform rotate-45"></div>
               </div>
             )}
           </div>
@@ -649,7 +670,7 @@ const Medicamentos: React.FC = () => {
     onClearValidationError: () => void;
   }
 
-  // Schema de validação CORRIGIDO
+  // Schema de validação
   const observacaoSchema = yup.object({
     observacao: yup
       .string()
@@ -658,16 +679,15 @@ const Medicamentos: React.FC = () => {
         if (status === 'parcial' || status === 'nao_administrado') {
           return schema.required('A observação é obrigatória para este status');
         }
-        return schema.nullable(); // Permitir null/undefined para outros status
+        return schema.nullable();
       })
       .max(100, 'A observação deve ter no máximo 100 caracteres')
-      .default('') // Valor padrão vazio
+      .default('')
   });
 
-  // CORREÇÃO: Tipo com propriedade id opcional
   type ObservacaoFormData = {
     observacao: string;
-    id?: number; // Adicionado como opcional
+    id?: number;
   };
 
   const ObservacaoModalComponente: React.FC<ObservacaoModalProps> = ({
@@ -687,38 +707,29 @@ const Medicamentos: React.FC = () => {
       handleSubmit,
       formState: { errors },
       setValue,
-      setError, // Adicionado para manipulação de erros
-      clearErrors // Adicionado para limpar erros
+      setError,
+      clearErrors
     } = useForm<ObservacaoFormData>({
       resolver: yupResolver(observacaoSchema),
-      context: { status }, // Passa o status como contexto para o schema
+      context: { status },
       defaultValues: {
         observacao: observacaoInicial || ''
       }
     });
 
-    // Determina se a observação é obrigatória baseada no status
     const isObservacaoObrigatoria = status === 'parcial' || status === 'nao_administrado';
-
-    // Determina se é para edição ou adição
     const isEdicao = !!observacaoInicial;
-
-    // Título do modal baseado no contexto
     const tituloModal = isEdicao ? 'Editar Observação' : 'Adicionar Observação';
-
-    // Texto de descrição baseado no contexto
     const descricaoModal = isEdicao
       ? 'Atualize a observação da administração'
       : 'Informe a observação para a administração';
 
-    // Handler para submit do formulário CORRIGIDO
     const onSubmit = async (values: ObservacaoFormData) => {
       setIsSubmitting(true);
 
       try {
         console.log("Dados sendo enviados:", values.observacao);
 
-        // Validação manual para status que exigem observação
         if ((status === 'parcial' || status === 'nao_administrado') && !values.observacao?.trim()) {
           setError('observacao', {
             type: 'manual',
@@ -728,10 +739,7 @@ const Medicamentos: React.FC = () => {
           return;
         }
 
-        // Chama o callback de confirmação passando a observação
         onConfirm(values.observacao || '');
-
-        // Toast de sucesso movido para onde o status é atualizado
 
       } catch (err: any) {
         console.error("Erro detalhado ao salvar observação:", err);
@@ -741,7 +749,6 @@ const Medicamentos: React.FC = () => {
       }
     };
 
-    // Resetar formulário quando o modal abrir/fechar
     React.useEffect(() => {
       if (isOpen) {
         setIsSubmitting(false);
@@ -788,11 +795,9 @@ const Medicamentos: React.FC = () => {
                   {...register('observacao')}
                   onChange={(e) => {
                     setValue('observacao', e.target.value);
-                    // Limpa o erro de validação quando o usuário começa a digitar
                     if (validationError) {
                       onClearValidationError();
                     }
-                    // Limpa erros do react-hook-form
                     clearErrors('observacao');
                   }}
                   className={'w-full px-4 py-2 border border-odara-primary rounded-lg focus:border-transparent focus:outline-none focus:ring-odara-secondary focus:ring-2 text-odara-secondary text-sm sm:text-base mb-2'}
@@ -991,7 +996,7 @@ const Medicamentos: React.FC = () => {
             ? {
               ...a,
               status: newStatus,
-              observacao: observacao ?? a.observacao, // Manter observação existente se não fornecida
+              observacao: observacao ?? a.observacao,
               data_administracao: newStatus !== 'pendente' ? dataHoje : null,
               horario_administracao: newStatus !== 'pendente' ? horarioAgora : null
             }
@@ -1009,13 +1014,11 @@ const Medicamentos: React.FC = () => {
   const handleStatusClick = useCallback(async (adminId: number, status: string) => {
     try {
       if (status === "administrado") {
-        // Para "administrado", não precisa de observação obrigatória
         await updateStatus(adminId, status);
       } else {
-        // Para outros status, salva o status para validação e abre modal
         setStatusParaObservacao(status);
         const obs = await observacaoModal.openModal("", adminId, status);
-        if (obs !== null) { // Usuário confirmou (não cancelou)
+        if (obs !== null) {
           await updateStatus(adminId, status, obs);
         }
       }
@@ -1027,7 +1030,7 @@ const Medicamentos: React.FC = () => {
   const handleEditObservation = useCallback(async (admin: AdministracaoComDetalhes) => {
     try {
       const novaObs = await observacaoModal.openModal(admin.observacao || "", admin.id, admin.status);
-      if (novaObs !== null) { // Usuário confirmou (não cancelou)
+      if (novaObs !== null) {
         await updateStatus(admin.id, admin.status, novaObs);
       }
     } catch {
@@ -1069,36 +1072,36 @@ const Medicamentos: React.FC = () => {
     const totalGeral = listaCompleta.length;
 
     return (
-      <div className="bg-white rounded-xl sm:rounded-2xl shadow-lg p-3 sm:p-4 md:p-6 border-l-4 border-odara-primary">
-        <div className="flex flex-col sm:flex-row items-center justify-between gap-2 mb-4">
-          <h2 className="text-2xl lg:text-3xl font-bold text-odara-dark">Administrações</h2>
-          <span className="bg-gray-200 text-gray-700 px-3 py-1 rounded-full text-sm font-medium">
-            Total: {totalFiltrado} de {totalGeral}
+      <div className="bg-white border-l-4 border-odara-primary rounded-xl sm:rounded-2xl shadow-lg p-3 sm:p-6">
+        <div className="flex flex-col sm:flex-row items-center justify-between gap-2 mb-3 sm:mb-4">
+          <h2 className="text-lg sm:text-xl lg:text-2xl font-bold text-odara-dark">Administrações</h2>
+          <span className="bg-gray-200 text-gray-700 px-2 py-1 rounded-full text-xs font-medium">
+            Total: {totalFiltrado}
           </span>
         </div>
 
         {/* Tags de filtros ativos */}
         {(filtros.residenteId || filtros.status || searchTerm || filtros.startDate || filtros.endDate) && (
-          <div className="mb-4 flex flex-wrap justify-center sm:justify-start gap-2 text-xs">
+          <div className="mb-3 flex flex-wrap justify-center sm:justify-start gap-1 text-xs">
             {searchTerm && (
-              <span className="bg-odara-secondary text-white px-2 py-1 rounded-full">
+              <span className="bg-odara-secondary text-white px-2 py-1 rounded-full text-xs">
                 Busca: {searchTerm}
               </span>
             )}
             {filtros.residenteId && (
-              <span className="bg-odara-secondary text-white px-2 py-1 rounded-full">
+              <span className="bg-odara-secondary text-white px-2 py-1 rounded-full text-xs">
                 Residente: {residentes.find(r => r.id === filtros.residenteId)?.nome}
               </span>
             )}
             {filtros.status && filtros.status !== 'todos' && (
-              <span className="bg-odara-secondary text-white px-2 py-1 rounded-full">
+              <span className="bg-odara-secondary text-white px-2 py-1 rounded-full text-xs">
                 Status: {filtros.status}
               </span>
             )}
             {(filtros.startDate || filtros.endDate) && (
-              <span className="bg-odara-secondary text-white px-2 py-1 rounded-full">
+              <span className="bg-odara-secondary text-white px-2 py-1 rounded-full text-xs">
                 Data: {filtros.startDate ? ` ${formatarData(filtros.startDate)}` : ''}
-                {filtros.endDate ? ' até ' + formatarData(filtros.endDate) : ''}
+                {filtros.endDate ? ' até' + ` ${formatarData(filtros.endDate)}` : ''}
               </span>
             )}
           </div>
@@ -1106,17 +1109,16 @@ const Medicamentos: React.FC = () => {
 
         {/* Lista de administrações */}
         {loading ? (
-          <div className="p-8 text-center">
-            <Loader className="animate-spin inline mx-auto mb-3" size={32} />
-            <p className="text-odara-dark/60 text-lg">Carregando administrações...</p>
+          <div className="p-6 text-center">
+            <p className="text-odara-dark/60 text-sm sm:text-lg">Carregando administrações...</p>
           </div>
         ) : gruposRenderizaveis.length === 0 ? (
-          <div className="p-6 sm:p-8 rounded-xl bg-odara-name/10 text-center">
-            <Pill className="mx-auto text-gray-300 mb-3" size={40} />
-            <p className="text-odara-dark/60 text-base sm:text-lg">
+          <div className="p-6 rounded-lg sm:rounded-xl bg-odara-name/10 text-center">
+            <Pill className="mx-auto text-gray-300 mb-3" size={32} />
+            <p className="text-odara-dark/60 text-sm sm:text-lg">
               Nenhuma administração encontrada
             </p>
-            <p className="text-odara-dark/40 text-xs sm:text-sm mt-2">
+            <p className="text-odara-dark/40 text-xs sm:text-sm mt-1 sm:mt-2">
               Tente ajustar os termos da busca ou os filtros
             </p>
           </div>
@@ -1130,38 +1132,36 @@ const Medicamentos: React.FC = () => {
                 <div key={`group-${grupo.dataFormatada}`} className="bg-gray-50 rounded-xl overflow-hidden border-l-2 border-odara-primary">
                   {/* Cabeçalho da Data */}
                   <div
-                    className="bg-odara-primary/20 border-b border-odara-primary/60 p-3 sm:p-4 flex items-center justify-between cursor-pointer select-none"
+                    className="bg-odara-primary/20 border-b border-odara-primary/60 p-3 sm:p-4 flex flex-col sm:flex-row items-center justify-between cursor-pointer select-none"
                     onClick={() => toggleDate(grupo.dataFormatada)}
                   >
-                    <div className="flex flex-col sm:flex-row items-center justify-center sm:justify-between w-full gap-2 sm:gap-0">
-                      <div className="flex items-center gap-2 sm:gap-3 min-w-0">
-                        {grupo.isExpandido ? (
-                          <ChevronDown className="text-odara-accent flex-shrink-0" size={16} />
-                        ) : (
-                          <ChevronRight className="text-odara-accent flex-shrink-0" size={16} />
-                        )}
-                        <h2 className="text-lg sm:text-xl font-bold text-odara-dark truncate">
-                          {formatarData(grupo.dataFormatada)}
-                        </h2>
-                      </div>
-                      <div className="flex items-center gap-2 flex-shrink-0">
-                        <span className={`px-2 py-0.5 sm:px-2.5 sm:py-1 rounded-full border text-xs font-medium ${pendentes > 0
-                          ? 'bg-yellow-50 text-yellow-600 border-yellow-600'
-                          : 'bg-gray-50 text-gray-500 border-gray-500'
-                          }`}>
-                          {pendentes > 0
-                            ? `Pendentes: ${pendentes} de ${totalGrupo}`
-                            : `Total: ${totalGrupo}`
-                          }
-                        </span>
-                      </div>
+                    <div className="flex items-center gap-2 sm:gap-3 min-w-0 w-full sm:w-auto justify-center sm:justify-start mb-2 sm:mb-0">
+                      {grupo.isExpandido ? (
+                        <ChevronDown className="text-odara-accent flex-shrink-0" size={16} />
+                      ) : (
+                        <ChevronRight className="text-odara-accent flex-shrink-0" size={16} />
+                      )}
+                      <h2 className="text-base sm:text-lg md:text-xl font-bold text-odara-dark truncate">
+                        {formatarData(grupo.dataFormatada)}
+                      </h2>
+                    </div>
+                    <div className="flex items-center gap-2 flex-shrink-0">
+                      <span className={`px-2 py-0.5 sm:px-2.5 sm:py-1 rounded-full border text-xs font-medium ${pendentes > 0
+                        ? 'bg-yellow-50 text-yellow-600 border-yellow-600'
+                        : 'bg-gray-50 text-gray-500 border-gray-500'
+                        }`}>
+                        {pendentes > 0
+                          ? `Pendentes: ${pendentes} de ${totalGrupo}`
+                          : `Total: ${totalGrupo}`
+                        }
+                      </span>
                     </div>
                   </div>
 
                   {/* Lista de Medicamentos */}
                   {grupo.isExpandido && (
-                    <div className="p-3 sm:p-4 mt-6">
-                      <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-3 sm:gap-4">
+                    <div className="p-3 sm:p-4">
+                      <div className="flex flex-col lg:grid lg:grid-cols-2 gap-4 sm:gap-6">
                         {grupo.itens.map(admin => (
                           <CardAdministracao
                             key={admin.id}
@@ -1185,7 +1185,7 @@ const Medicamentos: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-odara-offwhite">
+    <div className="min-h-screen bg-odara-offwhite overflow-x-hidden">
       <Toaster
         position="top-center"
         toastOptions={{
@@ -1215,36 +1215,36 @@ const Medicamentos: React.FC = () => {
         }}
       />
 
-      <div className="p-3 sm:p-4 md:p-6">
+      <div className="p-3 sm:p-6 lg:p-8 max-w-full overflow-hidden">
+        {/* Cabeçalho */}
         <Cabecalho />
 
         {/* Barra de Busca e Filtros */}
-        <div className="flex flex-col sm:flex-row gap-3 mb-4">
+        <div className="flex flex-col sm:flex-row gap-3 mb-4 sm:mb-6">
           {/* Barra de Busca */}
-          <div className="flex-1 relative">
-            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-              <Search className="text-odara-primary h-4 w-4" />
+          <div className="flex-1 relative min-w-0">
+            <div className="absolute inset-y-0 left-0 pl-2 sm:pl-3 flex items-center pointer-events-none">
+              <Search className="text-odara-primary h-3 w-3 sm:h-4 sm:w-4" />
             </div>
             <input
               type="text"
-              placeholder="Buscar medicamento..."
+              placeholder="Buscar por nome do medicamento..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full pl-10 pr-4 py-2.5 sm:py-3 bg-white rounded-xl border border-gray-200 text-odara-dark placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-odara-primary focus:border-transparent text-sm sm:text-base"
+              className="w-full pl-7 sm:pl-10 pr-3 sm:pr-4 py-2 bg-white rounded-lg border border-gray-200 text-odara-dark placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-odara-primary focus:border-transparent text-xs sm:text-sm"
             />
           </div>
 
-          {/* Botão Filtros */}
+          {/* Botão ativador do modal de filtros */}
           <div className="flex gap-2">
             <button
               onClick={toggleFiltros}
-              className="flex items-center gap-2 bg-white rounded-xl px-3 sm:px-4 py-2.5 sm:py-3 border border-gray-200 text-odara-dark font-medium hover:bg-odara-primary/10 transition text-sm"
+              className="flex items-center gap-1 sm:gap-2 bg-white rounded-lg px-2 sm:px-4 py-2 border border-gray-200 text-odara-dark font-medium hover:bg-odara-primary/10 transition w-full sm:w-max justify-center text-xs sm:text-sm"
             >
-              <Filter size={16} className="text-odara-accent" />
-              <span className="hidden sm:inline">
-                {filtrosAberto ? 'Fechar ' : 'Abrir '}Filtros
+              <Filter size={16} className="sm:w-5 sm:h-5 text-odara-accent" />
+              <span>
+                {!filtrosAberto ? 'Filtros' : 'Fechar'}
               </span>
-              <span className="sm:hidden">Filtros</span>
             </button>
           </div>
         </div>
@@ -1268,19 +1268,19 @@ const Medicamentos: React.FC = () => {
         <ListaAdministracoes />
 
         {/* Contador de resultados */}
-        <div className="mt-2 sm:mt-4 text-xs sm:text-sm text-gray-400 px-1 sm:px-2">
-          Mostrando {gruposRenderizaveis.reduce((acc, grupo) => acc + grupo.itens.length, 0)} de {listaCompleta.length} administrações
-          {(searchTerm || filtros.residenteId || filtros.status) && ' com filtros aplicados'}
+        <div className="mt-3 text-xs sm:text-sm text-gray-400">
+          Total de {gruposRenderizaveis.reduce((acc, grupo) => acc + grupo.itens.length, 0)} administração(ões) encontrada(s) de {listaCompleta.length}
+          {searchTerm && <span> para "{searchTerm}"</span>}
         </div>
 
         {/* Modal de Observação */}
         <ObservacaoModalComponente
           isOpen={observacaoModal.modalState.isOpen}
           observacaoInicial={observacaoModal.modalState.observacaoInicial}
-          status={observacaoModal.modalState.status || statusParaObservacao} // Usar status do modal
+          status={observacaoModal.modalState.status || statusParaObservacao}
           onConfirm={observacaoModal.handleConfirm}
           onCancel={observacaoModal.handleCancel}
-          onClose={observacaoModal.handleCancel} // Usar handleCancel
+          onClose={observacaoModal.handleCancel}
           validationError={observacaoModal.validationError}
           onClearValidationError={observacaoModal.clearValidationError}
         />

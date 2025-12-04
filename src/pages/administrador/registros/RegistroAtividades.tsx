@@ -195,6 +195,7 @@ const RegistroAtividades = () => {
       setAtividades(atividadesComResidentes);
     } catch (err) {
       console.error('Erro ao buscar atividades:', err);
+      toast.error('Erro ao carregar atividades');
     }
   }, []);
 
@@ -220,8 +221,10 @@ const RegistroAtividades = () => {
         )
       );
       setDropdownAberto(null);
+      toast.success('Status atualizado com sucesso!');
     } catch (error) {
       console.error('Erro ao alterar status:', error);
+      toast.error('Erro ao atualizar status');
     }
   };
 
@@ -238,8 +241,10 @@ const RegistroAtividades = () => {
       if (error) throw error;
 
       setAtividades(prev => prev.filter(atividade => atividade.id !== id));
+      toast.success('Atividade excluída com sucesso!');
     } catch (error) {
       console.error('Erro ao excluir atividade:', error);
+      toast.error('Erro ao excluir atividade');
     }
   };
 
@@ -365,7 +370,7 @@ const RegistroAtividades = () => {
     return `${h > 0 ? `${h}h` : ''}${h > 0 && m > 0 ? ' ' : ''}${m > 0 ? `${m}m` : h === 0 ? '0m' : ''}`;
   };
 
-  /* Componentes de UI */
+  /* Componentes de UI - Otimizados para Mobile */
   const DropdownStatus = ({ atividade }: { atividade: Atividade }) => {
     const IconeStatus = obterIconeStatus(atividade.status);
 
@@ -373,13 +378,13 @@ const RegistroAtividades = () => {
       <div className="relative">
         <button
           onClick={() => toggleDropdown(atividade.id)}
-          className="flex items-center gap-2 px-3 py-1 text-sm border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
+          className="flex items-center gap-1 sm:gap-2 px-2 sm:px-3 py-1 text-xs sm:text-sm border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
         >
-          <IconeStatus size={14} className={"text-odara-accent"} />
-          <span className="text-odara-dark capitalize">
+          <IconeStatus size={10} className="sm:w-3.5 sm:h-3.5 text-odara-accent" />
+          <span className="text-odara-dark capitalize text-xs sm:text-sm">
             {STATUS_OPTIONS.find(opt => opt.value === atividade.status)?.label || atividade.status}
           </span>
-          <ChevronDown size={12} className="text-gray-500" />
+          <ChevronDown size={8} className="sm:w-2.5 sm:h-2.5 text-gray-500" />
         </button>
 
         {dropdownAberto === atividade.id && (
@@ -390,8 +395,8 @@ const RegistroAtividades = () => {
               onClick={() => setDropdownAberto(null)}
             ></div>
 
-            {/* MENU DROPDOWN */}
-            <div className="absolute top-full right-0 mt-2 w-48 bg-white rounded-lg shadow-lg border border-gray-200 z-20 overflow-hidden">
+            {/* MENU DROPDOWN - Responsivo */}
+            <div className="absolute top-full sm:right-0 mt-1 sm:mt-2 w-32 sm:w-48 bg-white rounded-lg shadow-lg border border-gray-200 z-20 overflow-hidden">
               {STATUS_OPTIONS.map((option) => {
                 const OptionIcon = obterIconeStatus(option.value);
                 return (
@@ -401,15 +406,15 @@ const RegistroAtividades = () => {
                       e.stopPropagation();
                       alterarStatus(atividade.id, option.value);
                     }}
-                    className={`flex items-center gap-3 w-full text-left px-4 py-3 text-sm hover:bg-odara-primary/10 transition ${atividade.status === option.value
+                    className={`flex items-center gap-1 sm:gap-2 w-full text-left px-2 sm:px-4 py-2 sm:py-3 text-xs sm:text-sm hover:bg-odara-primary/10 transition ${atividade.status === option.value
                       ? 'bg-odara-primary/20 text-odara-primary font-semibold'
                       : 'text-gray-700'
                       }`}
                   >
-                    <OptionIcon size={14} className={"text-odara-accent"} />
-                    <span className="capitalize">{option.label}</span>
+                    <OptionIcon size={10} className="sm:w-3.5 sm:h-3.5 text-odara-accent" />
+                    <span className="capitalize text-xs sm:text-sm">{option.label}</span>
                     {atividade.status === option.value && (
-                      <Check className="ml-auto text-odara-primary" size={14} />
+                      <Check className="ml-auto text-odara-primary w-2.5 h-2.5 sm:w-3.5 sm:h-3.5" />
                     )}
                   </button>
                 );
@@ -449,9 +454,9 @@ const RegistroAtividades = () => {
         <button
           type="button"
           onClick={() => setAberto(!aberto)}
-          className="flex items-center justify-between w-full h-10 border border-gray-300 rounded-lg px-3 text-sm hover:bg-gray-50 transition-colors"
+          className="flex items-center justify-between w-full h-9 sm:h-10 border border-gray-300 rounded-lg px-2 sm:px-3 text-xs sm:text-sm hover:bg-gray-50 transition-colors"
         >
-          <span className="text-odara-dark">
+          <span className="text-odara-dark truncate text-xs sm:text-sm">
             {tipo === 'residente'
               ? valorSelecionado
                 ? residentes.find(r => r.id === valorSelecionado)?.nome
@@ -461,32 +466,32 @@ const RegistroAtividades = () => {
                 : titulo
             }
           </span>
-          <ChevronDown size={12} className="text-gray-500" />
+          <ChevronDown size={8} className="sm:w-2.5 sm:h-2.5 text-gray-500 flex-shrink-0" />
         </button>
 
         {aberto && (
-          <div className="absolute top-full left-0 right-0 mt-1 bg-white rounded-lg shadow-lg border border-gray-200 z-10 max-h-60 overflow-y-auto">
+          <div className="absolute top-full left-0 right-0 mt-1 bg-white rounded-lg shadow-lg border border-gray-200 z-10 max-h-48 sm:max-h-60 overflow-y-auto">
             {tipo === 'residente' ? (
               <>
                 <button
                   onClick={() => onSelecionar(null)}
-                  className={`flex items-center gap-3 w-full text-left px-4 py-3 text-sm hover:bg-odara-primary/10 transition ${!valorSelecionado
+                  className={`flex items-center gap-1 sm:gap-2 w-full text-left px-2 sm:px-4 py-2 sm:py-3 text-xs sm:text-sm hover:bg-odara-primary/10 transition ${!valorSelecionado
                     ? 'bg-odara-primary/20 text-odara-primary font-semibold'
                     : 'text-gray-700'
                     }`}
                 >
-                  <span>Todos os residentes</span>
+                  <span className="text-xs sm:text-sm">Todos os residentes</span>
                 </button>
                 {residentes.map(residente => (
                   <button
                     key={residente.id}
                     onClick={() => onSelecionar(residente.id)}
-                    className={`flex items-center gap-3 w-full text-left px-4 py-3 text-sm hover:bg-odara-primary/10 transition ${valorSelecionado === residente.id
+                    className={`flex items-center gap-1 sm:gap-2 w-full text-left px-2 sm:px-4 py-2 sm:py-3 text-xs sm:text-sm hover:bg-odara-primary/10 transition ${valorSelecionado === residente.id
                       ? 'bg-odara-primary/20 text-odara-primary font-semibold'
                       : 'text-gray-700'
                       }`}
                   >
-                    <span>{residente.nome}</span>
+                    <span className="truncate text-xs sm:text-sm">{residente.nome}</span>
                   </button>
                 ))}
               </>
@@ -495,12 +500,12 @@ const RegistroAtividades = () => {
                 <button
                   key={opcao.value}
                   onClick={() => onSelecionar(opcao.value)}
-                  className={`flex items-center gap-3 w-full text-left px-4 py-3 text-sm hover:bg-odara-primary/10 transition ${(opcao.value === 'todos' && !valorSelecionado) || valorSelecionado === opcao.value
+                  className={`flex items-center gap-1 sm:gap-2 w-full text-left px-2 sm:px-4 py-2 sm:py-3 text-xs sm:text-sm hover:bg-odara-primary/10 transition ${(opcao.value === 'todos' && !valorSelecionado) || valorSelecionado === opcao.value
                     ? 'bg-odara-primary/20 text-odara-primary font-semibold'
                     : 'text-gray-700'
                     }`}
                 >
-                  <span>{opcao.label}</span>
+                  <span className="text-xs sm:text-sm">{opcao.label}</span>
                 </button>
               ))
             )}
@@ -514,13 +519,13 @@ const RegistroAtividades = () => {
     if (!filtrosAberto) return null;
 
     return (
-      <div className="mb-8 bg-white p-5 rounded-xl shadow border border-gray-200 animate-fade-in">
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-5">
+      <div className="mb-4 sm:mb-6 bg-white p-3 sm:p-5 rounded-xl sm:rounded-xl shadow border border-gray-200 animate-fade-in">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
           {/* Filtro de Residente */}
           <div>
             <div className='flex gap-1 items-center ml-1 mb-1'>
-              <Filter size={10} className="text-odara-accent" />
-              <label className="block text-sm font-semibold text-odara-secondary">Residente</label>
+              <Filter size={8} className="sm:w-2.5 sm:h-2.5 text-odara-accent" />
+              <label className="block text-xs sm:text-sm font-semibold text-odara-secondary">Residente</label>
             </div>
             <FiltroDropdown
               titulo="Todos os residentes"
@@ -536,8 +541,8 @@ const RegistroAtividades = () => {
           {/* Filtro de Categoria */}
           <div>
             <div className='flex gap-1 items-center ml-1 mb-1'>
-              <Filter size={10} className="text-odara-accent" />
-              <label className="block text-sm font-semibold text-odara-secondary">Categoria</label>
+              <Filter size={8} className="sm:w-2.5 sm:h-2.5 text-odara-accent" />
+              <label className="block text-xs sm:text-sm font-semibold text-odara-secondary">Categoria</label>
             </div>
             <FiltroDropdown
               titulo="Todas as categorias"
@@ -553,8 +558,8 @@ const RegistroAtividades = () => {
           {/* Filtro de Status */}
           <div>
             <div className='flex gap-1 items-center ml-1 mb-1'>
-              <Filter size={10} className="text-odara-accent" />
-              <label className="block text-sm font-semibold text-odara-secondary">Status</label>
+              <Filter size={8} className="sm:w-2.5 sm:h-2.5 text-odara-accent" />
+              <label className="block text-xs sm:text-sm font-semibold text-odara-secondary">Status</label>
             </div>
             <FiltroDropdown
               titulo="Todos os status"
@@ -568,10 +573,10 @@ const RegistroAtividades = () => {
           </div>
 
           {/* Botão Limpar Filtros */}
-          <div className="flex md:items-end gap-2 pt-1 md:pt-0">
+          <div className="flex items-end gap-2 pt-1">
             <button
               onClick={limparFiltros}
-              className="bg-odara-accent hover:bg-odara-secondary text-white font-semibold py-2 px-4 rounded-lg flex items-center transition text-sm h-10"
+              className="bg-odara-accent hover:bg-odara-secondary text-white font-semibold py-2 px-2 sm:px-4 rounded-lg flex items-center transition text-xs sm:text-sm h-9 sm:h-10 w-full justify-center"
             >
               Limpar Filtros
             </button>
@@ -579,30 +584,30 @@ const RegistroAtividades = () => {
         </div>
 
         {/* Filtros de data */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-5 mt-5 pt-5 border-t border-gray-200">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4 mt-3 sm:mt-4 pt-3 sm:pt-4 border-t border-gray-200">
           <div>
             <div className='flex gap-1 items-center ml-1 mb-1'>
-              <Filter size={10} className="text-odara-accent" />
-              <label className="block text-sm font-semibold text-odara-secondary">A Partir da Data</label>
+              <Filter size={8} className="sm:w-2.5 sm:h-2.5 text-odara-accent" />
+              <label className="block text-xs sm:text-sm font-semibold text-odara-secondary">A Partir da Data</label>
             </div>
             <input
               type="date"
               value={filtros.startDate || ''}
               onChange={(e) => setFiltros(prev => ({ ...prev, startDate: e.target.value || null }))}
-              className="w-full h-10 border border-gray-300 rounded-lg px-3 text-sm text-odara-dark focus:ring-2 focus:ring-odara-primary focus:border-transparent focus:outline-none"
+              className="w-full h-9 sm:h-10 border border-gray-300 rounded-lg px-2 sm:px-3 text-xs sm:text-sm text-odara-dark focus:ring-2 focus:ring-odara-primary focus:border-transparent focus:outline-none"
             />
           </div>
 
           <div>
             <div className='flex gap-1 items-center ml-1 mb-1'>
-              <Filter size={10} className="text-odara-accent" />
-              <label className="block text-sm font-semibold text-odara-secondary">Data Final</label>
+              <Filter size={8} className="sm:w-2.5 sm:h-2.5 text-odara-accent" />
+              <label className="block text-xs sm:text-sm font-semibold text-odara-secondary">Data Final</label>
             </div>
             <input
               type="date"
               value={filtros.endDate || ''}
               onChange={(e) => setFiltros(prev => ({ ...prev, endDate: e.target.value || null }))}
-              className="w-full h-10 border border-gray-300 rounded-lg px-3 text-sm text-odara-dark focus:ring-2 focus:ring-odara-primary focus:border-transparent focus:outline-none"
+              className="w-full h-9 sm:h-10 border border-gray-300 rounded-lg px-2 sm:px-3 text-xs sm:text-sm text-odara-dark focus:ring-2 focus:ring-odara-primary focus:border-transparent focus:outline-none"
             />
           </div>
         </div>
@@ -616,17 +621,17 @@ const RegistroAtividades = () => {
 
     return (
       <div className="bg-white rounded-lg shadow-md border border-gray-200 hover:shadow-lg transition-shadow duration-200 flex flex-col h-full">
-        {/* Header do Card */}
-        <div className={`flex flex-wrap justify-center sm:justify-between gap-2 items-center p-3 rounded-t-lg ${configStatus.corFundo} ${configStatus.corBorda}`}>
+        {/* Header do Card - Responsivo */}
+        <div className={`flex flex-wrap justify-center sm:justify-between gap-2 items-center p-2 sm:p-3 rounded-t-lg ${configStatus.corFundo} ${configStatus.corBorda}`}>
           {/* Coluna Esquerda */}
           <div className="flex items-center">
-            <div className={`w-3 h-3 rounded-full mr-3 ${configStatus.corBolinha}`}></div>
-            <p className="text-sm sm:text-base text-odara-dark">
+            <div className={`w-2 h-2 sm:w-3 sm:h-3 rounded-full mr-1 sm:mr-2 ${configStatus.corBolinha}`}></div>
+            <p className="text-xs sm:text-sm md:text-base text-odara-dark">
               <span className='font-semibold'>
                 {formatarData(atividade.data)}
               </span>
               {atividade.horario_inicio && (
-                <span className="text-odara-accent ml-2">
+                <span className="text-odara-accent ml-1 sm:ml-2">
                   • {atividade.horario_inicio.replace(/:\d{2}$/, '')}
                 </span>
               )}
@@ -634,76 +639,74 @@ const RegistroAtividades = () => {
           </div>
 
           {/* Coluna Direita */}
-          {/* Botão de Status (altera o status)*/}
           <DropdownStatus atividade={atividade} />
         </div>
 
-        {/* Corpo do Card */}
-        <div className="p-4 flex-1 flex flex-col">
+        {/* Corpo do Card - Responsivo */}
+        <div className="p-3 sm:p-4 flex-1 flex flex-col">
           {/* Título do Corpo */}
-          <div className="flex items-start justify-between mb-3">
-            <h3 className="text-lg sm:text-xl font-bold text-odara-dark line-clamp-1 flex-1">
+          <div className="flex items-start justify-between mb-2 sm:mb-3">
+            <h3 className="text-sm sm:text-base md:text-lg font-bold text-odara-dark line-clamp-2 flex-1">
               {atividade.nome || 'Sem nome'}
             </h3>
 
-            <div className="flex items-center gap-1 ml-2">
+            {/* Botões de ação - Menor em mobile */}
+            <div className="flex items-center gap-0.5 sm:gap-1 ml-2">
               <button
                 onClick={() => abrirModalEdicao(atividade)}
-                className="text-odara-dropdown-accent hover:text-odara-white transition-colors duration-200 p-2 rounded-full hover:bg-odara-dropdown-accent"
+                className="text-odara-dropdown-accent hover:text-odara-white transition-colors duration-200 p-1 sm:p-2 rounded-full hover:bg-odara-dropdown-accent"
                 title="Editar atividade"
               >
-                <Edit size={14} />
+                <Edit size={12} className="sm:w-3.5 sm:h-3.5" />
               </button>
 
               <button
                 onClick={() => excluirAtividade(atividade.id)}
-                className="text-odara-alerta hover:text-odara-white transition-colors duration-200 p-2 rounded-full hover:bg-odara-alerta"
+                className="text-odara-alerta hover:text-odara-white transition-colors duration-200 p-1 sm:p-2 rounded-full hover:bg-odara-alerta"
                 title="Excluir atividade"
               >
-                <Trash size={14} />
+                <Trash size={12} className="sm:w-3.5 sm:h-3.5" />
               </button>
             </div>
           </div>
 
-          {/* Detalhes do Corpo */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 flex-1">
+          {/* Detalhes do Corpo - Responsivo */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4 flex-1">
             {/* Coluna Esquerda */}
-            <div className="space-y-3">
+            <div className="space-y-2 sm:space-y-3">
               <div>
-                <strong className="text-odara-dark text-sm">Categoria:</strong>
-                <span className="text-odara-name mt-1 text-sm">
-                  {' ' + CATEGORIAS[atividade.categoria as keyof typeof CATEGORIAS] || atividade.categoria}
+                <strong className="text-odara-dark text-xs sm:text-sm">Categoria:</strong>
+                <span className="text-odara-name mt-0.5 sm:mt-1 text-xs sm:text-sm block">
+                  {CATEGORIAS[atividade.categoria as keyof typeof CATEGORIAS] || atividade.categoria}
                 </span>
               </div>
 
               {atividade.observacao && (
                 <div>
-                  <div>
-                    <strong className="text-odara-dark text-sm">Descrição:</strong>
-                    <span className="text-odara-name mt-1 text-sm">
-                      {' ' + atividade.observacao}
-                    </span>
-                  </div>
+                  <strong className="text-odara-dark text-xs sm:text-sm">Descrição:</strong>
+                  <span className="text-odara-name mt-0.5 sm:mt-1 text-xs sm:text-sm block line-clamp-2">
+                    {atividade.observacao}
+                  </span>
                 </div>
               )}
             </div>
 
             {/* Coluna Direita */}
-            <div className="space-y-3">
+            <div className="space-y-2 sm:space-y-3">
               {atividade.horario_inicio && atividade.horario_fim && (
                 <div>
-                  <strong className="text-odara-dark text-sm">Duração:</strong>
-                  <span className="text-odara-name mt-1 text-sm">
-                    {' ' + calcularDuracao(atividade.horario_inicio, atividade.horario_fim)}
+                  <strong className="text-odara-dark text-xs sm:text-sm">Duração:</strong>
+                  <span className="text-odara-name mt-0.5 sm:mt-1 text-xs sm:text-sm block">
+                    {calcularDuracao(atividade.horario_inicio, atividade.horario_fim)}
                   </span>
                 </div>
               )}
 
               {atividade.local && (
                 <div>
-                  <strong className="text-odara-dark text-sm">Local:</strong>
-                  <span className="text-odara-name mt-1 text-sm">
-                    {' ' + atividade.local}
+                  <strong className="text-odara-dark text-xs sm:text-sm">Local:</strong>
+                  <span className="text-odara-name mt-0.5 sm:mt-1 text-xs sm:text-sm block">
+                    {atividade.local}
                   </span>
                 </div>
               )}
@@ -711,29 +714,27 @@ const RegistroAtividades = () => {
           </div>
         </div>
 
-        {/* Footer do Card */}
-        <div className="px-4 py-3 bg-gray-50 rounded-b-lg border-t border-gray-200">
-          <div className="flex flex-wrap justify-center sm:justify-between gap-2 text-xs">
-            <div className="flex items-center justify-center sm:justify-start text-sm flex-wrap gap-1">
+        {/* Footer do Card - Responsivo */}
+        <div className="px-3 sm:px-4 py-2 sm:py-3 bg-gray-50 rounded-b-lg border-t border-gray-200">
+          <div className="flex flex-wrap justify-center sm:justify-between gap-1 sm:gap-2 text-xs">
+            <div className="flex items-center justify-center sm:justify-start flex-wrap gap-1">
               {atividade.residentes
                 .map(r => r?.nome)
                 .filter(Boolean)
                 .sort((a, b) => a!.localeCompare(b!))
+                .slice(0, 3) // Mostra no máximo 3 residentes em mobile
                 .map(residente => (
-                  <span key={residente} className="bg-odara-accent text-white px-3 py-1 rounded-full text-xs font-medium flex items-center gap-1">
-                    <RockingChair size={12} />
-                    {residente}
+                  <span key={residente} className="bg-odara-accent text-white px-2 py-1 rounded-full text-xs font-medium flex items-center gap-1">
+                    <RockingChair size={9} className="sm:w-2.5 sm:h-2.5" />
+                    <span className="truncate max-w-[80px] sm:max-w-none">{residente}</span>
                   </span>
                 ))}
+              {atividade.residentes.length > 3 && (
+                <span className="text-xs text-odara-dark">
+                  +{atividade.residentes.length - 3}
+                </span>
+              )}
             </div>
-
-            {/* Ciado em */}
-            {/* 
-              <div className="text-xs text-odara-name flex items-center gap-1">
-                <Clock size={10} />
-                Criado em: {atividade.criado_em ? new Date(atividade.criado_em).toLocaleDateString('pt-BR') : 'N/A'}
-              </div>
-             */}
           </div>
         </div>
       </div>
@@ -742,46 +743,46 @@ const RegistroAtividades = () => {
 
   const ListaAtividades = () => {
     return (
-      <div className="bg-white border-l-4 border-odara-primary rounded-2xl shadow-lg p-4 sm:p-6">
-        <div className="flex flex-col sm:flex-row items-center gap-2 mb-4">
-          <h2 className="text-2xl lg:text-3xl font-bold text-odara-dark">
+      <div className="bg-white border-l-4 border-odara-primary rounded-xl sm:rounded-2xl shadow-lg p-3 sm:p-6">
+        <div className="flex flex-col sm:flex-row items-center justify-between gap-2 mb-3 sm:mb-4">
+          <h2 className="text-lg sm:text-xl lg:text-2xl font-bold text-odara-dark">
             {filtros.status ? `Atividades ${filtros.status}` : 'Todas as Atividades'}
           </h2>
-          <span className="bg-gray-200 text-gray-700 px-3 py-1 rounded-full text-sm font-medium">
+          <span className="bg-gray-200 text-gray-700 px-2 py-1 rounded-full text-xs font-medium">
             Total: {atividadesFiltradas.length}
           </span>
         </div>
 
         {/* Filtros ativos */}
         {(filtros.status || filtros.categoria || filtros.residenteId || filtros.startDate || filtros.endDate) && (
-          <div className="mb-4 flex flex-wrap gap-2 text-xs">
+          <div className="mb-3 flex flex-wrap justify-center sm:justify-start gap-1 text-xs">
             {searchTerm && (
-              <span className="bg-odara-secondary text-white px-2 py-1 rounded-full">
+              <span className="bg-odara-secondary text-white px-2 py-1 rounded-full text-xs">
                 Busca: {searchTerm}
               </span>
             )}
 
             {filtros.residenteId && (
-              <span className="bg-odara-secondary text-white px-2 py-1 rounded-full">
+              <span className="bg-odara-secondary text-white px-2 py-1 rounded-full text-xs">
                 Residente: {residentes.find(r => r.id === filtros.residenteId)?.nome}
               </span>
             )}
 
             {filtros.categoria && (
-              <span className="bg-odara-secondary text-white px-2 py-1 rounded-full">
+              <span className="bg-odara-secondary text-white px-2 py-1 rounded-full text-xs">
                 Categoria: {FILTRO_CATEGORIA_OPTIONS.find(opt => opt.value === filtros.categoria)?.label}
               </span>
             )}
 
             {filtros.status && (
-              <span className="bg-odara-secondary text-white px-2 py-1 rounded-full">
+              <span className="bg-odara-secondary text-white px-2 py-1 rounded-full text-xs">
                 Status: {FILTRO_STATUS_OPTIONS.find(opt => opt.value === filtros.status)?.label}
               </span>
             )}
 
             {(filtros.startDate || filtros.endDate) && (
-              <span className="bg-odara-secondary text-white px-2 py-1 rounded-full">
-                Data: {filtros.startDate ? ` ${formatarDataParaExibicao(filtros.startDate)}` : 'não informada'}
+              <span className="bg-odara-secondary text-white px-2 py-1 rounded-full text-xs">
+                Data: {filtros.startDate ? ` ${formatarDataParaExibicao(filtros.startDate)}` : ''}
                 {filtros.endDate ? ' a' + ` ${formatarDataParaExibicao(filtros.endDate)}` : ''}
               </span>
             )}
@@ -789,18 +790,18 @@ const RegistroAtividades = () => {
         )}
 
         {atividadesFiltradas.length === 0 ? (
-          <div className="p-8 rounded-xl bg-odara-name/10 text-center">
-            <p className="text-odara-dark/60 text-lg">
+          <div className="p-4 sm:p-6 rounded-lg sm:rounded-xl bg-odara-name/10 text-center">
+            <p className="text-odara-dark/60 text-sm sm:text-lg">
               {atividades.length === 0 ? 'Nenhuma atividade cadastrada' : 'Nenhuma atividade encontrada'}
             </p>
             {atividades.length > 0 && (
-              <p className="text-odara-dark/40 text-sm mt-2">
+              <p className="text-odara-dark/40 text-xs sm:text-sm mt-1 sm:mt-2">
                 Tente ajustar os termos da busca ou os filtros
               </p>
             )}
           </div>
         ) : (
-          <div className="grid grid-cols-1 xl:grid-cols-2 gap-6 max-h-[800px] overflow-y-auto p-2">
+          <div className="flex flex-col lg:grid lg:grid-cols-2 gap-4 sm:gap-6">
             {atividadesFiltradas.map(atividade => (
               <CardAtividade
                 key={atividade.id}
@@ -814,26 +815,79 @@ const RegistroAtividades = () => {
   };
 
   const Cabecalho = () => {
+    const [infoMobileVisivel, setInfoMobileVisivel] = useState(false);
+
     return (
-      <div className="flex flex-col sm:flex-row justify-center xl:justify-start items-start sm:items-center gap-4 mb-6">
-        <div className="flex items-center">
-          <Palette size={30} className='text-odara-accent mr-2' />
-          <h1 className="text-2xl sm:text-3xl font-bold text-odara-dark mr-2">
-            Registro de Atividades
-          </h1>
-          <div className="relative">
-            <button
-              onMouseEnter={() => setInfoVisivel(true)}
-              onMouseLeave={() => setInfoVisivel(false)}
-              className="transition-colors duration-200"
-            >
-              <Info size={20} className="text-odara-accent hover:text-odara-secondary" />
-            </button>
-            {infoVisivel && (
-              <div className="absolute z-10 left-0 top-full mt-2 w-72 p-3 bg-odara-dropdown text-odara-name text-sm rounded-lg shadow-lg">
-                <h3 className="font-bold mb-2">Registro de Atividades</h3>
-                <p>Documento para controle e planejamento das atividades dos residentes.</p>
-                <div className="absolute bottom-full left-4 border-4 border-transparent border-b-odara-dropdown"></div>
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 mb-4 sm:mb-6">
+        <div className="flex items-start sm:items-center gap-2 sm:gap-3 w-full">
+          <Palette size={20} className='sm:w-6 sm:h-6 lg:w-8 lg:h-8 text-odara-accent flex-shrink-0 mt-1 sm:mt-0' />
+          
+          <div className="flex-1 min-w-0 relative">
+            <div className="flex items-center gap-0.5 sm:gap-2">
+              <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold text-odara-dark flex-1 truncate">
+                Registro de Atividades
+              </h1>
+              
+              <button
+                onClick={() => {
+                  if (window.innerWidth < 640) {
+                    setInfoMobileVisivel(!infoMobileVisivel);
+                  } else {
+                    setInfoVisivel(!infoVisivel);
+                  }
+                }}
+                onMouseEnter={() => window.innerWidth >= 640 && setInfoVisivel(true)}
+                onMouseLeave={() => window.innerWidth >= 640 && setInfoVisivel(false)}
+                className="flex-shrink-0 w-5 h-5 sm:w-6 sm:h-6 lg:w-7 lg:h-7 flex items-center justify-center rounded-full hover:bg-gray-100 transition-colors ml-1"
+                aria-label="Informações"
+              >
+                <Info size={12} className="sm:w-3.5 sm:h-3.5 lg:w-4 lg:h-4 text-odara-accent" />
+              </button>
+            </div>
+            
+            {/* Tooltip para desktop */}
+            {infoVisivel && window.innerWidth >= 640 && (
+              <div className="absolute z-10 top-full left-0 sm:left-auto sm:right-0 mt-2 w-full sm:w-72 bg-blue-50 border border-blue-100 rounded-lg shadow-lg animate-fade-in">
+                <div className="p-3 sm:p-4">
+                  <h3 className="font-bold mb-2 text-sm sm:text-base">Registro de Atividades</h3>
+                  <p className="text-xs sm:text-sm text-odara-dark">
+                    Documento para controle e planejamento das atividades dos residentes.
+                  </p>
+                  <button
+                    onClick={() => setInfoVisivel(false)}
+                    className="mt-2 text-xs sm:text-sm text-odara-accent hover:text-odara-secondary font-medium"
+                  >
+                    Entendi
+                  </button>
+                </div>
+                {/* Seta do tooltip para desktop */}
+                <div className="hidden sm:block absolute -top-2 right-4 w-4 h-4 bg-blue-50 border-t border-l border-blue-100 transform rotate-45"></div>
+              </div>
+            )}
+            
+            {/* Modal para mobile */}
+            {infoMobileVisivel && window.innerWidth < 640 && (
+              <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4 animate-fade-in">
+                <div className="bg-white rounded-xl p-4 max-w-sm w-full animate-scale-in">
+                  <div className="flex justify-between items-center mb-3">
+                    <h3 className="font-bold text-lg">Registro de Atividades</h3>
+                    <button
+                      onClick={() => setInfoMobileVisivel(false)}
+                      className="text-gray-500 hover:text-gray-700"
+                    >
+                      ✕
+                    </button>
+                  </div>
+                  <p className="text-sm text-gray-600 mb-4">
+                    Documento para controle e planejamento das atividades dos residentes.
+                  </p>
+                  <button
+                    onClick={() => setInfoMobileVisivel(false)}
+                    className="w-full bg-odara-accent text-white py-2 rounded-lg font-medium"
+                  >
+                    Entendi
+                  </button>
+                </div>
               </div>
             )}
           </div>
@@ -846,44 +900,75 @@ const RegistroAtividades = () => {
     return (
       <button
         onClick={abrirModalNova}
-        className="bg-odara-accent hover:bg-odara-secondary text-white font-semibold py-2 px-4 rounded-lg flex items-center transition text-sm h-10 mb-6"
+        className="bg-odara-accent hover:bg-odara-secondary text-white font-semibold py-2 px-3 sm:px-4 rounded-lg flex items-center transition text-xs sm:text-sm h-9 sm:h-10 w-full sm:w-max justify-center"
       >
-        <Plus className="mr-2" /> Nova Atividade
+        <Plus className="mr-1 sm:mr-2 w-3 h-3 sm:w-4 sm:h-4" /> Nova Atividade
       </button>
     );
   };
 
-  /* Renderização Principal */
+  /* Renderização Principal - Otimizada para Mobile */
   return (
-    <div className="flex min-h-screen bg-odara-offwhite">
+    <div className="min-h-screen bg-odara-offwhite overflow-x-hidden">
+      {/* Modal de Atividades */}
       <ModalAtividades
         atividade={atividadeSelecionada}
         isOpen={modalAberto}
         onClose={fecharModal}
       />
 
-      <div className="flex-1 p-4 sm:p-6 lg:p-8">
-        {/* Cabeçalho e Botão Novo */}
-        <div className='flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6'>
+      {/* Toaster para notificações */}
+      <Toaster
+        position="top-center"
+        toastOptions={{
+          duration: 4000,
+          style: {
+            background: '#e4edfdff',
+            color: '#52323a',
+            border: '1px solid #0036caff',
+            borderRadius: '12px',
+            fontSize: '14px',
+            fontWeight: '500',
+          },
+          success: {
+            style: {
+              background: '#f0fdf4',
+              color: '#52323a',
+              border: '1px solid #00c950',
+            },
+          },
+          error: {
+            style: {
+              background: '#fce7e7ff',
+              color: '#52323a',
+              border: '1px solid #c90d00ff',
+            },
+          },
+        }}
+      />
+
+      <div className="p-3 sm:p-6 lg:p-8 max-w-full overflow-hidden">
+        {/* Cabeçalho e Botão Novo - Otimizado para mobile */}
+        <div className='flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 mb-4 sm:mb-6'>
           <Cabecalho />
-          <div className="flex justify-end">
+          <div className="w-full sm:w-auto">
             <BotaoNovaAtividade />
           </div>
         </div>
 
-        {/* Barra de Busca e Filtros */}
-        <div className="flex flex-col sm:flex-row gap-4 mb-6">
+        {/* Barra de Busca e Filtros - Otimizado para mobile */}
+        <div className="flex flex-col sm:flex-row gap-3 mb-4 sm:mb-6">
           {/* Barra de Busca */}
-          <div className="flex-1 relative min-w-[300px]">
-            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-              <Search className="text-odara-primary h-4 w-4" />
+          <div className="flex-1 relative min-w-0">
+            <div className="absolute inset-y-0 left-0 pl-2 sm:pl-3 flex items-center pointer-events-none">
+              <Search className="text-odara-primary h-3 w-3 sm:h-4 sm:w-4" />
             </div>
             <input
               type="text"
               placeholder="Buscar nome da atividade..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full pl-10 pr-4 py-3 bg-white rounded-xl border border-gray-200 text-odara-dark placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-odara-primary focus:border-transparent"
+              className="w-full pl-7 sm:pl-10 pr-3 sm:pr-4 py-2 bg-white rounded-lg border border-gray-200 text-odara-dark placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-odara-primary focus:border-transparent text-xs sm:text-sm"
             />
           </div>
 
@@ -891,21 +976,24 @@ const RegistroAtividades = () => {
           <div className="flex gap-2">
             <button
               onClick={toggleFiltros}
-              className="flex items-center gap-2 bg-white rounded-xl px-4 py-3 border border-gray-200 text-odara-dark font-medium hover:bg-odara-primary/10 transition w-max justify-between"
+              className="flex items-center gap-1 sm:gap-2 bg-white rounded-lg px-2 sm:px-4 py-2 border border-gray-200 text-odara-dark font-medium hover:bg-odara-primary/10 transition w-full sm:w-max justify-center text-xs sm:text-sm"
             >
-              <Filter size={20} className="text-odara-accent" />
+              <Filter size={16} className="sm:w-5 sm:h-5 text-odara-accent" />
               <span>
-                {!filtrosAberto ? 'Abrir ' : 'Fechar '} Filtros
+                {!filtrosAberto ? 'Filtros' : 'Fechar'}
               </span>
             </button>
           </div>
         </div>
 
+        {/* Seção de Filtros */}
         <SecaoFiltros />
+
+        {/* Lista de Atividades */}
         <ListaAtividades />
 
         {/* Contador de resultados */}
-        <div className="my-4 text-sm text-gray-400">
+        <div className="mt-3 text-xs sm:text-sm text-gray-400">
           Total de {atividadesFiltradas.length} atividade(s) encontrada(s) de {atividades.length}
           {searchTerm && <span> para "{searchTerm}"</span>}
         </div>

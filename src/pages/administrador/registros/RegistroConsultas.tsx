@@ -821,7 +821,8 @@ const RegistroConsultas = () => {
           <div className="flex-1 min-w-0 relative">
             <div className="flex items-center gap-0.1 sm:gap-2">
               <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold text-odara-dark flex-1 truncate">
-                Registro de Consultas Médicas
+                <span className="sm:hidden">Consultas</span>
+                <span className="hidden sm:inline">Registro de Consultas Médicas</span>
               </h1>
               
               <button
@@ -837,7 +838,7 @@ const RegistroConsultas = () => {
             {infoVisivel && (
               <div className="absolute z-10 top-full left-0 sm:left-auto sm:right-0 mt-2 w-full sm:w-72 bg-blue-50 border border-blue-100 rounded-lg shadow-lg animate-fade-in">
                 <div className="p-3 sm:p-4">
-                  <h3 className="font-bold mb-2 text-sm">Registro de Consultas Médicas</h3>
+                  <h3 className="font-bold mb-2 text-sm">Registro de Consultas</h3>
                   <p className="text-xs sm:text-sm text-odara-dark">
                     Você pode adicionar, editar ou excluir consultas dos residentes conforme necessário.
                   </p>

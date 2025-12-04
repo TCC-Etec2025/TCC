@@ -1,15 +1,13 @@
 // src/pages/RegistroComportamento.tsx
-import React, { useEffect, useState, useRef } from "react";
-import {
-  FaPlus,
-  FaEdit,
-  FaTrash,
-  FaFilter,
-  FaInfoCircle,
-  FaCheck,
-} from "react-icons/fa";
+import React, { useEffect, useState, useRef, useCallback, useMemo } from "react";
+import { 
+  Filter, Search, Plus, Edit, Trash, Info, ChevronDown, Check, 
+  Clock, AlertCircle, CheckCircle, User, Calendar, Clock as ClockIcon,
+  Smile, Frown, Meh
+} from "lucide-react";
 import { supabase } from "../../../lib/supabaseClient";
 import ModalComportamento from "./ModalComportamento";
+import toast, { Toaster } from 'react-hot-toast';
 
 // ===== CONSTANTES =====
 const CATEGORIAS = {
@@ -24,22 +22,59 @@ const ROTULOS_CATEGORIAS: Record<string, string> = {
   [CATEGORIAS.NEUTRO]: "Neutro",
 };
 
-const CORES_CATEGORIAS: Record<string, string> = {
-  [CATEGORIAS.POSITIVO]: "bg-odara-primary/60 text-odara-dark border-l-4 border-odara-primary",
-  [CATEGORIAS.NEGATIVO]: "bg-odara-dropdown-accent/80 text-odara-dark border-l-4 border-odara-dropdown-accent",
-  [CATEGORIAS.NEUTRO]: "bg-odara-secondary/60 text-odara-dark border-l-4 border-odara-secondary",
+const CORES_CATEGORIAS: Record<string, {
+  bg: string;
+  text: string;
+  border: string;
+  bola: string;
+  icon: React.ComponentType<any>;
+}> = {
+  [CATEGORIAS.POSITIVO]: {
+    bg: 'bg-green-50',
+    text: 'text-green-800 font-semibold',
+    border: 'border-b border-green-200',
+    bola: 'bg-green-500',
+    icon: Smile
+  },
+  [CATEGORIAS.NEGATIVO]: {
+    bg: 'bg-red-50',
+    text: 'text-red-800 font-semibold',
+    border: 'border-b border-red-200',
+    bola: 'bg-red-500',
+    icon: Frown
+  },
+  [CATEGORIAS.NEUTRO]: {
+    bg: 'bg-yellow-50',
+    text: 'text-yellow-800 font-semibold',
+    border: 'border-b border-yellow-200',
+    bola: 'bg-yellow-500',
+    icon: Meh
+  },
 };
 
-const CORES_PONTOS: Record<string, string> = {
-  [CATEGORIAS.POSITIVO]: "bg-odara-primary",
-  [CATEGORIAS.NEGATIVO]: "bg-odara-dropdown-accent",
-  [CATEGORIAS.NEUTRO]: "bg-odara-secondary",
-};
+const STATUS_OPTIONS = [
+  { value: 'pendente', label: 'Pendente', icon: Clock },
+  { value: 'resolvido', label: 'Resolvido', icon: CheckCircle }
+];
+
+const FILTRO_STATUS_OPTIONS = [
+  { value: 'todos', label: 'Todos os status' },
+  { value: 'pendente', label: 'Pendente' },
+  { value: 'resolvido', label: 'Resolvido' }
+];
+
+const FILTRO_CATEGORIA_OPTIONS = [
+  { value: 'todos', label: 'Todas categorias' },
+  { value: 'positivo', label: 'Positivo' },
+  { value: 'negativo', label: 'Negativo' },
+  { value: 'neutro', label: 'Neutro' }
+];
 
 // ===== TIPOS =====
 type Residente = {
   id: number;
   nome: string;
+  quarto?: string | null;
   foto?: string | null;
 };
 
@@ -52,466 +87,1009 @@ type Comportamento = {
   id: number;
   titulo: string;
   descricao?: string | null;
-  data: Date;
+  data: string;
   horario: string;
   id_residente: number | null;
-  residente: Residente;
+  residente: Residente | null;
   id_funcionario: number | null;
-  funcionario: Funcionario;
+  funcionario: Funcionario | null;
   categoria: string;
-  status: boolean;
-  criado_em?: string | null;
+  resolvido: boolean;
+  criado_em?: string;
+  foto_url?: string | null;
 };
 
 // ===== COMPONENTE =====
 const RegistroComportamento: React.FC = () => {
-  // estados
+  // estados principais
   const [comportamentos, setComportamentos] = useState<Comportamento[]>([]);
   const [residentes, setResidentes] = useState<Residente[]>([]);
-  const [loading, setLoading] = useState(false);
-
-  // filtros e UI
-  const [filtros, setFiltros] = useState<{
-    categoria: string | null;
-    residenteId: number | null;
-    status: string | null;
-    startDate: Date | null;
-    endDate: Date | null;
-  }>({
-    categoria: null,
-    residenteId: null,
-    status: null,
-    startDate: null,
-    endDate: null,
-  });
-
-  const formFiltrosRef = useRef<HTMLFormElement>(null);
-
   const [modalAberto, setModalAberto] = useState(false);
   const [comportamentoEditando, setComportamentoEditando] = useState<Comportamento | null>(null);
+  const [loading, setLoading] = useState(true);
+  
+  // estados de exclusão
+  const [modalExclusaoAberto, setModalExclusaoAberto] = useState<boolean>(false);
+  const [comportamentoParaExcluir, setComportamentoParaExcluir] = useState<number | null>(null);
+
+  // estados de busca e filtros
+  const [searchTerm, setSearchTerm] = useState('');
+  const [filtros, setFiltros] = useState<{
+    residenteId: number | null;
+    status: string | null;
+    categoria: string | null;
+    startDate: string | null;
+    endDate: string | null;
+  }>({
+    residenteId: null,
+    status: null,
+    categoria: null,
+    startDate: null,
+    endDate: null
+  });
+
+  // estados de UI
+  const [filtroStatusAberto, setFiltroStatusAberto] = useState(false);
+  const [filtroResidenteAberto, setFiltroResidenteAberto] = useState(false);
+  const [filtroCategoriaAberto, setFiltroCategoriaAberto] = useState(false);
+  const [filtrosAberto, setFiltrosAberto] = useState(false);
   const [infoVisivel, setInfoVisivel] = useState(false);
 
-  // carregar dados iniciais
+  // refs para dropdowns
+  const filtroResidenteRef = useRef<HTMLDivElement>(null);
+  const filtroStatusRef = useRef<HTMLDivElement>(null);
+  const filtroCategoriaRef = useRef<HTMLDivElement>(null);
+
+  /* Utilitários */
+  const formatarData = (dataString: string) => {
+    try {
+      const data = new Date(dataString);
+      return data.toLocaleDateString('pt-BR');
+    } catch (error) {
+      return 'Data inválida';
+    }
+  };
+
+  const formatarDataHora = (dataString: string, horario: string) => {
+    try {
+      const data = new Date(dataString);
+      return `${data.toLocaleDateString('pt-BR')} ${horario ? `- ${horario}` : ''}`;
+    } catch (error) {
+      return 'Data inválida';
+    }
+  };
+
+  /* Efeitos */
   useEffect(() => {
-    fetchComportamentos();
-    fetchResidentes();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    const handleClickOutside = (event: MouseEvent) => {
+      const target = event.target as Node;
+      
+      if (filtroResidenteRef.current && !filtroResidenteRef.current.contains(target)) {
+        setFiltroResidenteAberto(false);
+      }
+      if (filtroStatusRef.current && !filtroStatusRef.current.contains(target)) {
+        setFiltroStatusAberto(false);
+      }
+      if (filtroCategoriaRef.current && !filtroCategoriaRef.current.contains(target)) {
+        setFiltroCategoriaAberto(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
-  // ===== FETCHES =====
-  const fetchComportamentos = async () => {
+  /* Carregar Dados */
+  const carregarComportamentos = useCallback(async () => {
+    console.log('Carregando comportamentos...');
     setLoading(true);
+
     try {
       const { data, error } = await supabase
         .from("comportamento")
-        .select(
-          `*,
-            residente:residente(id, nome, foto),
-            funcionario:funcionario(id, nome)
-          `
-        )
+        .select(`
+          *,
+          residente:residente(id, nome, quarto, foto),
+          funcionario:funcionario(id, nome)
+        `)
         .order("data", { ascending: false });
 
       if (error) throw error;
-      if (!data) {
-        setComportamentos([]);
-        setLoading(false);
-        return;
-      }
 
-      const mapped = (data as any[]).map((d) => {
-        const residenteObj =
-          Array.isArray(d.residente) && d.residente.length > 0
-            ? d.residente[0]
-            : d.residente || { id: d.id_residente, nome: "N/A", foto: null };
-        const funcionarioObj =
-          Array.isArray(d.funcionario) && d.funcionario.length > 0
-            ? d.funcionario[0]
-            : d.funcionario || { id: d.id_funcionario, nome: "N/A" };
+      // Mapear os dados para o formato correto
+      const comportamentosMapeados = (data || []).map((item: any) => ({
+        id: item.id,
+        titulo: item.titulo,
+        descricao: item.descricao,
+        data: item.data,
+        horario: item.horario,
+        categoria: item.categoria,
+        resolvido: item.resolvido || false,
+        criado_em: item.criado_em,
+        foto_url: item.foto_url,
+        id_residente: item.id_residente,
+        id_funcionario: item.id_funcionario,
+        residente: item.residente || null,
+        funcionario: item.funcionario || null
+      })) as Comportamento[];
 
-        return {
-          id: d.id,
-          titulo: d.titulo,
-          descricao: d.descricao,
-          data: new Date(d.data),
-          horario: d.horario,
-          categoria: d.categoria,
-          status: d.resolvido,
-          criado_em: d.criado_em,
-          id_residente: d.id_residente ?? residenteObj?.id ?? null,
-          id_funcionario: d.id_funcionario ?? funcionarioObj?.id ?? null,
-          residente: {
-            id: residenteObj?.id ?? -1,
-            nome: residenteObj?.nome ?? "N/A",
-            foto: residenteObj?.foto ?? null,
-          },
-          funcionario: {
-            id: funcionarioObj?.id ?? -1,
-            nome: funcionarioObj?.nome ?? "N/A",
-          },
-        } as Comportamento;
-      });
-
-      setComportamentos(mapped);
-    } catch (err) {
-      console.error("Erro ao buscar comportamentos:", err);
-      alert("Erro ao buscar comportamentos. Veja o console.");
+      setComportamentos(comportamentosMapeados);
+      console.log('Comportamentos carregados:', comportamentosMapeados.length);
+    } catch (error: any) {
+      console.error('Erro ao buscar comportamentos:', error);
+      toast.error('Erro ao carregar comportamentos');
     } finally {
       setLoading(false);
     }
+  }, []);
+
+  const carregarResidentes = useCallback(async () => {
+    try {
+      const { data, error } = await supabase
+        .from("residente")
+        .select("id, nome, quarto, foto")
+        .order("nome");
+
+      if (error) throw error;
+      setResidentes(data || []);
+    } catch (err: any) {
+      console.error('Erro ao carregar residentes:', err);
+      toast.error('Erro ao carregar lista de residentes');
+    }
+  }, []);
+
+  useEffect(() => {
+    const carregarDados = async () => {
+      await carregarComportamentos();
+      await carregarResidentes();
+    };
+    
+    carregarDados();
+  }, [carregarComportamentos, carregarResidentes]);
+
+  /* Handlers de Exclusão */
+  const abrirModalExclusao = (id: number) => {
+    setComportamentoParaExcluir(id);
+    setModalExclusaoAberto(true);
   };
 
-  const fetchResidentes = async () => {
+  const fecharModalExclusao = () => {
+    setModalExclusaoAberto(false);
+    setComportamentoParaExcluir(null);
+  };
+
+  const executarExclusao = async () => {
+    if (!comportamentoParaExcluir) return;
+
     try {
-      const { data, error } = await supabase.from("residente").select("id, nome, foto").order("nome");
+      const { error } = await supabase
+        .from("comportamento")
+        .delete()
+        .eq("id", comportamentoParaExcluir);
+
       if (error) throw error;
-      if (data) setResidentes(data as Residente[]);
-    } catch (err) {
-      console.error("Erro ao buscar residentes:", err);
+
+      // Atualiza a lista localmente
+      setComportamentos(prev => prev.filter(c => c.id !== comportamentoParaExcluir));
+      toast.success('Comportamento excluído com sucesso!');
+    } catch (err: any) {
+      console.error('Erro ao excluir comportamento:', err);
+      toast.error('Erro ao excluir comportamento');
+    } finally {
+      fecharModalExclusao();
     }
   };
 
-  // abrir modal novo
-  const abrirModalNovo = () => {
-    setComportamentoEditando(null);
+  const alternarResolvido = async (id: number) => {
+    try {
+      const comportamento = comportamentos.find(c => c.id === id);
+      if (!comportamento) return;
+
+      const novoStatus = !comportamento.resolvido;
+
+      // Atualizar localmente primeiro para feedback imediato
+      setComportamentos(prev => prev.map(c =>
+        c.id === id ? { ...c, resolvido: novoStatus } : c
+      ));
+
+      // Atualiza no banco de dados
+      const { error } = await supabase
+        .from('comportamento')
+        .update({ resolvido: novoStatus })
+        .eq('id', id);
+
+      if (error) throw error;
+
+      toast.success(`Comportamento ${novoStatus ? 'marcado como resolvido' : 'reaberto'}!`);
+    } catch (err: any) {
+      console.error('Erro ao alternar status:', err);
+      toast.error('Falha ao atualizar status.');
+      // Reverter em caso de erro
+      carregarComportamentos();
+    }
+  };
+
+  /* Handlers de UI */
+  const abrirModalEdicao = (comportamento: Comportamento) => {
+    setComportamentoEditando(comportamento);
     setModalAberto(true);
   };
 
-  // abrir modal editar
-  const abrirModalEditar = (id: number) => {
-    const item = comportamentos.find((c) => c.id === id);
-    if (!item) return;
-    setComportamentoEditando(item);
+  const abrirModalNovo = () => {
+    setComportamentoEditando(null);
     setModalAberto(true);
   };
 
   const fecharModal = () => {
     setModalAberto(false);
     setComportamentoEditando(null);
+    carregarComportamentos();
   };
 
-  // excluir
-  const excluirComportamento = async (id: number) => {
-    if (!window.confirm("Tem certeza que deseja excluir este registro de comportamento?")) return;
-    try {
-      const { error } = await supabase.from("comportamento").delete().eq("id", id);
-      if (error) throw error;
-      setComportamentos((prev) => prev.filter((c) => c.id !== id));
-    } catch (err) {
-      console.error("Erro ao excluir comportamento:", err);
-      alert("Erro ao excluir comportamento. Veja o console.");
-    }
+  const toggleFiltros = () => {
+    setFiltrosAberto(!filtrosAberto);
   };
 
-  // alternar resolvido
-  const alternarResolvido = async (id: number) => {
-    try {
-      const item = comportamentos.find((c) => c.id === id);
-      if (!item) return;
-      const novo = !item.status;
-
-      // otimista
-      setComportamentos((ant) => ant.map((c) => (c.id === id ? { ...c, resolvido: novo } : c)));
-
-      const { error } = await supabase.from("comportamento").update({ resolvido: novo }).eq("id", id);
-      if (error) throw error;
-    } catch (err) {
-      console.error("Erro ao alternar resolvido:", err);
-      fetchComportamentos();
-    }
+  const selecionarResidente = (residenteId: number | null) => {
+    setFiltros(prev => ({ ...prev, residenteId }));
+    setFiltroResidenteAberto(false);
   };
 
-  // filtros e utilitários
-  const comportamentosFiltrados = comportamentos
-    .filter((comportamento) => {
-      if (filtros.categoria && comportamento.categoria !== filtros.categoria) return false;
-      if (filtros.residenteId && comportamento.residente?.id !== filtros.residenteId) return false;
-      if (filtros.status) {
-        const st = comportamento.status ? "resolvido" : "pendente";
-        if (st !== filtros.status) return false;
-      }
-      if (filtros.startDate || filtros.endDate) {
-        const d = new Date(comportamento.data.getFullYear(), comportamento.data.getMonth(), comportamento.data.getDate());
-        if (filtros.startDate && d < filtros.startDate) return false;
-        if (filtros.endDate && d > filtros.endDate) return false;
-      }
-      return true;
-    })
-    .sort((a, b) => b.data.getTime() - a.data.getTime());
+  const selecionarStatus = (status: string | null) => {
+    setFiltros(prev => ({ ...prev, status: status === 'todos' ? null : status }));
+    setFiltroStatusAberto(false);
+  };
 
-  const contadorPendentes = comportamentos.filter((c) => !c.status).length;
-  const contadorConcluidos = comportamentos.filter((c) => c.status).length;
+  const selecionarCategoria = (categoria: string | null) => {
+    setFiltros(prev => ({ ...prev, categoria: categoria === 'todos' ? null : categoria }));
+    setFiltroCategoriaAberto(false);
+  };
 
-  const temFiltrosAtivos = filtros.categoria || filtros.residenteId || filtros.status || filtros.startDate || filtros.endDate;
+  const limparFiltros = () => {
+    setFiltros({
+      status: null,
+      residenteId: null,
+      categoria: null,
+      startDate: null,
+      endDate: null
+    });
+    setSearchTerm('');
+    setFiltroStatusAberto(false);
+    setFiltroResidenteAberto(false);
+    setFiltroCategoriaAberto(false);
+  };
 
-  // Render
-  return (
-    <div className="flex min-h-screen bg-odara-offwhite">
-      <div className="flex-1 p-6 lg:p-10">
-        {/* Cabeçalho */}
-        <div className="flex justify-between items-center mb-6">
-          <div className="flex items-center">
-            <h1 className="text-3xl font-bold text-odara-dark mr-2">Registro de Comportamento</h1>
-            <div className="relative">
-              <button onMouseEnter={() => setInfoVisivel(true)} onMouseLeave={() => setInfoVisivel(false)} className="text-odara-dark hover:text-odara-secondary transition-colors duration-200">
-                <FaInfoCircle size={20} className="text-odara-accent hover:text-odara-secondary" />
-              </button>
-              {infoVisivel && (
-                <div className="absolute z-10 left-0 top-full mt-2 w-72 p-3 bg-odara-dropdown text-odara-name text-sm rounded-lg shadow-lg">
-                  <h3 className="font-bold mb-2">Registro de Comportamento</h3>
-                  <p>
-                    O registro documenta comportamentos dos residentes, com categoria, responsável, data, horário e foto (opcional).
-                  </p>
-                  <div className="absolute bottom-full left-4 border-4 border-transparent border-b-gray-800"></div>
-                </div>
-              )}
-            </div>
+  /* Filtragem e Ordenação */
+  const comportamentosFiltrados = useMemo(() => {
+    return comportamentos
+      .filter(comportamento => {
+        // Filtro por texto (busca em título, descrição, nome do residente)
+        if (searchTerm.trim()) {
+          const term = searchTerm.toLowerCase();
+          const matchTitulo = comportamento.titulo?.toLowerCase().includes(term) || false;
+          const matchDescricao = comportamento.descricao?.toLowerCase().includes(term) || false;
+          const matchResidente = comportamento.residente?.nome?.toLowerCase().includes(term) || false;
+          const matchFuncionario = comportamento.funcionario?.nome?.toLowerCase().includes(term) || false;
+          
+          if (!matchTitulo && !matchDescricao && !matchResidente && !matchFuncionario) {
+            return false;
+          }
+        }
+
+        // Filtro por residente
+        if (filtros.residenteId && comportamento.residente?.id !== filtros.residenteId) {
+          return false;
+        }
+
+        // Filtro por status
+        if (filtros.status) {
+          const statusComportamento = comportamento.resolvido ? 'resolvido' : 'pendente';
+          if (statusComportamento !== filtros.status) {
+            return false;
+          }
+        }
+
+        // Filtro por categoria
+        if (filtros.categoria && comportamento.categoria !== filtros.categoria) {
+          return false;
+        }
+
+        // Filtro por data
+        if (filtros.startDate || filtros.endDate) {
+          const dataComportamento = new Date(comportamento.data);
+          
+          if (filtros.startDate) {
+            const startDate = new Date(filtros.startDate);
+            if (dataComportamento < startDate) {
+              return false;
+            }
+          }
+          
+          if (filtros.endDate) {
+            const endDate = new Date(filtros.endDate);
+            if (dataComportamento > endDate) {
+              return false;
+            }
+          }
+        }
+
+        return true;
+      })
+      .sort((a, b) => {
+        // Ordena por data (mais recente primeiro)
+        const dataA = new Date(a.data).getTime();
+        const dataB = new Date(b.data).getTime();
+        
+        if (dataA !== dataB) return dataB - dataA;
+        
+        // Se mesma data, ordena por horário
+        return (b.horario || '').localeCompare(a.horario || '');
+      });
+  }, [comportamentos, searchTerm, filtros]);
+
+  /* Componentes de UI */
+  const FiltroDropdown = ({
+    titulo,
+    aberto,
+    setAberto,
+    ref,
+    valorSelecionado,
+    onSelecionar,
+    tipo,
+    opcoes
+  }: {
+    titulo: string;
+    aberto: boolean;
+    setAberto: (aberto: boolean) => void;
+    ref: React.RefObject<HTMLDivElement>;
+    valorSelecionado: string | number | null;
+    onSelecionar: (value: any) => void;
+    tipo: 'residente' | 'status' | 'categoria';
+    opcoes: Array<{ value: string; label: string; icon?: React.ComponentType<any> }>;
+  }) => {
+    return (
+      <div className="relative" ref={ref}>
+        <button
+          type="button"
+          onClick={() => setAberto(!aberto)}
+          className="flex items-center justify-between w-full h-9 sm:h-10 border border-gray-300 rounded-lg px-3 text-xs sm:text-sm hover:bg-gray-50 transition-colors"
+        >
+          <span className="text-odara-dark truncate">
+            {tipo === 'residente'
+              ? valorSelecionado
+                ? residentes.find(r => r.id === valorSelecionado)?.nome
+                : titulo
+              : valorSelecionado
+                ? opcoes.find(opt => opt.value === valorSelecionado)?.label
+                : titulo
+            }
+          </span>
+          <ChevronDown size={10} className="sm:w-3 sm:h-3 text-gray-500 flex-shrink-0" />
+        </button>
+
+        {aberto && (
+          <div className="absolute top-full left-0 right-0 mt-1 bg-white rounded-lg shadow-lg border border-gray-200 z-10 max-h-60 overflow-y-auto">
+            <button
+              onClick={() => onSelecionar(tipo === 'categoria' ? 'todos' : null)}
+              className={`flex items-center gap-2 sm:gap-3 w-full text-left px-3 sm:px-4 py-2 sm:py-3 text-xs sm:text-sm hover:bg-odara-primary/10 transition ${!valorSelecionado || (tipo === 'categoria' && valorSelecionado === 'todos')
+                ? 'bg-odara-primary/20 text-odara-primary font-semibold'
+                : 'text-gray-700'
+                }`}
+            >
+              <span>{tipo === 'categoria' ? 'Todas categorias' : 
+                    tipo === 'residente' ? 'Todos os residentes' : 
+                    'Todos os status'}</span>
+              {(!valorSelecionado || (tipo === 'categoria' && valorSelecionado === 'todos')) && 
+                <Check className="ml-auto text-odara-primary w-3 h-3 sm:w-3.5 sm:h-3.5" />}
+            </button>
+
+            {tipo === 'residente' ? (
+              residentes.map((residente) => (
+                <button
+                  key={residente.id}
+                  onClick={() => onSelecionar(residente.id)}
+                  className={`flex items-center gap-2 sm:gap-3 w-full text-left px-3 sm:px-4 py-2 sm:py-3 text-xs sm:text-sm hover:bg-odara-primary/10 transition ${valorSelecionado === residente.id
+                    ? 'bg-odara-primary/20 text-odara-primary font-semibold'
+                    : 'text-gray-700'
+                    }`}
+                >
+                  <span className="truncate">
+                    {residente.nome} {residente.quarto ? `(Q ${residente.quarto})` : ''}
+                  </span>
+                  {valorSelecionado === residente.id && 
+                    <Check className="ml-auto text-odara-primary w-3 h-3 sm:w-3.5 sm:h-3.5" />}
+                </button>
+              ))
+            ) : (
+              opcoes.map((opcao) => (
+                <button
+                  key={opcao.value}
+                  onClick={() => onSelecionar(opcao.value)}
+                  className={`flex items-center gap-2 sm:gap-3 w-full text-left px-3 sm:px-4 py-2 sm:py-3 text-xs sm:text-sm hover:bg-odara-primary/10 transition ${valorSelecionado === opcao.value
+                    ? 'bg-odara-primary/20 text-odara-primary font-semibold'
+                    : 'text-gray-700'
+                    }`}
+                >
+                  {opcao.icon && (
+                    <opcao.icon size={12} className="sm:w-3.5 sm:h-3.5 text-odara-accent" />
+                  )}
+                  <span>{opcao.label}</span>
+                  {valorSelecionado === opcao.value && (
+                    <Check className="ml-auto text-odara-primary w-3 h-3 sm:w-3.5 sm:h-3.5" />
+                  )}
+                </button>
+              ))
+            )}
+          </div>
+        )}
+      </div>
+    );
+  };
+
+  const CardComportamento = ({ comportamento }: { comportamento: Comportamento }) => {
+    const cores = CORES_CATEGORIAS[comportamento.categoria] || CORES_CATEGORIAS.neutro;
+    const CategoriaIcon = cores.icon;
+    const statusLabel = comportamento.resolvido ? 'Resolvido' : 'Pendente';
+    const StatusIcon = comportamento.resolvido ? CheckCircle : Clock;
+
+    return (
+      <div className="bg-white rounded-lg shadow-md border border-gray-200 hover:shadow-lg transition-shadow duration-200 flex flex-col h-full">
+        {/* Header do Card */}
+        <div className={`flex flex-wrap justify-center sm:justify-between gap-2 items-center p-2 sm:p-3 rounded-t-lg ${cores.border} ${cores.bg}`}>
+          {/* Coluna Esquerda */}
+          <div className="flex items-center gap-2">
+            <div className={`w-2 h-2 sm:w-3 sm:h-3 rounded-full ${cores.bola}`}></div>
+            <CategoriaIcon size={12} className="sm:w-3.5 sm:h-3.5 text-odara-accent" />
+            <p className={`text-xs sm:text-sm md:text-base ${cores.text}`}>
+              {ROTULOS_CATEGORIAS[comportamento.categoria]}
+            </p>
           </div>
 
-          <div className="text-sm text-odara-dark">
-            <strong>{contadorPendentes}</strong> pendentes / <strong>{contadorConcluidos}</strong> resolvidos
+          {/* Coluna Direita - Data/Horário */}
+          <div className="flex items-center gap-1 text-xs sm:text-sm">
+            <Calendar size={10} className="sm:w-3 sm:h-3 text-odara-accent" />
+            <span className="text-odara-dark">
+              {formatarDataHora(comportamento.data, comportamento.horario)}
+            </span>
           </div>
         </div>
 
-        {/* Novo + Filtros (details) */}
-        <details className="group mb-8 w-full">
-          <summary
-            className="flex flex-col sm:flex-row gap-4 items-end list-none [&::-webkit-details-marker]:hidden cursor-pointer"
-          >
+        {/* Corpo do Card */}
+        <div className="p-3 sm:p-4 flex-1 flex flex-col">
+          {/* Título e Status */}
+          <div className="flex items-start justify-between mb-2 sm:mb-3">
+            <h3 className="text-sm sm:text-base md:text-lg font-bold text-odara-dark line-clamp-1 flex-1">
+              {comportamento.titulo}
+            </h3>
+
+            {/* Status */}
             <button
-              type="button"
-              onClick={abrirModalNovo}
-              className="bg-odara-accent hover:bg-odara-secondary text-white font-semibold py-2 px-4 rounded-lg flex items-center transition text-sm h-10"
+              onClick={() => alternarResolvido(comportamento.id)}
+              className={`flex items-center gap-1 px-2 py-1 rounded-lg text-xs font-medium transition-colors ${
+                comportamento.resolvido
+                  ? 'bg-green-100 text-green-800 hover:bg-green-200'
+                  : 'bg-yellow-100 text-yellow-800 hover:bg-yellow-200'
+              }`}
+              title={`Marcar como ${comportamento.resolvido ? 'pendente' : 'resolvido'}`}
             >
-              <FaPlus className="mr-2" /> Novo Registro
+              <StatusIcon size={10} className="sm:w-3 sm:h-3" />
+              <span>{statusLabel}</span>
             </button>
-            <div className="sm:w-40">
-              <div className="h-10 w-full inline-flex items-center justify-center px-4 bg-odara-dark text-white rounded hover:bg-odara-darkgreen transition text-sm font-medium select-none">
-                <FaFilter className="mr-2" /> Filtros
-              </div>
-            </div>
-          </summary>
-
-          {/* Painel de filtros */}
-          <form
-            ref={formFiltrosRef}
-            onSubmit={e => {
-              e.preventDefault();
-              const fd = new FormData(e.currentTarget);
-              const categoriaRaw = fd.get("categoria") as string;
-              const residenteRaw = fd.get("residente") as string;
-              const statusRaw = fd.get("status") as string;
-              const startRaw = fd.get("startDate") as string;
-              const endRaw = fd.get("endDate") as string;
-
-              setFiltros({
-                categoria: categoriaRaw && categoriaRaw !== "todas" ? categoriaRaw : null,
-                residenteId: residenteRaw ? Number(residenteRaw) : null,
-                status: statusRaw && statusRaw !== "todos" ? statusRaw : null,
-                startDate: startRaw ? new Date(startRaw + "T00:00:00") : null,
-                endDate: endRaw ? new Date(endRaw + "T00:00:00") : null,
-              });
-            }}
-            className="mt-6 bg-white p-5 rounded-xl shadow border w-full"
-          >
-            <div className="grid grid-cols-1 md:grid-cols-5 gap-5">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Categoria</label>
-                <select
-                  name="categoria"
-                  defaultValue="todas"
-                  className="w-full h-10 border rounded px-2 text-sm focus:ring-2 focus:ring-odara-primary focus:outline-none"
-                >
-                  <option value="todas">Todas</option>
-                  {Object.entries(ROTULOS_CATEGORIAS).map(([valor, rotulo]) => (
-                    <option key={valor} value={valor}>{rotulo}</option>
-                  ))}
-                </select>
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Residente</label>
-                <select
-                  name="residente"
-                  defaultValue=""
-                  className="w-full h-10 border rounded px-2 text-sm focus:ring-2 focus:ring-odara-primary focus:outline-none"
-                >
-                  <option value="">Todos</option>
-                  {residentes.map(r => (
-                    <option key={r.id} value={r.id}>{r.nome}</option>
-                  ))}
-                </select>
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Status</label>
-                <select
-                  name="status"
-                  defaultValue="todos"
-                  className="w-full h-10 border rounded px-2 text-sm focus:ring-2 focus:ring-odara-primary focus:outline-none"
-                >
-                  <option value="todos">Todos</option>
-                  <option value="pendente">Pendentes</option>
-                  <option value="resolvido">Resolvidos</option>
-                </select>
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Data inicial</label>
-                <input
-                  type="date"
-                  name="startDate"
-                  className="w-full h-10 border rounded px-2 text-sm focus:ring-2 focus:ring-odara-primary focus:outline-none"
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Data final</label>
-                <input
-                  type="date"
-                  name="endDate"
-                  className="w-full h-10 border rounded px-2 text-sm focus:ring-2 focus:ring-odara-primary focus:outline-none"
-                />
-              </div>
-            </div>
-
-            <div className="flex gap-2 mt-6">
-              <button
-                type="submit"
-                className="h-10 px-4 bg-odara-dark text-white rounded hover:bg-odara-darkgreen text-sm font-medium"
-              >
-                Aplicar
-              </button>
-              <button
-                type="button"
-                onClick={() => {
-                  setFiltros({
-                    categoria: null,
-                    residenteId: null,
-                    status: null,
-                    startDate: null,
-                    endDate: null
-                  });
-                  if (formFiltrosRef.current) {
-                    formFiltrosRef.current.reset();
-                  }
-                }}
-                className="h-10 px-4 bg-gray-200 rounded hover:bg-gray-300 text-sm font-medium"
-              >
-                Limpar
-              </button>
-            </div>
-          </form>
-        </details>
-
-        {/* Loading */}
-        {loading && (
-          <div className="flex justify-center items-center py-8">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-odara-accent" />
           </div>
-        )}
 
-        {/* Lista de Comportamentos */}
-        {!loading && (
-          <div className="bg-odara-white border-l-4 border-odara-primary rounded-2xl shadow-lg p-6">
-            <h2 className="text-2xl font-bold text-odara-dark flex items-center mb-2">
-              Comportamento
-              <span className="text-sm font-normal text-odara-name/60 ml-2">({comportamentosFiltrados.length} registros)</span>
-            </h2>
+          {/* Descrição */}
+          <div className="mb-3 sm:mb-4">
+            <p className="text-sm text-odara-dark line-clamp-3">
+              {comportamento.descricao || 'Sem descrição'}
+            </p>
+          </div>
 
-            {/* Indicadores de filtros ativos */}
-            {temFiltrosAtivos && (
-              <div className="flex flex-wrap gap-2 mb-4">
-                {filtros.categoria && (
-                  <span className="text-sm bg-odara-primary text-odara-white px-2 py-1 rounded-full">
-                    Categoria: {ROTULOS_CATEGORIAS[filtros.categoria]}
+          {/* Detalhes do Comportamento */}
+          <div className="grid grid-cols-1 gap-2 sm:gap-3 sm:grid-cols-2 flex-1">
+            {/* Coluna Esquerda */}
+            <div className="space-y-2 sm:space-y-3">
+              <div className="flex items-center gap-2">
+                <User size={12} className="text-odara-accent flex-shrink-0" />
+                <div>
+                  <strong className="text-odara-dark text-xs sm:text-sm">Residente:</strong>
+                  <span className="text-odara-name mt-0.5 sm:mt-1 text-xs sm:text-sm block">
+                    {comportamento.residente?.nome || 'Não informado'}
                   </span>
-                )}
-                {filtros.residenteId && (
-                  <span className="text-sm bg-odara-secondary text-odara-white px-2 py-1 rounded-full">
-                    Residente: {residentes.find(r => r.id === filtros.residenteId)?.nome}
-                  </span>
-                )}
-                {filtros.status && (
-                  <span className="text-sm bg-odara-dropdown-accent text-odara-white px-2 py-1 rounded-full">
-                    Status: {filtros.status === 'pendente' ? 'Pendentes' : 'Resolvidos'}
-                  </span>
-                )}
-                {filtros.startDate && (
-                  <span className="text-sm bg-gray-600 text-white px-2 py-1 rounded-full">
-                    De: {filtros.startDate.toLocaleDateString('pt-BR')}
-                  </span>
-                )}
-                {filtros.endDate && (
-                  <span className="text-sm bg-gray-600 text-white px-2 py-1 rounded-full">
-                    Até: {filtros.endDate.toLocaleDateString('pt-BR')}
-                  </span>
-                )}
-              </div>
-            )}
-
-            <div className="space-y-4 max-h-[600px] overflow-y-auto">
-              {comportamentosFiltrados.length === 0 ? (
-                <div className="p-6 rounded-xl bg-odara-name/10 text-center">
-                  <p className="text-odara-dark/60">Nenhum comportamento encontrado com os filtros atuais</p>
                 </div>
-              ) : (
-                comportamentosFiltrados.map((comportamento) => (
-                  <div key={comportamento.id} className={`p-4 rounded-xl hover:shadow-md transition-shadow duration-200 ${CORES_CATEGORIAS[comportamento.categoria]}`}>
-                    <div className="flex items-center justify-between mb-3">
-                      <div className="flex items-center gap-2.5">
-                        <span className={`w-2.5 h-2.5 rounded-full ${CORES_PONTOS[comportamento.categoria]}`} />
-                        <p className="text-base font-semibold">
-                          {comportamento.data.getDate().toString().padStart(2, "0")}/
-                          {(comportamento.data.getMonth() + 1).toString().padStart(2, "0")}/
-                          {comportamento.data.getFullYear()}
-                          {comportamento.horario && ` - ${comportamento.horario}`}
-                        </p>
-                      </div>
+              </div>
 
-                      <div className="flex items-center gap-3">
-                        <label className="flex items-center gap-2 text-sm cursor-pointer">
-                          <input type="checkbox" checked={comportamento.status} onChange={(e) => { e.stopPropagation(); alternarResolvido(comportamento.id); }} className="rounded border-odara-primary text-odara-accent focus:ring-odara-accent" />
-                          <span className={comportamento.status ? "text-green-600 font-semibold" : "text-odara-dark"}>{comportamento.status ? "Resolvido" : "Pendente"}</span>
-                        </label>
-                      </div>
-                    </div>
+              {comportamento.residente?.quarto && (
+                <div>
+                  <strong className="text-odara-dark text-xs sm:text-sm">Quarto:</strong>
+                  <span className="text-odara-name mt-0.5 sm:mt-1 text-xs sm:text-sm block">
+                    {comportamento.residente.quarto}
+                  </span>
+                </div>
+              )}
+            </div>
 
-                    <h6 className="text-xl font-bold mb-1 flex items-center">
-                      {comportamento.status && <span className="text-green-500 mr-2"><FaCheck className="h-4 w-4" /></span>}
-                      {comportamento.titulo}
-                    </h6>
-
-                    <p className="text-base mb-2">{comportamento.descricao}</p>
-
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center text-sm">
-                        <span className="bg-odara-dropdown text-odara-dropdown-name/60 px-2 py-1 rounded-md text-xs">{ROTULOS_CATEGORIAS[comportamento.categoria]}</span>
-                        {comportamento.residente && (<><span className="mx-2">•</span><span className="text-odara-name">{comportamento.residente.nome}</span></>)}
-                        {comportamento.funcionario && (<><span className="mx-2">•</span><span className="text-odara-name">Registrado por: {comportamento.funcionario.nome}</span></>)}
-                      </div>
-
-                      <div className="flex space-x-2">
-                        <button onClick={() => abrirModalEditar(comportamento.id)} className="text-odara-secondary hover:text-odara-dropdown-accent transition-colors duration-200 p-2 rounded-full hover:bg-odara-dropdown" title="Editar comportamento"><FaEdit size={14} /></button>
-                        <button onClick={() => excluirComportamento(comportamento.id)} className="text-odara-alerta hover:text-red-700 transition-colors duration-200 p-2 rounded-full hover:bg-odara-alerta/50" title="Excluir comportamento"><FaTrash size={14} /></button>
-                      </div>
-                    </div>
+            {/* Coluna Direita */}
+            <div className="space-y-2 sm:space-y-3">
+              {comportamento.funcionario && (
+                <div className="flex items-center gap-2">
+                  <User size={12} className="text-odara-accent flex-shrink-0" />
+                  <div>
+                    <strong className="text-odara-dark text-xs sm:text-sm">Registrado por:</strong>
+                    <span className="text-odara-name mt-0.5 sm:mt-1 text-xs sm:text-sm block">
+                      {comportamento.funcionario.nome}
+                    </span>
                   </div>
-                ))
+                </div>
+              )}
+
+              {comportamento.criado_em && (
+                <div className="flex items-center gap-2">
+                  <ClockIcon size={12} className="text-odara-accent flex-shrink-0" />
+                  <div>
+                    <strong className="text-odara-dark text-xs sm:text-sm">Criado em:</strong>
+                    <span className="text-odara-name mt-0.5 sm:mt-1 text-xs sm:text-sm block">
+                      {formatarData(comportamento.criado_em)}
+                    </span>
+                  </div>
+                </div>
               )}
             </div>
           </div>
+        </div>
+
+        {/* Footer do Card */}
+        <div className="px-3 sm:px-4 py-2 sm:py-3 bg-gray-50 rounded-b-lg border-t border-gray-200">
+          <div className="flex flex-wrap justify-between items-center gap-2 text-xs">
+            <div className="flex items-center gap-2">
+              <span className="bg-odara-accent text-white px-2 py-1 rounded-full text-xs font-medium">
+                ID: {comportamento.id}
+              </span>
+            </div>
+
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => abrirModalEdicao(comportamento)}
+                className="text-odara-dropdown-accent hover:text-odara-white transition-colors duration-200 p-1.5 sm:p-2 rounded-full hover:bg-odara-dropdown-accent"
+                title="Editar comportamento"
+              >
+                <Edit size={12} className="sm:w-3.5 sm:h-3.5" />
+              </button>
+
+              <button
+                onClick={() => abrirModalExclusao(comportamento.id)}
+                className="text-odara-alerta hover:text-odara-white transition-colors duration-200 p-1.5 sm:p-2 rounded-full hover:bg-odara-alerta"
+                title="Excluir comportamento"
+              >
+                <Trash size={12} className="sm:w-3.5 sm:h-3.5" />
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  };
+
+  const SecaoFiltros = () => {
+    if (!filtrosAberto) return null;
+
+    return (
+      <div className="mb-6 bg-white p-4 sm:p-5 rounded-xl shadow border border-gray-200 animate-fade-in">
+        {/* Primeira Linha - Filtros principais */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-5 w-full">
+          {/* Filtro de Residente */}
+          <div className="min-w-0">
+            <div className='flex gap-1 items-center ml-1 mb-1'>
+              <Filter size={9} className="sm:w-2.5 sm:h-2.5 text-odara-accent" />
+              <label className="block text-xs sm:text-sm font-semibold text-odara-secondary">Residente</label>
+            </div>
+
+            <FiltroDropdown
+              titulo="Todos os residentes"
+              aberto={filtroResidenteAberto}
+              setAberto={setFiltroResidenteAberto}
+              ref={filtroResidenteRef}
+              valorSelecionado={filtros.residenteId}
+              onSelecionar={selecionarResidente}
+              tipo="residente"
+              opcoes={[]}
+            />
+          </div>
+
+          {/* Filtro de Status */}
+          <div className="min-w-0">
+            <div className='flex gap-1 items-center ml-1 mb-1'>
+              <Filter size={9} className="sm:w-2.5 sm:h-2.5 text-odara-accent" />
+              <label className="block text-xs sm:text-sm font-semibold text-odara-secondary">Status</label>
+            </div>
+
+            <FiltroDropdown
+              titulo="Todos os status"
+              aberto={filtroStatusAberto}
+              setAberto={setFiltroStatusAberto}
+              ref={filtroStatusRef}
+              valorSelecionado={filtros.status || 'todos'}
+              onSelecionar={selecionarStatus}
+              tipo="status"
+              opcoes={FILTRO_STATUS_OPTIONS}
+            />
+          </div>
+
+          {/* Filtro de Categoria */}
+          <div className="min-w-0">
+            <div className='flex gap-1 items-center ml-1 mb-1'>
+              <Filter size={9} className="sm:w-2.5 sm:h-2.5 text-odara-accent" />
+              <label className="block text-xs sm:text-sm font-semibold text-odara-secondary">Categoria</label>
+            </div>
+
+            <FiltroDropdown
+              titulo="Todas categorias"
+              aberto={filtroCategoriaAberto}
+              setAberto={setFiltroCategoriaAberto}
+              ref={filtroCategoriaRef}
+              valorSelecionado={filtros.categoria || 'todos'}
+              onSelecionar={selecionarCategoria}
+              tipo="categoria"
+              opcoes={FILTRO_CATEGORIA_OPTIONS}
+            />
+          </div>
+        </div>
+
+        {/* Segunda Linha (Filtro de Data) */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-5 mt-4 sm:mt-5 pt-4 sm:pt-5 border-t border-gray-200">
+          {/* Data Inicial */}
+          <div>
+            <div className='flex gap-1 items-center ml-1 mb-1'>
+              <Filter size={9} className="sm:w-2.5 sm:h-2.5 text-odara-accent" />
+              <label className="block text-xs sm:text-sm font-semibold text-odara-secondary">Data Inicial</label>
+            </div>
+
+            <input
+              type="date"
+              value={filtros.startDate || ''}
+              onChange={(e) => setFiltros(prev => ({ ...prev, startDate: e.target.value || null }))}
+              className="w-full h-9 sm:h-10 border border-gray-300 rounded-lg px-3 text-xs sm:text-sm focus:ring-2 focus:ring-odara-primary focus:outline-none"
+            />
+          </div>
+
+          {/* Data Final */}
+          <div>
+            <div className="flex gap-1 items-center ml-1 mb-1">
+              <Filter size={9} className="sm:w-2.5 sm:h-2.5 text-odara-accent" />
+              <label className="block text-xs sm:text-sm font-semibold text-odara-secondary">Data Final</label>
+            </div>
+
+            <input
+              type="date"
+              value={filtros.endDate || ''}
+              onChange={(e) => setFiltros(prev => ({ ...prev, endDate: e.target.value || null }))}
+              className="w-full h-9 sm:h-10 border border-gray-300 rounded-lg px-3 text-xs sm:text-sm focus:ring-2 focus:ring-odara-primary focus:outline-none"
+            />
+          </div>
+        </div>
+
+        {/* Botão Limpar Filtros */}
+        <div className="flex justify-end gap-2 pt-4 sm:pt-5 mt-4 sm:mt-5 border-t border-gray-200">
+          <button
+            onClick={limparFiltros}
+            className="bg-odara-accent hover:bg-odara-secondary text-white font-semibold py-2 px-3 sm:px-4 rounded-lg flex items-center transition text-xs sm:text-sm h-9 sm:h-10"
+          >
+            Limpar Filtros
+          </button>
+        </div>
+      </div>
+    );
+  };
+
+  const ModalConfirmacaoExclusao = () => {
+    if (!modalExclusaoAberto) return null;
+
+    const comportamento = comportamentoParaExcluir
+      ? comportamentos.find(c => c.id === comportamentoParaExcluir)
+      : null;
+    const tituloComportamento = comportamento?.titulo || '';
+
+    return (
+      <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-[100] p-4 animate-fade-in">
+        <div className="bg-white rounded-2xl shadow-xl p-4 sm:p-6 max-w-md w-full animate-scale-in">
+          <div className="text-center">
+            {/* Ícone de alerta */}
+            <div className="mx-auto flex items-center justify-center h-12 sm:h-14 w-12 sm:w-14 rounded-full bg-odara-alerta/10 mb-3 sm:mb-4">
+              <AlertCircle className="h-6 w-6 sm:h-7 sm:w-7 text-odara-alerta" />
+            </div>
+
+            {/* Textos do modal */}
+            <h3 className="text-lg sm:text-xl font-bold text-odara-dark mb-2">Confirmar exclusão</h3>
+            <p className="text-odara-name text-sm sm:text-base mb-3 sm:mb-4">
+              Tem certeza que deseja excluir este registro de comportamento?
+            </p>
+
+            {/* Detalhes do comportamento */}
+            {tituloComportamento && (
+              <div className="bg-odara-offwhite rounded-lg p-3 mb-3 sm:mb-4 border border-gray-200">
+                <p className="text-sm font-medium text-odara-dark">Comportamento:</p>
+                <p className="text-sm font-semibold text-odara-name truncate" title={tituloComportamento}>
+                  {tituloComportamento}
+                </p>
+              </div>
+            )}
+
+            <p className="text-xs sm:text-sm text-odara-alerta mb-4 sm:mb-6 font-medium">
+              Esta ação não pode ser desfeita.
+            </p>
+
+            {/* Botões de ação */}
+            <div className="flex gap-2 sm:gap-3 justify-center">
+              <button
+                onClick={fecharModalExclusao}
+                className="px-4 sm:px-6 py-2 border border-odara-primary text-odara-primary rounded-lg hover:bg-odara-primary/10 transition-colors duration-200 flex-1 text-sm"
+                autoFocus
+              >
+                Cancelar
+              </button>
+
+              <button
+                onClick={executarExclusao}
+                className="px-4 sm:px-5 py-2 bg-odara-alerta text-white rounded-lg hover:bg-red-700 transition-colors duration-200 font-medium flex-1 text-sm"
+              >
+                Excluir
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  };
+
+  const ListaComportamentos = () => {
+    const contadorPendentes = comportamentos.filter(c => !c.resolvido).length;
+    const contadorResolvidos = comportamentos.filter(c => c.resolvido).length;
+
+    return (
+      <div className="bg-white border-l-4 border-odara-primary rounded-xl sm:rounded-2xl shadow-lg p-3 sm:p-6">
+        <div className="flex flex-col sm:flex-row items-center justify-between gap-2 mb-3 sm:mb-4">
+          <div>
+            <h2 className="text-lg sm:text-xl lg:text-2xl font-bold text-odara-dark">Comportamentos</h2>
+            <div className="flex items-center gap-3 mt-1 text-xs sm:text-sm">
+              <span className="flex items-center gap-1">
+                <Clock size={12} className="text-yellow-500" />
+                <span className="text-odara-dark">{contadorPendentes} pendentes</span>
+              </span>
+              <span className="flex items-center gap-1">
+                <CheckCircle size={12} className="text-green-500" />
+                <span className="text-odara-dark">{contadorResolvidos} resolvidos</span>
+              </span>
+            </div>
+          </div>
+          <span className="bg-gray-200 text-gray-700 px-2 py-1 rounded-full text-xs font-medium">
+            Total: {comportamentosFiltrados.length}
+          </span>
+        </div>
+
+        {/* Tags de filtros ativos */}
+        {(filtros.status || filtros.residenteId || filtros.categoria || filtros.startDate || filtros.endDate || searchTerm) && (
+          <div className="mb-3 flex flex-wrap justify-center sm:justify-start gap-1 text-xs">
+            {searchTerm && (
+              <span className="bg-odara-secondary text-white px-2 py-1 rounded-full">
+                Busca: {searchTerm}
+              </span>
+            )}
+
+            {filtros.residenteId && (
+              <span className="bg-odara-secondary text-white px-2 py-1 rounded-full">
+                Residente: {residentes.find(r => r.id === filtros.residenteId)?.nome}
+              </span>
+            )}
+
+            {filtros.status && (
+              <span className="bg-odara-secondary text-white px-2 py-1 rounded-full">
+                Status: {filtros.status === 'pendente' ? 'Pendente' : 'Resolvido'}
+              </span>
+            )}
+
+            {filtros.categoria && (
+              <span className="bg-odara-secondary text-white px-2 py-1 rounded-full">
+                Categoria: {ROTULOS_CATEGORIAS[filtros.categoria]}
+              </span>
+            )}
+
+            {(filtros.startDate || filtros.endDate) && (
+              <span className="bg-odara-secondary text-white px-2 py-1 rounded-full">
+                Período: {filtros.startDate ? `${filtros.startDate.split('-').reverse().join('/')}` : ''}
+                {filtros.endDate ? ' até' + ` ${filtros.endDate.split('-').reverse().join('/')}` : ''}
+              </span>
+            )}
+          </div>
         )}
 
-        {/* Modal usando o componente separado */}
-        <ModalComportamento
-          comportamento={comportamentoEditando}
-          isOpen={modalAberto}
-          onClose={() => {
-            fecharModal();
-            fetchComportamentos(); // Recarregar a lista após fechar o modal
-          }}
-        />
+        {/* Lista ou mensagem de vazio */}
+        {loading ? (
+          <div className="p-6 text-center">
+            <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-odara-accent mb-4"></div>
+            <p className="text-odara-dark/60 text-sm sm:text-lg">Carregando comportamentos...</p>
+          </div>
+        ) : comportamentosFiltrados.length === 0 ? (
+          <div className="p-6 rounded-lg sm:rounded-xl bg-odara-name/10 text-center">
+            <AlertCircle className="h-8 w-8 text-odara-accent mx-auto mb-4 opacity-50" />
+            <p className="text-odara-dark/60 text-sm sm:text-lg">
+              {comportamentos.length === 0 ? 'Nenhum comportamento registrado' : 'Nenhum comportamento encontrado'}
+            </p>
+
+            {comportamentos.length > 0 && (
+              <p className="text-odara-dark/40 text-xs sm:text-sm mt-1 sm:mt-2">
+                Tente ajustar os termos da busca ou os filtros
+              </p>
+            )}
+            
+            <button
+              onClick={abrirModalNovo}
+              className="mt-4 bg-odara-accent hover:bg-odara-secondary text-white font-semibold py-2 px-4 rounded-lg transition text-sm"
+            >
+              <Plus className="inline mr-2 h-4 w-4" />
+              Registrar primeiro comportamento
+            </button>
+          </div>
+        ) : (
+          <div className="flex flex-col lg:grid lg:grid-cols-2 gap-4 sm:gap-6">
+            {comportamentosFiltrados.map(comportamento => (
+              <CardComportamento
+                key={comportamento.id}
+                comportamento={comportamento}
+              />
+            ))}
+          </div>
+        )}
+      </div>
+    );
+  };
+
+  const Cabecalho = () => {
+    return (
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
+        <div className="flex items-start sm:items-center gap-3 w-full">
+          <AlertCircle size={24} className='sm:w-7 sm:h-7 lg:w-8 lg:h-8 text-odara-accent flex-shrink-0 mt-1 sm:mt-0' />
+          
+          <div className="flex-1 min-w-0 relative">
+            <div className="flex items-center gap-0.1 sm:gap-2">
+              <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold text-odara-dark flex-1 truncate">
+                Registro de Comportamento
+              </h1>
+              
+              <button
+                onClick={() => setInfoVisivel(!infoVisivel)}
+                className="flex-shrink-0 w-5 h-5 sm:w-6 sm:h-6 lg:w-7 lg:h-7 flex items-center justify-center rounded-full hover:bg-gray-100 transition-colors ml-1"
+                aria-label="Informações"
+              >
+                <Info size={12} className="sm:w-3.5 sm:h-3.5 lg:w-4 lg:h-4 text-odara-accent" />
+              </button>
+            </div>
+            
+            {infoVisivel && (
+              <div className="absolute z-10 top-full left-0 sm:left-auto sm:right-0 mt-2 w-full sm:w-80 bg-blue-50 border border-blue-100 rounded-lg shadow-lg animate-fade-in">
+                <div className="p-3 sm:p-4">
+                  <p className="text-xs sm:text-sm text-odara-dark">
+                    <strong className="font-semibold">Como usar:</strong> Registre comportamentos dos residentes, classificando como positivo, negativo ou neutro.
+                  </p>
+                  <button
+                    onClick={() => setInfoVisivel(false)}
+                    className="mt-2 text-xs sm:text-sm text-odara-accent hover:text-odara-secondary font-medium"
+                  >
+                    Entendi
+                  </button>
+                </div>
+                {/* Seta do tooltip para desktop */}
+                <div className="hidden sm:block absolute -top-2 right-4 w-4 h-4 bg-blue-50 border-t border-l border-blue-100 transform rotate-45"></div>
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+    );
+  };
+
+  const BotaoNovoComportamento = () => {
+    return (
+      <button
+        onClick={abrirModalNovo}
+        className="bg-odara-accent hover:bg-odara-secondary text-white font-semibold py-2 px-3 sm:px-4 rounded-lg flex items-center transition text-xs sm:text-sm h-9 sm:h-10 w-full sm:w-max justify-center"
+      >
+        <Plus className="mr-1 sm:mr-2 w-3 h-3 sm:w-4 sm:h-4" /> Novo Comportamento
+      </button>
+    );
+  };
+
+  /* Renderização Principal */
+  return (
+    <div className="min-h-screen bg-odara-offwhite overflow-x-hidden">
+      {/* Modal de Comportamento */}
+      <ModalComportamento
+        comportamento={comportamentoEditando}
+        isOpen={modalAberto}
+        onClose={fecharModal}
+      />
+
+      {/* Modal de Confirmação de Exclusão */}
+      <ModalConfirmacaoExclusao />
+
+      {/* Toaster para notificações */}
+      <Toaster
+        position="top-center"
+        toastOptions={{
+          duration: 4000,
+          style: {
+            background: '#e4edfdff',
+            color: '#52323a',
+            border: '1px solid #0036caff',
+            borderRadius: '12px',
+            fontSize: '14px',
+            fontWeight: '500',
+          },
+          success: {
+            style: {
+              background: '#f0fdf4',
+              color: '#52323a',
+              border: '1px solid #00c950',
+            },
+          },
+          error: {
+            style: {
+              background: '#fce7e7ff',
+              color: '#52323a',
+              border: '1px solid #c90d00ff',
+            },
+          },
+        }}
+      />
+
+      <div className="p-3 sm:p-6 lg:p-8 max-w-full overflow-hidden">
+        {/* Cabeçalho e Botão Novo - Ajustado para mobile */}
+        <div className='flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 mb-4 sm:mb-6'>
+          <Cabecalho />
+          <div className="w-full sm:w-auto">
+            <BotaoNovoComportamento />
+          </div>
+        </div>
+
+        {/* Barra de Busca e Filtros - Otimizado para mobile */}
+        <div className="flex flex-col sm:flex-row gap-3 mb-4 sm:mb-6">
+          {/* Barra de Busca */}
+          <div className="flex-1 relative min-w-0">
+            <div className="absolute inset-y-0 left-0 pl-2 sm:pl-3 flex items-center pointer-events-none">
+              <Search className="text-odara-primary h-3 w-3 sm:h-4 sm:w-4" />
+            </div>
+            <input
+              type="text"
+              placeholder="Buscar por título, descrição ou residente..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="w-full pl-7 sm:pl-10 pr-3 sm:pr-4 py-2 bg-white rounded-lg border border-gray-200 text-odara-dark placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-odara-primary focus:border-transparent text-xs sm:text-sm"
+            />
+          </div>
+
+          {/* Botão ativador do modal de filtros */}
+          <div className="flex gap-2">
+            <button
+              onClick={toggleFiltros}
+              className="flex items-center gap-1 sm:gap-2 bg-white rounded-lg px-2 sm:px-4 py-2 border border-gray-200 text-odara-dark font-medium hover:bg-odara-primary/10 transition w-full sm:w-max justify-center text-xs sm:text-sm"
+            >
+              <Filter size={16} className="sm:w-5 sm:h-5 text-odara-accent" />
+              <span>
+                {!filtrosAberto ? 'Filtros' : 'Fechar'}
+              </span>
+            </button>
+          </div>
+        </div>
+
+        {/* Seção de Filtros */}
+        <SecaoFiltros />
+
+        {/* Lista de Comportamentos */}
+        <ListaComportamentos />
+
+        {/* Contador de resultados */}
+        <div className="mt-3 text-xs sm:text-sm text-gray-400">
+          Total de {comportamentosFiltrados.length} comportamento(s) encontrado(s) de {comportamentos.length}
+          {searchTerm && <span> para "{searchTerm}"</span>}
+        </div>
       </div>
     </div>
   );

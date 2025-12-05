@@ -36,7 +36,7 @@ const Registros = () => {
       categoria: "saude",
     },
     {
-      path: "/app/admin/registro/saudeInicial",
+      path: "/app/admin/registro/saude",
       label: "Registro de Saúde",
       icon: HeartPulse,
       descricao: "Monitoramento do estado de saúde dos residentes",

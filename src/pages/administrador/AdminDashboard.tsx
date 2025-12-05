@@ -7,22 +7,6 @@ import { supabase } from '../../lib/supabaseClient';
 import DataFormatada from '../../components/DataFormatada';
 
 // Interfaces para tipagem
-interface DetalhesItem {
-  titulo: string;
-  descricao: string;
-  lista: string[];
-  acaoRecomendada: string;
-}
-
-interface ItemAlertaNotificacao {
-  id: number;
-  texto: string;
-  tipo: 'alerta' | 'info';
-  hora: string;
-  detalhes: DetalhesItem;
-  lido?: boolean;
-}
-
 interface BotaoAcao {
   id: number;
   nome: string;
@@ -69,6 +53,23 @@ type ConsultasAlerta = {
   horario: string;
 }
 
+type Ocorrencia = {
+	id: number;
+	titulo: string;
+	descricao: string;
+	providencias?: string | null;
+	data: string;
+	residente: Residente | null;
+	categoria: string;
+	status: boolean;
+	criado_em?: string | null;
+};
+
+type Residente = {
+  id: number;
+  nome: string;
+};
+
 const AdminDashboard = () => {
 
   // Estados do componente
@@ -80,103 +81,10 @@ const AdminDashboard = () => {
 
   // Estados para notificações
   const [notificacoesAbertas, setNotificacoesAbertas] = useState<boolean>(false);
-  const [alertas, setAlertas] = useState<ItemAlertaNotificacao[]>([
-    {
-      id: 1,
-      texto: "Checklist pendente para 3 funcionários",
-      tipo: "alerta",
-      hora: "09:30",
-      detalhes: {
-        titulo: "Checklists Pendentes",
-        descricao: "Existem 3 funcionários com checklists pendentes para hoje.",
-        lista: [
-          "João Silva - Checklist de segurança",
-          "Maria Santos - Checklist de equipamentos",
-          "Pedro Oliveira - Checklist de limpeza"
-        ],
-        acaoRecomendada: "Verificar com a equipe a conclusão dos checklists até o final do expediente."
-      },
-      lido: false
-    },
-    {
-      id: 3,
-      texto: "5 novos checklists atribuídos",
-      tipo: "alerta",
-      hora: "07:45",
-      detalhes: {
-        titulo: "Novos Checklists Atribuídos",
-        descricao: "Foram atribuídos 5 novos checklists para sua equipe.",
-        lista: [
-          "Checklist de segurança - Área A",
-          "Checklist de equipamentos - Turno manhã",
-          "Checklist de qualidade - Produto X",
-          "Checklist de limpeza - Cozinha",
-          "Checklist de manutenção - Equipamento Y"
-        ],
-        acaoRecomendada: "Distribuir os checklists entre os funcionários disponíveis."
-      },
-      lido: false
-    },
-  ]);
 
   const [meusAlertas, setMeusAlertas] = useState<Alertas | null>(null);
 
-  const [notificacoes, setNotificacoes] = useState<ItemAlertaNotificacao[]>([
-    {
-      id: 2,
-      texto: "Reunião de equipe às 14:00",
-      tipo: "info",
-      hora: "08:15",
-      detalhes: {
-        titulo: "Reunião de Equipe",
-        descricao: "Reunião agendada para hoje às 14:00 na sala de reuniões principal.",
-        lista: [
-          "Horário: 14:00 - 15:30",
-          "Local: Sala de Reuniões Principal",
-          "Pauta: Revisão mensal de métricas",
-          "Participantes: Equipe completa"
-        ],
-        acaoRecomendada: "Confirmar presença e preparar relatórios solicitados."
-      },
-      lido: false
-    },
-    {
-      id: 4,
-      texto: "Relatório mensal devido sexta-feira",
-      tipo: "info",
-      hora: "Ontem",
-      detalhes: {
-        titulo: "Relatório Mensal - Prazo",
-        descricao: "O relatório mensal de atividades está com prazo para sexta-feira.",
-        lista: [
-          "Tipo: Relatório Mensal de Atividades",
-          "Prazo: Sexta-feira, 17:00",
-          "Formato: Planilha padrão",
-          "Envio: Sistema interno"
-        ],
-        acaoRecomendada: "Iniciar a compilação dos dados com antecedência."
-      },
-      lido: false
-    },
-    {
-      id: 5,
-      texto: "Atualização no sistema de checklist",
-      tipo: "info",
-      hora: "10:00",
-      detalhes: {
-        titulo: "Atualização do Sistema",
-        descricao: "O sistema de checklist foi atualizado com novas funcionalidades:",
-        lista: [
-          "Nova interface de usuário",
-          "Relatórios em tempo real",
-          "Exportação em PDF",
-          "Notificações push"
-        ],
-        acaoRecomendada: "Familiarizar-se com as novas funcionalidades."
-      },
-      lido: false
-    },
-  ]);
+  const [ocorrencias, setOcorrencias] = useState<Ocorrencia[]>([]);
 
   const [alertaSelecionado, setAlertaSelecionado] = useState<MedicamentosAlerta[] | AtividadesAlerta[] | AlimentacaoAlerta[] | ConsultasAlerta[] | null>(null);
 
@@ -201,14 +109,6 @@ const AdminDashboard = () => {
     if (window.innerWidth < 640) {
       setNotificacoesAbertas(false);
     }
-    // Marcar como lido ao abrir
-    // if (!item.lido) {
-    //   if (item.tipo === 'alerta') {
-    //     setAlertas(prev => prev.map(a => a.id === item.id ? { ...a, lido: true } : a));
-    //   } else {
-    //     setNotificacoes(prev => prev.map(n => n.id === item.id ? { ...n, lido: true } : n));
-    //   }
-    // }
   };
 
   // Função para fechar modal
@@ -216,19 +116,6 @@ const AdminDashboard = () => {
     setModalAberto(false);
     setAlertaSelecionado(null);
   };
-
-  // Função para marcar todas como lidas
-  const marcarTodasComoLidas = () => {
-    setAlertas(prev => prev.map(a => ({ ...a, lido: true })));
-    setNotificacoes(prev => prev.map(n => ({ ...n, lido: true })));
-    toast.success('Todas as notificações marcadas como lidas!');
-    setNotificacoesAbertas(false);
-  };
-
-  // Contadores
-  const alertasNaoLidos = alertas.filter(a => !a.lido).length;
-  const notificacoesNaoLidas = notificacoes.filter(n => !n.lido).length;
-  const totalNaoLidas = alertasNaoLidos + notificacoesNaoLidas;
 
   // Efeito para carregar estatísticas iniciais
   useEffect(() => {
@@ -260,6 +147,7 @@ const AdminDashboard = () => {
 
     buscarNumeroPessoas();
     buscarAlertas();
+    buscarOcorrencias();
   }, []);
 
   const buscarAlertas = async () => {
@@ -280,6 +168,19 @@ const AdminDashboard = () => {
     }
   };
 
+  const buscarOcorrencias = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('ocorrencia')
+        .select('*, residente(id, nome)')
+        .eq('data', new Date().toISOString().split('T')[0])
+        .order('data', { ascending: false });
+      if (error) throw error;
+      setOcorrencias(data || []);
+    } catch (error) {
+      console.error('Erro ao buscar ocorrências:', error);
+    }
+  };
 
   // Componente de Cabeçalho COM ÍCONE DE NOTIFICAÇÕES
   const CabecalhoDashboard = () => {
@@ -309,11 +210,6 @@ const AdminDashboard = () => {
                 className="text-odara-primary"
               />
             </div>
-            {totalNaoLidas > 0 && (
-              <span className="absolute -top-1 -right-1 bg-odara-primary text-white text-xs font-bold w-5 h-5 flex items-center justify-center rounded-full">
-                {totalNaoLidas}
-              </span>
-            )}
           </button>
         </div>
       </div>
@@ -497,6 +393,15 @@ const AdminDashboard = () => {
   const PainelNotificacoes = () => {
     if (!notificacoesAbertas) return null;
 
+    const totalAlertas = meusAlertas
+      ? meusAlertas.contagens.medicamentos +
+        meusAlertas.contagens.atividades +
+        meusAlertas.contagens.alimentacao +
+        meusAlertas.contagens.consultas
+      : 0;
+
+    const totalOcorrencias = ocorrencias.length;
+
     return (
       <>
         {/* Overlay para mobile */}
@@ -525,11 +430,6 @@ const AdminDashboard = () => {
                 </div>
                 <div>
                   <h3 className="text-lg font-semibold text-odara-dark">Notificações</h3>
-                  <p className="text-sm text-gray-500">
-                    {totalNaoLidas > 0
-                      ? `${totalNaoLidas} não lida${totalNaoLidas !== 1 ? 's' : ''}`
-                      : 'Todas lidas'}
-                  </p>
                 </div>
               </div>
               <button
@@ -545,12 +445,12 @@ const AdminDashboard = () => {
           {/* Corpo do Painel com scroll */}
           <div className="overflow-y-auto h-[calc(100%-140px)] sm:h-[calc(60vh)]">
             {/* Alertas Urgentes */}
-            {alertasNaoLidos > 0 && (
+            {totalAlertas > 0 && (
               <div className="p-4 border-b border-gray-200">
                 <div className="flex items-center justify-between mb-3">
                   <h4 className="font-medium text-odara-dark flex items-center gap-2">
                     <WrapperIcone icone={AlertTriangle} tamanho={16} className="text-odara-primary" />
-                    Alertas Urgentes ({alertasNaoLidos})
+                    Alertas Urgentes ({totalAlertas})
                   </h4>
                 </div>
                 <div className="space-y-3">
@@ -587,8 +487,53 @@ const AdminDashboard = () => {
               </div>
             )}
 
+            {totalOcorrencias > 0 && (
+              <div className="p-4 border-b border-gray-200">
+                <div className="flex items-center justify-between mb-3">
+                  <h4 className="font-medium text-odara-dark flex items-center gap-2">
+                    <WrapperIcone icone={AlertTriangle} tamanho={16} className="text-odara-primary" />
+                    Ocorrências ({totalOcorrencias})
+                  </h4>
+                </div>
+                <div className="space-y-3">
+                  {ocorrencias && ocorrencias.map((ocorrencia) => (
+                    <div
+                      key={ocorrencia.id}
+                      className="p-3 border border-odara-primary/20 rounded-lg hover:bg-odara-primary/5 active:bg-odara-primary/10 cursor-pointer transition-colors"
+                    >
+                      <div className="flex items-start justify-between">
+                        <div className="flex-1 pr-2">
+                          <div className="flex items-center justify-between">
+                            <h5 className="text-sm font-semibold text-odara-dark">{ocorrencia.titulo}</h5>
+                            <span
+                              className={`text-xs font-medium px-2 py-0.5 rounded border ${
+                                ocorrencia.status
+                                  ? 'text-green-700 bg-green-50 border-green-100'
+                                  : 'text-yellow-700 bg-yellow-50 border-yellow-100'
+                              }`}
+                            >
+                              {ocorrencia.status ? 'Resolvida' : 'Pendente'}
+                            </span>
+                          </div>
+
+                          {ocorrencia.descricao && (
+                            <p className="text-xs text-gray-500 mt-1 line-clamp-2">{ocorrencia.descricao}</p>
+                          )}
+
+                          <div className="flex items-center justify-between text-xs text-gray-400 mt-2">
+                            <span>{ocorrencia.residente ? ocorrencia.residente.nome : 'Residente não informado'}</span>
+                            <span>{ocorrencia.data ? ocorrencia.data.split('-').reverse().join('/') : ''}</span>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
             {/* Mensagem quando não há notificações */}
-            {totalNaoLidas === 0 && (
+            {totalAlertas === 0 && (
               <div className="p-8 text-center">
                 <div className="p-4 bg-odara-primary/10 rounded-full inline-block mb-3">
                   <WrapperIcone icone={Bell} tamanho={24} className="text-odara-primary" />
@@ -598,18 +543,6 @@ const AdminDashboard = () => {
               </div>
             )}
           </div>
-
-          {/* Rodapé do Painel */}
-          {totalNaoLidas > 0 && (
-            <div className="border-t border-gray-200 p-4 sticky bottom-0 bg-white">
-              <button
-                onClick={marcarTodasComoLidas}
-                className="w-full py-3 text-sm font-medium text-odara-primary bg-odara-primary/10 rounded-lg hover:bg-odara-primary/20 active:bg-odara-primary/30 transition-colors"
-              >
-                Marcar todas como lidas
-              </button>
-            </div>
-          )}
         </div>
       </>
     );

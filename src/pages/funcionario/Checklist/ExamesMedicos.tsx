@@ -17,10 +17,8 @@ type Exame = {
   id_consulta: number | null;
   tipo: string;
   laboratorio: string;
-  data_prevista: string;
-  horario_previsto: string;
-  data_realizacao: string | null;
-  horario_realizacao: string | null;
+  data: string;
+  horario: string;
   resultado: string | null;
   status: string;
   observacao: string | null;
@@ -316,11 +314,11 @@ const Exames: React.FC = () => {
             <div className={`w-2 h-2 sm:w-3 sm:h-3 rounded-full mr-2 ${cores.bola}`}></div>
             <div className="flex flex-col sm:flex-row sm:items-center gap-0 sm:gap-2">
               <p className={`text-xs sm:text-sm md:text-base ${cores.text} whitespace-nowrap`}>
-                {formatarData(exame.data_prevista)}
+                {formatarData(exame.data)}
               </p>
               <span className="text-odara-accent mx-1 hidden sm:inline">•</span>
               <span className="text-xs sm:text-sm md:text-base text-odara-accent whitespace-nowrap">
-                {formatarHora(exame.horario_previsto)}
+                {formatarHora(exame.horario)}
               </span>
             </div>
           </div>
@@ -945,9 +943,9 @@ const Exames: React.FC = () => {
           <div className="p-6 bg-odara-offwhite/30">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
               <div>
-                <strong className="text-odara-dark text-sm">Data Prevista:</strong>
+                <strong className="text-odara-dark text-sm">Data:</strong>
                 <p className="text-odara-name mt-1">
-                  {formatarData(exame.data_prevista)} às {formatarHora(exame.horario_previsto)}
+                  {formatarData(exame.data)} às {formatarHora(exame.horario)}
                 </p>
               </div>
               <div>
@@ -1050,8 +1048,8 @@ const Exames: React.FC = () => {
       const { data: examesData, error: examesErr } = await supabase
         .from("exame")
         .select("*")
-        .order('data_prevista', { ascending: true })
-        .order('horario_previsto', { ascending: true });
+        .order('data', { ascending: true })
+        .order('horario', { ascending: true });
 
       if (examesErr) throw examesErr;
       setExames(examesData || []);
@@ -1120,11 +1118,11 @@ const Exames: React.FC = () => {
 
       // Filtro por data
       if (startDate && endDate) {
-        if (exame.data_prevista < startDate || exame.data_prevista > endDate) return false;
+        if (exame.data < startDate || exame.data > endDate) return false;
       } else if (startDate) {
-        if (exame.data_prevista < startDate) return false;
+        if (exame.data < startDate) return false;
       } else if (endDate) {
-        if (exame.data_prevista > endDate) return false;
+        if (exame.data > endDate) return false;
       }
 
       return true;
@@ -1132,15 +1130,15 @@ const Exames: React.FC = () => {
 
     // Ordenar por data e horário
     filtradas.sort((a, b) => {
-      if (a.data_prevista !== b.data_prevista) return a.data_prevista.localeCompare(b.data_prevista);
-      return a.horario_previsto.localeCompare(b.horario_previsto);
+      if (a.data !== b.data) return a.data.localeCompare(b.data);
+      return a.horario.localeCompare(b.horario);
     });
 
     // Agrupar por data
     const grupos: Record<string, ExameComDetalhes[]> = {};
     filtradas.forEach(item => {
-      if (!grupos[item.data_prevista]) grupos[item.data_prevista] = [];
-      grupos[item.data_prevista].push(item);
+      if (!grupos[item.data]) grupos[item.data] = [];
+      grupos[item.data].push(item);
     });
 
     return Object.keys(grupos).sort().map(data => ({
@@ -1162,14 +1160,14 @@ const Exames: React.FC = () => {
         observacao: observacao ?? null,
       };
 
-      // Se o exame foi realizado, registrar data e hora de realização
-      if (newStatus === 'realizado') {
-        updateData.data_realizacao = dataHoje;
-        updateData.horario_realizacao = horarioAgora;
-      } else if (newStatus === 'cancelado' || newStatus === 'reagendado') {
-        updateData.data_realizacao = null;
-        updateData.horario_realizacao = null;
-      }
+      // // Se o exame foi realizado, registrar data e hora de realização
+      // if (newStatus === 'realizado') {
+      //   updateData.data_realizacao = dataHoje;
+      //   updateData.horario_realizacao = horarioAgora;
+      // } else if (newStatus === 'cancelado' || newStatus === 'reagendado') {
+      //   updateData.data_realizacao = null;
+      //   updateData.horario_realizacao = null;
+      // }
 
       const { error } = await supabase
         .from("exame")
@@ -1185,9 +1183,9 @@ const Exames: React.FC = () => {
             ? {
               ...e,
               status: newStatus,
-              observacao: observacao ?? e.observacao,
-              data_realizacao: updateData.data_realizacao,
-              horario_realizacao: updateData.horario_realizacao
+              observacao: observacao ?? e.observacao
+              // data_realizacao: updateData.data_realizacao,
+              // horario_realizacao: updateData.horario_realizacao
             }
             : e
         )

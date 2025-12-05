@@ -12,9 +12,7 @@ export const useCadastroForm = (pertence: Pertence) => {
             nome: '',
             descricao: '',
             estado: '',
-            data_registro: '',
-            status: '',
-            data_baixa: '',
+            data_registro: new Date().toISOString().split('T')[0],
             observacoes: '',
         },
     });
@@ -29,8 +27,6 @@ export const useCadastroForm = (pertence: Pertence) => {
                 descricao: pertence.descricao || '',
                 estado: pertence.estado || '',
                 data_registro: pertence.data_registro || '',
-                status: pertence.status || '',
-                data_baixa: pertence.data_baixa || '',
                 observacoes: pertence.observacoes || '',
             });
         }

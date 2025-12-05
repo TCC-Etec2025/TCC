@@ -10,6 +10,7 @@ export interface Medicamento {
   id: number;
   nome: string;
   dosagem: string;
+  dose: string;
   intervalo: number;
   recorrencia: string;
   horario_inicio: string;

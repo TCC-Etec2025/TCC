@@ -1,6 +1,10 @@
 // src/components/RegistroExames.tsx
 import { useEffect, useState, useRef, useCallback, useMemo } from 'react';
+<<<<<<< HEAD
 import { Filter, Search, CheckCircle, Clock, CircleX, Plus, Edit, Trash, Info, ChevronDown, Check, Calendar, Beaker, AlertTriangle, Download, Microscope } from 'lucide-react';
+=======
+import { Filter, Search, CheckCircle, Clock, CircleX, Plus, Edit, Trash, Info, ChevronDown, Check, Calendar, Microscope, AlertTriangle, Download, RockingChair } from 'lucide-react';
+>>>>>>> c96d00503807a99709f1e811891be2df679a6ac7
 
 import { supabase } from '../../../lib/supabaseClient';
 import toast, { Toaster } from 'react-hot-toast';
@@ -201,8 +205,8 @@ const RegistroExames: React.FC = () => {
           residente:residente(id, nome, quarto),
           consulta:consulta(id, data_consulta, horario, medico)
         `)
-        .order('data_prevista', { ascending: false })
-        .order('horario_previsto', { ascending: true });
+        .order('data', { ascending: false })
+        .order('horario', { ascending: true });
 
       if (error) throw error;
       setExames(data || []);
@@ -643,7 +647,7 @@ const RegistroExames: React.FC = () => {
           <div className="flex flex-wrap justify-center sm:justify-between gap-1 sm:gap-2 text-xs">
             <div className="flex items-center flex-wrap gap-1 justify-center sm:justify-start">
               <span className="bg-odara-accent text-white px-2 py-1 rounded-full text-xs font-medium flex items-center gap-1">
-                <Beaker size={10} className="sm:w-3 sm:h-3" />
+                <RockingChair size={10} className="sm:w-3 sm:h-3" />
                 {exame.residente?.nome || 'Residente'}
               </span>
 

@@ -1,6 +1,5 @@
 import { useState, useMemo } from "react";
 import {CalendarIcon,  ChevronLeft,  ChevronRight } from "lucide-react";
-import Calendar from 'react-calendar';
 
 // Tipos para os dados do calendário
 export interface CalendarItem {

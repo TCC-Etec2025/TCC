@@ -4,7 +4,7 @@ import { Palette, MapPin, Clock, CalendarIcon as CalendarIconLucide, X } from "l
 import Calendar from 'react-calendar';
 import { supabase } from "../../../../lib/supabaseClient";
 import type { BaseContentProps, Atividade } from "../types";
-import { useCalendar,  CalendarControls,  EmptyList,  LoadingSpinner } from "./Calendario/CalendarUtils";
+import { useCalendar, CalendarControls, EmptyList, LoadingSpinner } from "./Calendario/CalendarUtils";
 import { CalendarStyles } from "./Calendario/CalendarStyles";
 import 'react-calendar/dist/Calendar.css';
 
@@ -52,17 +52,38 @@ export const AtividadesContent = ({ idResidente }: BaseContentProps) => {
   // Fetch TUDO (Histórico Completo)
   useEffect(() => {
     const fetchAll = async () => {
+      // Busca os vínculos do residente com atividades
+      const { data: residenteData, error: residenteError } = await supabase
+        .from('atividade_residente')
+        .select('id_atividade')
+        .eq('id_residente', idResidente);
+
+      if (residenteError) {
+        console.error('Erro ao buscar vínculos de atividades do residente:', residenteError);
+        setTodasAtividades([]);
+        setLoading(false);
+        return;
+      }
+
+      const atividadesUnicasIds = (residenteData || []).map(item => item.id_atividade);
+
+      if (!atividadesUnicasIds.length) {
+        setTodasAtividades([]);
+        setLoading(false);
+        return;
+      }
+
+      // Busca apenas as atividades que o residente participa
       const { data, error } = await supabase
         .from('atividade')
         .select('*')
-        .eq('id_residente', idResidente)
+        .in('id', atividadesUnicasIds)
         .order('data', { ascending: false });
 
       if (error) {
         console.error('Erro ao buscar atividades:', error);
         setTodasAtividades([]);
       } else {
-        // Converter para o tipo correto
         const atividadesFormatadas: AtividadeCompleta[] = (data || []).map(item => ({
           id: item.id,
           nome: item.nome,
@@ -73,11 +94,11 @@ export const AtividadesContent = ({ idResidente }: BaseContentProps) => {
           local: item.local,
           observacao: item.observacao,
           status: (item.status as 'pendente' | 'cancelada' | 'concluida' | 'atrasada' | 'ativo') || 'pendente',
-          id_residente: item.id_residente
+          id_residente: idResidente
         }));
-        
         setTodasAtividades(atividadesFormatadas);
       }
+
       setLoading(false);
     };
     fetchAll();
@@ -90,7 +111,7 @@ export const AtividadesContent = ({ idResidente }: BaseContentProps) => {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Coluna do Calendário */}
         <div className="lg:col-span-1">
-          <CalendarControls 
+          <CalendarControls
             dataSelecionada={dataSelecionada}
             navigateMonth={navigateMonth}
             legendLabel="atividades"

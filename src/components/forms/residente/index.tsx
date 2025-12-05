@@ -11,7 +11,7 @@ import { formatDateNumeric } from "../../../utils/date";
 import { formatCPF, removeFormatting } from "../../../utils";
 
 type Props = {
-  residente: Residente;
+  residente?: Residente | null; // antes: Residente
 };
 
 type Responsavel = {
@@ -44,14 +44,14 @@ export default function CadastroResidente({ residente }: Props) {
     acoes: [],
   });
 
-  // Hook do formulário
+  // Hook do formulário (aceita residente opcional)
   const {
     register,
     handleSubmit,
     formState: { errors },
     reset,
     setValue,
-  } = useCadastroForm(residente);
+  } = useCadastroForm(residente as Residente | undefined);
 
   // Função para selecionar arquivo
   const selecionarArquivo = async (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -77,36 +77,36 @@ export default function CadastroResidente({ residente }: Props) {
   const enviarImagem = async (arquivo: File): Promise<string | null> => {
     setEnviandoImagem(true);
     try {
-        const hashAleatorio = Math.random().toString(36).substring(2) + Date.now().toString(36);
-        const extensaoArquivo = arquivo.name.split(".").pop();
-        const nomeArquivo = `${hashAleatorio}.${extensaoArquivo}`; 
-        
-        const caminhoArquivo = `odara/${nomeArquivo}`;
+      const hashAleatorio = Math.random().toString(36).substring(2) + Date.now().toString(36);
+      const extensaoArquivo = arquivo.name.split(".").pop();
+      const nomeArquivo = `${hashAleatorio}.${extensaoArquivo}`;
 
-        const { error: erroUpload } = await supabase.storage
-            .from("odara")
-            .upload(caminhoArquivo, arquivo, {
-                upsert: true 
-            });
+      const caminhoArquivo = `odara/${nomeArquivo}`;
 
-        if (erroUpload) {
-            throw erroUpload;
-        }
+      const { error: erroUpload } = await supabase.storage
+        .from("odara")
+        .upload(caminhoArquivo, arquivo, {
+          upsert: true
+        });
 
-        const { data: { publicUrl } } = supabase.storage
-            .from("odara")
-            .getPublicUrl(caminhoArquivo);
+      if (erroUpload) {
+        throw erroUpload;
+      }
 
-        return publicUrl;
+      const { data: { publicUrl } } = supabase.storage
+        .from("odara")
+        .getPublicUrl(caminhoArquivo);
+
+      return publicUrl;
     } catch (erro) {
-        console.error("Erro ao fazer upload:", erro);
-        const mensagemErro = erro instanceof Error ? erro.message : 'Erro desconhecido ao fazer upload.';
-        alert(`Erro ao fazer upload da imagem: ${mensagemErro}`);
-        return null;
+      console.error("Erro ao fazer upload:", erro);
+      const mensagemErro = erro instanceof Error ? erro.message : 'Erro desconhecido ao fazer upload.';
+      alert(`Erro ao fazer upload da imagem: ${mensagemErro}`);
+      return null;
     } finally {
-        setEnviandoImagem(false);
+      setEnviandoImagem(false);
     }
-};
+  };
 
   // Buscar responsáveis
   useEffect(() => {
@@ -160,7 +160,9 @@ export default function CadastroResidente({ residente }: Props) {
     setCarregando(true);
 
     try {
-      let urlFoto = residente.foto || null;
+      const isEdicao = !!residente?.id;
+
+      let urlFoto = residente?.foto || null;
 
       if (arquivoSelecionado) {
         const urlEnviada = await enviarImagem(arquivoSelecionado);
@@ -186,27 +188,17 @@ export default function CadastroResidente({ residente }: Props) {
         foto: urlFoto,
       };
 
-      let resultado;
-
-      if (residente) {
-        resultado = await supabase
-          .from("residente")
-          .update(dadosParaInserir)
-          .eq("id", residente.id);
-      } else {
-        resultado = await supabase
-          .from("residente")
-          .insert(dadosParaInserir);
-      }
+      const resultado = isEdicao
+        ? await supabase.from("residente").update(dadosParaInserir).eq("id", residente!.id)
+        : await supabase.from("residente").insert(dadosParaInserir);
 
       if (resultado.error) {
         throw resultado.error;
       }
 
-      // Configurar modal de sucesso
       setConfiguracaoModal({
         titulo: "Sucesso!",
-        descricao: `Residente ${dados.nome} ${residente ? "atualizado" : "cadastrado"} com sucesso!`,
+        descricao: `Residente ${dados.nome} ${isEdicao ? "atualizado" : "cadastrado"} com sucesso!`,
         acoes: [
           {
             rotulo: "Acessar Lista",
@@ -218,46 +210,38 @@ export default function CadastroResidente({ residente }: Props) {
             className: "bg-odara-white text-odara-primary hover:bg-odara-primary hover:text-white border border-odara-primary",
             aoClicar: () => navigate("/app/admin"),
           },
-          ...(!residente
-            ? [
-              {
-                rotulo: "Novo Cadastro",
-                className: "bg-odara-accent text-odara-contorno hover:bg-odara-secondary",
-                aoClicar: () => {
-                  reset();
-                  setModalAberto(false);
-                  setPreviewUrl(null);
-                  setArquivoSelecionado(null);
-                }
-              },
-            ]
-            : [
-              {
-                rotulo: "Continuar Editando",
-                className: "bg-odara-accent text-odara-contorno hover:bg-odara-secondary",
-                aoClicar: () => {
-                  setModalAberto(false);
-                }
+          ...(!isEdicao
+            ? [{
+              rotulo: "Novo Cadastro",
+              className: "bg-odara-accent text-odara-contorno hover:bg-odara-secondary",
+              aoClicar: () => {
+                reset();
+                setModalAberto(false);
+                setPreviewUrl(null);
+                setArquivoSelecionado(null);
               }
-            ]
+            }]
+            : [{
+              rotulo: "Continuar Editando",
+              className: "bg-odara-accent text-odara-contorno hover:bg-odara-secondary",
+              aoClicar: () => setModalAberto(false)
+            }]
           ),
         ],
       });
       setModalAberto(true);
 
-      if (!residente) reset();
+      if (!isEdicao) reset();
     } catch (erro) {
-      // Extrair mensagem de erro de forma segura
       const mensagemErro = erro instanceof Error
         ? erro.message
         : typeof erro === 'string'
           ? erro
           : 'Erro desconhecido';
 
-      // Configurar modal de erro
       setConfiguracaoModal({
         titulo: "Erro!",
-        descricao: `Erro ao ${residente ? "editar" : "cadastrar"} residente: ${mensagemErro}`,
+        descricao: `Erro ao ${residente?.id ? "editar" : "cadastrar"} residente: ${mensagemErro}`,
         acoes: [
           {
             rotulo: "Fechar",

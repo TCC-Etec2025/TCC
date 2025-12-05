@@ -5,7 +5,7 @@ import { residenteSchema } from './schema';
 import { type Residente } from '../../../Modelos'
 import { formatCPF } from '../../../utils/formatters';
 
-export const useCadastroForm = (residente: Residente) => {
+export const useCadastroForm = (residente?: Residente) => {
     const form = useForm({
         resolver: yupResolver(residenteSchema),
         defaultValues: {

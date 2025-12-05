@@ -97,7 +97,7 @@ return (
               : "text-odara-contorno/90 hover:bg-odara-contorno/10 hover:text-odara-contorno"
             }`}
         >
-          <item.icon className={`${isMobile && !expanded ? "w-4 h-4" : "w-5 h-5"} flex-shrink-0`} />
+          <item.icon className={`${isMobile && !expanded ? "w-4 h-4" : "w-5 h-5"} shrink-0`} />
           {expanded && <span className="font-medium">{item.label}</span>}
         </button>
       ))}
@@ -109,7 +109,7 @@ return (
         onClick={logout}
         className={`flex items-center gap-3 w-full p-3 rounded-lg font-semibold text-odara-accent hover:bg-odara-contorno/10 hover:text-odara-secondary transition-all ${expanded ? "" : "justify-center"}`}
       >
-        <LogOut className={`${isMobile && !expanded ? "w-4 h-4" : "w-5 h-5"} flex-shrink-0`} />
+        <LogOut className={`${isMobile && !expanded ? "w-4 h-4" : "w-5 h-5"} shrink-0`} />
         {expanded && <span>Fazer logoff</span>}
       </button>
     </div>

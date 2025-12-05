@@ -440,7 +440,7 @@ const RegistroAtividades = () => {
     setAberto: (aberto: boolean) => void;
     ref: React.RefObject<HTMLDivElement>;
     valorSelecionado: string | number | null;
-    onSelecionar: (value: any) => void;
+    onSelecionar: (value: string | number | null) => void;
     tipo: 'status' | 'categoria' | 'residente';
   }) => {
     const opcoes = tipo === 'status'
@@ -466,7 +466,7 @@ const RegistroAtividades = () => {
                 : titulo
             }
           </span>
-          <ChevronDown size={8} className="sm:w-2.5 sm:h-2.5 text-gray-500 flex-shrink-0" />
+          <ChevronDown size={8} className="sm:w-2.5 sm:h-2.5 text-gray-500 shrink-0" />
         </button>
 
         {aberto && (
@@ -533,7 +533,7 @@ const RegistroAtividades = () => {
               setAberto={setFiltroResidenteAberto}
               ref={filtroResidenteRef}
               valorSelecionado={filtros.residenteId}
-              onSelecionar={selecionarResidente}
+              onSelecionar={selecionarResidente as (value: string | number | null) => void}
               tipo="residente"
             />
           </div>
@@ -550,7 +550,7 @@ const RegistroAtividades = () => {
               setAberto={setFiltroCategoriaAberto}
               ref={filtroCategoriaRef}
               valorSelecionado={filtros.categoria || 'todos'}
-              onSelecionar={selecionarCategoria}
+              onSelecionar={selecionarCategoria as (value: string | number | null) => void}
               tipo="categoria"
             />
           </div>
@@ -567,7 +567,7 @@ const RegistroAtividades = () => {
               setAberto={setFiltroStatusAberto}
               ref={filtroStatusRef}
               valorSelecionado={filtros.status || 'todos'}
-              onSelecionar={selecionarStatus}
+              onSelecionar={selecionarStatus as (value: string | number | null) => void}
               tipo="status"
             />
           </div>
@@ -726,7 +726,7 @@ const RegistroAtividades = () => {
                 .map(residente => (
                   <span key={residente} className="bg-odara-accent text-white px-2 py-1 rounded-full text-xs font-medium flex items-center gap-1">
                     <RockingChair size={9} className="sm:w-2.5 sm:h-2.5" />
-                    <span className="truncate max-w-[80px] sm:max-w-none">{residente}</span>
+                    <span className="truncate max-w-20 sm:max-w-none">{residente}</span>
                   </span>
                 ))}
               {atividade.residentes.length > 3 && (
@@ -820,7 +820,7 @@ const RegistroAtividades = () => {
     return (
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 mb-4 sm:mb-6">
         <div className="flex items-start sm:items-center gap-2 sm:gap-3 w-full">
-          <Palette size={20} className='sm:w-6 sm:h-6 lg:w-8 lg:h-8 text-odara-accent flex-shrink-0 mt-1 sm:mt-0' />
+          <Palette size={20} className='sm:w-6 sm:h-6 lg:w-8 lg:h-8 text-odara-accent shrink-0 mt-1 sm:mt-0' />
           
           <div className="flex-1 min-w-0 relative">
             <div className="flex items-center gap-0.5 sm:gap-2">
@@ -838,7 +838,7 @@ const RegistroAtividades = () => {
                 }}
                 onMouseEnter={() => window.innerWidth >= 640 && setInfoVisivel(true)}
                 onMouseLeave={() => window.innerWidth >= 640 && setInfoVisivel(false)}
-                className="flex-shrink-0 w-5 h-5 sm:w-6 sm:h-6 lg:w-7 lg:h-7 flex items-center justify-center rounded-full hover:bg-gray-100 transition-colors ml-1"
+                className="shrink-0 w-5 h-5 sm:w-6 sm:h-6 lg:w-7 lg:h-7 flex items-center justify-center rounded-full hover:bg-gray-100 transition-colors ml-1"
                 aria-label="Informações"
               >
                 <Info size={12} className="sm:w-3.5 sm:h-3.5 lg:w-4 lg:h-4 text-odara-accent" />

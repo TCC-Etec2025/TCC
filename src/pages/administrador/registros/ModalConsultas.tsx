@@ -78,8 +78,8 @@ const ModalConsultas: React.FC<ModalConsultaProps> = ({ consulta, isOpen, onClos
     handleSubmit,
     reset,
     formState: { errors }
-  } = useForm<FormValues>({
-    resolver: yupResolver(schema) as any,
+  } = useForm({
+    resolver: yupResolver(schema),
     defaultValues: {
       id: null,
       id_residente: 0,
@@ -183,9 +183,9 @@ const ModalConsultas: React.FC<ModalConsultaProps> = ({ consulta, isOpen, onClos
       setTimeout(() => {
         onClose();
       }, 500);
-    } catch (err: any) {
+    } catch (err) {
       console.error('Erro ao salvar consulta:', err);
-      toast.error(`Erro ao salvar consulta: ${err.message}`);
+      toast.error(`Erro ao salvar consulta`);
     } finally {
       setIsSubmitting(false);
     }
@@ -226,7 +226,7 @@ const ModalConsultas: React.FC<ModalConsultaProps> = ({ consulta, isOpen, onClos
 
       <div className="w-full max-w-4xl bg-white rounded-2xl shadow-lg overflow-hidden max-h-[90vh] flex flex-col border-l-4 border-odara-primary">
         {/* Header do Modal */}
-        <div className="border-b-1 border-odara-primary bg-odara-primary/70 text-odara-accent p-6">
+        <div className="border-b border-odara-primary bg-odara-primary/70 text-odara-accent p-6">
           <div className="flex justify-between items-center">
             <h2 className="text-2xl font-bold">
               {consulta ? 'Editar Consulta Médica' : 'Nova Consulta Médica'}
@@ -256,7 +256,7 @@ const ModalConsultas: React.FC<ModalConsultaProps> = ({ consulta, isOpen, onClos
 
             {/* Linha 1 - Residente */}
             <div>
-              <label className="block text-medium text-odara-dark mb-2 flex items-center gap-1">
+              <label className="block text-medium text-odara-dark mb-2 items-center gap-1">
                 <User size={16} className="text-odara-accent" />
                 Residente *
               </label>
@@ -281,7 +281,7 @@ const ModalConsultas: React.FC<ModalConsultaProps> = ({ consulta, isOpen, onClos
             {/* Linha 2 - Data, Horário e Médico */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <div>
-                <label className="block text-medium text-odara-dark mb-2 flex items-center gap-1">
+                <label className="block text-medium text-odara-dark mb-2 items-center gap-1">
                   <Calendar size={16} className="text-odara-accent" />
                   Data *
                 </label>
@@ -298,7 +298,7 @@ const ModalConsultas: React.FC<ModalConsultaProps> = ({ consulta, isOpen, onClos
               </div>
 
               <div>
-                <label className="block text-medium text-odara-dark mb-2 flex items-center gap-1">
+                <label className="block text-medium text-odara-dark mb-2 items-center gap-1">
                   <Clock size={16} className="text-odara-accent" />
                   Horário *
                 </label>
@@ -315,7 +315,7 @@ const ModalConsultas: React.FC<ModalConsultaProps> = ({ consulta, isOpen, onClos
               </div>
 
               <div>
-                <label className="block text-medium text-odara-dark mb-2 flex items-center gap-1">
+                <label className="block text-medium text-odara-dark mb-2 items-center gap-1">
                   <Stethoscope size={16} className="text-odara-accent" />
                   Médico *
                 </label>
@@ -335,7 +335,7 @@ const ModalConsultas: React.FC<ModalConsultaProps> = ({ consulta, isOpen, onClos
 
             {/* Motivo da Consulta  */}
             <div>
-              <label className="block text-medium text-odara-dark mb-2 flex items-center gap-1">
+              <label className="block text-medium text-odara-dark mb-2 items-center gap-1">
                 <FileText size={16} className="text-odara-accent" />
                 Título da Consulta *
               </label>
@@ -355,7 +355,7 @@ const ModalConsultas: React.FC<ModalConsultaProps> = ({ consulta, isOpen, onClos
             {/* Tratamento Indicado e Observações */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <label className="block text-medium text-odara-dark mb-2 flex items-center gap-1">
+                <label className="block text-medium text-odara-dark mb-2 items-center gap-1">
                   <Pill size={16} className="text-odara-accent" />
                   Tratamento Indicado
                 </label>
@@ -368,7 +368,7 @@ const ModalConsultas: React.FC<ModalConsultaProps> = ({ consulta, isOpen, onClos
               </div>
 
               <div>
-                <label className="block text-medium text-odara-dark mb-2 flex items-center gap-1">
+                <label className="block text-medium text-odara-dark mb-2 items-center gap-1">
                   <AlertCircle size={16} className="text-odara-accent" />
                   Observações
                 </label>

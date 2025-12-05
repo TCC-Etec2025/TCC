@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { FaFileAlt, FaSearch, FaEye, FaEdit, FaDownload, FaClock, FaCheckCircle, FaExclamationTriangle } from 'react-icons/fa';
 
 const PaginaRelatorios = () => {

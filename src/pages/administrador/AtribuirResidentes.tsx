@@ -61,17 +61,9 @@ export const ModalAtribuicaoResidentes: React.FC<ModalProps> = ({
     const [salvando, setSalvando] = useState(false);
 
     useEffect(() => {
-        if (isOpen && funcionarioId) {
-            carregarDados();
-        } else {
-            limparEstado();
-        }
+        if (!isOpen) return;
+        carregarDados();
     }, [isOpen, funcionarioId]);
-
-    const limparEstado = () => {
-        setBusca('');
-        setSelecionados(new Set());
-    };
 
     const carregarDados = async () => {
         if (!funcionarioId) return;

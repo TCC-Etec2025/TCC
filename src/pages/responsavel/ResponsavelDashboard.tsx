@@ -2,8 +2,9 @@ import { useState, useEffect, useCallback } from "react";
 import {
   Home, Pill, Apple, Coffee, Banana, Cookie, Soup, GlassWater, CookingPot, Palette, Bell,
   ChevronLeft, ChevronRight, User, Calendar as CalendarIcon, Microscope,
-  Clock, Eye, Loader2, Calendar, UsersRound, X, ChevronRight as ChevronRightIcon,
-  RockingChair
+  Clock, Loader2, Calendar, UsersRound, X, ChevronRight as ChevronRightIcon,
+  RockingChair,
+  type LucideIcon
 } from "lucide-react";
 import { supabase } from "../../lib/supabaseClient";
 import { useUser } from "../../context/UserContext";
@@ -79,7 +80,7 @@ const DashboardResponsavel = () => {
     tamanho = 24,
     className = ""
   }: {
-    icone: React.ComponentType<any>;
+    icone: LucideIcon;
     tamanho?: number;
     className?: string;
   }) => (

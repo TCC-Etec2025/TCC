@@ -47,7 +47,7 @@ export const ModalRoot = ({ isOpen, onClose, tipo, idResidente  }: Props) => {
     <div className="fixed inset-0 bg-odara-offwhite/50 flex items-center justify-center z-50 p-4 backdrop-blur-sm animate-in fade-in duration-200">
       <div className="bg-white rounded-2xl max-w-7xl w-full max-h-[90vh] flex flex-col shadow-2xl overflow-hidden border-l-4 border-odara-primary">
         {/* Header */}
-        <div className="border-b-1 border-odara-primary bg-odara-primary/70 text-odara-accent p-6">
+        <div className="border-b border-odara-primary bg-odara-primary/70 text-odara-accent p-6">
           <div className="flex justify-between items-center">
             <h2 className="text-2xl font-bold">{getTitulo()}</h2>
 

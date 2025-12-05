@@ -235,7 +235,7 @@ const ModalAtividades = ({ atividade, isOpen, onClose }: ModalAtividadesProps) =
 
             <div className="w-full max-w-4xl bg-white rounded-2xl shadow-lg overflow-hidden max-h-[90vh] flex flex-col border-l-4 border-odara-primary">
                 {/* Header do Modal */}
-                <div className="border-b-1 border-odara-primary bg-odara-primary/70 text-odara-accent p-6">
+                <div className="border-b border-odara-primary bg-odara-primary/70 text-odara-accent p-6">
                     <div className="flex justify-between items-center">
                         <h2 className="text-2xl font-bold">
                             {atividade ? 'Editar Atividade' : 'Adicionar Nova Atividade'}

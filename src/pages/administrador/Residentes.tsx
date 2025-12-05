@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Search, Plus, Edit, Trash2, User, Phone, Mail, AlertTriangle, Loader2, Eye, ChevronRight, MoreVertical } from 'lucide-react';
+import { Search, Plus, Edit, Trash2, User, Phone, Mail, AlertTriangle, Loader2, Eye, MoreVertical } from 'lucide-react';
 import { supabase } from '../../lib/supabaseClient';
 import { type Residente } from '../../Modelos';
 import { differenceInYears } from 'date-fns';
@@ -60,9 +60,9 @@ const Residentes: React.FC = () => {
 
       setListaResidentes(residentesComResponsaveis);
 
-    } catch (erro: any) {
+    } catch (erro) {
       console.error('Erro ao buscar residentes:', erro);
-      toast.error('Erro ao buscar residentes: ' + (erro?.message ?? String(erro)));
+      toast.error('Erro ao buscar residentes');
     } finally {
       setCarregando(false);
     }
@@ -106,9 +106,9 @@ const Residentes: React.FC = () => {
       ));
 
       toast.success(`Residente ${novoStatus ? 'ativado' : 'inativado'} com sucesso!`);
-    } catch (erro: any) {
+    } catch (erro) {
       console.error('Erro ao alterar status:', erro);
-      toast.error('Erro ao alterar status: ' + (erro?.message ?? String(erro)));
+      toast.error('Erro ao alterar status');
     } finally {
       setAtualizandoStatus(null);
     }
@@ -164,9 +164,9 @@ const Residentes: React.FC = () => {
       // Atualiza a lista localmente
       setListaResidentes(listaResidentes.filter(residente => residente.id !== residenteParaExcluir));
       toast.success('Residente excluído com sucesso!');
-    } catch (erro: any) {
+    } catch (erro) {
       console.error('Erro ao excluir residente:', erro);
-      toast.error('Erro ao excluir residente: ' + (erro?.message ?? String(erro)));
+      toast.error('Erro ao excluir residente');
     } finally {
       fecharModalExclusao();
     }
@@ -183,7 +183,7 @@ const Residentes: React.FC = () => {
     const nomeResidente = residente?.nome || '';
 
     return (
-      <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-[100] p-4">
+      <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-100 p-4">
         <div className="bg-white rounded-2xl shadow-lg p-6 max-w-md w-full">
           <div className="text-center">
             {/* Ícone de alerta */}
@@ -240,7 +240,7 @@ const Residentes: React.FC = () => {
         <div className="p-4 border-b border-gray-100 bg-odara-offwhite/30">
           <div className="flex items-start justify-between">
             <div className="flex items-center gap-3">
-              <div className="bg-odara-primary/20 rounded-full p-2 flex-shrink-0">
+              <div className="bg-odara-primary/20 rounded-full p-2 shrink-0">
                 {residente.foto ? (
                   <img
                     src={residente.foto}
@@ -351,20 +351,20 @@ const Residentes: React.FC = () => {
             {residente.responsavel ? (
               <div className="space-y-2">
                 <div className="flex items-center gap-2">
-                  <User className="h-4 w-4 text-odara-primary flex-shrink-0" />
+                  <User className="h-4 w-4 text-odara-primary shrink-0" />
                   <span className="text-sm font-medium text-odara-dark truncate">
                     {residente.responsavel.nome}
                   </span>
                 </div>
                 <div className="flex items-center gap-2">
-                  <Phone className="h-4 w-4 text-odara-primary flex-shrink-0" />
+                  <Phone className="h-4 w-4 text-odara-primary shrink-0" />
                   <span className="text-sm text-gray-600 truncate">
                     {formatarTelefone(residente.responsavel.telefone_principal)}
                   </span>
                 </div>
                 {residente.responsavel.email && (
                   <div className="flex items-center gap-2">
-                    <Mail className="h-4 w-4 text-odara-primary flex-shrink-0" />
+                    <Mail className="h-4 w-4 text-odara-primary shrink-0" />
                     <span className="text-sm text-gray-600 truncate">
                       {residente.responsavel.email}
                     </span>
@@ -417,7 +417,7 @@ const Residentes: React.FC = () => {
           </div>
 
           {/* Botão Cadastrar Residente */}
-          <div className="flex-shrink-0 w-full sm:w-auto">
+          <div className="shrink-0 w-full sm:w-auto">
             <button
               className="bg-odara-accent hover:bg-odara-secondary text-white font-medium py-2 px-4 rounded-lg flex items-center justify-center transition-colors w-full sm:w-auto"
               onClick={() => navigate('/app/admin/residente/formulario')}
@@ -449,7 +449,7 @@ const Residentes: React.FC = () => {
           <div className="bg-white rounded-xl shadow-sm overflow-hidden border-l-4 border-odara-primary">
             <div className="overflow-x-auto">
               <table className="w-full text-sm">
-                <thead className="border-b-1 border-odara-primary bg-odara-primary/10 text-odara-primary">
+                <thead className="border-b border-odara-primary bg-odara-primary/10 text-odara-primary">
                   <tr>
                     <th className="p-4 text-left font-semibold align-middle">Residente</th>
                     <th className="p-4 text-left font-semibold align-middle">Sexo</th>
@@ -470,7 +470,7 @@ const Residentes: React.FC = () => {
                       <td className="p-4">
                         <div className="flex items-center gap-3 min-w-[200px]">
                           {/* Ícone */}
-                          <div className="bg-odara-primary/20 rounded-full p-2 flex-shrink-0">
+                          <div className="bg-odara-primary/20 rounded-full p-2 shrink-0">
                             {residente.foto ? (
                               <img
                                 src={residente.foto}

@@ -428,7 +428,7 @@ const RegistroMedicamentos: React.FC = () => {
     setAberto: (aberto: boolean) => void;
     ref: React.RefObject<HTMLDivElement>;
     valorSelecionado: string | number | null;
-    onSelecionar: (value: any) => void;
+    onSelecionar: (value: string | number | null) => void;
     tipo: 'residente' | 'status';
   }) => {
     const residentesUnicos = obterResidentesUnicos();
@@ -450,7 +450,7 @@ const RegistroMedicamentos: React.FC = () => {
                 : titulo
             }
           </span>
-          <ChevronDown size={10} className="sm:w-3 sm:h-3 text-gray-500 flex-shrink-0" />
+          <ChevronDown size={10} className="sm:w-3 sm:h-3 text-gray-500 shrink-0" />
         </button>
 
         {aberto && (
@@ -658,7 +658,7 @@ const RegistroMedicamentos: React.FC = () => {
                 setAberto={setFiltroResidenteAberto}
                 ref={filtroResidenteRef}
                 valorSelecionado={filtros.residenteId}
-                onSelecionar={selecionarResidente}
+                onSelecionar={selecionarResidente as (value: string | number | null) => void}
                 tipo="residente"
               />
             </div>
@@ -676,14 +676,14 @@ const RegistroMedicamentos: React.FC = () => {
                 setAberto={setFiltroStatusAberto}
                 ref={filtroStatusRef}
                 valorSelecionado={filtros.status || 'todos'}
-                onSelecionar={selecionarStatus}
+                onSelecionar={selecionarStatus  as (value: string | number | null) => void}
                 tipo="status"
               />
             </div>
           </div>
 
           {/* Botão Limpar Filtros/Busca */}
-          <div className="flex md:items-end gap-2 pt-1 md:pt-0 md:flex-shrink-0">
+          <div className="flex md:items-end gap-2 pt-1 md:pt-0 md:shrink-0">
             <button
               onClick={limparFiltros}
               className="bg-odara-accent hover:bg-odara-secondary text-white font-semibold py-2 px-3 sm:px-4 rounded-lg flex items-center transition text-xs sm:text-sm h-9 sm:h-10 w-full md:w-auto justify-center"
@@ -745,7 +745,7 @@ const RegistroMedicamentos: React.FC = () => {
     const nomeMedicamento = medicamento?.nome || '';
 
     return (
-      <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-[100] p-4 animate-fade-in">
+      <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-100 p-4 animate-fade-in">
         <div className="bg-white rounded-2xl shadow-xl p-4 sm:p-6 max-w-md w-full animate-scale-in">
           <div className="text-center">
             {/* Ícone de alerta */}
@@ -872,7 +872,7 @@ const Cabecalho = () => {
   return (
     <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
       <div className="flex items-start sm:items-center gap-3 w-full">
-        <Pill size={24} className='sm:w-7 sm:h-7 lg:w-8 lg:h-8 text-odara-accent flex-shrink-0 mt-1 sm:mt-0' />
+        <Pill size={24} className='sm:w-7 sm:h-7 lg:w-8 lg:h-8 text-odara-accent shrink-0 mt-1 sm:mt-0' />
         
         <div className="flex-1 min-w-0 relative">
           <div className="flex items-center gap-0.1 sm:gap-2">
@@ -882,7 +882,7 @@ const Cabecalho = () => {
             
             <button
               onClick={() => setInfoVisivel(!infoVisivel)}
-              className="flex-shrink-0 w-5 h-5 sm:w-6 sm:h-6 lg:w-7 lg:h-7 flex items-center justify-center rounded-full hover:bg-gray-100 transition-colors ml-1"
+              className="shrink-0 w-5 h-5 sm:w-6 sm:h-6 lg:w-7 lg:h-7 flex items-center justify-center rounded-full hover:bg-gray-100 transition-colors ml-1"
               aria-label="Informações"
             >
               <Info size={12} className="sm:w-3.5 sm:h-3.5 lg:w-4 lg:h-4 text-odara-accent" />

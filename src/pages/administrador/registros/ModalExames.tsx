@@ -10,14 +10,15 @@ import toast, { Toaster } from 'react-hot-toast';
 type Residente = {
     id: number;
     nome: string;
+    quarto?: string | null;
 };
 
 type Consulta = {
     id: number;
     data_consulta: string;
     horario: string;
-    medico?: string;
-    id_residente?: number;
+    medico: string;
+    id_residente?: number | null;
 };
 
 type Exame = {
@@ -26,16 +27,15 @@ type Exame = {
     id_residente: number;
     tipo: string;
     laboratorio: string;
-    data_prevista: string;
-    horario_previsto: string;
-    data_realizado: string | null;
-    horario_realizado: string | null;
+    data: string;
+    horario: string;
     resultado: string | null;
     arquivo_resultado: string | null;
     status: string;
     observacao: string | null;
-    residente: Residente;
-    consulta: Consulta | null;
+    criado_em?: string | null;
+    residente?: Residente | null;
+    consulta?: Consulta | null;
 };
 
 type ModalExameProps = {
@@ -54,10 +54,8 @@ const schema = yup.object({
         .nullable(),
     tipo: yup.string().required('Tipo de exame é obrigatório'),
     laboratorio: yup.string().nullable(),
-    data_prevista: yup.string().required('Data prevista é obrigatória'),
-    horario_previsto: yup.string().required('Horário previsto é obrigatório').matches(/^\d{2}:\d{2}$/, 'Formato HH:MM'),
-    data_realizado: yup.string().nullable(),
-    horario_realizado: yup.string().nullable()
+    data: yup.string().required('Data é obrigatória'),
+    horario: yup.string().required('Horário é obrigatório').matches(/^\d{2}:\d{2}$/, 'Formato HH:MM')
 }).required();
 
 type FormValues = yup.InferType<typeof schema>;
@@ -80,10 +78,8 @@ const ModalExame: React.FC<ModalExameProps> = ({ exame, isOpen, onClose }) => {
             id_consulta: null,
             tipo: '',
             laboratorio: '',
-            data_prevista: new Date().toISOString().split('T')[0],
-            horario_previsto: '',
-            data_realizado: '',
-            horario_realizado: ''
+            data: new Date().toISOString().split('T')[0],
+            horario: '',
         }
     });
 
@@ -112,10 +108,8 @@ const ModalExame: React.FC<ModalExameProps> = ({ exame, isOpen, onClose }) => {
             id_consulta: exame ? exame.id_consulta : null,
             tipo: exame ? exame.tipo : '',
             laboratorio: exame ? exame.laboratorio : '',
-            data_prevista: exame ? exame.data_prevista : new Date().toISOString().split('T')[0],
-            horario_previsto: exame ? exame.horario_previsto : '',
-            data_realizado: exame ? exame.data_realizado : '',
-            horario_realizado: exame ? exame.horario_realizado : ''
+            data: exame ? exame.data : new Date().toISOString().split('T')[0],
+            horario: exame ? exame.horario : '',
         });
     }, [exame, reset, isOpen]);
 
@@ -126,10 +120,8 @@ const ModalExame: React.FC<ModalExameProps> = ({ exame, isOpen, onClose }) => {
                 id_consulta: values.id_consulta || null,
                 tipo: values.tipo,
                 laboratorio: values.laboratorio || null,
-                data_prevista: values.data_prevista,
-                horario_previsto: values.horario_previsto,
-                data_realizado: values.data_realizado || null,
-                horario_realizado: values.horario_realizado || null,
+                data: values.data,
+                horario: values.horario
             };
 
             if (values.id) {
@@ -237,46 +229,34 @@ const ModalExame: React.FC<ModalExameProps> = ({ exame, isOpen, onClose }) => {
 
                     <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                         <div>
-                            <label className="block font-medium text-odara-dark mb-1">Data Prevista *</label>
+                            <label className="block font-medium text-odara-dark mb-1">Data *</label>
                             <input
                                 type="date"
-                                {...register('data_prevista')}
-                                className={`w-full border px-3 py-2 rounded focus:ring-2 focus:ring-odara-primary ${errors.data_prevista ? 'border-red-600' : ''
+                                {...register('data')}
+                                className={`w-full border px-3 py-2 rounded focus:ring-2 focus:ring-odara-primary ${errors.data ? 'border-red-600' : ''
                                     }`}
                             />
-                            {errors.data_prevista && (
+                            {errors.data && (
                                 <p className="text-red-600 text-sm mt-1 flex items-center gap-1">
-                                    <FaExclamationCircle /> {errors.data_prevista.message}
+                                    <FaExclamationCircle /> {errors.data.message}
                                 </p>
                             )}
                         </div>
 
                         <div>
-                            <label className="block font-medium text-odara-dark mb-1">Horário Previsto *</label>
+                            <label className="block font-medium text-odara-dark mb-1">Horário *</label>
                             <input
                                 type="time"
-                                {...register('horario_previsto')}
-                                className={`w-full border px-3 py-2 rounded focus:ring-2 focus:ring-odara-primary ${errors.horario_previsto ? 'border-red-600' : ''
+                                {...register('horario')}
+                                className={`w-full border px-3 py-2 rounded focus:ring-2 focus:ring-odara-primary ${errors.horario ? 'border-red-600' : ''
                                     }`}
                             />
-                            {errors.horario_previsto && (
+                            {errors.horario && (
                                 <p className="text-red-600 text-sm mt-1 flex items-center gap-1">
-                                    <FaExclamationCircle /> {errors.horario_previsto.message}
+                                    <FaExclamationCircle /> {errors.horario.message}
                                 </p>
                             )}
                         </div>
-                        {exame && (
-                            <div>
-                                <div>
-                                    <label className="block font-medium text-odara-dark mb-1">Data Realizado</label>
-                                    <input type="date" {...register('data_realizado')} className="w-full border px-3 py-2 rounded focus:ring-2 focus:ring-odara-primary" />
-                                </div>
-                                <div>
-                                    <label className="block font-medium text-odara-dark mb-1">Horário Realizado</label>
-                                    <input type="time" {...register('horario_realizado')} className="w-full border px-3 py-2 rounded focus:ring-2 focus:ring-odara-primary" />
-                                </div>
-                            </div>
-                        )}
                     </div>
 
                     <div className="flex justify-end gap-3 pt-4 border-t border-gray-200">

@@ -65,6 +65,7 @@ export default function RecuperarSenha() {
       setIsLoading(false);
 
     } catch (err) {
+      console.error(err);
       setServerError("Erro interno ao processar sua solicitação. Tente novamente.");
       setIsLoading(false);
     }

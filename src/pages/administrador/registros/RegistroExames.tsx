@@ -1,6 +1,6 @@
 // src/components/RegistroExames.tsx
 import { useEffect, useState, useRef, useCallback, useMemo } from 'react';
-import { Filter, Search, CheckCircle, Clock, CircleX, Plus, Edit, Trash, Info, ChevronDown, Check, FileText, Calendar, Beaker, AlertTriangle, Download } from 'lucide-react';
+import { Filter, Search, CheckCircle, Clock, CircleX, Plus, Edit, Trash, Info, ChevronDown, Check, Calendar, Beaker, AlertTriangle, Download } from 'lucide-react';
 
 import { supabase } from '../../../lib/supabaseClient';
 import toast, { Toaster } from 'react-hot-toast';
@@ -19,6 +19,7 @@ type Consulta = {
   data_consulta: string;
   horario: string;
   medico: string;
+  id_residente?: number | null;
 };
 
 type Exame = {
@@ -27,15 +28,13 @@ type Exame = {
   id_residente: number;
   tipo: string;
   laboratorio: string;
-  data_prevista: string;
-  horario_previsto: string;
-  data_realizado: string | null;
-  horario_realizado: string | null;
+  data: string;
+  horario: string;
   resultado: string | null;
   arquivo_resultado: string | null;
   status: string;
   observacao: string | null;
-  criado_em?: string;
+  criado_em?: string | null;
   residente?: Residente | null;
   consulta?: Consulta | null;
 };
@@ -366,26 +365,16 @@ const RegistroExames: React.FC = () => {
           return false;
         }
 
-        // Filtro por data
-        const dataPrevista = exame.data_prevista;
-        const dataRealizado = exame.data_realizado;
-        const dataReferencia = dataRealizado || dataPrevista;
-
         // Filtro "Até a data" (endDate)
-        if (filtros.endDate && dataPrevista > filtros.endDate) {
+        if (filtros.endDate && exame.data > filtros.endDate) {
           return false;
         }
 
         // Filtro "A partir da data" (startDate)
         if (filtros.startDate) {
-          if (dataPrevista >= filtros.startDate) {
+          if (exame.data >= filtros.startDate) {
             return true;
-          }
-          
-          if (dataRealizado && dataRealizado >= filtros.startDate) {
-            return true;
-          }
-          
+          }          
           return false;
         }
 
@@ -393,9 +382,9 @@ const RegistroExames: React.FC = () => {
       })
       .sort((a, b) => {
         // Ordenar por data prevista (mais recente primeiro)
-        const dataA = new Date(`${a.data_prevista}T${a.horario_previsto}`).getTime();
-        const dataB = new Date(`${b.data_prevista}T${b.horario_previsto}`).getTime();
-        
+        const dataA = new Date(`${a.data}T${a.horario}`).getTime();
+        const dataB = new Date(`${b.data}T${b.horario}`).getTime();
+
         return dataB - dataA;
       });
   }, [exames, searchTerm, filtros]);
@@ -466,7 +455,7 @@ const RegistroExames: React.FC = () => {
     setAberto: (aberto: boolean) => void;
     ref: React.RefObject<HTMLDivElement>;
     valorSelecionado: string | number | null;
-    onSelecionar: (value: any) => void;
+    onSelecionar: (value: string | number | null) => void;
     tipo: 'residente' | 'status';
   }) => {
     const residentesUnicos = obterResidentesUnicos();
@@ -488,7 +477,7 @@ const RegistroExames: React.FC = () => {
                 : titulo
             }
           </span>
-          <ChevronDown size={10} className="sm:w-3 sm:h-3 text-gray-500 flex-shrink-0" />
+          <ChevronDown size={10} className="sm:w-3 sm:h-3 text-gray-500 shrink-0" />
         </button>
 
         {aberto && (
@@ -555,16 +544,8 @@ const RegistroExames: React.FC = () => {
             <div className={`w-2 h-2 sm:w-3 sm:h-3 rounded-full mr-2 sm:mr-3 ${cores.bola}`}></div>
             <p className={`text-xs sm:text-sm md:text-base text-odara-dark`}>
               <span className='font-semibold'>
-                {exame.status === 'realizado' && exame.data_realizado
-                  ? `Realizado: ${formatarDataHora(exame.data_realizado, exame.horario_realizado || '')}`
-                  : `Previsto: ${formatarDataHora(exame.data_prevista, exame.horario_previsto)}`
-                }
+                {`Realizado: ${formatarDataHora(exame.data, exame.horario)}`}
               </span>
-              {exame.status === 'realizado' && exame.data_realizado && (
-                <span className="text-odara-accent ml-1 sm:ml-2">
-                  • Previsto: {formatarDataHora(exame.data_prevista, exame.horario_previsto)}
-                </span>
-              )}
             </p>
           </div>
 
@@ -643,18 +624,9 @@ const RegistroExames: React.FC = () => {
               <div>
                 <strong className="text-odara-dark text-xs sm:text-sm">Data de Previsão:</strong>
                 <span className="text-odara-name mt-0.5 sm:mt-1 text-xs sm:text-sm block">
-                  {formatarDataHora(exame.data_prevista, exame.horario_previsto)}
+                  {formatarDataHora(exame.data, exame.horario)}
                 </span>
               </div>
-
-              {exame.data_realizado && (
-                <div>
-                  <strong className="text-odara-dark text-xs sm:text-sm">Data de Realização:</strong>
-                  <span className="text-odara-name mt-0.5 sm:mt-1 text-xs sm:text-sm block">
-                    {formatarDataHora(exame.data_realizado, exame.horario_realizado || '')}
-                  </span>
-                </div>
-              )}
 
               <div>
                 <strong className="text-odara-dark text-xs sm:text-sm">Observações:</strong>
@@ -713,7 +685,7 @@ const RegistroExames: React.FC = () => {
                 setAberto={setFiltroResidenteAberto}
                 ref={filtroResidenteRef}
                 valorSelecionado={filtros.residenteId}
-                onSelecionar={selecionarResidente}
+                onSelecionar={selecionarResidente as (value: string | number | null) => void}
                 tipo="residente"
               />
             </div>
@@ -731,14 +703,14 @@ const RegistroExames: React.FC = () => {
                 setAberto={setFiltroStatusAberto}
                 ref={filtroStatusRef}
                 valorSelecionado={filtros.status || 'todos'}
-                onSelecionar={selecionarStatus}
+                onSelecionar={selecionarStatus as (value: string | number | null) => void}
                 tipo="status"
               />
             </div>
           </div>
 
           {/* Botão Limpar Filtros/Busca */}
-          <div className="flex md:items-end gap-2 pt-1 md:pt-0 md:flex-shrink-0">
+          <div className="flex md:items-end gap-2 pt-1 md:pt-0 md:shrink-0">
             <button
               onClick={limparFiltros}
               className="bg-odara-accent hover:bg-odara-secondary text-white font-semibold py-2 px-3 sm:px-4 rounded-lg flex items-center transition text-xs sm:text-sm h-9 sm:h-10 w-full md:w-auto justify-center"
@@ -800,7 +772,7 @@ const RegistroExames: React.FC = () => {
     const nomeExame = exame?.tipo || '';
 
     return (
-      <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-[100] p-4 animate-fade-in">
+      <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-100 p-4 animate-fade-in">
         <div className="bg-white rounded-2xl shadow-xl p-4 sm:p-6 max-w-md w-full animate-scale-in">
           <div className="text-center">
             {/* Ícone de alerta */}
@@ -928,7 +900,7 @@ const RegistroExames: React.FC = () => {
     return (
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
         <div className="flex items-start sm:items-center gap-3 w-full">
-          <Beaker size={24} className='sm:w-7 sm:h-7 lg:w-8 lg:h-8 text-odara-accent flex-shrink-0 mt-1 sm:mt-0' />
+          <Beaker size={24} className='sm:w-7 sm:h-7 lg:w-8 lg:h-8 text-odara-accent shrink-0 mt-1 sm:mt-0' />
           
           <div className="flex-1 min-w-0 relative">
             <div className="flex items-center gap-0.1 sm:gap-2">
@@ -938,7 +910,7 @@ const RegistroExames: React.FC = () => {
               
               <button
                 onClick={() => setInfoVisivel(!infoVisivel)}
-                className="flex-shrink-0 w-5 h-5 sm:w-6 sm:h-6 lg:w-7 lg:h-7 flex items-center justify-center rounded-full hover:bg-gray-100 transition-colors ml-1"
+                className="shrink-0 w-5 h-5 sm:w-6 sm:h-6 lg:w-7 lg:h-7 flex items-center justify-center rounded-full hover:bg-gray-100 transition-colors ml-1"
                 aria-label="Informações"
               >
                 <Info size={12} className="sm:w-3.5 sm:h-3.5 lg:w-4 lg:h-4 text-odara-accent" />

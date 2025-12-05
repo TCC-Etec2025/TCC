@@ -78,7 +78,6 @@ const RegistroAlimentar = () => {
   /* Estados principais */
   const [registros, setRegistros] = useState<RegistroAlimentar[]>([]);
   const [residentes, setResidentes] = useState<Residente[]>([]);
-  const [funcionarios, setFuncionarios] = useState<Funcionario[]>([]);
   const [registroSelecionado, setRegistroSelecionado] = useState<RegistroAlimentar | null>(null);
   const [loading, setLoading] = useState(true);
   const [modalAberto, setModalAberto] = useState(false);
@@ -107,7 +106,6 @@ const RegistroAlimentar = () => {
   });
 
   /* Estados de UI */
-  const [infoVisivel, setInfoVisivel] = useState(false);
   const [filtroResidenteAberto, setFiltroResidenteAberto] = useState(false);
   const [filtroRefeicaoAberto, setFiltroRefeicaoAberto] = useState(false);
   const [filtrosAberto, setFiltrosAberto] = useState(false);
@@ -143,13 +141,6 @@ const RegistroAlimentar = () => {
         .order("nome");
       if (residentesError) throw residentesError;
 
-      // Carregar funcionários
-      const { data: funcionariosData, error: funcionariosError } = await supabase
-        .from("funcionario")
-        .select("id, nome")
-        .order("nome");
-      if (funcionariosError) throw funcionariosError;
-
       // Carregar registros alimentares
       const { data: registrosData, error: registrosError } = await supabase
         .from("registro_alimentar")
@@ -160,7 +151,6 @@ const RegistroAlimentar = () => {
       if (registrosError) throw registrosError;
 
       setResidentes(residentesData || []);
-      setFuncionarios(funcionariosData || []);
       setRegistros(registrosData || []);
     } catch (e) {
       console.error("Erro ao buscar dados:", e);
@@ -358,7 +348,7 @@ const RegistroAlimentar = () => {
     setAberto: (aberto: boolean) => void;
     ref: React.RefObject<HTMLDivElement>;
     valorSelecionado: string | number | null;
-    onSelecionar: (value: any) => void;
+    onSelecionar: (value: string | number | null) => void;
     tipo: 'refeicao' | 'residente';
   }) => {
     const opcoes = tipo === 'refeicao' ? FILTRO_REFEICAO_OPTIONS : [];
@@ -380,7 +370,7 @@ const RegistroAlimentar = () => {
                 : titulo
             }
           </span>
-          <ChevronDown size={10} className="sm:w-3 sm:h-3 text-gray-500 flex-shrink-0" />
+          <ChevronDown size={10} className="sm:w-3 sm:h-3 text-gray-500 shrink-0" />
         </button>
 
         {aberto && (
@@ -457,7 +447,7 @@ const RegistroAlimentar = () => {
                 setAberto={setFiltroResidenteAberto}
                 ref={filtroResidenteRef}
                 valorSelecionado={filtros.residenteId}
-                onSelecionar={selecionarResidente}
+                onSelecionar={selecionarResidente as (value: string | number | null) => void}
                 tipo="residente"
               />
             </div>
@@ -475,14 +465,14 @@ const RegistroAlimentar = () => {
                 setAberto={setFiltroRefeicaoAberto}
                 ref={filtroRefeicaoRef}
                 valorSelecionado={filtros.refeicao || 'todas'}
-                onSelecionar={selecionarRefeicao}
+                onSelecionar={selecionarRefeicao as (value: string | number | null) => void}
                 tipo="refeicao"
               />
             </div>
           </div>
 
           {/* Botão Limpar Filtros/Busca */}
-          <div className="flex md:items-end gap-2 pt-1 md:pt-0 md:flex-shrink-0">
+          <div className="flex md:items-end gap-2 pt-1 md:pt-0 md:shrink-0">
             <button
               onClick={limparFiltros}
               className="bg-odara-accent hover:bg-odara-secondary text-white font-semibold py-2 px-3 sm:px-4 rounded-lg flex items-center transition text-xs sm:text-sm h-9 sm:h-10 w-full md:w-auto justify-center"
@@ -539,7 +529,7 @@ const RegistroAlimentar = () => {
     const residenteNome = registro?.residente?.nome || '';
 
     return (
-      <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-[100] p-4 animate-fade-in">
+      <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-100 p-4 animate-fade-in">
         <div className="bg-white rounded-2xl shadow-xl p-4 sm:p-6 max-w-md w-full animate-scale-in">
           <div className="text-center">
             {/* Ícone de alerta */}
@@ -858,7 +848,7 @@ const RegistroAlimentar = () => {
             </div>
 
             {/* Filtro de Residente */}
-            <div className="relative flex-1 z-30" ref={filtroSemanalResidenteRef}>
+            <div className="relative flex-1 z-30 w-full" ref={filtroSemanalResidenteRef}>
               <button
                 type="button"
                 onClick={() => setFiltroSemanalResidenteAberto(!filtroSemanalResidenteAberto)}
@@ -869,7 +859,7 @@ const RegistroAlimentar = () => {
                     ? residentes.find(r => r.id === residenteSelecionadoFiltro)?.nome
                     : "Selecione um residente..."}
                 </span>
-                <ChevronDown size={10} className="sm:w-3 sm:h-3 text-gray-500 flex-shrink-0" />
+                <ChevronDown size={10} className="sm:w-3 sm:h-3 text-gray-500 shrink-0" />
               </button>
 
               {filtroSemanalResidenteAberto && (
@@ -921,7 +911,7 @@ const RegistroAlimentar = () => {
         ) : (
           <>
             {/* Tags de filtros ativos */}
-            <div className="mb-4 flex flex-wrap justify-center sm:justify-start gap-1 text-xs">
+            <div className="mb-4 flex flex-wrap justify-center gap-1 text-xs">
               {/* Tag do residente selecionado */}
               {residenteSelecionadoFiltro && (
                 <span className="bg-odara-secondary text-white px-2 py-1 rounded-full flex items-center gap-1">
@@ -939,8 +929,8 @@ const RegistroAlimentar = () => {
             </div>
 
             {/* Controles de navegação */}
-            <div className="sticky top-0 z-10 bg-odara-white py-2 flex flex-col justify-between items-center mb-4 sm:mb-8 pb-4 sm:pb-6 border-b border-gray-200">
-              <div className="flex flex-col sm:flex-row items-center gap-3 sm:gap-4 w-full">
+            <div className="sticky top-0 z-10 bg-odara-white py-2 flex flex-col justify-center items-center mb-4 sm:mb-8 pb-4 sm:pb-6 border-b border-gray-200">
+              <div className="flex flex-col sm:flex-row items-center gap-3 sm:gap-4 w-full justify-center">
                 <div className="flex items-center gap-2 w-full sm:w-auto">
                   <input
                     className="flex items-center gap-2 border border-odara-primary rounded-lg focus:outline-none focus:border-none focus:ring-2 focus:ring-odara-secondary shadow-sm px-3 py-2 text-odara-dark text-xs sm:text-sm w-full"
@@ -951,13 +941,13 @@ const RegistroAlimentar = () => {
 
                   <button
                     onClick={goToToday}
-                    className="bg-odara-accent hover:bg-odara-secondary text-white rounded-lg hover:bg-odara-secondary transition text-xs sm:text-sm shadow-sm px-3 py-2 whitespace-nowrap w-full sm:w-auto"
+                    className="bg-odara-accent hover:bg-odara-secondary text-white rounded-lg transition text-xs sm:text-sm shadow-sm px-3 py-2 whitespace-nowrap w-full sm:w-auto"
                   >
                     Ir para Hoje
                   </button>
                 </div>
 
-                <div className="flex items-center gap-2 border border-odara-primary rounded-lg focus:outline-none focus:border-none focus:ring-2 focus:ring-odara-secondary shadow-sm w-full sm:w-auto">
+                <div className="flex items-center gap-2 justify-center border border-odara-primary rounded-lg focus:outline-none focus:border-none focus:ring-2 focus:ring-odara-secondary shadow-sm w-full sm:w-auto">
                   <button onClick={() => navigateWeek("prev")} className="p-1 sm:p-2 rounded-full transition">
                     <ChevronLeft size={20} className="sm:w-6 sm:h-6 text-odara-primary hover:text-odara-secondary" />
                   </button>
@@ -1010,7 +1000,7 @@ const RegistroAlimentar = () => {
                           return <IconeComponente size={18} className="sm:w-6 sm:h-6" />;
                         })()}
 
-                        <div className="text-xs sm:text-sm font-semibold truncate">
+                        <div className="text-xs sm:text-sm font-semibold whitespace-normal wrap-break-words leading-tight">
                           {ref.label}
                         </div>
                       </div>
@@ -1081,7 +1071,7 @@ const RegistroAlimentar = () => {
                                   setRegistroSelecionado(novoRegistro as RegistroAlimentar);
                                   setModalAberto(true);
                                 }}
-                                className="w-full h-full min-h-[40px] sm:min-h-[60px] flex items-center justify-center text-gray-400 hover:text-odara-accent hover:bg-white/50 rounded-lg border-2 border-dashed border-gray-300 hover:border-odara-accent transition-colors group"
+                                className="w-full h-full min-h-10 sm:min-h-[60px] flex items-center justify-center text-gray-400 hover:text-odara-accent hover:bg-white/50 rounded-lg border-2 border-dashed border-gray-300 hover:border-odara-accent transition-colors group"
                               >
                                 <Plus className="text-xs sm:text-sm group-hover:scale-110 transition-transform" />
                               </button>
@@ -1125,7 +1115,7 @@ const RegistroAlimentar = () => {
     return (
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
         <div className="flex items-start sm:items-center gap-3 w-full">
-          <Apple size={24} className='sm:w-7 sm:h-7 lg:w-8 lg:h-8 text-odara-accent flex-shrink-0 mt-1 sm:mt-0' />
+          <Apple size={24} className='sm:w-7 sm:h-7 lg:w-8 lg:h-8 text-odara-accent shrink-0 mt-1 sm:mt-0' />
           
           <div className="flex-1 min-w-0 relative">
             <div className="flex items-center gap-0.1 sm:gap-2">
@@ -1135,7 +1125,7 @@ const RegistroAlimentar = () => {
               
               <button
                 onClick={() => setInfoVisivel(!infoVisivel)}
-                className="flex-shrink-0 w-5 h-5 sm:w-6 sm:h-6 lg:w-7 lg:h-7 flex items-center justify-center rounded-full hover:bg-gray-100 transition-colors ml-1"
+                className="shrink-0 w-5 h-5 sm:w-6 sm:h-6 lg:w-7 lg:h-7 flex items-center justify-center rounded-full hover:bg-gray-100 transition-colors ml-1"
                 aria-label="Informações"
               >
                 <Info size={12} className="sm:w-3.5 sm:h-3.5 lg:w-4 lg:h-4 text-odara-accent" />
@@ -1232,7 +1222,7 @@ const RegistroAlimentar = () => {
         {/* Controles de visualização */}
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 sm:gap-4 mb-4 sm:mb-6">
           {/* Barra de Busca */}
-          <div className="flex-1 relative min-w-0">
+          <div className="flex-1 relative min-w-0 w-full">
             <div className="absolute inset-y-0 left-0 pl-2 sm:pl-3 flex items-center pointer-events-none">
               <Search className="text-odara-primary h-3 w-3 sm:h-4 sm:w-4" />
             </div>
@@ -1265,7 +1255,7 @@ const RegistroAlimentar = () => {
             <div className="flex bg-white rounded-lg border border-gray-200 overflow-hidden items-center shadow-sm h-max w-full sm:w-auto">
               <button
                 onClick={() => mudarViewMode("semanal")}
-                className={`px-3 sm:px-6 py-2 sm:py-4 text-xs sm:text-sm font-medium transition-colors ${viewMode === "semanal" ? "bg-odara-accent text-white" : "text-gray-600 hover:bg-gray-100"
+                className={`flex-1 px-3 sm:px-6 py-2 sm:py-4 text-xs sm:text-sm font-medium transition-colors ${viewMode === "semanal" ? "bg-odara-accent text-white" : "text-gray-600 hover:bg-gray-100"
                   }`}
               >
                 Semanal
@@ -1273,7 +1263,7 @@ const RegistroAlimentar = () => {
 
               <button
                 onClick={() => mudarViewMode("lista")}
-                className={`px-3 sm:px-6 py-2 sm:py-4 text-xs sm:text-sm font-medium transition-colors ${viewMode === "lista" ? "bg-odara-accent text-white" : "text-gray-600 hover:bg-gray-100"
+                className={`flex-1 px-3 sm:px-6 py-2 sm:py-4 text-xs sm:text-sm font-medium transition-colors ${viewMode === "lista" ? "bg-odara-accent text-white" : "text-gray-600 hover:bg-gray-100"
                   }`}
               >
                 Lista

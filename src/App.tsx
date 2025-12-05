@@ -6,7 +6,7 @@ import DashboardRedirect from './components/DashboardRedirect'
 import ProtectedLayout from './layouts/ProtectedLayout'
 
 /* ------------------- Landing Page */
-import LayoutLandingPage from './layouts/LayoutLandingPage'
+import LayoutLandingPage from './layouts/LayoutLandingPage.tsx'
 import Home from './pages/landingPage/Home.tsx'
 import Documentacao from './pages/landingPage/Documentacao.tsx'
 

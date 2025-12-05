@@ -465,15 +465,10 @@ const RegistroPreferencias: React.FC = () => {
     setAberto: (aberto: boolean) => void;
     ref: React.RefObject<HTMLDivElement>;
     valorSelecionado: string | number | null;
-    onSelecionar: (value: any) => void;
+    onSelecionar: (value: string | number | null) => void;
     tipo: 'residente' | 'status' | 'categoria' | 'prioridade';
     opcoes: Array<{ value: string; label: string; cor?: string }>;
   }) => {
-    const residentesUnicos = Array.from(new Map(
-      preferencias
-        .filter(p => p.residente)
-        .map(p => [p.residente!.id, p.residente!.nome])
-    ));
 
     return (
       <div className="relative" ref={ref}>
@@ -494,7 +489,7 @@ const RegistroPreferencias: React.FC = () => {
                   : titulo
             }
           </span>
-          <ChevronDown size={10} className="sm:w-3 sm:h-3 text-gray-500 flex-shrink-0" />
+          <ChevronDown size={10} className="sm:w-3 sm:h-3 text-gray-500 shrink-0" />
         </button>
 
         {aberto && (
@@ -710,7 +705,7 @@ const RegistroPreferencias: React.FC = () => {
               setAberto={setFiltroResidenteAberto}
               ref={filtroResidenteRef}
               valorSelecionado={filtros.residenteId}
-              onSelecionar={selecionarResidente}
+              onSelecionar={selecionarResidente as (value: string | number | null) => void}
               tipo="residente"
               opcoes={[]}
             />
@@ -729,7 +724,7 @@ const RegistroPreferencias: React.FC = () => {
               setAberto={setFiltroStatusAberto}
               ref={filtroStatusRef}
               valorSelecionado={filtros.status || 'todos'}
-              onSelecionar={selecionarStatus}
+              onSelecionar={selecionarStatus as (value: string | number | null) => void}
               tipo="status"
               opcoes={FILTRO_STATUS_OPTIONS}
             />
@@ -748,7 +743,7 @@ const RegistroPreferencias: React.FC = () => {
               setAberto={setFiltroCategoriaAberto}
               ref={filtroCategoriaRef}
               valorSelecionado={filtros.categoria || 'todos'}
-              onSelecionar={selecionarCategoria}
+              onSelecionar={selecionarCategoria as (value: string | number | null) => void}
               tipo="categoria"
               opcoes={CATEGORIA_OPTIONS}
             />
@@ -767,7 +762,7 @@ const RegistroPreferencias: React.FC = () => {
               setAberto={setFiltroPrioridadeAberto}
               ref={filtroPrioridadeRef}
               valorSelecionado={filtros.prioridade}
-              onSelecionar={selecionarPrioridade}
+              onSelecionar={selecionarPrioridade as (value: string | number | null) => void}
               tipo="prioridade"
               opcoes={PRIORIDADE_OPTIONS}
             />
@@ -797,7 +792,7 @@ const RegistroPreferencias: React.FC = () => {
     const tituloPreferencia = preferencia?.titulo || '';
 
     return (
-      <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-[100] p-4 animate-fade-in">
+      <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-100 p-4 animate-fade-in">
         <div className="bg-white rounded-2xl shadow-xl p-4 sm:p-6 max-w-md w-full animate-scale-in">
           <div className="text-center">
             {/* Ícone de alerta */}
@@ -930,7 +925,7 @@ const RegistroPreferencias: React.FC = () => {
     return (
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
         <div className="flex items-start sm:items-center gap-3 w-full">
-          <Heart size={24} className='sm:w-7 sm:h-7 lg:w-8 lg:h-8 text-odara-accent flex-shrink-0 mt-1 sm:mt-0' />
+          <Heart size={24} className='sm:w-7 sm:h-7 lg:w-8 lg:h-8 text-odara-accent shrink-0 mt-1 sm:mt-0' />
           
           <div className="flex-1 min-w-0 relative">
             <div className="flex items-center gap-0.1 sm:gap-2">
@@ -940,7 +935,7 @@ const RegistroPreferencias: React.FC = () => {
               
               <button
                 onClick={() => setInfoVisivel(!infoVisivel)}
-                className="flex-shrink-0 w-5 h-5 sm:w-6 sm:h-6 lg:w-7 lg:h-7 flex items-center justify-center rounded-full hover:bg-gray-100 transition-colors ml-1"
+                className="shrink-0 w-5 h-5 sm:w-6 sm:h-6 lg:w-7 lg:h-7 flex items-center justify-center rounded-full hover:bg-gray-100 transition-colors ml-1"
                 aria-label="Informações"
               >
                 <Info size={12} className="sm:w-3.5 sm:h-3.5 lg:w-4 lg:h-4 text-odara-accent" />

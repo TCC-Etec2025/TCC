@@ -64,9 +64,9 @@ const Responsaveis: React.FC = () => {
 
       setListaResponsaveis(responsaveisComResidentes);
 
-    } catch (erro: any) {
+    } catch (erro) {
       console.error('Erro ao buscar responsáveis:', erro);
-      toast.error('Erro ao buscar responsáveis: ' + (erro?.message ?? String(erro)));
+      toast.error('Erro ao buscar responsáveis');
     } finally {
       setCarregando(false);
     }
@@ -118,9 +118,9 @@ const Responsaveis: React.FC = () => {
       ));
 
       toast.success(`Responsável ${novoStatus ? 'ativado' : 'inativado'} com sucesso!`);
-    } catch (erro: any) {
+    } catch (erro) {
       console.error('Erro ao alterar status:', erro);
-      toast.error('Erro ao alterar status: ' + (erro?.message ?? String(erro)));
+      toast.error('Erro ao alterar status');
     } finally {
       setAtualizandoStatus(null);
     }
@@ -169,9 +169,9 @@ const Responsaveis: React.FC = () => {
       // Atualiza a lista localmente
       setListaResponsaveis(listaResponsaveis.filter(responsavel => responsavel.id !== responsavelParaExcluir));
       toast.success('Responsável excluído com sucesso!');
-    } catch (erro: any) {
+    } catch (erro) {
       console.error('Erro ao excluir responsável:', erro);
-      toast.error('Erro ao excluir responsável: ' + (erro?.message ?? String(erro)));
+      toast.error('Erro ao excluir responsável');
     } finally {
       fecharModalExclusao();
     }
@@ -182,7 +182,7 @@ const Responsaveis: React.FC = () => {
     if (!modalExclusaoAberto) return null;
 
     return (
-      <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-[100] p-4">
+      <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-100 p-4">
         <div className="bg-white rounded-2xl shadow-lg p-6 max-w-md w-full">
           <div className="text-center">
             {/* Ícone de alerta */}
@@ -225,7 +225,7 @@ const Responsaveis: React.FC = () => {
         <div className="p-4 border-b border-gray-100 bg-odara-offwhite/30">
           <div className="flex items-start justify-between">
             <div className="flex items-center gap-3">
-              <div className="bg-odara-primary/20 rounded-full p-2 flex-shrink-0">
+              <div className="bg-odara-primary/20 rounded-full p-2 shrink-0">
                 <User className="h-5 w-5 text-odara-primary" />
               </div>
               <div className="flex-1 min-w-0">
@@ -277,14 +277,14 @@ const Responsaveis: React.FC = () => {
             <p className="text-xs text-gray-500 mb-2">Contato</p>
             <div className="space-y-2">
               <div className="flex items-center gap-2">
-                <Phone className="h-4 w-4 text-odara-primary flex-shrink-0" />
+                <Phone className="h-4 w-4 text-odara-primary shrink-0" />
                 <span className="text-sm text-odara-dark">
                   {formatarTelefone(responsavel.telefone_principal)}
                 </span>
               </div>
               {responsavel.telefone_secundario && (
                 <div className="flex items-center gap-2">
-                  <Phone className="h-4 w-4 text-odara-primary flex-shrink-0" />
+                  <Phone className="h-4 w-4 text-odara-primary shrink-0" />
                   <span className="text-sm text-gray-600">
                     {formatarTelefone(responsavel.telefone_secundario)}
                   </span>
@@ -292,7 +292,7 @@ const Responsaveis: React.FC = () => {
               )}
               {responsavel.email && (
                 <div className="flex items-center gap-2">
-                  <Mail className="h-4 w-4 text-odara-primary flex-shrink-0" />
+                  <Mail className="h-4 w-4 text-odara-primary shrink-0" />
                   <span className="text-sm text-gray-600 truncate">
                     {responsavel.email}
                   </span>
@@ -308,7 +308,7 @@ const Responsaveis: React.FC = () => {
               <div className="space-y-2">
                 {responsavel.residentes.map((residente) => (
                   <div key={residente.id} className="flex items-center gap-2">
-                    <User className="h-4 w-4 text-odara-primary flex-shrink-0" />
+                    <User className="h-4 w-4 text-odara-primary shrink-0" />
                     <div className="flex-1 min-w-0">
                       <p className="text-sm font-medium text-odara-dark truncate">
                         {residente.nome}
@@ -378,7 +378,7 @@ const Responsaveis: React.FC = () => {
           </div>
 
           {/* Botão Cadastrar Responsável */}
-          <div className="flex-shrink-0 w-full sm:w-auto">
+          <div className="shrink-0 w-full sm:w-auto">
             <button
               className="bg-odara-accent hover:bg-odara-secondary text-white font-medium py-2 px-4 rounded-lg flex items-center justify-center transition-colors w-full sm:w-auto"
               onClick={() => navigate('/app/admin/responsavel/formulario')}
@@ -410,7 +410,7 @@ const Responsaveis: React.FC = () => {
           <div className="bg-white rounded-xl shadow-sm overflow-hidden border-l-4 border-odara-primary">
             <div className="overflow-x-auto">
               <table className="w-full text-sm">
-                <thead className="border-b-1 border-odara-primary bg-odara-primary/10 text-odara-primary">
+                <thead className="border-b border-odara-primary bg-odara-primary/10 text-odara-primary">
                   <tr>
                     <th className="p-4 text-left font-semibold align-middle">Responsável</th>
                     <th className="p-4 text-left font-semibold align-middle">Contato</th>
@@ -428,7 +428,7 @@ const Responsaveis: React.FC = () => {
                       <td className="p-4">
                         <div className="flex items-center gap-3 min-w-[200px]">
                           {/* Ícone */}
-                          <div className="bg-odara-primary/20 rounded-full p-2 flex-shrink-0">
+                          <div className="bg-odara-primary/20 rounded-full p-2 shrink-0">
                             <User className="h-4 w-4 text-odara-primary" />
                           </div>
 

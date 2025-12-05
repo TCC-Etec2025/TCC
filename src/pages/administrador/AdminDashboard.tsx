@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Pill, Microscope, ClipboardPlus, AlertTriangle, Palette, Calendar, Apple, FileText, UsersRound, Bell, Info, Eye, UserRoundPlus, PackagePlus, UserRoundCog, X, ChevronRight, Activity, Utensils, Stethoscope } from "lucide-react";
+import { Pill, Microscope, AlertTriangle, Palette, Calendar, Apple, FileText, UsersRound, Bell, Info, UserRoundPlus, PackagePlus, UserRoundCog, X, Activity, Utensils, Stethoscope, type LucideIcon } from "lucide-react";
 import toast, { Toaster } from 'react-hot-toast';
 
 import { supabase } from '../../lib/supabaseClient';
@@ -26,7 +26,7 @@ interface ItemAlertaNotificacao {
 interface BotaoAcao {
   id: number;
   nome: string;
-  icone: React.ComponentType<any>;
+  icone: LucideIcon;
   acao: () => void;
 }
 
@@ -70,16 +70,14 @@ type ConsultasAlerta = {
 }
 
 const AdminDashboard = () => {
-  const navigate = useNavigate();
 
   // Estados do componente
   const [acaoSelecionada, setAcaoSelecionada] = useState<BotaoAcao | null>(null);
   const [modalAberto, setModalAberto] = useState<boolean>(false);
-  const [itemSelecionado, setItemSelecionado] = useState<ItemAlertaNotificacao | null>(null);
   const [numeroIdosos, setNumeroIdosos] = useState<number>(0);
   const [numeroColaboradores, setNumeroColaboradores] = useState<number>(0);
   const [carregando, setCarregando] = useState<boolean>(true);
-  
+
   // Estados para notificações
   const [notificacoesAbertas, setNotificacoesAbertas] = useState<boolean>(false);
   const [alertas, setAlertas] = useState<ItemAlertaNotificacao[]>([
@@ -122,7 +120,7 @@ const AdminDashboard = () => {
   ]);
 
   const [meusAlertas, setMeusAlertas] = useState<Alertas | null>(null);
-  
+
   const [notificacoes, setNotificacoes] = useState<ItemAlertaNotificacao[]>([
     {
       id: 2,
@@ -188,7 +186,7 @@ const AdminDashboard = () => {
     tamanho = 24,
     className = ""
   }: {
-    icone: React.ComponentType<any>;
+    icone: LucideIcon;
     tamanho?: number;
     className?: string;
   }) => (
@@ -196,7 +194,7 @@ const AdminDashboard = () => {
   );
 
   // Função para abrir modal com detalhes do item
-  const abrirModal = (item: MedicamentosAlerta | AtividadesAlerta | AlimentacaoAlerta | ConsultasAlerta | null) => {
+  const abrirModal = (item: MedicamentosAlerta[] | AtividadesAlerta[] | AlimentacaoAlerta[] | ConsultasAlerta[] | null) => {
     setAlertaSelecionado(item);
     setModalAberto(true);
     // Fechar painel de notificações no mobile
@@ -216,18 +214,7 @@ const AdminDashboard = () => {
   // Função para fechar modal
   const fecharModal = () => {
     setModalAberto(false);
-    setItemSelecionado(null);
-  };
-
-  // Função para marcar item como lido
-  const marcarComoLido = (item: ItemAlertaNotificacao) => {
-    if (item.tipo === 'alerta') {
-      setAlertas(prev => prev.map(a => a.id === item.id ? { ...a, lido: true } : a));
-    } else {
-      setNotificacoes(prev => prev.map(n => n.id === item.id ? { ...n, lido: true } : n));
-    }
-    toast.success('Notificação marcada como lida!');
-    fecharModal();
+    setAlertaSelecionado(null);
   };
 
   // Função para marcar todas como lidas
@@ -262,8 +249,8 @@ const AdminDashboard = () => {
 
         setNumeroIdosos(contadorIdosos ?? 0);
         setNumeroColaboradores(contadorColaboradores ?? 0);
-        
-      } catch (erro: any) {
+
+      } catch (erro) {
         console.error('Erro ao buscar dados:', erro);
         toast.error('Erro ao carregar estatísticas');
       } finally {
@@ -278,12 +265,12 @@ const AdminDashboard = () => {
   const buscarAlertas = async () => {
     try {
       const agora = new Date();
-      agora.setMinutes(agora.getMinutes() + 5); 
+      agora.setMinutes(agora.getMinutes() + 5);
       const dataLimite = agora.toISOString();
 
       const { data, error } = await supabase
-        .rpc('get_alertas_dashboard', { 
-          data_limite: dataLimite 
+        .rpc('get_alertas_dashboard', {
+          data_limite: dataLimite
         });
 
       if (error) throw error;
@@ -308,7 +295,7 @@ const AdminDashboard = () => {
             <WrapperIcone icone={Calendar} tamanho={20} className="text-odara-primary" />
             <span><DataFormatada /></span>
           </div>
-          
+
           {/* Botão de Notificações no Cabeçalho */}
           <button
             onClick={() => setNotificacoesAbertas(true)}
@@ -316,10 +303,10 @@ const AdminDashboard = () => {
             aria-label="Notificações"
           >
             <div className="p-2 bg-odara-primary/10 rounded-lg group-hover:bg-odara-primary/20 transition-colors">
-              <WrapperIcone 
-                icone={Bell} 
-                tamanho={20} 
-                className="text-odara-primary" 
+              <WrapperIcone
+                icone={Bell}
+                tamanho={20}
+                className="text-odara-primary"
               />
             </div>
             {totalNaoLidas > 0 && (
@@ -513,13 +500,13 @@ const AdminDashboard = () => {
     return (
       <>
         {/* Overlay para mobile */}
-        <div 
+        <div
           className="fixed inset-0 z-40 bg-black/20"
           onClick={() => setNotificacoesAbertas(false)}
         />
-        
+
         {/* Painel de Notificações */}
-        <div 
+        <div
           className="fixed z-50 bg-white rounded-lg shadow-xl border border-gray-200
             // Mobile: tela cheia no fundo
             inset-x-0 bottom-0 top-16
@@ -539,7 +526,7 @@ const AdminDashboard = () => {
                 <div>
                   <h3 className="text-lg font-semibold text-odara-dark">Notificações</h3>
                   <p className="text-sm text-gray-500">
-                    {totalNaoLidas > 0 
+                    {totalNaoLidas > 0
                       ? `${totalNaoLidas} não lida${totalNaoLidas !== 1 ? 's' : ''}`
                       : 'Todas lidas'}
                   </p>
@@ -567,12 +554,13 @@ const AdminDashboard = () => {
                   </h4>
                 </div>
                 <div className="space-y-3">
-                  {meusAlertas && Object.entries(meusAlertas.contagens).map(([key, value]) => {
+                  {meusAlertas && (['medicamentos', 'atividades', 'alimentacao', 'consultas'] as const).map((key) => {
+                    const value = meusAlertas.contagens[key];
                     if (value > 0) {
                       return (
                         <div
                           key={key}
-                          onClick={() => abrirModal(meusAlertas[key as keyof Alertas])}
+                          onClick={() => abrirModal(meusAlertas[key])}
                           className="p-3 border border-odara-primary/20 rounded-lg hover:bg-odara-primary/5 active:bg-odara-primary/10 cursor-pointer transition-colors"
                         >
                           <div className="flex items-start justify-between">
@@ -627,118 +615,14 @@ const AdminDashboard = () => {
     );
   };
 
-  // Componente do Modal de Detalhes - TOTALMENTE RESPONSIVO
-  // const ModalDetalhes = () => {
-  //   if (!modalAberto || !itemSelecionado) return null;
-
-  //   return (
-  //     <>
-  //       {/* Overlay */}
-  //       <div 
-  //         className="fixed inset-0 bg-black/30 z-50"
-  //         onClick={fecharModal}
-  //       />
-        
-  //       {/* Modal */}
-  //       <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-  //         <div 
-  //           className="bg-white rounded-xl shadow-lg w-full max-w-md max-h-[90vh] overflow-hidden flex flex-col"
-  //           onClick={(e) => e.stopPropagation()}
-  //         >
-  //           {/* Cabeçalho do Modal */}
-  //           <div className="flex items-center justify-between p-4 border-b sticky top-0 bg-white z-10">
-  //             <div className="flex items-center gap-3 flex-1 min-w-0">
-  //               <div className="p-2 bg-odara-primary rounded-lg flex-shrink-0">
-  //                 <WrapperIcone
-  //                   className="text-white"
-  //                   icone={itemSelecionado.tipo === 'alerta' ? AlertTriangle : Info}
-  //                   tamanho={20}
-  //                 />
-  //               </div>
-  //               <div className="min-w-0">
-  //                 <h3 className="text-lg font-semibold text-odara-dark truncate">
-  //                   {itemSelecionado.detalhes.titulo}
-  //                 </h3>
-  //                 <p className="text-xs text-gray-500">{itemSelecionado.hora}</p>
-  //               </div>
-  //             </div>
-  //             <button
-  //               onClick={fecharModal}
-  //               className="p-2 hover:bg-gray-100 rounded-lg transition-colors ml-2 flex-shrink-0"
-  //               aria-label="Fechar"
-  //             >
-  //               <WrapperIcone icone={X} tamanho={20} className="text-gray-500" />
-  //             </button>
-  //           </div>
-
-  //           {/* Corpo do Modal com scroll */}
-  //           <div className="overflow-y-auto flex-1 p-4">
-  //             {/* Descrição */}
-  //             <div className="mb-4">
-  //               <p className="text-sm text-gray-700 leading-relaxed">
-  //                 {itemSelecionado.detalhes.descricao}
-  //               </p>
-  //             </div>
-
-  //             {/* Lista de detalhes */}
-  //             {itemSelecionado.detalhes.lista && itemSelecionado.detalhes.lista.length > 0 && (
-  //               <div className="mb-4">
-  //                 <h4 className="font-medium text-odara-dark mb-2 text-sm">Detalhes:</h4>
-  //                 <ul className="space-y-2">
-  //                   {itemSelecionado.detalhes.lista.map((item, index) => (
-  //                     <li key={index} className="flex items-start gap-2 p-2 hover:bg-gray-50 rounded">
-  //                       <div className="w-1.5 h-1.5 rounded-full bg-odara-primary mt-2 flex-shrink-0"></div>
-  //                       <span className="text-sm text-gray-700 flex-1">{item}</span>
-  //                     </li>
-  //                   ))}
-  //                 </ul>
-  //               </div>
-  //             )}
-
-  //             {/* Ação Recomendada */}
-  //             <div className="p-3 bg-odara-primary/5 border border-odara-primary/20 rounded-lg">
-  //               <h4 className="font-medium text-odara-dark mb-1 text-sm">
-  //                 Ação Recomendada:
-  //               </h4>
-  //               <p className="text-sm text-gray-700 leading-relaxed">
-  //                 {itemSelecionado.detalhes.acaoRecomendada}
-  //               </p>
-  //             </div>
-  //           </div>
-
-  //           {/* Rodapé do Modal */}
-  //           <div className="border-t p-4">
-  //             <div className="flex flex-col sm:flex-row justify-end gap-2">
-  //               <button
-  //                 onClick={fecharModal}
-  //                 className="px-4 py-2.5 text-sm font-medium text-odara-primary hover:text-odara-primary/80 transition-colors order-2 sm:order-1"
-  //               >
-  //                 Fechar
-  //               </button>
-  //               {!itemSelecionado.lido && (
-  //                 <button
-  //                   onClick={() => marcarComoLido(itemSelecionado)}
-  //                   className="px-4 py-2.5 text-sm font-medium text-white bg-odara-primary rounded-lg hover:bg-odara-primary/90 active:bg-odara-primary/95 transition-colors order-1 sm:order-2"
-  //                 >
-  //                   Marcar como Lida
-  //                 </button>
-  //               )}
-  //             </div>
-  //           </div>
-  //         </div>
-  //       </div>
-  //     </>
-  //   );
-  // };
-
-const ModalDetalhes = () => {
+  const ModalDetalhes = () => {
     // Verifica se há dados para exibir
     if (!modalAberto || !alertaSelecionado || (Array.isArray(alertaSelecionado) && alertaSelecionado.length === 0)) return null;
 
     // Função auxiliar para determinar o título e ícone com base no tipo de dado (Duck Typing)
     const getConfig = () => {
       const item = Array.isArray(alertaSelecionado) ? alertaSelecionado[0] : alertaSelecionado;
-      
+
       if ('medicamento' in item) return { titulo: 'Medicamentos Pendentes', icone: AlertTriangle, cor: 'bg-red-500' };
       if ('atividade' in item) return { titulo: 'Atividades Pendentes', icone: Activity, cor: 'bg-blue-500' };
       if ('refeicao' in item) return { titulo: 'Alimentação Pendentes', icone: Utensils, cor: 'bg-orange-500' };
@@ -753,21 +637,21 @@ const ModalDetalhes = () => {
     return (
       <>
         {/* Overlay */}
-        <div 
+        <div
           className="fixed inset-0 bg-black/30 z-50"
           onClick={fecharModal}
         />
-        
+
         {/* Modal */}
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-          <div 
+          <div
             className="bg-white rounded-xl shadow-lg w-full max-w-md max-h-[90vh] overflow-hidden flex flex-col"
             onClick={(e) => e.stopPropagation()}
           >
             {/* Cabeçalho do Modal */}
             <div className="flex items-center justify-between p-4 border-b sticky top-0 bg-white z-10">
               <div className="flex items-center gap-3 flex-1 min-w-0">
-                <div className={`p-2 rounded-lg flex-shrink-0 ${config.cor}`}>
+                <div className={`p-2 rounded-lg shrink-0 ${config.cor}`}>
                   <WrapperIcone
                     className="text-white"
                     icone={config.icone}
@@ -785,7 +669,7 @@ const ModalDetalhes = () => {
               </div>
               <button
                 onClick={fecharModal}
-                className="p-2 hover:bg-gray-100 rounded-lg transition-colors ml-2 flex-shrink-0"
+                className="p-2 hover:bg-gray-100 rounded-lg transition-colors ml-2 shrink-0"
                 aria-label="Fechar"
               >
                 <WrapperIcone icone={X} tamanho={20} className="text-gray-500" />
@@ -796,7 +680,7 @@ const ModalDetalhes = () => {
             <div className="overflow-y-auto flex-1 p-4">
               <ul className="space-y-3">
                 {listaItens.map((item: MedicamentosAlerta | AtividadesAlerta | AlimentacaoAlerta | ConsultasAlerta, index: number) => {
-                  
+
                   // Renderização: MEDICAMENTOS
                   if ('medicamento' in item) {
                     return (
@@ -804,7 +688,7 @@ const ModalDetalhes = () => {
                         <div className="flex justify-between items-start mb-1">
                           <span className="font-semibold text-odara-dark">{item.medicamento}</span>
                           <span className="text-xs font-medium text-red-600 bg-red-50 px-2 py-0.5 rounded border border-red-100">
-                            {item.horario_previsto.slice(0,5)}
+                            {item.horario_previsto.slice(0, 5)}
                           </span>
                         </div>
                         <p className="text-sm text-gray-600">Residente: <span className="font-medium">{item.residente}</span></p>
@@ -817,15 +701,15 @@ const ModalDetalhes = () => {
                   if ('atividade' in item) {
                     return (
                       <li key={index} className="p-3 bg-gray-50 rounded-lg border border-gray-100 hover:bg-gray-100 transition-colors">
-                         <div className="flex justify-between items-center">
-                            <span className="font-semibold text-odara-dark">{item.atividade}</span>
-                            <div className="text-right">
-                              <div className="text-xs font-bold text-blue-600 bg-blue-50 px-2 py-0.5 rounded border border-blue-100">
-                                {item.horario_inicio.slice(0,5)}
-                              </div>
-                              <div className="text-[10px] text-gray-400 mt-0.5">{item.data.split('-').reverse().join('/')}</div>
+                        <div className="flex justify-between items-center">
+                          <span className="font-semibold text-odara-dark">{item.atividade}</span>
+                          <div className="text-right">
+                            <div className="text-xs font-bold text-blue-600 bg-blue-50 px-2 py-0.5 rounded border border-blue-100">
+                              {item.horario_inicio.slice(0, 5)}
                             </div>
-                         </div>
+                            <div className="text-[10px] text-gray-400 mt-0.5">{item.data.split('-').reverse().join('/')}</div>
+                          </div>
+                        </div>
                       </li>
                     );
                   }
@@ -837,7 +721,7 @@ const ModalDetalhes = () => {
                         <div className="flex justify-between items-start mb-1">
                           <span className="font-semibold text-odara-dark">{item.refeicao}</span>
                           <span className="text-xs font-medium text-orange-600 bg-orange-50 px-2 py-0.5 rounded border border-orange-100">
-                            {item.horario.slice(0,5)}
+                            {item.horario.slice(0, 5)}
                           </span>
                         </div>
                         <p className="text-sm text-gray-600">Residente: <span className="font-medium">{item.residente}</span></p>
@@ -852,7 +736,7 @@ const ModalDetalhes = () => {
                         <div className="flex justify-between items-start mb-1">
                           <span className="font-semibold text-odara-dark">Consulta Médica</span>
                           <span className="text-xs font-medium text-purple-600 bg-purple-50 px-2 py-0.5 rounded border border-purple-100">
-                            {item.horario.slice(0,5)}
+                            {item.horario.slice(0, 5)}
                           </span>
                         </div>
                         <p className="text-sm text-gray-600">Residente: <span className="font-medium">{item.residente}</span></p>

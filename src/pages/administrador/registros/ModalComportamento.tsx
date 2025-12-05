@@ -10,18 +10,25 @@ import { useUser } from "../../../context/UserContext";
 type Residente = {
     id: number;
     nome: string;
+    quarto?: string | null;
+    foto?: string | null;
+};
+
+type Funcionario = {
+    id: number;
+    nome: string;
 };
 
 type Comportamento = {
     id: number;
     titulo: string;
     descricao?: string | null;
-    data: Date;
+    data: string;
     horario: string;
     id_residente: number | null;
-    residente: Residente;
+    residente: Residente | null;
     id_funcionario: number | null;
-    funcionario: Residente;
+    funcionario: Funcionario | null;
     categoria: string;
     status: boolean;
     criado_em?: string | null;
@@ -94,7 +101,7 @@ const ModalComportamento: React.FC<ModalComportamentoProps> = ({
             titulo: comportamento?.titulo || "",
             descricao: comportamento?.descricao || "",
             data: comportamento
-                ? comportamento.data.toISOString().split("T")[0]
+                ? comportamento.data
                 : new Date().toISOString().split("T")[0],
             horario: comportamento?.horario || new Date().toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" }),
             id_residente: comportamento?.id_residente || 0,

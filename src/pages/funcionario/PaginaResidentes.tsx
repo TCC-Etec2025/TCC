@@ -72,9 +72,9 @@ const PaginaResidentes: React.FC = () => {
 
       setListaResidentes(residentesCompletos);
 
-    } catch (erro: any) {
+    } catch (erro) {
       console.error('Erro ao buscar residentes:', erro);
-      toast.error('Erro ao buscar residentes: ' + (erro?.message ?? String(erro)));
+      toast.error('Erro ao buscar residentes');
     } finally {
       setCarregando(false);
     }
@@ -231,7 +231,7 @@ const PaginaResidentes: React.FC = () => {
           </div>
 
           {/* Estatística Principal */}
-          <div className="flex-shrink-0 text-right">
+          <div className="shrink-0 text-right">
             <div className="text-2xl font-bold text-odara-primary">{estatisticas.total}</div>
             <div className="text-sm text-odara-dark/70">Residentes atribuídos</div>
           </div>
@@ -295,7 +295,7 @@ const PaginaResidentes: React.FC = () => {
         {/* Barra de Busca */}
         <div className="flex-1 relative mb-8">
           <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-            <Search className="text-odara-primary mr-3 h-4 w-4 flex-shrink-0" />
+            <Search className="text-odara-primary mr-3 h-4 w-4 shrink-0" />
           </div>
 
           <input
@@ -311,7 +311,7 @@ const PaginaResidentes: React.FC = () => {
         <div className="bg-white rounded-xl shadow-sm overflow-hidden border-l-4 border-odara-primary">
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
-              <thead className="border-b-1 border-odara-primary bg-odara-primary/10 text-odara-primary">
+              <thead className="border-b border-odara-primary bg-odara-primary/10 text-odara-primary">
                 <tr>
                   <th className="p-4 text-left font-semibold align-middle">Residente</th>
                   <th className="p-4 text-left font-semibold align-middle">Quarto</th>
@@ -330,7 +330,7 @@ const PaginaResidentes: React.FC = () => {
                     {/* Coluna Residente */}
                     <td className="p-4">
                       <div className="flex items-center gap-3 min-w-[200px]">
-                        <div className="bg-odara-primary/20 rounded-full p-2 flex-shrink-0">
+                        <div className="bg-odara-primary/20 rounded-full p-2 shrink-0">
                           <User className="h-4 w-4 text-odara-primary" />
                         </div>
                         <div>

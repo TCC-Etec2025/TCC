@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo, useCallback, useRef } from 'react';
+import React, { useState, useMemo, useCallback, useRef } from 'react';
 import {
   Info,
   Filter,
@@ -16,7 +16,8 @@ import {
   Calendar as CalendarIcon,
   MessageCircleMore,
   X,
-  Loader
+  Loader,
+  type LucideIcon
 } from 'lucide-react';
 import * as yup from 'yup';
 import { yupResolver } from '@hookform/resolvers/yup';
@@ -57,13 +58,21 @@ type AtividadeResidente = {
   observacao: string;
 };
 
+type Filtros = {
+    residenteId: number | null;
+    status: string | null;
+    categoria: string | null;
+    startDate: string | null;
+    endDate: string | null;
+  };
+
 /* Constantes */
 const COR_STATUS: Record<string, {
   bola: string;
   bg: string;
   text: string;
   border: string;
-  icon: any;
+  icon: LucideIcon;
 }> = {
   concluido: {
     bola: 'bg-green-500',
@@ -87,12 +96,6 @@ const COR_STATUS: Record<string, {
     icon: XCircleIcon
   }
 };
-
-const STATUS_OPTIONS = [
-  { value: 'pendente', label: 'Pendente', icon: Clock },
-  { value: 'concluido', label: 'Concluído', icon: CheckCircle },
-  { value: 'cancelado', label: 'Cancelado', icon: XCircleIcon }
-];
 
 const FILTRO_STATUS_OPTIONS = [
   { value: 'todos', label: 'Todos os status' },
@@ -149,7 +152,7 @@ interface FiltroDropdownProps {
   aberto: boolean;
   setAberto: (aberto: boolean) => void;
   valorSelecionado: string | number | null;
-  onSelecionar: (value: any) => void;
+  onSelecionar: (value: string | number | null) => void;
   tipo: 'residente' | 'status' | 'categoria';
   residentesUnicos?: [number, string][];
   ref?: React.Ref<HTMLDivElement>;
@@ -191,7 +194,7 @@ const FiltroDropdown = React.forwardRef<HTMLDivElement, FiltroDropdownProps>(
                   : titulo
             }
           </span>
-          <ChevronDown size={10} className="sm:w-3 sm:h-3 text-gray-500 flex-shrink-0" />
+          <ChevronDown size={10} className="sm:w-3 sm:h-3 text-gray-500 shrink-0" />
         </button>
 
         {aberto && (
@@ -329,7 +332,7 @@ const ObservacaoModal: React.FC<ObservacaoModalProps> = ({
 
       onConfirm(values.observacao || '');
 
-    } catch (err: any) {
+    } catch (err) {
       console.error("Erro detalhado ao salvar observação:", err);
       toast.error("Erro ao salvar observação");
     } finally {
@@ -349,7 +352,7 @@ const ObservacaoModal: React.FC<ObservacaoModalProps> = ({
     <div className="fixed inset-0 bg-odara-offwhite/80 flex items-center justify-center p-4 z-50">
       <div className="w-full max-w-md bg-white rounded-2xl shadow-lg overflow-hidden border-l-4 border-odara-primary">
         {/* Header do Modal */}
-        <div className="border-b-1 border-odara-primary bg-odara-primary/70 text-odara-accent p-6">
+        <div className="border-b border-odara-primary bg-odara-primary/70 text-odara-accent p-6">
           <div className="flex justify-between items-center">
             <h2 className="text-2xl font-bold">
               {tituloModal}
@@ -503,7 +506,7 @@ const CardAtividade: React.FC<CardAtividadeProps> = ({
           <div className="space-y-2 sm:space-y-3">
             <div>
               <div className="flex items-start gap-2">
-                <MapPin className="text-odara-accent flex-shrink-0 mt-0.5 hidden sm:block" size={12} />
+                <MapPin className="text-odara-accent shrink-0 mt-0.5 hidden sm:block" size={12} />
                 <div className="flex-1 min-w-0">
                   <strong className="text-odara-dark text-xs sm:text-sm">Local:</strong>
                   <div className="mt-0.5">
@@ -531,7 +534,7 @@ const CardAtividade: React.FC<CardAtividadeProps> = ({
           <div className="space-y-2 sm:space-y-3">
             <div>
               <div className="flex items-start gap-2">
-                <RockingChair className="text-odara-accent flex-shrink-0 mt-0.5 hidden sm:block" size={12} />
+                <RockingChair className="text-odara-accent shrink-0 mt-0.5 hidden sm:block" size={12} />
                 <div className="flex-1 min-w-0">
                   <strong className="text-odara-dark text-xs sm:text-sm">Participantes:</strong>
                   <div className="space-y-1 mt-2">
@@ -615,7 +618,7 @@ interface SecaoFiltrosProps {
     startDate: string | null;
     endDate: string | null;
   };
-  setFiltros: (filtros: any) => void;
+  setFiltros: React.Dispatch<React.SetStateAction<Filtros>>;
   filtrosAberto: boolean;
   filtroResidenteAberto: boolean;
   setFiltroResidenteAberto: (aberto: boolean) => void;
@@ -649,17 +652,17 @@ const SecaoFiltros: React.FC<SecaoFiltrosProps> = ({
   const filtroCategoriaRef = useRef<HTMLDivElement>(null);
 
   const selecionarResidente = useCallback((residenteId: number | null) => {
-    setFiltros((prev: any) => ({ ...prev, residenteId }));
+    setFiltros((prev: Filtros) => ({ ...prev, residenteId }));
     setFiltroResidenteAberto(false);
   }, [setFiltros, setFiltroResidenteAberto]);
 
   const selecionarStatus = useCallback((status: string | null) => {
-    setFiltros((prev: any) => ({ ...prev, status: status === 'todos' ? null : status }));
+    setFiltros((prev: Filtros) => ({ ...prev, status: status === 'todos' ? null : status }));
     setFiltroStatusAberto(false);
   }, [setFiltros, setFiltroStatusAberto]);
 
   const selecionarCategoria = useCallback((categoria: string | null) => {
-    setFiltros((prev: any) => ({ ...prev, categoria: categoria === 'todos' ? null : categoria }));
+    setFiltros((prev: Filtros) => ({ ...prev, categoria: categoria === 'todos' ? null : categoria }));
     setFiltroCategoriaAberto(false);
   }, [setFiltros, setFiltroCategoriaAberto]);
 
@@ -682,7 +685,7 @@ const SecaoFiltros: React.FC<SecaoFiltrosProps> = ({
               aberto={filtroResidenteAberto}
               setAberto={setFiltroResidenteAberto}
               valorSelecionado={filtros.residenteId}
-              onSelecionar={selecionarResidente}
+              onSelecionar={selecionarResidente as (value: string | number | null) => void}
               tipo="residente"
               residentesUnicos={residentesUnicos}
               ref={filtroResidenteRef}
@@ -701,7 +704,7 @@ const SecaoFiltros: React.FC<SecaoFiltrosProps> = ({
               aberto={filtroStatusAberto}
               setAberto={setFiltroStatusAberto}
               valorSelecionado={filtros.status || 'todos'}
-              onSelecionar={selecionarStatus}
+              onSelecionar={selecionarStatus as (value: string | number | null) => void}
               tipo="status"
               ref={filtroStatusRef}
             />
@@ -719,7 +722,7 @@ const SecaoFiltros: React.FC<SecaoFiltrosProps> = ({
               aberto={filtroCategoriaAberto}
               setAberto={setFiltroCategoriaAberto}
               valorSelecionado={filtros.categoria || 'todos'}
-              onSelecionar={selecionarCategoria}
+              onSelecionar={selecionarCategoria as (value: string | number | null) => void}
               tipo="categoria"
               ref={filtroCategoriaRef}
             />
@@ -727,7 +730,7 @@ const SecaoFiltros: React.FC<SecaoFiltrosProps> = ({
         </div>
 
         {/* Botão Limpar Filtros/Busca */}
-        <div className="flex md:items-end gap-2 pt-1 md:pt-0 md:flex-shrink-0">
+        <div className="flex md:items-end gap-2 pt-1 md:pt-0 md:shrink-0">
           <button
             onClick={onLimparFiltros}
             className="bg-odara-accent hover:bg-odara-secondary text-white font-semibold py-2 px-3 sm:px-4 rounded-lg flex items-center transition text-xs sm:text-sm h-9 sm:h-10 w-full md:w-auto justify-center"
@@ -749,7 +752,7 @@ const SecaoFiltros: React.FC<SecaoFiltrosProps> = ({
             type="date"
             value={filtros.startDate || ''}
             onChange={(e) => {
-              setFiltros((prev: any) => ({ ...prev, startDate: e.target.value || null }));
+              setFiltros((prev: Filtros) => ({ ...prev, startDate: e.target.value || null }));
               setDateError(null);
             }}
             className={`w-full h-9 sm:h-10 border border-gray-300 rounded-lg px-3 text-xs sm:text-sm focus:ring-2 focus:ring-odara-primary focus:outline-none ${dateError ? 'border-red-500 bg-red-50' : 'border-gray-300'
@@ -767,7 +770,7 @@ const SecaoFiltros: React.FC<SecaoFiltrosProps> = ({
             type="date"
             value={filtros.endDate || ''}
             onChange={(e) => {
-              setFiltros((prev: any) => ({ ...prev, endDate: e.target.value || null }));
+              setFiltros((prev: Filtros) => ({ ...prev, endDate: e.target.value || null }));
               setDateError(null);
             }}
             className={`w-full h-9 sm:h-10 border border-gray-300 rounded-lg px-3 text-xs sm:text-sm focus:ring-2 focus:ring-odara-primary focus:outline-none ${dateError ? 'border-red-500 bg-red-50' : 'border-gray-300'
@@ -800,7 +803,7 @@ const Atividades = () => {
   const [filtroCategoriaAberto, setFiltroCategoriaAberto] = useState(false);
   const [loading, setLoading] = useState(false);
 
-  const [filtros, setFiltros] = useState({
+  const [filtros, setFiltros] = useState<Filtros>({
     residenteId: null as number | null,
     status: null as string | null,
     categoria: null as string | null,
@@ -861,7 +864,7 @@ const Atividades = () => {
     return (
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
         <div className="flex items-start sm:items-center gap-3 w-full">
-          <Palette size={24} className='sm:w-7 sm:h-7 lg:w-8 lg:h-8 text-odara-accent flex-shrink-0 mt-1 sm:mt-0' />
+          <Palette size={24} className='sm:w-7 sm:h-7 lg:w-8 lg:h-8 text-odara-accent shrink-0 mt-1 sm:mt-0' />
           
           <div className="flex-1 min-w-0 relative">
             <div className="flex items-center gap-0.1 sm:gap-2">
@@ -871,7 +874,7 @@ const Atividades = () => {
               
               <button
                 onClick={() => setInfoVisivel(!infoVisivel)}
-                className="flex-shrink-0 w-5 h-5 sm:w-6 sm:h-6 lg:w-7 lg:h-7 flex items-center justify-center rounded-full hover:bg-gray-100 transition-colors ml-1"
+                className="shrink-0 w-5 h-5 sm:w-6 sm:h-6 lg:w-7 lg:h-7 flex items-center justify-center rounded-full hover:bg-gray-100 transition-colors ml-1"
                 aria-label="Informações"
               >
                 <Info size={12} className="sm:w-3.5 sm:h-3.5 lg:w-4 lg:h-4 text-odara-accent" />
@@ -933,14 +936,17 @@ const Atividades = () => {
       // Combinar dados
       const atividadesCompletas: Atividade[] = (atividadesData || []).map(atv => {
         const relacoes = (joinsData || []).filter((j: AtividadeResidente) => j.id_atividade === atv.id);
-        const residentesMapeados: ResidenteNaAtividade[] = relacoes.map(j => {
+        const residentesMapeados: ResidenteNaAtividade[] = relacoes.reduce<ResidenteNaAtividade[]>((acc, j) => {
           const dadosResidente = resData?.find(r => r.id === j.id_residente);
-          return dadosResidente ? {
-            ...dadosResidente,
-            statusIndividual: j.status || 'pendente',
-            observacao: j.observacao || ''
-          } : null;
-        }).filter((r): r is ResidenteNaAtividade => !!r);
+          if (dadosResidente) {
+            acc.push({
+              ...dadosResidente,
+              statusIndividual: j.status || 'pendente',
+              observacao: j.observacao || ''
+            });
+          }
+          return acc;
+        }, []);
 
         return {
           ...atv,
@@ -1144,7 +1150,6 @@ const Atividades = () => {
   /* Componente: Lista de Atividades */
   const ListaAtividades = () => {
     const totalFiltrado = gruposAtividades.reduce((acc, grupo) => acc + grupo.itens.length, 0);
-    const totalGeral = atividades.length;
 
     return (
       <div className="bg-white border-l-4 border-odara-primary rounded-xl sm:rounded-2xl shadow-lg p-3 sm:p-6">
@@ -1217,15 +1222,15 @@ const Atividades = () => {
                   >
                     <div className="flex items-center gap-2 sm:gap-3 min-w-0 w-full sm:w-auto justify-center sm:justify-start mb-2 sm:mb-0">
                       {grupo.isExpandido ? (
-                        <ChevronDown className="text-odara-accent flex-shrink-0" size={16} />
+                        <ChevronDown className="text-odara-accent shrink-0" size={16} />
                       ) : (
-                        <ChevronRight className="text-odara-accent flex-shrink-0" size={16} />
+                        <ChevronRight className="text-odara-accent shrink-0" size={16} />
                       )}
                       <h2 className="text-base sm:text-lg md:text-xl font-bold text-odara-dark truncate">
                         {grupo.dataFormatada}
                       </h2>
                     </div>
-                    <div className="flex items-center gap-2 flex-shrink-0">
+                    <div className="flex items-center gap-2 shrink-0">
                       <span className={`px-2 py-0.5 sm:px-2.5 sm:py-1 rounded-full border text-xs font-medium ${pendentes > 0
                         ? 'bg-yellow-50 text-yellow-600 border-yellow-600'
                         : 'bg-gray-50 text-gray-500 border-gray-500'

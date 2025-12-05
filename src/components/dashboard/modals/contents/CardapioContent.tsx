@@ -72,7 +72,7 @@ export const CardapioContent = ({ idResidente }: BaseContentProps) => {
           <div className="flex items-center gap-2 w-full sm:w-auto">
             <button
               onClick={goToToday}
-              className="bg-odara-accent hover:bg-odara-secondary text-white rounded-lg hover:bg-odara-secondary transition text-xs sm:text-sm sm:text-sm shadow-sm px-3 py-2 whitespace-nowrap w-full sm:w-auto"
+              className="bg-odara-accent hover:bg-odara-secondary text-white rounded-lg transition text-xs sm:text-sm shadow-sm px-3 py-2 whitespace-nowrap w-full sm:w-auto"
             >
               Ir para Hoje
             </button>
@@ -83,7 +83,7 @@ export const CardapioContent = ({ idResidente }: BaseContentProps) => {
               <ChevronLeft size={20} className="sm:w-6 sm:h-6 text-odara-primary hover:text-odara-secondary" />
             </button>
 
-            <span className="text-odara-dark text-xs sm:text-sm sm:text-sm min-w-[100px] text-center px-1 sm:px-2">
+            <span className="text-odara-dark text-xs sm:text-sm min-w-[100px] text-center px-1 sm:px-2">
               {weekDates[0].toLocaleDateString("pt-BR", { day: "2-digit", month: "2-digit" })} - {weekDates[6].toLocaleDateString("pt-BR", { day: "2-digit", month: "2-digit" })}
             </span>
 
@@ -115,7 +115,7 @@ export const CardapioContent = ({ idResidente }: BaseContentProps) => {
                     }`
                   }
                 >
-                  <div className="font-semibold text-xs sm:text-sm sm:text-sm capitalize truncate">
+                  <div className="font-semibold text-xs sm:text-sm capitalize truncate">
                     {date.toLocaleDateString("pt-BR", { weekday: "short" })}
                   </div>
                   <div className="text-sm sm:text-lg font-bold">{date.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' })}</div>
@@ -134,7 +134,7 @@ export const CardapioContent = ({ idResidente }: BaseContentProps) => {
                   <div className="sm:w-6 sm:h-6">{ref.icon}</div>
 
                   {/* Nome da Refeição */}
-                  <div className="text-xs sm:text-sm sm:text-sm font-semibold truncate">{ref.label}</div>
+                  <div className="text-xs sm:text-sm font-semibold truncate">{ref.label}</div>
                 </div>
               </div>
 
@@ -212,7 +212,7 @@ export const CardapioContent = ({ idResidente }: BaseContentProps) => {
         <div className="fixed inset-0 bg-odara-offwhite/50 flex items-center justify-center z-50 p-4 backdrop-blur-sm animate-in fade-in duration-200">
           <div className="w-full max-w-4xl bg-white rounded-2xl shadow-lg overflow-hidden max-h-[90vh] flex flex-col border-l-4 border-odara-primary">
             {/* Header do Modal */}
-            <div className="border-b-1 border-odara-primary bg-odara-primary/70 text-odara-accent p-6">
+            <div className="border-b border-odara-primary bg-odara-primary/70 text-odara-accent p-6">
               <div className="flex justify-between items-center">
                 <span className="flex gap-2 items-baseline">
                   <span className="text-odara-accent">

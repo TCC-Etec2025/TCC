@@ -28,15 +28,15 @@ export const AtividadesContent = ({ idResidente }: BaseContentProps) => {
   const atividadesDoDia = useMemo(() => {
     const dataString = dataSelecionada.toISOString().split('T')[0];
     return todasAtividades
-        .filter(a => a.atividade.data === dataString)
-        .sort((a, b) => a.atividade.horario_inicio.localeCompare(b.atividade.horario_inicio));
+        .filter(a => a.data === dataString)
+        .sort((a, b) => a.horario_inicio.localeCompare(b.horario_inicio));
   }, [todasAtividades, dataSelecionada]);
 
   // (Opcional) Função para marcar dias com bolinha no calendário
   const tileContent = ({ date, view }: { date: Date; view: string }) => {
     if (view === 'month') {
         const dataStr = date.toISOString().split('T')[0];
-        const temAtividade = todasAtividades.some(a => a.atividade.data === dataStr);
+        const temAtividade = todasAtividades.some(a => a.data === dataStr);
         return temAtividade ? <div className="w-1.5 h-1.5 bg-green-500 rounded-full mx-auto mt-1"></div> : null;
     }
   };
@@ -65,8 +65,8 @@ export const AtividadesContent = ({ idResidente }: BaseContentProps) => {
                     <Activity size={20}/>
                 </div>
                 <div>
-                    <h4 className="font-bold text-gray-800">{item.atividade.nome}</h4>
-                    <p className="text-sm text-gray-500">{item.atividade.horario_inicio.slice(0,5)} • {item.atividade.local}</p>
+                    <h4 className="font-bold text-gray-800">{item.nome}</h4>
+                    <p className="text-sm text-gray-500">{item.horario_inicio.slice(0,5)} • {item.local}</p>
                 </div>
             </div>
          ))}

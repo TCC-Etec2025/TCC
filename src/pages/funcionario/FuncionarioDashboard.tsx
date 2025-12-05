@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Pill, Microscope, ClipboardPlus, HeartPulse, AlertTriangle, Siren, UserRoundSearch, Palette, Apple, Star, Calendar, FileText, UsersRound, Bell, Info, Eye, X, ChevronRight } from 'lucide-react';
+import { Pill, Microscope, ClipboardPlus, HeartPulse, AlertTriangle, Siren, UserRoundSearch, Palette, Apple, Star, Calendar, FileText, UsersRound, Bell, Info, X, ChevronRight, type LucideIcon } from 'lucide-react';
 import toast, { Toaster } from 'react-hot-toast';
 
 import DataFormatada from '../../components/DataFormatada';
@@ -27,7 +27,7 @@ interface ItemAlertaNotificacao {
 interface BotaoAcao {
   id: number;
   nome: string;
-  icone: React.ComponentType<any>;
+  icone: LucideIcon;
   acao: () => void;
 }
 
@@ -148,7 +148,7 @@ const FuncionarioDashboard = () => {
     tamanho = 24,
     className = ""
   }: {
-    icone: React.ComponentType<any>;
+    icone: LucideIcon;
     tamanho?: number;
     className?: string;
   }) => (
@@ -226,7 +226,7 @@ const FuncionarioDashboard = () => {
   
       // Chama a função depois de declará-la
       carregarDadosDashboard();
-    }, []);
+    }, [usuario?.id]);
 
   // Componente de Cabeçalho COM ÍCONE DE NOTIFICAÇÕES
   const CabecalhoDashboard = () => {
@@ -512,7 +512,7 @@ const FuncionarioDashboard = () => {
                           </p>
                           <div className="flex items-center justify-between mt-2">
                             <span className="text-xs text-gray-500">{alerta.hora}</span>
-                            <ChevronRight size={14} className="text-odara-primary flex-shrink-0" />
+                            <ChevronRight size={14} className="text-odara-primary shrink-0" />
                           </div>
                         </div>
                       </div>
@@ -571,7 +571,7 @@ const FuncionarioDashboard = () => {
             {/* Cabeçalho do Modal */}
             <div className="flex items-center justify-between p-4 border-b sticky top-0 bg-white z-10">
               <div className="flex items-center gap-3 flex-1 min-w-0">
-                <div className="p-2 bg-odara-primary rounded-lg flex-shrink-0">
+                <div className="p-2 bg-odara-primary rounded-lg shrink-0">
                   <WrapperIcone
                     className="text-white"
                     icone={itemSelecionado.tipo === 'alerta' ? AlertTriangle : Info}
@@ -587,7 +587,7 @@ const FuncionarioDashboard = () => {
               </div>
               <button
                 onClick={fecharModal}
-                className="p-2 hover:bg-gray-100 rounded-lg transition-colors ml-2 flex-shrink-0"
+                className="p-2 hover:bg-gray-100 rounded-lg transition-colors ml-2 shrink-0"
                 aria-label="Fechar"
               >
                 <WrapperIcone icone={X} tamanho={20} className="text-gray-500" />
@@ -610,7 +610,7 @@ const FuncionarioDashboard = () => {
                   <ul className="space-y-2">
                     {itemSelecionado.detalhes.lista.map((item, index) => (
                       <li key={index} className="flex items-start gap-2 p-2 hover:bg-gray-50 rounded">
-                        <div className="w-1.5 h-1.5 rounded-full bg-odara-primary mt-2 flex-shrink-0"></div>
+                        <div className="w-1.5 h-1.5 rounded-full bg-odara-primary mt-2 shrink-0"></div>
                         <span className="text-sm text-gray-700 flex-1">{item}</span>
                       </li>
                     ))}
@@ -688,8 +688,8 @@ const FuncionarioDashboard = () => {
 
         <div className="space-y-4 sm:space-y-6">
           <CartoesEstatisticas
-            checklists={dadosDashboard?.checklists}
-            residentes={dadosDashboard?.residentes}
+            checklists={dadosDashboard?.checklists ?? 0}
+            residentes={dadosDashboard?.residentes ?? 0}
           />
 
           <AcoesFuncionario />

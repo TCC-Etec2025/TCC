@@ -3,7 +3,8 @@ import React, { useEffect, useState, useRef, useCallback, useMemo } from "react"
 import { 
   Filter, Search, Plus, Edit, Trash, Info, ChevronDown, Check, 
   Clock, AlertCircle, CheckCircle, User, Calendar, Clock as ClockIcon,
-  Smile, Frown, Meh
+  Smile, Frown, Meh,
+  type LucideIcon
 } from "lucide-react";
 import { supabase } from "../../../lib/supabaseClient";
 import ModalComportamento from "./ModalComportamento";
@@ -27,7 +28,7 @@ const CORES_CATEGORIAS: Record<string, {
   text: string;
   border: string;
   bola: string;
-  icon: React.ComponentType<any>;
+  icon: LucideIcon;
 }> = {
   [CATEGORIAS.POSITIVO]: {
     bg: 'bg-green-50',
@@ -51,11 +52,6 @@ const CORES_CATEGORIAS: Record<string, {
     icon: Meh
   },
 };
-
-const STATUS_OPTIONS = [
-  { value: 'pendente', label: 'Pendente', icon: Clock },
-  { value: 'resolvido', label: 'Resolvido', icon: CheckCircle }
-];
 
 const FILTRO_STATUS_OPTIONS = [
   { value: 'todos', label: 'Todos os status' },
@@ -94,10 +90,33 @@ type Comportamento = {
   id_funcionario: number | null;
   funcionario: Funcionario | null;
   categoria: string;
-  resolvido: boolean;
+  status: boolean;
   criado_em?: string;
-  foto_url?: string | null;
 };
+
+export interface ComportamentoBD {
+  id: number;
+  id_residente: number | null;
+  id_funcionario: number;
+  titulo: string;
+  descricao: string | null;
+  data: string;
+  horario: string;
+  categoria: string;
+  status: boolean;
+  criado_em: string;
+  atualizado_em: string;
+  residente: {
+    id: number;
+    nome: string;
+    quarto: string | null;
+    foto: string | null;
+  } | null;
+  funcionario: {
+    id: number;
+    nome: string;
+  } | null;
+}
 
 // ===== COMPONENTE =====
 const RegistroComportamento: React.FC = () => {
@@ -142,21 +161,13 @@ const RegistroComportamento: React.FC = () => {
 
   /* Utilitários */
   const formatarData = (dataString: string) => {
-    try {
-      const data = new Date(dataString);
-      return data.toLocaleDateString('pt-BR');
-    } catch (error) {
-      return 'Data inválida';
-    }
+    const data = new Date(dataString);
+    return data.toLocaleDateString('pt-BR');
   };
 
   const formatarDataHora = (dataString: string, horario: string) => {
-    try {
-      const data = new Date(dataString);
-      return `${data.toLocaleDateString('pt-BR')} ${horario ? `- ${horario}` : ''}`;
-    } catch (error) {
-      return 'Data inválida';
-    }
+    const data = new Date(dataString);
+    return `${data.toLocaleDateString('pt-BR')} ${horario ? `- ${horario}` : ''}`;
   };
 
   /* Efeitos */
@@ -192,21 +203,21 @@ const RegistroComportamento: React.FC = () => {
           residente:residente(id, nome, quarto, foto),
           funcionario:funcionario(id, nome)
         `)
-        .order("data", { ascending: false });
+        .order("data", { ascending: false })
+        .returns<ComportamentoBD[]>();
 
       if (error) throw error;
 
       // Mapear os dados para o formato correto
-      const comportamentosMapeados = (data || []).map((item: any) => ({
+      const comportamentosMapeados = (data || []).map((item) => ({
         id: item.id,
         titulo: item.titulo,
         descricao: item.descricao,
         data: item.data,
         horario: item.horario,
         categoria: item.categoria,
-        resolvido: item.resolvido || false,
+        status: item.status || false,
         criado_em: item.criado_em,
-        foto_url: item.foto_url,
         id_residente: item.id_residente,
         id_funcionario: item.id_funcionario,
         residente: item.residente || null,
@@ -215,7 +226,7 @@ const RegistroComportamento: React.FC = () => {
 
       setComportamentos(comportamentosMapeados);
       console.log('Comportamentos carregados:', comportamentosMapeados.length);
-    } catch (error: any) {
+    } catch (error) {
       console.error('Erro ao buscar comportamentos:', error);
       toast.error('Erro ao carregar comportamentos');
     } finally {
@@ -232,7 +243,7 @@ const RegistroComportamento: React.FC = () => {
 
       if (error) throw error;
       setResidentes(data || []);
-    } catch (err: any) {
+    } catch (err) {
       console.error('Erro ao carregar residentes:', err);
       toast.error('Erro ao carregar lista de residentes');
     }
@@ -272,7 +283,7 @@ const RegistroComportamento: React.FC = () => {
       // Atualiza a lista localmente
       setComportamentos(prev => prev.filter(c => c.id !== comportamentoParaExcluir));
       toast.success('Comportamento excluído com sucesso!');
-    } catch (err: any) {
+    } catch (err) {
       console.error('Erro ao excluir comportamento:', err);
       toast.error('Erro ao excluir comportamento');
     } finally {
@@ -280,28 +291,28 @@ const RegistroComportamento: React.FC = () => {
     }
   };
 
-  const alternarResolvido = async (id: number) => {
+  const alternarStatus = async (id: number) => {
     try {
       const comportamento = comportamentos.find(c => c.id === id);
       if (!comportamento) return;
 
-      const novoStatus = !comportamento.resolvido;
+      const novoStatus = !comportamento.status;
 
       // Atualizar localmente primeiro para feedback imediato
       setComportamentos(prev => prev.map(c =>
-        c.id === id ? { ...c, resolvido: novoStatus } : c
+        c.id === id ? { ...c, status: novoStatus } : c
       ));
 
       // Atualiza no banco de dados
       const { error } = await supabase
         .from('comportamento')
-        .update({ resolvido: novoStatus })
+        .update({ status: novoStatus })
         .eq('id', id);
 
       if (error) throw error;
 
       toast.success(`Comportamento ${novoStatus ? 'marcado como resolvido' : 'reaberto'}!`);
-    } catch (err: any) {
+    } catch (err) {
       console.error('Erro ao alternar status:', err);
       toast.error('Falha ao atualizar status.');
       // Reverter em caso de erro
@@ -383,7 +394,7 @@ const RegistroComportamento: React.FC = () => {
 
         // Filtro por status
         if (filtros.status) {
-          const statusComportamento = comportamento.resolvido ? 'resolvido' : 'pendente';
+          const statusComportamento = comportamento.status ? 'resolvido' : 'pendente';
           if (statusComportamento !== filtros.status) {
             return false;
           }
@@ -443,9 +454,9 @@ const RegistroComportamento: React.FC = () => {
     setAberto: (aberto: boolean) => void;
     ref: React.RefObject<HTMLDivElement>;
     valorSelecionado: string | number | null;
-    onSelecionar: (value: any) => void;
+    onSelecionar: (value: string | number | null) => void;
     tipo: 'residente' | 'status' | 'categoria';
-    opcoes: Array<{ value: string; label: string; icon?: React.ComponentType<any> }>;
+    opcoes: Array<{ value: string; label: string; icon?: LucideIcon }>;
   }) => {
     return (
       <div className="relative" ref={ref}>
@@ -464,7 +475,7 @@ const RegistroComportamento: React.FC = () => {
                 : titulo
             }
           </span>
-          <ChevronDown size={10} className="sm:w-3 sm:h-3 text-gray-500 flex-shrink-0" />
+          <ChevronDown size={10} className="sm:w-3 sm:h-3 text-gray-500 shrink-0" />
         </button>
 
         {aberto && (
@@ -529,8 +540,8 @@ const RegistroComportamento: React.FC = () => {
   const CardComportamento = ({ comportamento }: { comportamento: Comportamento }) => {
     const cores = CORES_CATEGORIAS[comportamento.categoria] || CORES_CATEGORIAS.neutro;
     const CategoriaIcon = cores.icon;
-    const statusLabel = comportamento.resolvido ? 'Resolvido' : 'Pendente';
-    const StatusIcon = comportamento.resolvido ? CheckCircle : Clock;
+    const statusLabel = comportamento.status ? 'Resolvido' : 'Pendente';
+    const StatusIcon = comportamento.status ? CheckCircle : Clock;
 
     return (
       <div className="bg-white rounded-lg shadow-md border border-gray-200 hover:shadow-lg transition-shadow duration-200 flex flex-col h-full">
@@ -564,13 +575,13 @@ const RegistroComportamento: React.FC = () => {
 
             {/* Status */}
             <button
-              onClick={() => alternarResolvido(comportamento.id)}
+              onClick={() => alternarStatus(comportamento.id)}
               className={`flex items-center gap-1 px-2 py-1 rounded-lg text-xs font-medium transition-colors ${
-                comportamento.resolvido
+                comportamento.status
                   ? 'bg-green-100 text-green-800 hover:bg-green-200'
                   : 'bg-yellow-100 text-yellow-800 hover:bg-yellow-200'
               }`}
-              title={`Marcar como ${comportamento.resolvido ? 'pendente' : 'resolvido'}`}
+              title={`Marcar como ${comportamento.status ? 'pendente' : 'resolvido'}`}
             >
               <StatusIcon size={10} className="sm:w-3 sm:h-3" />
               <span>{statusLabel}</span>
@@ -589,7 +600,7 @@ const RegistroComportamento: React.FC = () => {
             {/* Coluna Esquerda */}
             <div className="space-y-2 sm:space-y-3">
               <div className="flex items-center gap-2">
-                <User size={12} className="text-odara-accent flex-shrink-0" />
+                <User size={12} className="text-odara-accent shrink-0" />
                 <div>
                   <strong className="text-odara-dark text-xs sm:text-sm">Residente:</strong>
                   <span className="text-odara-name mt-0.5 sm:mt-1 text-xs sm:text-sm block">
@@ -612,7 +623,7 @@ const RegistroComportamento: React.FC = () => {
             <div className="space-y-2 sm:space-y-3">
               {comportamento.funcionario && (
                 <div className="flex items-center gap-2">
-                  <User size={12} className="text-odara-accent flex-shrink-0" />
+                  <User size={12} className="text-odara-accent shrink-0" />
                   <div>
                     <strong className="text-odara-dark text-xs sm:text-sm">Registrado por:</strong>
                     <span className="text-odara-name mt-0.5 sm:mt-1 text-xs sm:text-sm block">
@@ -624,7 +635,7 @@ const RegistroComportamento: React.FC = () => {
 
               {comportamento.criado_em && (
                 <div className="flex items-center gap-2">
-                  <ClockIcon size={12} className="text-odara-accent flex-shrink-0" />
+                  <ClockIcon size={12} className="text-odara-accent shrink-0" />
                   <div>
                     <strong className="text-odara-dark text-xs sm:text-sm">Criado em:</strong>
                     <span className="text-odara-name mt-0.5 sm:mt-1 text-xs sm:text-sm block">
@@ -689,7 +700,7 @@ const RegistroComportamento: React.FC = () => {
               setAberto={setFiltroResidenteAberto}
               ref={filtroResidenteRef}
               valorSelecionado={filtros.residenteId}
-              onSelecionar={selecionarResidente}
+              onSelecionar={selecionarResidente as (value: string | number | null) => void}
               tipo="residente"
               opcoes={[]}
             />
@@ -708,7 +719,7 @@ const RegistroComportamento: React.FC = () => {
               setAberto={setFiltroStatusAberto}
               ref={filtroStatusRef}
               valorSelecionado={filtros.status || 'todos'}
-              onSelecionar={selecionarStatus}
+              onSelecionar={selecionarStatus as (value: string | number | null) => void}
               tipo="status"
               opcoes={FILTRO_STATUS_OPTIONS}
             />
@@ -727,7 +738,7 @@ const RegistroComportamento: React.FC = () => {
               setAberto={setFiltroCategoriaAberto}
               ref={filtroCategoriaRef}
               valorSelecionado={filtros.categoria || 'todos'}
-              onSelecionar={selecionarCategoria}
+              onSelecionar={selecionarCategoria as (value: string | number | null) => void}
               tipo="categoria"
               opcoes={FILTRO_CATEGORIA_OPTIONS}
             />
@@ -789,7 +800,7 @@ const RegistroComportamento: React.FC = () => {
     const tituloComportamento = comportamento?.titulo || '';
 
     return (
-      <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-[100] p-4 animate-fade-in">
+      <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-100 p-4 animate-fade-in">
         <div className="bg-white rounded-2xl shadow-xl p-4 sm:p-6 max-w-md w-full animate-scale-in">
           <div className="text-center">
             {/* Ícone de alerta */}
@@ -841,8 +852,8 @@ const RegistroComportamento: React.FC = () => {
   };
 
   const ListaComportamentos = () => {
-    const contadorPendentes = comportamentos.filter(c => !c.resolvido).length;
-    const contadorResolvidos = comportamentos.filter(c => c.resolvido).length;
+    const contadorPendentes = comportamentos.filter(c => !c.status).length;
+    const contadorResolvidos = comportamentos.filter(c => c.status).length;
 
     return (
       <div className="bg-white border-l-4 border-odara-primary rounded-xl sm:rounded-2xl shadow-lg p-3 sm:p-6">
@@ -946,7 +957,7 @@ const RegistroComportamento: React.FC = () => {
     return (
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
         <div className="flex items-start sm:items-center gap-3 w-full">
-          <AlertCircle size={24} className='sm:w-7 sm:h-7 lg:w-8 lg:h-8 text-odara-accent flex-shrink-0 mt-1 sm:mt-0' />
+          <AlertCircle size={24} className='sm:w-7 sm:h-7 lg:w-8 lg:h-8 text-odara-accent shrink-0 mt-1 sm:mt-0' />
           
           <div className="flex-1 min-w-0 relative">
             <div className="flex items-center gap-0.1 sm:gap-2">
@@ -956,7 +967,7 @@ const RegistroComportamento: React.FC = () => {
               
               <button
                 onClick={() => setInfoVisivel(!infoVisivel)}
-                className="flex-shrink-0 w-5 h-5 sm:w-6 sm:h-6 lg:w-7 lg:h-7 flex items-center justify-center rounded-full hover:bg-gray-100 transition-colors ml-1"
+                className="shrink-0 w-5 h-5 sm:w-6 sm:h-6 lg:w-7 lg:h-7 flex items-center justify-center rounded-full hover:bg-gray-100 transition-colors ml-1"
                 aria-label="Informações"
               >
                 <Info size={12} className="sm:w-3.5 sm:h-3.5 lg:w-4 lg:h-4 text-odara-accent" />

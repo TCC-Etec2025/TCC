@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
-import { Filter, Search, HeartPulse, Pill, Microscope, ClipboardPlus, Star, Palette, Apple, Siren, UserRoundSearch } from 'lucide-react';
+import { Filter, Search, HeartPulse, Pill, Microscope, ClipboardPlus, Star, Palette, Apple, Siren, UserRoundSearch, type LucideIcon } from 'lucide-react';
 
 const Registros = () => {
   const [filtroAberto, setFiltroAberto] = useState(false);
@@ -13,7 +13,7 @@ const Registros = () => {
     tamanho = 24,
     className = ""
   }: {
-    icone: React.ComponentType<any>;
+    icone: LucideIcon;
     tamanho?: number;
     className?: string;
   }) => (
@@ -134,7 +134,7 @@ const Registros = () => {
       <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 mb-6 sm:mb-8">
         <div className="flex-1 relative">
           <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-            <Search className="text-odara-primary mr-3 h-4 w-4 flex-shrink-0" />
+            <Search className="text-odara-primary mr-3 h-4 w-4 shrink-0" />
           </div>
 
           <input

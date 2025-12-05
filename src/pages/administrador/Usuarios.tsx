@@ -98,7 +98,7 @@ const Usuarios: React.FC = () => {
 
       // 5. Buscar parentesco dos responsáveis na tabela residente
       const responsavelIds = responsaveisData?.map(r => r.id) || [];
-      let parentescos: { [key: number]: string } = {};
+      const parentescos: { [key: number]: string } = {};
 
       if (responsavelIds.length > 0) {
         const { data: residentesData, error: residentesError } = await supabase
@@ -146,9 +146,9 @@ const Usuarios: React.FC = () => {
 
       setListaUsuarios(usuariosCompletos);
 
-    } catch (erro: any) {
+    } catch (erro) {
       console.error('Erro ao buscar usuários:', erro);
-      toast.error('Erro ao buscar usuários: ' + (erro?.message ?? String(erro)));
+      toast.error('Erro ao buscar usuários');
     } finally {
       setCarregando(false);
     }
@@ -217,9 +217,9 @@ const Usuarios: React.FC = () => {
       ));
 
       toast.success(`Usuário ${novoStatus ? 'ativado' : 'inativado'} com sucesso!`);
-    } catch (erro: any) {
+    } catch (erro) {
       console.error('Erro ao alterar status:', erro);
-      toast.error('Erro ao alterar status: ' + (erro?.message ?? String(erro)));
+      toast.error('Erro ao alterar status');
     } finally {
       setAtualizandoStatus(null);
     }
@@ -285,9 +285,9 @@ const Usuarios: React.FC = () => {
       // Atualiza a lista localmente
       setListaUsuarios(listaUsuarios.filter(usuario => usuario.id !== usuarioParaExcluir));
       toast.success('Usuário excluído com sucesso!');
-    } catch (erro: any) {
+    } catch (erro) {
       console.error('Erro ao excluir usuário:', erro);
-      toast.error('Erro ao excluir usuário: ' + (erro?.message ?? String(erro)));
+      toast.error('Erro ao excluir usuário');
     } finally {
       fecharModalExclusao();
     }
@@ -298,7 +298,7 @@ const Usuarios: React.FC = () => {
     if (!modalExclusaoAberto) return null;
 
     return (
-      <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-[100] p-4">
+      <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-100 p-4">
         <div className="bg-white rounded-2xl shadow-lg p-6 max-w-md w-full">
           <div className="text-center">
             {/* Ícone de alerta */}
@@ -346,7 +346,7 @@ const Usuarios: React.FC = () => {
         <div className="p-4 border-b border-gray-100 bg-odara-offwhite/30">
           <div className="flex items-start justify-between">
             <div className="flex items-center gap-3">
-              <div className="bg-odara-primary/20 rounded-full p-2 flex-shrink-0">
+              <div className="bg-odara-primary/20 rounded-full p-2 shrink-0">
                 <User className="h-5 w-5 text-odara-primary" />
               </div>
               <div className="flex-1 min-w-0">
@@ -404,7 +404,7 @@ const Usuarios: React.FC = () => {
           <div className="mb-4">
             <p className="text-xs text-gray-500 mb-1">E-mail</p>
             <div className="flex items-center gap-2">
-              <Mail className="h-4 w-4 text-odara-primary flex-shrink-0" />
+              <Mail className="h-4 w-4 text-odara-primary shrink-0" />
               <span className="text-sm text-gray-600 truncate">{usuario.email}</span>
             </div>
           </div>
@@ -414,7 +414,7 @@ const Usuarios: React.FC = () => {
             <div className="mb-4">
               <p className="text-xs text-gray-500 mb-1">Telefone</p>
               <div className="flex items-center gap-2">
-                <Phone className="h-4 w-4 text-odara-primary flex-shrink-0" />
+                <Phone className="h-4 w-4 text-odara-primary shrink-0" />
                 <span className="text-sm text-gray-600">{formatarTelefone(telefone)}</span>
               </div>
             </div>
@@ -479,7 +479,7 @@ const Usuarios: React.FC = () => {
           </div>
 
           {/* Botão Cadastrar Usuário */}
-          <div className="flex-shrink-0 w-full sm:w-auto">
+          <div className="shrink-0 w-full sm:w-auto">
             <button
               className="bg-odara-accent hover:bg-odara-secondary text-white font-medium py-2 px-4 rounded-lg flex items-center justify-center transition-colors w-full sm:w-auto"
               onClick={() => navigate('/app/admin/usuario/formulario')}
@@ -511,7 +511,7 @@ const Usuarios: React.FC = () => {
           <div className="bg-white rounded-xl shadow-sm overflow-hidden border-l-4 border-odara-primary">
             <div className="overflow-x-auto">
               <table className="w-full text-sm">
-                <thead className="border-b-1 border-odara-primary bg-odara-primary/10 text-odara-primary">
+                <thead className="border-b border-odara-primary bg-odara-primary/10 text-odara-primary">
                   <tr>
                     <th className="p-4 text-left font-semibold align-middle">Usuário</th>
                     <th className="p-4 text-left font-semibold align-middle">Contato</th>
@@ -535,7 +535,7 @@ const Usuarios: React.FC = () => {
                         <td className="p-4">
                           <div className="flex items-center gap-3 min-w-[200px]">
                             {/* Ícone */}
-                            <div className="bg-odara-primary/20 rounded-full p-2 flex-shrink-0">
+                            <div className="bg-odara-primary/20 rounded-full p-2 shrink-0">
                               <User className="h-4 w-4 text-odara-primary" />
                             </div>
 

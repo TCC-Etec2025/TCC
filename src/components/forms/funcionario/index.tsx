@@ -309,7 +309,7 @@ export default function CadastroFuncionario({ funcionario }: Props) {
             </label>
             <select
               {...register("vinculo")}
-              className="w-full px-4 py-3 bg-white rounded-xl border border-gray-200 text-odara-dark placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-odara-secondary focus:border-transparent bg-white"
+              className="w-full px-4 py-3 bg-white rounded-xl border border-gray-200 text-odara-dark placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-odara-secondary focus:border-transparent"
             >
               <option value="">Selecione o tipo de vínculo</option>
               <option className="hover:bg-odara-primary/10" value="CLT">CLT</option>
@@ -461,7 +461,7 @@ export default function CadastroFuncionario({ funcionario }: Props) {
               Papel <span className="text-odara-accent font-bold">*</span>
             </label>
             <select
-              className="w-full px-4 py-3 bg-white rounded-xl border border-gray-200 text-odara-dark placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-odara-secondary focus:border-transparent bg-white"
+              className="w-full px-4 py-3 bg-white rounded-xl border border-gray-200 text-odara-dark placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-odara-secondary focus:border-transparent"
             >
               <option value="funcionario" selected>
                 Funcionário
@@ -523,7 +523,7 @@ export default function CadastroFuncionario({ funcionario }: Props) {
               </div>
 
               {cepPreenchidoAutomaticamente && (
-                <div className="flex-shrink-0">
+                <div className="shrink-0">
                   <button
                     type="button"
                     onClick={() => setCepPreenchidoAutomaticamente(false)}
@@ -687,7 +687,7 @@ export default function CadastroFuncionario({ funcionario }: Props) {
           <button
             type="submit"
             disabled={carregando}
-            className="flex items-center px-6 py-3 bg-odara-accent hover:bg-odara-secondary text-white rounded-lg hover:bg-blue-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors font-medium"
+            className="flex items-center px-6 py-3 bg-odara-accent hover:bg-odara-secondary text-white rounded-lg disabled:opacity-50 disabled:cursor-not-allowed transition-colors font-medium"
           >
             {carregando ? (
               <>

@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
-import { Filter, Search, Pill, ClipboardPlus, Apple, Palette, Microscope } from 'lucide-react';
+import { Filter, Search, Pill, ClipboardPlus, Apple, Palette, Microscope, type LucideIcon } from 'lucide-react';
 
 const PaginaChecklist = () => {
   const [filtroAberto, setFiltroAberto] = useState(false);
@@ -13,7 +13,7 @@ const PaginaChecklist = () => {
     tamanho = 24,
     className = ""
   }: {
-    icone: React.ComponentType<any>;
+    icone: LucideIcon;
     tamanho?: number;
     className?: string;
   }) => (
@@ -98,7 +98,7 @@ const PaginaChecklist = () => {
       <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 mb-6 sm:mb-8">
         <div className="flex-1 relative">
           <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-            <Search className="text-odara-primary mr-3 h-4 w-4 flex-shrink-0" />
+            <Search className="text-odara-primary mr-3 h-4 w-4 shrink-0" />
           </div>
 
           <input

@@ -49,7 +49,7 @@ export const useCadastroForm = (responsavel: PerfilUsuario) => {
                         data_nascimento: responsavel.data_nascimento || '',
                         email: responsavel.email || '',
                         contato_emergencia_nome: responsavel.contato_emergencia_nome || '',
-                        contato_emergencia_telefone: formatTelefone(responsavel.contato_emergencia_telefone) || '',
+                        contato_emergencia_telefone: formatTelefone(responsavel.contato_emergencia_telefone || '') || '',
                         cep: formatCEP(data.cep) || '',
                         logradouro: data.logradouro || '',
                         numero: data.numero || '',

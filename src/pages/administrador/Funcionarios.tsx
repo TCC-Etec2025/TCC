@@ -33,9 +33,9 @@ const Funcionarios: React.FC = () => {
 
       if (error) throw error;
       if (data) setListaFuncionarios(data);
-    } catch (erro: any) {
+    } catch (erro) {
       console.error('Erro ao buscar funcionários:', erro);
-      toast.error('Erro ao buscar funcionários: ' + (erro?.message ?? String(erro)));
+      toast.error('Erro ao buscar funcionários');
     } finally {
       setCarregando(false);
     }
@@ -77,9 +77,9 @@ const Funcionarios: React.FC = () => {
       ));
 
       toast.success(`Status alterado para ${proximoStatus.charAt(0).toUpperCase() + proximoStatus.slice(1)}!`);
-    } catch (erro: any) {
+    } catch (erro) {
       console.error('Erro ao alterar status:', erro);
-      toast.error('Erro ao alterar status: ' + (erro?.message ?? String(erro)));
+      toast.error('Erro ao alterar status');
     } finally {
       setAtualizandoStatus(null);
     }
@@ -123,9 +123,9 @@ const Funcionarios: React.FC = () => {
       // Atualiza a lista localmente
       setListaFuncionarios(listaFuncionarios.filter(funcionario => funcionario.id !== funcionarioParaExcluir));
       toast.success('Funcionário excluído com sucesso!');
-    } catch (erro: any) {
+    } catch (erro) {
       console.error('Erro ao excluir funcionário:', erro);
-      toast.error('Erro ao excluir funcionário: ' + (erro?.message ?? String(erro)));
+      toast.error('Erro ao excluir funcionário');
     } finally {
       fecharModalExclusao();
     }
@@ -136,7 +136,7 @@ const Funcionarios: React.FC = () => {
     if (!modalExclusaoAberto) return null;
 
     return (
-      <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-[100] p-4">
+      <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-100 p-4">
         <div className="bg-white rounded-2xl shadow-lg p-6 max-w-md w-full">
           <div className="text-center">
             {/* Ícone de alerta */}
@@ -179,7 +179,7 @@ const Funcionarios: React.FC = () => {
         <div className="p-4 border-b border-gray-100 bg-odara-offwhite/30">
           <div className="flex items-start justify-between">
             <div className="flex items-center gap-3">
-              <div className="bg-odara-primary/20 rounded-full p-2 flex-shrink-0">
+              <div className="bg-odara-primary/20 rounded-full p-2 shrink-0">
                 <User className="h-5 w-5 text-odara-primary" />
               </div>
               <div className="flex-1 min-w-0">
@@ -259,7 +259,7 @@ const Funcionarios: React.FC = () => {
             <p className="text-xs text-gray-500 mb-2">Contato</p>
             <div className="space-y-2">
               <div className="flex items-center gap-2">
-                <Phone className="h-4 w-4 text-odara-primary flex-shrink-0" />
+                <Phone className="h-4 w-4 text-odara-primary shrink-0" />
                 <div>
                   <span className="text-sm text-odara-dark">{funcionario.telefone_principal}</span>
                   {funcionario.telefone_secundario && (
@@ -269,7 +269,7 @@ const Funcionarios: React.FC = () => {
               </div>
               {funcionario.email && (
                 <div className="flex items-center gap-2">
-                  <Mail className="h-4 w-4 text-odara-primary flex-shrink-0" />
+                  <Mail className="h-4 w-4 text-odara-primary shrink-0" />
                   <span className="text-sm text-gray-600 truncate">{funcionario.email}</span>
                 </div>
               )}
@@ -327,7 +327,7 @@ const Funcionarios: React.FC = () => {
           </div>
 
           {/* Botão Cadastrar Funcionário */}
-          <div className="flex-shrink-0 w-full sm:w-auto">
+          <div className="shrink-0 w-full sm:w-auto">
             <button
               className="bg-odara-accent hover:bg-odara-secondary text-white font-medium py-2 px-4 rounded-lg flex items-center justify-center transition-colors w-full sm:w-auto"
               onClick={() => navigate('/app/admin/funcionario/formulario')}
@@ -359,7 +359,7 @@ const Funcionarios: React.FC = () => {
           <div className="bg-white rounded-xl shadow-sm overflow-hidden border-l-4 border-odara-primary">
             <div className="overflow-x-auto">
               <table className="w-full text-sm">
-                <thead className="border-b-1 border-odara-primary bg-odara-primary/10 text-odara-primary">
+                <thead className="border-b border-odara-primary bg-odara-primary/10 text-odara-primary">
                   <tr>
                     <th className="p-4 text-left font-semibold align-middle">Funcionário</th>
                     <th className="p-4 text-left font-semibold align-middle">Cargo</th>
@@ -378,7 +378,7 @@ const Funcionarios: React.FC = () => {
                       <td className="p-4">
                         <div className="flex items-center gap-3 min-w-[200px]">
                           {/* Ícone */}
-                          <div className="bg-odara-primary/20 rounded-full p-2 flex-shrink-0">
+                          <div className="bg-odara-primary/20 rounded-full p-2 shrink-0">
                             <User className="h-4 w-4 text-odara-primary" />
                           </div>
 

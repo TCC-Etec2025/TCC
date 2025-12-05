@@ -244,29 +244,12 @@ export default function CadastroResponsavel({ responsavel }: Props) {
 
       if (!responsavel) reset();
     } catch (erro) {
-      console.error("Erro completo:", erro);
-      
-      // CORREÇÃO: Extrair mensagem de erro de forma mais robusta
-      let mensagemErro = "Erro desconhecido";
-      
-      if (erro instanceof Error) {
-        mensagemErro = erro.message;
-      } else if (typeof erro === 'string') {
-        mensagemErro = erro;
-      } else if (erro && typeof erro === 'object') {
-        // Tentar extrair mensagem de objetos de erro do Supabase
-        const errorObj = erro as any;
-        if (errorObj.message) {
-          mensagemErro = errorObj.message;
-        } else if (errorObj.error && errorObj.error.message) {
-          mensagemErro = errorObj.error.message;
-        }
-      }
+      console.error("Erro completo:", erro);  
 
       // Configurar modal de erro
       setConfiguracaoModal({
         titulo: "Erro!",
-        descricao: `Erro ao ${responsavel ? "editar" : "cadastrar"} responsável: ${mensagemErro}`,
+        descricao: `Erro ao ${responsavel ? "editar" : "cadastrar"} responsável`,
         acoes: [
           {
             rotulo: "Fechar",
@@ -493,7 +476,7 @@ export default function CadastroResponsavel({ responsavel }: Props) {
               </div>
 
               {cepPreenchidoAutomaticamente && (
-                <div className="flex-shrink-0">
+                <div className="shrink-0">
                   <button
                     type="button"
                     onClick={() => setCepPreenchidoAutomaticamente(false)}

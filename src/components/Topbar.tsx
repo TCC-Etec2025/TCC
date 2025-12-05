@@ -1,6 +1,5 @@
 import { useState, useRef, useEffect } from 'react';
 import { useUser, type PerfilUsuario } from "../context/UserContext"
-import { useLayout } from "../context/LayoutContext"
 import { User, LogOut } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 
@@ -13,7 +12,6 @@ type DropdownItem = {
 export default function Topbar() {
     const navigate = useNavigate()
     const { usuario, logout } = useUser() as { usuario: PerfilUsuario, logout: () => void }
-    const { toggleSidebar } = useLayout()
     const [imageError, setImageError] = useState(false)
     const [dropdownOpen, setDropdownOpen] = useState(false)
     const dropdownRef = useRef<HTMLDivElement>(null)
@@ -78,7 +76,7 @@ export default function Topbar() {
                     onClick={() => setDropdownOpen(!dropdownOpen)}
                     ref={dropdownRef}
                 >
-                    <div className={`w-11 h-11 rounded-full flex items-center justify-center overflow-hidden border-1 shadow-sm ${
+                    <div className={`w-11 h-11 rounded-full flex items-center justify-center overflow-hidden border shadow-sm ${
                         isResponsavel 
                             ? 'bg-odara-secondary border-odara-contorno' 
                             : 'bg-green-200 border-white'

@@ -31,6 +31,7 @@ export function LayoutProvider({ children }: { children: ReactNode }) {
   )
 }
 
+/* eslint-disable react-refresh/only-export-components */
 export function useLayout() {
   const context = useContext(LayoutContext)
   if (context === undefined) {

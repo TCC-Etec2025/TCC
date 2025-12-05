@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useMemo, useRef, useCallback } from 'react';
 import { useForm } from 'react-hook-form';
-import { Info, Filter, ChevronDown, ChevronRight, MessageCircleMore, Clock, FileText, Check, CircleCheck, Microscope, Search, Edit, RockingChair, XCircle, Loader, X, AlertCircle, Calendar, Building } from 'lucide-react';
+import { Info, Filter, ChevronDown, ChevronRight, MessageCircleMore, Clock, FileText, Check, CircleCheck, Microscope, Search, Edit, RockingChair, XCircle, Loader, X, Calendar, Building, type LucideIcon } from 'lucide-react';
 
 import * as yup from 'yup';
 import { yupResolver } from '@hookform/resolvers/yup';
@@ -44,7 +44,7 @@ const COR_STATUS: Record<string, {
   bg: string;
   text: string;
   border: string;
-  icon: any;
+  icon: LucideIcon;
 }> = {
   realizado: {
     bola: 'bg-green-500',

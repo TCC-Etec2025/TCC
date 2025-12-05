@@ -17,7 +17,7 @@ const Footer = () => {
                   alt="Logo Odara Gestão"
                   className="w-full h-full object-cover"
                   onError={(e) => {
-                    e.target.onerror = null;
+                    (e.currentTarget as HTMLImageElement).onerror = null;
                   }}
                 />
               </div>

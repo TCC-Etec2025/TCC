@@ -1,10 +1,10 @@
-import React, { useState, useRef, useEffect } from 'react';
-import { Pill, ClipboardList, AlertTriangle, Hospital, Utensils, BarChart, Star, Users, Stethoscope, Microscope, Video, Phone } from "lucide-react"
+import { useState, useRef, useEffect } from 'react';
+import { Pill, ClipboardList, AlertTriangle, Hospital, Utensils, BarChart, Star, Stethoscope, Microscope } from "lucide-react"
 
 const Documentacao = () => {
-  const [activeItem, setActiveItem] = useState(null);
-  const detailsRef = useRef(null);
-  const topRef = useRef(null); 
+  const [activeItem, setActiveItem] = useState<number | null>(null);
+  const detailsRef = useRef<HTMLDivElement | null>(null);
+  const topRef = useRef<HTMLDivElement | null>(null); 
 
   const funcionalidades = [
     {
@@ -146,12 +146,15 @@ const Documentacao = () => {
 
   // Efeito para rolar até os detalhes quando activeItem muda
   useEffect(() => {
-    if (activeItem !== null && detailsRef.current) {
+    if (activeItem !== null) {
       setTimeout(() => {
-        detailsRef.current.scrollIntoView({
-          behavior: 'smooth',
-          block: 'start'
-        });
+        const el = detailsRef.current;
+        if (el) {
+          el.scrollIntoView({
+            behavior: 'smooth',
+            block: 'start'
+          });
+        }
       }, 50);
     }
   }, [activeItem]);
@@ -204,7 +207,7 @@ const Documentacao = () => {
               }`}
             >
               <div className="flex items-start space-x-3">
-                <span className={`text-lg flex-shrink-0 mt-0.5 ${
+                <span className={`text-lg shrink-0 mt-0.5 ${
                   activeItem === index ? 'text-odara-secondary' : 'text-odara-primary group-hover:text-odara-accent'
                 }`}>
                   {item.icone}
@@ -256,7 +259,7 @@ const Documentacao = () => {
                   <ul className="space-y-3">
                     {funcionalidades[activeItem].detalhes.map((detalhe, i) => (
                       <li key={i} className="flex items-start">
-                        <span className="text-odara-primary mr-3 mt-1 flex-shrink-0">•</span>
+                        <span className="text-odara-primary mr-3 mt-1 shrink-0">•</span>
                         <span className="text-odara-dark leading-relaxed">{detalhe}</span>
                       </li>
                     ))}
@@ -274,7 +277,7 @@ const Documentacao = () => {
                   <ul className="space-y-3">
                     {funcionalidades[activeItem].beneficios.map((beneficio, i) => (
                       <li key={i} className="flex items-start">
-                        <span className="text-odara-primary mr-3 mt-1 flex-shrink-0">✓</span>
+                        <span className="text-odara-primary mr-3 mt-1 shrink-0">✓</span>
                         <span className="text-odara-dark leading-relaxed font-medium">{beneficio}</span>
                       </li>
                     ))}

@@ -56,7 +56,7 @@ interface FormValues {
     hora: string;
     descricao?: string | null;
     providencias?: string | null;
-    id_residente: number;
+    id_residente?: number | null;
     id_funcionario: number;
     categoria: string;
 }
@@ -82,8 +82,8 @@ const ModalOcorrencias = ({ ocorrencia, isOpen, onClose }: ModalOcorrenciasProps
         handleSubmit,
         reset,
         formState: { errors },
-    } = useForm<FormValues>({
-        resolver: yupResolver(schema) as any,
+    } = useForm({
+        resolver: yupResolver(schema),
         defaultValues: {
             id: null,
             titulo: "",
@@ -213,7 +213,7 @@ const ModalOcorrencias = ({ ocorrencia, isOpen, onClose }: ModalOcorrenciasProps
                 onClose();
             }, 500);
 
-        } catch (err: any) {
+        } catch (err) {
             console.error("Erro detalhado ao salvar ocorrência:", err);
             toast.error("Erro ao salvar ocorrência");
         } finally {
@@ -256,7 +256,7 @@ const ModalOcorrencias = ({ ocorrencia, isOpen, onClose }: ModalOcorrenciasProps
 
             <div className="w-full max-w-4xl bg-white rounded-2xl shadow-lg overflow-hidden max-h-[90vh] flex flex-col border-l-4 border-odara-primary">
                 {/* Header do Modal */}
-                <div className="border-b-1 border-odara-primary bg-odara-primary/70 text-odara-accent p-6">
+                <div className="border-b border-odara-primary bg-odara-primary/70 text-odara-accent p-6">
                     <div className="flex justify-between items-center">
                         <h2 className="text-2xl font-bold">
                             {ocorrencia ? 'Editar Ocorrência' : 'Nova Ocorrência'}

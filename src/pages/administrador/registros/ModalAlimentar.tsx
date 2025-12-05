@@ -92,8 +92,8 @@ const ModalAlimentar: React.FC<ModalAlimentarProps> = ({
         handleSubmit,
         reset,
         formState: { errors }
-    } = useForm<FormValues>({
-        resolver: yupResolver(schema) as any,
+    } = useForm({
+        resolver: yupResolver(schema),
         defaultValues: {
             id: null,
             id_residente: 0,
@@ -203,7 +203,7 @@ const ModalAlimentar: React.FC<ModalAlimentarProps> = ({
 
             // Fechar o modal imediatamente após sucesso
             onClose();
-        } catch (err: any) {
+        } catch (err) {
             console.error('Erro ao salvar registro alimentar:', err);
             toast.error('Erro ao salvar registro alimentar');
         } finally {
@@ -246,7 +246,7 @@ const ModalAlimentar: React.FC<ModalAlimentarProps> = ({
 
             <div className="w-full max-w-4xl bg-white rounded-2xl shadow-lg overflow-hidden max-h-[90vh] flex flex-col border-l-4 border-odara-primary">
                 {/* Header do Modal */}
-                <div className="border-b-1 border-odara-primary bg-odara-primary/70 text-odara-accent p-6">
+                <div className="border-b border-odara-primary bg-odara-primary/70 text-odara-accent p-6">
                     <div className="flex justify-between items-center">
                         <h2 className="text-2xl font-bold">
                             {alimentar ? 'Editar Registro Alimentar' : 'Novo Registro Alimentar'}
@@ -276,7 +276,7 @@ const ModalAlimentar: React.FC<ModalAlimentarProps> = ({
 
                         {/* Linha 1 - Residente */}
                         <div>
-                            <label className="block text-medium text-odara-dark mb-2 flex items-center gap-1">
+                            <label className="block text-medium text-odara-dark mb-2 items-center gap-1">
                                 Residente *
                             </label>
                             <select
@@ -300,7 +300,7 @@ const ModalAlimentar: React.FC<ModalAlimentarProps> = ({
                         {/* Linha 2 - Data, Horário e Refeição */}
                         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                             <div>
-                                <label className="block text-medium text-odara-dark mb-2 flex items-center gap-1">
+                                <label className="block text-medium text-odara-dark mb-2 items-center gap-1">
                                     Data *
                                 </label>
                                 <input
@@ -316,7 +316,7 @@ const ModalAlimentar: React.FC<ModalAlimentarProps> = ({
                             </div>
 
                             <div>
-                                <label className="block text-medium text-odara-dark mb-2 flex items-center gap-1">
+                                <label className="block text-medium text-odara-dark mb-2 items-center gap-1">
                                     Horário *
                                 </label>
                                 <input
@@ -332,7 +332,7 @@ const ModalAlimentar: React.FC<ModalAlimentarProps> = ({
                             </div>
 
                             <div>
-                                <label className="block text-medium text-odara-dark mb-2 flex items-center gap-1">
+                                <label className="block text-medium text-odara-dark mb-2 items-center gap-1">
                                     Refeição *
                                 </label>
                                 <select
@@ -356,7 +356,7 @@ const ModalAlimentar: React.FC<ModalAlimentarProps> = ({
 
                         {/* Alimentos */}
                         <div>
-                            <label className="block text-medium text-odara-dark mb-2 flex items-center gap-1">
+                            <label className="block text-medium text-odara-dark mb-2 items-center gap-1">
                                 Alimentos *
                             </label>
                             <textarea
@@ -374,7 +374,7 @@ const ModalAlimentar: React.FC<ModalAlimentarProps> = ({
 
                         {/* Observações - NOVO CAMPO */}
                         <div>
-                            <label className="block text-medium text-odara-dark mb-2 flex items-center gap-1">
+                            <label className="block text-medium text-odara-dark mb-2 items-center gap-1">
                                 Observações
                             </label>
                             <textarea

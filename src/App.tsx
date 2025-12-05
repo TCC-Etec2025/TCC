@@ -42,7 +42,7 @@ import RegistroComportamento from './pages/administrador/registros/RegistroCompo
 
 /* Leticia */
 import RegistroMedicamentos from './pages/administrador/registros/RegistroMedicamentos'
-import RegistroSaudeInicial from './pages/administrador/registros/RegistroSaudeInicial'
+import RegistroSaude from './pages/administrador/registros/RegistroSaude.tsx'
 import RegistroAtividades from './pages/administrador/registros/RegistroAtividades'
 
 /* Lucas */
@@ -120,7 +120,7 @@ export default function App() {
           {/* Registros Admin e Funcionários */}
           <Route path="admin/registros" element={<Registros />} />
           <Route path="admin/registro/medicamentos" element={<RegistroMedicamentos />} />
-          <Route path="admin/registro/saudeInicial" element={<RegistroSaudeInicial />} />
+          <Route path="admin/registro/saude" element={<RegistroSaude />} />
           <Route path="admin/registro/atividades" element={<RegistroAtividades />} />
           <Route path="admin/registro/ocorrencias" element={<RegistroOcorrencias />} />
           <Route path="admin/registro/alimentar" element={<RegistroAlimentar />} />

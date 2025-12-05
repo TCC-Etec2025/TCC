@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Pill, Microscope, ClipboardPlus, HeartPulse, AlertTriangle, Siren, UserRoundSearch, Palette, Apple, Star, Calendar, FileText, UsersRound, Bell, Info, X, ChevronRight, type LucideIcon } from 'lucide-react';
+import { Pill, Microscope, ClipboardPlus, HeartPulse, AlertTriangle, Siren, UserRoundSearch, Palette, Apple, Star, Calendar, FileText, UsersRound, Activity, Utensils, Stethoscope, Bell, Info, X, type LucideIcon } from 'lucide-react';
 import toast, { Toaster } from 'react-hot-toast';
 
 import DataFormatada from '../../components/DataFormatada';
@@ -8,22 +8,6 @@ import { supabase } from '../../lib/supabaseClient';
 import { useUser } from '../../context/UserContext';
 
 // Interfaces para tipagem
-interface DetalhesItem {
-  titulo: string;
-  descricao: string;
-  lista: string[];
-  acaoRecomendada: string;
-}
-
-interface ItemAlertaNotificacao {
-  id: number;
-  texto: string;
-  tipo: 'alerta' | 'info';
-  hora: string;
-  detalhes: DetalhesItem;
-  lido?: boolean;
-}
-
 interface BotaoAcao {
   id: number;
   nome: string;
@@ -36,111 +20,59 @@ interface DadosDashboard {
   residentes: number;
 }
 
+type Alertas = {
+  medicamentos: MedicamentosAlerta[];
+  atividades: AtividadesAlerta[];
+  alimentacao: AlimentacaoAlerta[];
+  consultas: ConsultasAlerta[];
+  contagens?: {
+    medicamentos: number;
+    atividades: number;
+    alimentacao: number;
+    consultas: number;
+  }
+};
+
+type MedicamentosAlerta = {
+  residente: string;
+  medicamento: string;
+  data_prevista: string;
+  horario_previsto: string;
+}
+
+type AtividadesAlerta = {
+  atividade: string;
+  data: string;
+  horario_inicio: string;
+}
+
+type AlimentacaoAlerta = {
+  residente: string;
+  refeicao: string;
+  data: string;
+  horario: string;
+}
+
+type ConsultasAlerta = {
+  residente: string;
+  data_consulta: string;
+  horario: string;
+}
+
 const FuncionarioDashboard = () => {
   const navigate = useNavigate();
 
   // Estados do componente
   const [acaoSelecionada, setAcaoSelecionada] = useState<BotaoAcao | null>(null);
   const [modalAberto, setModalAberto] = useState<boolean>(false);
-  const [itemSelecionado, setItemSelecionado] = useState<ItemAlertaNotificacao | null>(null);
+  const [alertaSelecionado, setAlertaSelecionado] = useState<MedicamentosAlerta[] | AtividadesAlerta[] | AlimentacaoAlerta[] | ConsultasAlerta[] | null>(null);
   const [dadosDashboard, setDadosDashboard] = useState<DadosDashboard | null>(null);
   const [carregando, setCarregando] = useState<boolean>(false);
   const { usuario } = useUser();
 
   // Estados para notificações
   const [notificacoesAbertas, setNotificacoesAbertas] = useState<boolean>(false);
-  const [alertas, setAlertas] = useState<ItemAlertaNotificacao[]>([
-    {
-      id: 1,
-      texto: "Checklist de medicamentos pendente",
-      tipo: "alerta",
-      hora: "09:30",
-      detalhes: {
-        titulo: "Checklist Pendente",
-        descricao: "Checklist de medicamentos está pendente para 2 residentes:",
-        lista: [
-          "Maria Silva - Medicamento às 10:00",
-          "João Santos - Medicamento às 14:00"
-        ],
-        acaoRecomendada: "Realizar o checklist de medicamentos o mais breve possível."
-      },
-      lido: false
-    },
-    {
-      id: 3,
-      texto: "Atividade física cancelada hoje",
-      tipo: "alerta",
-      hora: "08:15",
-      detalhes: {
-        titulo: "Atividade Cancelada",
-        descricao: "A atividade física programada para hoje foi cancelada:",
-        lista: [
-          "Atividade: Fisioterapia em grupo",
-          "Horário: 10:00 - 11:00",
-          "Motivo: Profissional de saúde ausente"
-        ],
-        acaoRecomendada: "Informar aos residentes e reorganizar a agenda."
-      },
-      lido: false
-    },
-  ]);
-
-  const [notificacoes, setNotificacoes] = useState<ItemAlertaNotificacao[]>([
-    {
-      id: 2,
-      texto: "Reunião de equipe às 14:00",
-      tipo: "info",
-      hora: "08:15",
-      detalhes: {
-        titulo: "Reunião de Equipe",
-        descricao: "Reunião agendada para hoje às 14:00 na sala de reuniões principal.",
-        lista: [
-          "Horário: 14:00 - 15:30",
-          "Local: Sala de Reuniões Principal",
-          "Pauta: Revisão mensal de métricas",
-          "Participantes: Equipe completa"
-        ],
-        acaoRecomendada: "Confirmar presença e preparar relatórios solicitados."
-      },
-      lido: false
-    },
-    {
-      id: 4,
-      texto: "Novo residente atribuído",
-      tipo: "info",
-      hora: "Ontem",
-      detalhes: {
-        titulo: "Novo Residente Atribuído",
-        descricao: "Você foi atribuído para cuidar de um novo residente:",
-        lista: [
-          "Nome: Carlos Alberto",
-          "Quarto: 201",
-          "Necessidades especiais: Cadeirante",
-          "Responsável: Ana Silva"
-        ],
-        acaoRecomendada: "Revisar o prontuário do residente antes do primeiro atendimento."
-      },
-      lido: false
-    },
-    {
-      id: 5,
-      texto: "Treinamento de primeiros socorros",
-      tipo: "info",
-      hora: "10:00",
-      detalhes: {
-        titulo: "Treinamento Agendado",
-        descricao: "Treinamento de primeiros socorros agendado para próxima semana:",
-        lista: [
-          "Data: Segunda-feira, 10:00",
-          "Local: Sala de Treinamento",
-          "Duração: 4 horas",
-          "Instrutor: Dr. Roberto"
-        ],
-        acaoRecomendada: "Confirmar presença no sistema interno."
-      },
-      lido: false
-    },
-  ]);
+  const [alertas, setAlertas] = useState<Alertas | null>(null);
 
   // Wrapper para ícones com configurações padrão
   const WrapperIcone = ({
@@ -156,52 +88,20 @@ const FuncionarioDashboard = () => {
   );
 
   // Função para abrir modal com detalhes do item
-  const abrirModal = (item: ItemAlertaNotificacao) => {
-    setItemSelecionado(item);
+  const abrirModal = (item: MedicamentosAlerta[] | AtividadesAlerta[] | AlimentacaoAlerta[] | ConsultasAlerta[]) => {
+    setAlertaSelecionado(item);
     setModalAberto(true);
     // Fechar painel de notificações no mobile
     if (window.innerWidth < 640) {
       setNotificacoesAbertas(false);
-    }
-    // Marcar como lido ao abrir
-    if (!item.lido) {
-      if (item.tipo === 'alerta') {
-        setAlertas(prev => prev.map(a => a.id === item.id ? { ...a, lido: true } : a));
-      } else {
-        setNotificacoes(prev => prev.map(n => n.id === item.id ? { ...n, lido: true } : n));
-      }
     }
   };
 
   // Função para fechar modal
   const fecharModal = () => {
     setModalAberto(false);
-    setItemSelecionado(null);
+    setAlertaSelecionado(null);
   };
-
-  // Função para marcar item como lido
-  const marcarComoLido = (item: ItemAlertaNotificacao) => {
-    if (item.tipo === 'alerta') {
-      setAlertas(prev => prev.map(a => a.id === item.id ? { ...a, lido: true } : a));
-    } else {
-      setNotificacoes(prev => prev.map(n => n.id === item.id ? { ...n, lido: true } : n));
-    }
-    toast.success('Notificação marcada como lida!');
-    fecharModal();
-  };
-
-  // Função para marcar todas como lidas
-  const marcarTodasComoLidas = () => {
-    setAlertas(prev => prev.map(a => ({ ...a, lido: true })));
-    setNotificacoes(prev => prev.map(n => ({ ...n, lido: true })));
-    toast.success('Todas as notificações marcadas como lidas!');
-    setNotificacoesAbertas(false);
-  };
-
-  // Contadores
-  const alertasNaoLidos = alertas.filter(a => !a.lido).length;
-  const notificacoesNaoLidas = notificacoes.filter(n => !n.lido).length;
-  const totalNaoLidas = alertasNaoLidos + notificacoesNaoLidas;
 
   // Efeito para simular carregamento de dados
     useEffect(() => {
@@ -226,7 +126,27 @@ const FuncionarioDashboard = () => {
   
       // Chama a função depois de declará-la
       carregarDadosDashboard();
+      buscarAlertas();
     }, [usuario?.id]);
+
+  const buscarAlertas = async () => {
+    try {
+      const agora = new Date();
+      agora.setMinutes(agora.getMinutes() + 5);
+      const dataLimite = agora.toISOString();
+
+      const { data, error } = await supabase
+        .rpc('get_alertas_funcionario', {
+          p_id_funcionario: usuario?.id,
+          p_data_limite: dataLimite
+        });
+
+      if (error) throw error;
+      setAlertas(data);
+    } catch (error) {
+      console.error('Erro ao chamar função RPC:', error);
+    }
+  };
 
   // Componente de Cabeçalho COM ÍCONE DE NOTIFICAÇÕES
   const CabecalhoDashboard = () => {
@@ -256,11 +176,6 @@ const FuncionarioDashboard = () => {
                 className="text-odara-primary"
               />
             </div>
-            {totalNaoLidas > 0 && (
-              <span className="absolute -top-1 -right-1 bg-odara-primary text-white text-xs font-bold w-5 h-5 flex items-center justify-center rounded-full">
-                {totalNaoLidas}
-              </span>
-            )}
           </button>
         </div>
       </div>
@@ -442,6 +357,8 @@ const FuncionarioDashboard = () => {
   const PainelNotificacoes = () => {
     if (!notificacoesAbertas) return null;
 
+    const totalAlertas = (alertas?.contagens?.alimentacao || 0) + (alertas?.contagens?.consultas || 0) + (alertas?.contagens?.medicamentos || 0) + (alertas?.contagens?.atividades || 0);
+
     return (
       <>
         {/* Overlay para mobile */}
@@ -470,11 +387,6 @@ const FuncionarioDashboard = () => {
                 </div>
                 <div>
                   <h3 className="text-lg font-semibold text-odara-dark">Notificações</h3>
-                  <p className="text-sm text-gray-500">
-                    {totalNaoLidas > 0
-                      ? `${totalNaoLidas} não lida${totalNaoLidas !== 1 ? 's' : ''}`
-                      : 'Todas lidas'}
-                  </p>
                 </div>
               </div>
               <button
@@ -490,7 +402,7 @@ const FuncionarioDashboard = () => {
           {/* Corpo do Painel com scroll */}
           <div className="overflow-y-auto h-[calc(100%-140px)] sm:h-[calc(60vh)]">
             {/* Alertas Urgentes */}
-            {alertasNaoLidos > 0 && (
+            {totalAlertas > 0 && (
               <div className="p-4 border-b border-gray-200">
                 <div className="flex items-center justify-between mb-3">
                   <h4 className="font-medium text-odara-dark flex items-center gap-2">
@@ -499,31 +411,41 @@ const FuncionarioDashboard = () => {
                   </h4>
                 </div>
                 <div className="space-y-3">
-                  {alertas.filter(a => !a.lido).map((alerta) => (
-                    <div
-                      key={alerta.id}
-                      onClick={() => abrirModal(alerta)}
-                      className="p-3 border border-odara-primary/20 rounded-lg hover:bg-odara-primary/5 active:bg-odara-primary/10 cursor-pointer transition-colors"
-                    >
-                      <div className="flex items-start justify-between">
-                        <div className="flex-1 pr-2">
-                          <p className="text-sm font-medium text-odara-dark mb-1 line-clamp-2">
-                            {alerta.texto}
-                          </p>
-                          <div className="flex items-center justify-between mt-2">
-                            <span className="text-xs text-gray-500">{alerta.hora}</span>
-                            <ChevronRight size={14} className="text-odara-primary shrink-0" />
+                  {alertas && (['medicamentos', 'atividades', 'alimentacao', 'consultas'] as const).map((key) => {
+                    const value = alertas?.contagens?.[key];
+                    if ((value || 0) > 0) {
+                      return (
+                        <div
+                          key={key}
+                          onClick={() => abrirModal(alertas[key])}
+                          className="p-3 border border-odara-primary/20 rounded-lg hover:bg-odara-primary/5 active:bg-odara-primary/10 cursor-pointer transition-colors"
+                        >
+                          <div className="flex items-start justify-between">
+                            <div className="flex-1 pr-2">
+                              <p className="text-sm font-medium text-odara-dark mb-1 line-clamp-2">
+                                {(key === 'medicamentos') ? (
+                                  `${value} administrações de medicamentos pendentes`
+                                ) : (key === 'atividades') ? (
+                                  `${value} atividades não iniciadas`
+                                ) : (key === 'alimentacao') ? (
+                                  `${value} refeições atrasadas`
+                                ) : (key === 'consultas') ? (
+                                  `${value} consultas médicas próximas`
+                                ) : null}
+                              </p>
+                            </div>
                           </div>
                         </div>
-                      </div>
-                    </div>
-                  ))}
+                      );
+                    }
+                    return null;
+                  })}
                 </div>
               </div>
             )}
 
             {/* Mensagem quando não há notificações */}
-            {totalNaoLidas === 0 && (
+            {totalAlertas === 0 && (
               <div className="p-8 text-center">
                 <div className="p-4 bg-odara-primary/10 rounded-full inline-block mb-3">
                   <WrapperIcone icone={Bell} tamanho={24} className="text-odara-primary" />
@@ -533,18 +455,6 @@ const FuncionarioDashboard = () => {
               </div>
             )}
           </div>
-
-          {/* Rodapé do Painel */}
-          {totalNaoLidas > 0 && (
-            <div className="border-t border-gray-200 p-4 sticky bottom-0 bg-white">
-              <button
-                onClick={marcarTodasComoLidas}
-                className="w-full py-3 text-sm font-medium text-odara-primary bg-odara-primary/10 rounded-lg hover:bg-odara-primary/20 active:bg-odara-primary/30 transition-colors"
-              >
-                Marcar todas como lidas
-              </button>
-            </div>
-          )}
         </div>
       </>
     );
@@ -552,7 +462,23 @@ const FuncionarioDashboard = () => {
 
   // Componente do Modal de Detalhes - TOTALMENTE RESPONSIVO
   const ModalDetalhes = () => {
-    if (!modalAberto || !itemSelecionado) return null;
+    // Verifica se há dados para exibir
+    if (!modalAberto || !alertaSelecionado || (Array.isArray(alertaSelecionado) && alertaSelecionado.length === 0)) return null;
+
+    // Função auxiliar para determinar o título e ícone com base no tipo de dado (Duck Typing)
+    const getConfig = () => {
+      const item = Array.isArray(alertaSelecionado) ? alertaSelecionado[0] : alertaSelecionado;
+
+      if ('medicamento' in item) return { titulo: 'Medicamentos Pendentes', icone: AlertTriangle, cor: 'bg-red-500' };
+      if ('atividade' in item) return { titulo: 'Atividades Pendentes', icone: Activity, cor: 'bg-blue-500' };
+      if ('refeicao' in item) return { titulo: 'Alimentação Pendentes', icone: Utensils, cor: 'bg-orange-500' };
+      if ('data_consulta' in item) return { titulo: 'Consultas Médicas Pendentes', icone: Stethoscope, cor: 'bg-purple-500' };
+
+      return { titulo: 'Detalhes', icone: Info, cor: 'bg-odara-primary' };
+    };
+
+    const config = getConfig();
+    const listaItens = Array.isArray(alertaSelecionado) ? alertaSelecionado : [alertaSelecionado];
 
     return (
       <>
@@ -571,18 +497,20 @@ const FuncionarioDashboard = () => {
             {/* Cabeçalho do Modal */}
             <div className="flex items-center justify-between p-4 border-b sticky top-0 bg-white z-10">
               <div className="flex items-center gap-3 flex-1 min-w-0">
-                <div className="p-2 bg-odara-primary rounded-lg shrink-0">
+                <div className={`p-2 rounded-lg shrink-0 ${config.cor}`}>
                   <WrapperIcone
                     className="text-white"
-                    icone={itemSelecionado.tipo === 'alerta' ? AlertTriangle : Info}
+                    icone={config.icone}
                     tamanho={20}
                   />
                 </div>
                 <div className="min-w-0">
                   <h3 className="text-lg font-semibold text-odara-dark truncate">
-                    {itemSelecionado.detalhes.titulo}
+                    {config.titulo}
                   </h3>
-                  <p className="text-xs text-gray-500">{itemSelecionado.hora}</p>
+                  <p className="text-xs text-gray-500">
+                    {listaItens.length} {listaItens.length === 1 ? 'item pendente' : 'itens pendentes'}
+                  </p>
                 </div>
               </div>
               <button
@@ -594,39 +522,78 @@ const FuncionarioDashboard = () => {
               </button>
             </div>
 
-            {/* Corpo do Modal com scroll */}
+            {/* Corpo do Modal com scroll - Renderização Condicional */}
             <div className="overflow-y-auto flex-1 p-4">
-              {/* Descrição */}
-              <div className="mb-4">
-                <p className="text-sm text-gray-700 leading-relaxed">
-                  {itemSelecionado.detalhes.descricao}
-                </p>
-              </div>
+              <ul className="space-y-3">
+                {listaItens.map((item: MedicamentosAlerta | AtividadesAlerta | AlimentacaoAlerta | ConsultasAlerta, index: number) => {
 
-              {/* Lista de detalhes */}
-              {itemSelecionado.detalhes.lista && itemSelecionado.detalhes.lista.length > 0 && (
-                <div className="mb-4">
-                  <h4 className="font-medium text-odara-dark mb-2 text-sm">Detalhes:</h4>
-                  <ul className="space-y-2">
-                    {itemSelecionado.detalhes.lista.map((item, index) => (
-                      <li key={index} className="flex items-start gap-2 p-2 hover:bg-gray-50 rounded">
-                        <div className="w-1.5 h-1.5 rounded-full bg-odara-primary mt-2 shrink-0"></div>
-                        <span className="text-sm text-gray-700 flex-1">{item}</span>
+                  // Renderização: MEDICAMENTOS
+                  if ('medicamento' in item) {
+                    return (
+                      <li key={index} className="p-3 bg-gray-50 rounded-lg border border-gray-100 hover:bg-gray-100 transition-colors">
+                        <div className="flex justify-between items-start mb-1">
+                          <span className="font-semibold text-odara-dark">{item.medicamento}</span>
+                          <span className="text-xs font-medium text-red-600 bg-red-50 px-2 py-0.5 rounded border border-red-100">
+                            {item.horario_previsto.slice(0, 5)}
+                          </span>
+                        </div>
+                        <p className="text-sm text-gray-600">Residente: <span className="font-medium">{item.residente}</span></p>
+                        <p className="text-xs text-gray-400 mt-1">Data: {item.data_prevista.split('-').reverse().join('/')}</p>
                       </li>
-                    ))}
-                  </ul>
-                </div>
-              )}
+                    );
+                  }
 
-              {/* Ação Recomendada */}
-              <div className="p-3 bg-odara-primary/5 border border-odara-primary/20 rounded-lg">
-                <h4 className="font-medium text-odara-dark mb-1 text-sm">
-                  Ação Recomendada:
-                </h4>
-                <p className="text-sm text-gray-700 leading-relaxed">
-                  {itemSelecionado.detalhes.acaoRecomendada}
-                </p>
-              </div>
+                  // Renderização: ATIVIDADES
+                  if ('atividade' in item) {
+                    return (
+                      <li key={index} className="p-3 bg-gray-50 rounded-lg border border-gray-100 hover:bg-gray-100 transition-colors">
+                        <div className="flex justify-between items-center">
+                          <span className="font-semibold text-odara-dark">{item.atividade}</span>
+                          <div className="text-right">
+                            <div className="text-xs font-bold text-blue-600 bg-blue-50 px-2 py-0.5 rounded border border-blue-100">
+                              {item.horario_inicio.slice(0, 5)}
+                            </div>
+                            <div className="text-[10px] text-gray-400 mt-0.5">{item.data.split('-').reverse().join('/')}</div>
+                          </div>
+                        </div>
+                      </li>
+                    );
+                  }
+
+                  // Renderização: ALIMENTAÇÃO
+                  if ('refeicao' in item) {
+                    return (
+                      <li key={index} className="p-3 bg-gray-50 rounded-lg border border-gray-100 hover:bg-gray-100 transition-colors">
+                        <div className="flex justify-between items-start mb-1">
+                          <span className="font-semibold text-odara-dark">{item.refeicao}</span>
+                          <span className="text-xs font-medium text-orange-600 bg-orange-50 px-2 py-0.5 rounded border border-orange-100">
+                            {item.horario.slice(0, 5)}
+                          </span>
+                        </div>
+                        <p className="text-sm text-gray-600">Residente: <span className="font-medium">{item.residente}</span></p>
+                      </li>
+                    );
+                  }
+
+                  // Renderização: CONSULTAS
+                  if ('data_consulta' in item) {
+                    return (
+                      <li key={index} className="p-3 bg-gray-50 rounded-lg border border-gray-100 hover:bg-gray-100 transition-colors">
+                        <div className="flex justify-between items-start mb-1">
+                          <span className="font-semibold text-odara-dark">Consulta Médica</span>
+                          <span className="text-xs font-medium text-purple-600 bg-purple-50 px-2 py-0.5 rounded border border-purple-100">
+                            {item.horario.slice(0, 5)}
+                          </span>
+                        </div>
+                        <p className="text-sm text-gray-600">Residente: <span className="font-medium">{item.residente}</span></p>
+                        <p className="text-xs text-gray-400 mt-1">Data: {item.data_consulta.split('-').reverse().join('/')}</p>
+                      </li>
+                    );
+                  }
+
+                  return null;
+                })}
+              </ul>
             </div>
 
             {/* Rodapé do Modal */}
@@ -634,18 +601,10 @@ const FuncionarioDashboard = () => {
               <div className="flex flex-col sm:flex-row justify-end gap-2">
                 <button
                   onClick={fecharModal}
-                  className="px-4 py-2.5 text-sm font-medium text-odara-primary hover:text-odara-primary/80 transition-colors order-2 sm:order-1"
+                  className="w-full sm:w-auto px-4 py-2.5 text-sm font-medium text-white bg-odara-primary rounded-lg hover:bg-odara-primary/90 transition-colors"
                 >
                   Fechar
                 </button>
-                {!itemSelecionado.lido && (
-                  <button
-                    onClick={() => marcarComoLido(itemSelecionado)}
-                    className="px-4 py-2.5 text-sm font-medium text-white bg-odara-primary rounded-lg hover:bg-odara-primary/90 active:bg-odara-primary/95 transition-colors order-1 sm:order-2"
-                  >
-                    Marcar como Lida
-                  </button>
-                )}
               </div>
             </div>
           </div>

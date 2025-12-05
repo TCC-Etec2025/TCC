@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Pill, Microscope, AlertTriangle, Palette, Calendar, Apple, FileText, UsersRound, Bell, Info, UserRoundPlus, PackagePlus, UserRoundCog, X, Activity, Utensils, Stethoscope, type LucideIcon } from "lucide-react";
+import { Pill,  AlertTriangle, Palette, Calendar, Apple, FileText, UsersRound, Bell, Info, UserRoundPlus, PackagePlus, UserRoundCog, X, Activity, Utensils, Stethoscope, type LucideIcon } from "lucide-react";
 import toast, { Toaster } from 'react-hot-toast';
 
 import { supabase } from '../../lib/supabaseClient';
@@ -305,12 +305,14 @@ const AdminDashboard = () => {
         icone: Pill,
         acao: () => navegar("/app/funcionario/checklist/medicamentos")
       },
+      /*
       {
         id: 7,
         nome: "Exames Médicos",
         icone: Microscope,
         acao: () => navegar("/app/funcionario/checklist/exames/medicos")
       },
+      */
       {
         id: 8,
         nome: "Atividades",
@@ -363,7 +365,7 @@ const AdminDashboard = () => {
 
         {/* Seção de Checklists */}
         <h2 className="text-lg sm:text-xl font-semibold text-odara-dark mb-3 sm:mb-4">Checklists</h2>
-        <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4">
+        <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 gap-3 sm:gap-4">
           {botoesChecklists.map((checklist) => (
             <div
               key={checklist.id}

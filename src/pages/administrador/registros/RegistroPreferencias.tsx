@@ -1,6 +1,5 @@
-// src/components/RegistroPreferencias.tsx
 import { useEffect, useState, useRef, useCallback, useMemo } from 'react';
-import { Filter, Search, CheckCircle, Clock, CircleX, Plus, Edit, Trash, Info, ChevronDown, Check, Heart, Utensils, Activity, Users } from 'lucide-react';
+import { Filter, Search, Plus, Edit, Trash, Info, ChevronDown, Check, Star, User } from 'lucide-react';
 
 import { supabase } from '../../../lib/supabaseClient';
 import toast, { Toaster } from 'react-hot-toast';
@@ -31,66 +30,43 @@ type Preferencia = {
 };
 
 /* Constantes */
-const COR_STATUS: Record<string, {
-  bola: string;
+const CORES_CATEGORIAS: Record<string, {
   bg: string;
   text: string;
-  border: string
+  border: string;
+  bola: string;
 }> = {
-  ativo: {
-    bola: 'bg-green-500',
-    bg: 'bg-green-50',
+  alimentar: {
+    bg: 'bg-odara-contorno/20',
     text: 'text-odara-dark font-semibold',
-    border: 'border-b border-green-200'
+    border: 'border-b border-odara-dark/30',
+    bola: 'bg-odara-contorno'
   },
-  inativo: {
-    bola: 'bg-yellow-500',
-    bg: 'bg-yellow-50',
-    text: 'text-odara-dark font-semibold',
-    border: 'border-b border-yellow-200'
+  atividade: {
+    bg: 'bg-odara-dropdown-accent/10',
+    text: 'text-odara-dropdown-accent font-semibold',
+    border: 'border-b border-odara-dropdown-accent',
+    bola: 'bg-odara-dropdown-accent'
   },
-  atendido: {
-    bola: 'bg-blue-500',
-    bg: 'bg-blue-50',
-    text: 'text-odara-dark font-semibold',
-    border: 'border-b border-blue-200'
+  cuidador: {
+    bg: 'bg-odara-primary/10',
+    text: 'text-odara-primary font-semibold',
+    border: 'border-b border-odara-primary',
+    bola: 'bg-odara-primary'
   }
-};
-
-const STATUS_OPTIONS = [
-  { value: 'ativo', label: 'Ativo' },
-  { value: 'inativo', label: 'Inativo' },
-  { value: 'atendido', label: 'Atendido' }
-];
-
-const FILTRO_STATUS_OPTIONS = [
-  { value: 'todos', label: 'Todos os status' },
-  { value: 'ativo', label: 'Ativo' },
-  { value: 'inativo', label: 'Inativo' },
-  { value: 'atendido', label: 'Atendido' }
-];
+} as const;
 
 const CATEGORIAS = {
-  alimentacao: 'Alimentação',
-  atividades: 'Atividades',
-  cuidados: 'Cuidados',
-  rotina: 'Rotina',
-  outros: 'Outros'
-};
+  alimentar: 'Alimentar',
+  atividade: 'Atividade',
+  cuidador: 'Cuidador',
+} as const;
 
 const CATEGORIA_OPTIONS = [
   { value: 'todos', label: 'Todas categorias' },
-  { value: 'alimentacao', label: 'Alimentação' },
-  { value: 'atividades', label: 'Atividades' },
-  { value: 'cuidados', label: 'Cuidados' },
-  { value: 'rotina', label: 'Rotina' },
-  { value: 'outros', label: 'Outros' }
-];
-
-const PRIORIDADE_OPTIONS = [
-  { value: 'alta', label: 'Alta', cor: 'bg-red-500' },
-  { value: 'media', label: 'Média', cor: 'bg-yellow-500' },
-  { value: 'baixa', label: 'Baixa', cor: 'bg-green-500' }
+  { value: 'alimentar', label: 'Alimentar' },
+  { value: 'atividade', label: 'Atividade' },
+  { value: 'cuidador', label: 'Cuidador' }
 ];
 
 const RegistroPreferencias: React.FC = () => {
@@ -109,51 +85,29 @@ const RegistroPreferencias: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [filtros, setFiltros] = useState<{
     residenteId: number | null;
-    status: string | null;
     categoria: string | null;
-    prioridade: string | null;
   }>({
     residenteId: null,
-    status: null,
-    categoria: null,
-    prioridade: null
+    categoria: null
   });
 
   // Estados de UI
-  const [filtroStatusAberto, setFiltroStatusAberto] = useState(false);
   const [filtroResidenteAberto, setFiltroResidenteAberto] = useState(false);
   const [filtroCategoriaAberto, setFiltroCategoriaAberto] = useState(false);
-  const [filtroPrioridadeAberto, setFiltroPrioridadeAberto] = useState(false);
   const [filtrosAberto, setFiltrosAberto] = useState(false);
-  const [dropdownAberto, setDropdownAberto] = useState<number | null>(null);
+  const [infoVisivel, setInfoVisivel] = useState(false);
 
   // Refs para dropdowns
   const filtroResidenteRef = useRef<HTMLDivElement>(null);
-  const filtroStatusRef = useRef<HTMLDivElement>(null);
   const filtroCategoriaRef = useRef<HTMLDivElement>(null);
-  const filtroPrioridadeRef = useRef<HTMLDivElement>(null);
 
   /* Utilitários */
-  const obterIconeCategoria = (categoria: string) => {
-    switch (categoria) {
-      case "alimentacao": return Utensils;
-      case "atividades": return Activity;
-      case "cuidados": return Users;
-      default: return Heart;
-    }
-  };
-
-  const obterIconeStatus = (status: string) => {
-    switch (status) {
-      case "ativo": return CheckCircle;
-      case "inativo": return Clock;
-      case "atendido": return CircleX;
-      default: return Clock;
-    }
-  };
-
   const formatarData = (data: string) => {
-    return new Date(data).toLocaleDateString('pt-BR');
+    try {
+      return new Date(data).toLocaleDateString('pt-BR');
+    } catch (error) {
+      return 'Data inválida';
+    }
   };
 
   /* Efeitos */
@@ -162,14 +116,8 @@ const RegistroPreferencias: React.FC = () => {
       if (filtroResidenteRef.current && !filtroResidenteRef.current.contains(event.target as Node)) {
         setFiltroResidenteAberto(false);
       }
-      if (filtroStatusRef.current && !filtroStatusRef.current.contains(event.target as Node)) {
-        setFiltroStatusAberto(false);
-      }
       if (filtroCategoriaRef.current && !filtroCategoriaRef.current.contains(event.target as Node)) {
         setFiltroCategoriaAberto(false);
-      }
-      if (filtroPrioridadeRef.current && !filtroPrioridadeRef.current.contains(event.target as Node)) {
-        setFiltroPrioridadeAberto(false);
       }
     };
 
@@ -191,11 +139,22 @@ const RegistroPreferencias: React.FC = () => {
         .order('criado_em', { ascending: false });
 
       if (error) throw error;
-      setPreferencias(data || []);
+      
+      // Garantir que os dados estão no formato correto
+      const preferenciasFormatadas = (data || []).map(item => ({
+        ...item,
+        tipo_preferencia: item.tipo_preferencia || 'outros',
+        prioridade: item.prioridade || 'media',
+        status: item.status || 'ativo'
+      })) as Preferencia[];
+      
+      console.log('Preferências carregadas:', preferenciasFormatadas);
+      console.log('Categorias presentes:', [...new Set(preferenciasFormatadas.map(p => p.tipo_preferencia))]);
+      
+      setPreferencias(preferenciasFormatadas);
     } catch (error) {
       console.error('Erro ao buscar preferências:', error);
       toast.error('Erro ao carregar preferências');
-      alert(JSON.stringify(error))
     } finally {
       setLoading(false);
     }
@@ -211,6 +170,7 @@ const RegistroPreferencias: React.FC = () => {
       if (!error) setResidentes(data || []);
     } catch (err) {
       console.error('Erro ao carregar residentes:', err);
+      toast.error('Erro ao carregar lista de residentes');
     }
   }, []);
 
@@ -241,7 +201,6 @@ const RegistroPreferencias: React.FC = () => {
 
       if (error) throw error;
 
-      // Atualiza a lista localmente
       setPreferencias(prev => prev.filter(o => o.id !== preferenciaParaExcluir));
       toast.success('Preferência excluída com sucesso!');
     } catch (err) {
@@ -249,36 +208,6 @@ const RegistroPreferencias: React.FC = () => {
       toast.error('Erro ao excluir preferência');
     } finally {
       fecharModalExclusao();
-    }
-  };
-
-  const atualizarStatus = async (id: number, novoStatus: string) => {
-    try {
-      // Atualizar localmente primeiro para feedback imediato
-      setPreferencias(prev => prev.map(preferencia =>
-        preferencia.id === id
-          ? { ...preferencia, status: novoStatus, atualizado_em: new Date().toISOString() }
-          : preferencia
-      ));
-
-      // Atualiza no banco de dados
-      const { error } = await supabase
-        .from('preferencia')
-        .update({ 
-          status: novoStatus,
-          atualizado_em: new Date().toISOString()
-        })
-        .eq('id', id);
-
-      if (error) throw error;
-
-      setDropdownAberto(null);
-      toast.success('Status atualizado com sucesso!');
-    } catch (err) {
-      console.error('Erro ao atualizar status:', err);
-      toast.error('Falha ao atualizar status.');
-      // Reverter em caso de erro
-      carregarPreferencias();
     }
   };
 
@@ -299,10 +228,6 @@ const RegistroPreferencias: React.FC = () => {
     carregarPreferencias();
   };
 
-  const toggleDropdown = (id: number) => {
-    setDropdownAberto(dropdownAberto === id ? null : id);
-  };
-
   const toggleFiltros = () => {
     setFiltrosAberto(!filtrosAberto);
   };
@@ -312,46 +237,40 @@ const RegistroPreferencias: React.FC = () => {
     setFiltroResidenteAberto(false);
   };
 
-  const selecionarStatus = (status: string | null) => {
-    setFiltros(prev => ({ ...prev, status: status === 'todos' ? null : status }));
-    setFiltroStatusAberto(false);
-  };
-
   const selecionarCategoria = (categoria: string | null) => {
-    setFiltros(prev => ({ ...prev, categoria: categoria === 'todos' ? null : categoria }));
+    setFiltros(prev => ({ 
+      ...prev, 
+      categoria: categoria === 'todos' ? null : categoria 
+    }));
     setFiltroCategoriaAberto(false);
-  };
-
-  const selecionarPrioridade = (prioridade: string | null) => {
-    setFiltros(prev => ({ ...prev, prioridade: prioridade === 'todos' ? null : prioridade }));
-    setFiltroPrioridadeAberto(false);
   };
 
   const limparFiltros = () => {
     setFiltros({
-      status: null,
       residenteId: null,
-      categoria: null,
-      prioridade: null
+      categoria: null
     });
     setSearchTerm('');
-    setFiltroStatusAberto(false);
     setFiltroResidenteAberto(false);
     setFiltroCategoriaAberto(false);
-    setFiltroPrioridadeAberto(false);
   };
 
   /* Filtragem e Ordenação */
   const preferenciasFiltradas = useMemo(() => {
-    return preferencias
+    console.log('Filtrando preferências...');
+    console.log('Total de preferências:', preferencias.length);
+    console.log('Filtros ativos:', filtros);
+    console.log('Termo de busca:', searchTerm);
+
+    const resultado = preferencias
       .filter(preferencia => {
         // Filtro por texto (busca em título, descrição, nome do residente)
         if (searchTerm.trim()) {
           const term = searchTerm.toLowerCase();
-          const matchTitulo = preferencia.titulo.toLowerCase().includes(term);
-          const matchDescricao = preferencia.descricao.toLowerCase().includes(term);
-          const matchResidente = preferencia.residente?.nome.toLowerCase().includes(term);
-          const matchObservacoes = preferencia.observacoes?.toLowerCase().includes(term);
+          const matchTitulo = preferencia.titulo?.toLowerCase().includes(term) || false;
+          const matchDescricao = preferencia.descricao?.toLowerCase().includes(term) || false;
+          const matchResidente = preferencia.residente?.nome?.toLowerCase().includes(term) || false;
+          const matchObservacoes = preferencia.observacoes?.toLowerCase().includes(term) || false;
           
           if (!matchTitulo && !matchDescricao && !matchResidente && !matchObservacoes) {
             return false;
@@ -363,93 +282,29 @@ const RegistroPreferencias: React.FC = () => {
           return false;
         }
 
-        // Filtro por status
-        if (filtros.status && filtros.status !== 'todos' && preferencia.status !== filtros.status) {
-          return false;
-        }
-
-        // Filtro por categoria
-        if (filtros.categoria && filtros.categoria !== 'todos' && preferencia.tipo_preferencia !== filtros.categoria) {
-          return false;
-        }
-
-        // Filtro por prioridade
-        if (filtros.prioridade && preferencia.prioridade !== filtros.prioridade) {
-          return false;
+        // Filtro por categoria - CORRIGIDO
+        if (filtros.categoria) {
+          // Verifica se a categoria da preferência é igual à categoria filtrada
+          if (preferencia.tipo_preferencia !== filtros.categoria) {
+            return false;
+          }
         }
 
         return true;
       })
       .sort((a, b) => {
-        // Ordena por prioridade (alta > média > baixa)
-        const prioridadeOrder = { alta: 1, media: 2, baixa: 3 };
-        const prioridadeDiff = prioridadeOrder[a.prioridade as keyof typeof prioridadeOrder] - 
-                              prioridadeOrder[b.prioridade as keyof typeof prioridadeOrder];
-        
-        if (prioridadeDiff !== 0) return prioridadeDiff;
-        
-        // Se mesma prioridade, ordena por data de registro
+        // Ordena por data de registro (mais recente primeiro)
         const dataA = new Date(a.criado_em).getTime();
         const dataB = new Date(b.criado_em).getTime();
         
-        return dataB - dataA; // Mais recente primeiro
+        return dataB - dataA;
       });
+    
+    console.log('Resultados filtrados:', resultado.length);
+    return resultado;
   }, [preferencias, searchTerm, filtros]);
 
   /* Componentes de UI */
-  const DropdownStatus = ({ preferencia }: { preferencia: Preferencia }) => {
-    const IconeStatus = obterIconeStatus(preferencia.status);
-
-    return (
-      <div className="relative">
-        <button
-          onClick={() => toggleDropdown(preferencia.id)}
-          className="flex items-center gap-2 px-2 sm:px-3 py-1 text-xs sm:text-sm border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
-        >
-          <IconeStatus size={12} className="sm:w-3.5 sm:h-3.5 text-odara-accent" />
-          <span className="text-odara-dark capitalize">{preferencia.status}</span>
-          <ChevronDown size={10} className="sm:w-3 sm:h-3 text-gray-500" />
-        </button>
-
-        {dropdownAberto === preferencia.id && (
-          <>
-            {/* CAMADA INVISÍVEL PARA FECHAR AO CLICAR FORA */}
-            <div
-              className="fixed inset-0 z-10 cursor-default"
-              onClick={() => setDropdownAberto(null)}
-            ></div>
-
-            {/* MENU DROPDOWN */}
-            <div className="absolute top-full sm:right-0 mt-2 w-40 sm:w-48 bg-white rounded-lg shadow-lg border border-gray-200 z-20 overflow-hidden">
-              {STATUS_OPTIONS.map((option) => {
-                const OptionIcon = obterIconeStatus(option.value);
-                return (
-                  <button
-                    key={option.value}
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      atualizarStatus(preferencia.id, option.value);
-                    }}
-                    className={`flex items-center gap-2 sm:gap-3 w-full text-left px-3 sm:px-4 py-2 sm:py-3 text-xs sm:text-sm hover:bg-odara-primary/10 transition ${preferencia.status === option.value
-                      ? 'bg-odara-primary/20 text-odara-primary font-semibold'
-                      : 'text-gray-700'
-                      }`}
-                  >
-                    <OptionIcon size={12} className="sm:w-3.5 sm:h-3.5 text-odara-accent" />
-                    <span className="capitalize">{option.label}</span>
-                    {preferencia.status === option.value && (
-                      <Check className="ml-auto text-odara-primary w-3 h-3 sm:w-3.5 sm:h-3.5" />
-                    )}
-                  </button>
-                );
-              })}
-            </div>
-          </>
-        )}
-      </div>
-    );
-  };
-
   const FiltroDropdown = ({
     titulo,
     aberto,
@@ -466,10 +321,9 @@ const RegistroPreferencias: React.FC = () => {
     ref: React.RefObject<HTMLDivElement>;
     valorSelecionado: string | number | null;
     onSelecionar: (value: string | number | null) => void;
-    tipo: 'residente' | 'status' | 'categoria' | 'prioridade';
-    opcoes: Array<{ value: string; label: string; cor?: string }>;
+    tipo: 'residente' | 'categoria';
+    opcoes: Array<{ value: string; label: string }>;
   }) => {
-
     return (
       <div className="relative" ref={ref}>
         <button
@@ -482,11 +336,9 @@ const RegistroPreferencias: React.FC = () => {
               ? valorSelecionado
                 ? residentes.find(r => r.id === valorSelecionado)?.nome
                 : titulo
-              : tipo === 'prioridade' && valorSelecionado
+              : valorSelecionado
                 ? opcoes.find(opt => opt.value === valorSelecionado)?.label
-                : valorSelecionado
-                  ? opcoes.find(opt => opt.value === valorSelecionado)?.label
-                  : titulo
+                : titulo
             }
           </span>
           <ChevronDown size={10} className="sm:w-3 sm:h-3 text-gray-500 shrink-0" />
@@ -495,17 +347,16 @@ const RegistroPreferencias: React.FC = () => {
         {aberto && (
           <div className="absolute top-full left-0 right-0 mt-1 bg-white rounded-lg shadow-lg border border-gray-200 z-10 max-h-60 overflow-y-auto">
             <button
-              onClick={() => onSelecionar(tipo === 'prioridade' ? null : tipo === 'categoria' ? 'todos' : null)}
-              className={`flex items-center gap-2 sm:gap-3 w-full text-left px-3 sm:px-4 py-2 sm:py-3 text-xs sm:text-sm hover:bg-odara-primary/10 transition ${!valorSelecionado || (tipo === 'categoria' && valorSelecionado === 'todos')
+              onClick={() => onSelecionar(tipo === 'residente' ? null : 'todos')}
+              className={`flex items-center gap-2 sm:gap-3 w-full text-left px-3 sm:px-4 py-2 sm:py-3 text-xs sm:text-sm hover:bg-odara-primary/10 transition ${!valorSelecionado || valorSelecionado === 'todos'
                 ? 'bg-odara-primary/20 text-odara-primary font-semibold'
                 : 'text-gray-700'
                 }`}
             >
-              <span>{tipo === 'categoria' ? 'Todas categorias' : 
-                    tipo === 'prioridade' ? 'Todas prioridades' : 
-                    tipo === 'residente' ? 'Todos os residentes' : 
-                    'Todos os status'}</span>
-              {(!valorSelecionado || (tipo === 'categoria' && valorSelecionado === 'todos')) && 
+              <span>
+                {tipo === 'categoria' ? 'Todas categorias' : 'Todos os residentes'}
+              </span>
+              {(!valorSelecionado || valorSelecionado === 'todos') && 
                 <Check className="ml-auto text-odara-primary w-3 h-3 sm:w-3.5 sm:h-3.5" />}
             </button>
 
@@ -527,7 +378,7 @@ const RegistroPreferencias: React.FC = () => {
                 </button>
               ))
             ) : (
-              opcoes.map((opcao) => (
+              opcoes.filter(opt => opt.value !== 'todos').map((opcao) => (
                 <button
                   key={opcao.value}
                   onClick={() => onSelecionar(opcao.value)}
@@ -536,9 +387,6 @@ const RegistroPreferencias: React.FC = () => {
                     : 'text-gray-700'
                     }`}
                 >
-                  {tipo === 'prioridade' && opcao.cor && (
-                    <div className={`w-2 h-2 sm:w-2.5 sm:h-2.5 rounded-full ${opcao.cor}`}></div>
-                  )}
                   <span>{opcao.label}</span>
                   {valorSelecionado === opcao.value && (
                     <Check className="ml-auto text-odara-primary w-3 h-3 sm:w-3.5 sm:h-3.5" />
@@ -553,32 +401,24 @@ const RegistroPreferencias: React.FC = () => {
   };
 
   const CardPreferencia = ({ preferencia }: { preferencia: Preferencia }) => {
-    const cores = COR_STATUS[preferencia.status] || COR_STATUS.ativo;
-    const IconeCategoria = obterIconeCategoria(preferencia.tipo_preferencia);
-    const prioridadeCor = PRIORIDADE_OPTIONS.find(p => p.value === preferencia.prioridade)?.cor || 'bg-gray-500';
+    const cores = CORES_CATEGORIAS[preferencia.tipo_preferencia] || CORES_CATEGORIAS.outros;
+    const categoriaLabel = CATEGORIAS[preferencia.tipo_preferencia as keyof typeof CATEGORIAS] || preferencia.tipo_preferencia;
 
     return (
       <div className="bg-white rounded-lg shadow-md border border-gray-200 hover:shadow-lg transition-shadow duration-200 flex flex-col h-full">
-        {/* Header do Card */}
-        <div className={`flex flex-wrap justify-center sm:justify-between gap-2 items-center p-2 sm:p-3 rounded-t-lg ${cores.border} ${cores.bg}`}>
-          {/* Coluna Esquerda */}
+        {/* Header do Card - Somente categoria com cor */}
+        <div className={`flex flex-wrap justify-between gap-2 items-center p-2 sm:p-3 rounded-t-lg ${cores.border} ${cores.bg}`}>
           <div className="flex items-center gap-2">
             <div className={`w-2 h-2 sm:w-3 sm:h-3 rounded-full ${cores.bola}`}></div>
-            <IconeCategoria size={12} className="sm:w-3.5 sm:h-3.5 text-odara-accent" />
             <p className={`text-xs sm:text-sm md:text-base ${cores.text}`}>
-              {CATEGORIAS[preferencia.tipo_preferencia as keyof typeof CATEGORIAS] || preferencia.tipo_preferencia}
+              {categoriaLabel}
             </p>
-            <div className={`w-2 h-2 sm:w-2.5 sm:h-2.5 rounded-full ${prioridadeCor}`}></div>
-            <span className="text-xs font-medium capitalize">{preferencia.prioridade}</span>
           </div>
-
-          {/* Coluna Direita - Status */}
-          <DropdownStatus preferencia={preferencia} />
         </div>
 
         {/* Corpo do Card */}
         <div className="p-3 sm:p-4 flex-1 flex flex-col">
-          {/* Título do Corpo */}
+          {/* Título e Botões de Ação */}
           <div className="flex items-start justify-between mb-2 sm:mb-3">
             <h3 className="text-sm sm:text-base md:text-lg font-bold text-odara-dark line-clamp-1 flex-1">
               {preferencia.titulo}
@@ -611,73 +451,52 @@ const RegistroPreferencias: React.FC = () => {
             </p>
           </div>
 
-          {/* Detalhes da Preferência */}
-          <div className="grid grid-cols-1 gap-2 sm:gap-3 sm:grid-cols-2 flex-1">
-            {/* Coluna Esquerda */}
-            <div className="space-y-2 sm:space-y-3">
-              <div>
-                <strong className="text-odara-dark text-xs sm:text-sm">Data de Registro:</strong>
-                <span className="text-odara-name mt-0.5 sm:mt-1 text-xs sm:text-sm block">
-                  {formatarData(preferencia.criado_em)}
-                </span>
-              </div>
+          {/* Observações */}
+          {preferencia.observacoes && (
+            <div className="mb-3 sm:mb-4">
+              <strong className="text-odara-dark text-xs sm:text-sm">Observações:</strong>
+              <p className="text-sm text-odara-dark mt-1">
+                {preferencia.observacoes}
+              </p>
+            </div>
+          )}
 
-              <div>
-                <strong className="text-odara-dark text-xs sm:text-sm">Última Atualização:</strong>
-                <span className="text-odara-name mt-0.5 sm:mt-1 text-xs sm:text-sm block">
-                  {formatarData(preferencia.atualizado_em)}
-                </span>
-              </div>
+          {/* Datas em duas colunas - Sem ícones */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4 mt-auto">
+            <div>
+              <strong className="text-odara-dark text-xs sm:text-sm">Registro:</strong>
+              <span className="text-odara-name mt-0.5 sm:mt-1 text-xs sm:text-sm block">
+                {formatarData(preferencia.criado_em)}
+              </span>
             </div>
 
-            {/* Coluna Direita */}
-            <div className="space-y-2 sm:space-y-3">
-              {preferencia.observacoes && (
-                <div>
-                  <strong className="text-odara-dark text-xs sm:text-sm">Observações:</strong>
-                  <span className="text-odara-name mt-0.5 sm:mt-1 text-xs sm:text-sm block line-clamp-2">
-                    {preferencia.observacoes}
-                  </span>
-                </div>
-              )}
+            <div>
+              <strong className="text-odara-dark text-xs sm:text-sm">Atualização:</strong>
+              <span className="text-odara-name mt-0.5 sm:mt-1 text-xs sm:text-sm block">
+                {formatarData(preferencia.atualizado_em)}
+              </span>
             </div>
           </div>
         </div>
 
-        {/* Footer do Card */}
+        {/* Footer do Card - Balão com nome do residente e quarto */}
         <div className="px-3 sm:px-4 py-2 sm:py-3 bg-gray-50 rounded-b-lg border-t border-gray-200">
           <div className="flex flex-wrap justify-center sm:justify-between gap-1 sm:gap-2 text-xs">
             <div className="flex items-center flex-wrap gap-1 justify-center sm:justify-start">
-              <div className="flex items-center gap-1">
-                {/* Foto do residente */}
-                <div className="w-6 h-6 rounded-full bg-odara-offwhite overflow-hidden border border-odara-primary flex items-center justify-center">
-                  {preferencia.residente?.foto ? (
-                    <img
-                      src={preferencia.residente.foto}
-                      alt={preferencia.residente.nome}
-                      className="w-full h-full object-cover"
-                    />
-                  ) : (
-                    <span className="text-odara-primary text-xs font-semibold">
-                      {preferencia.residente?.nome?.charAt(0) || 'R'}
+              {preferencia.residente && (
+                <>
+                  <span className="bg-odara-accent text-white px-2 py-1 rounded-full text-xs font-medium flex items-center gap-1">
+                    <User size={10} className="sm:w-3 sm:h-3" />
+                    {preferencia.residente.nome}
+                  </span>
+
+                  {preferencia.residente.quarto && (
+                    <span className="text-xs text-odara-dark">
+                      • Quarto {preferencia.residente.quarto}
                     </span>
                   )}
-                </div>
-                <span className="bg-odara-accent text-white px-2 py-1 rounded-full text-xs font-medium">
-                  {preferencia.residente?.nome || 'Residente'}
-                </span>
-              </div>
-
-              {preferencia.residente?.quarto && (
-                <span className="text-xs text-odara-dark">
-                  • {preferencia.residente.quarto}
-                </span>
+                </>
               )}
-            </div>
-
-            <div className="text-xs text-odara-name flex items-center gap-1 justify-center sm:justify-start">
-              <Clock size={9} className="sm:w-2.5 sm:h-2.5" />
-              ID: {preferencia.id}
             </div>
           </div>
         </div>
@@ -690,93 +509,57 @@ const RegistroPreferencias: React.FC = () => {
 
     return (
       <div className="mb-6 bg-white p-4 sm:p-5 rounded-xl shadow border border-gray-200 animate-fade-in">
-        {/* Primeira Linha - Filtros principais */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-5 w-full">
-          {/* Filtro de Residente */}
-          <div className="min-w-0">
-            <div className='flex gap-1 items-center ml-1 mb-1'>
-              <Filter size={9} className="sm:w-2.5 sm:h-2.5 text-odara-accent" />
-              <label className="block text-xs sm:text-sm font-semibold text-odara-secondary">Residente</label>
+        {/* Filtros principais em layout responsivo */}
+        <div className="flex flex-col md:flex-row gap-4 sm:gap-5 w-full">
+          <div className="flex flex-col md:flex-row flex-1 gap-4 sm:gap-5 w-full">
+            {/* Filtro de Residente */}
+            <div className="flex-1 min-w-0">
+              <div className='flex gap-1 items-center ml-1 mb-1'>
+                <Filter size={9} className="sm:w-2.5 sm:h-2.5 text-odara-accent" />
+                <label className="block text-xs sm:text-sm font-semibold text-odara-secondary">Residente</label>
+              </div>
+
+              <FiltroDropdown
+                titulo="Todos os residentes"
+                aberto={filtroResidenteAberto}
+                setAberto={setFiltroResidenteAberto}
+                ref={filtroResidenteRef}
+                valorSelecionado={filtros.residenteId}
+                onSelecionar={selecionarResidente as (value: string | number | null) => void}
+                tipo="residente"
+                opcoes={[]}
+              />
             </div>
 
-            <FiltroDropdown
-              titulo="Todos os residentes"
-              aberto={filtroResidenteAberto}
-              setAberto={setFiltroResidenteAberto}
-              ref={filtroResidenteRef}
-              valorSelecionado={filtros.residenteId}
-              onSelecionar={selecionarResidente as (value: string | number | null) => void}
-              tipo="residente"
-              opcoes={[]}
-            />
-          </div>
+            {/* Filtro de Categoria */}
+            <div className="flex-1 min-w-0">
+              <div className='flex gap-1 items-center ml-1 mb-1'>
+                <Filter size={9} className="sm:w-2.5 sm:h-2.5 text-odara-accent" />
+                <label className="block text-xs sm:text-sm font-semibold text-odara-secondary">Categoria</label>
+              </div>
 
-          {/* Filtro de Status */}
-          <div className="min-w-0">
-            <div className='flex gap-1 items-center ml-1 mb-1'>
-              <Filter size={9} className="sm:w-2.5 sm:h-2.5 text-odara-accent" />
-              <label className="block text-xs sm:text-sm font-semibold text-odara-secondary">Status</label>
+              <FiltroDropdown
+                titulo="Todas categorias"
+                aberto={filtroCategoriaAberto}
+                setAberto={setFiltroCategoriaAberto}
+                ref={filtroCategoriaRef}
+                valorSelecionado={filtros.categoria || 'todos'}
+                onSelecionar={selecionarCategoria as (value: string | number | null) => void}
+                tipo="categoria"
+                opcoes={CATEGORIA_OPTIONS}
+              />
             </div>
-
-            <FiltroDropdown
-              titulo="Todos os status"
-              aberto={filtroStatusAberto}
-              setAberto={setFiltroStatusAberto}
-              ref={filtroStatusRef}
-              valorSelecionado={filtros.status || 'todos'}
-              onSelecionar={selecionarStatus as (value: string | number | null) => void}
-              tipo="status"
-              opcoes={FILTRO_STATUS_OPTIONS}
-            />
           </div>
 
-          {/* Filtro de Categoria */}
-          <div className="min-w-0">
-            <div className='flex gap-1 items-center ml-1 mb-1'>
-              <Filter size={9} className="sm:w-2.5 sm:h-2.5 text-odara-accent" />
-              <label className="block text-xs sm:text-sm font-semibold text-odara-secondary">Categoria</label>
-            </div>
-
-            <FiltroDropdown
-              titulo="Todas categorias"
-              aberto={filtroCategoriaAberto}
-              setAberto={setFiltroCategoriaAberto}
-              ref={filtroCategoriaRef}
-              valorSelecionado={filtros.categoria || 'todos'}
-              onSelecionar={selecionarCategoria as (value: string | number | null) => void}
-              tipo="categoria"
-              opcoes={CATEGORIA_OPTIONS}
-            />
+          {/* Botão Limpar Filtros */}
+          <div className="flex md:items-end gap-2 pt-1 md:pt-0 md:shrink-0">
+            <button
+              onClick={limparFiltros}
+              className="bg-odara-accent hover:bg-odara-secondary text-white font-semibold py-2 px-3 sm:px-4 rounded-lg flex items-center transition text-xs sm:text-sm h-9 sm:h-10 w-full md:w-auto justify-center"
+            >
+              Limpar Filtros
+            </button>
           </div>
-
-          {/* Filtro de Prioridade */}
-          <div className="min-w-0">
-            <div className='flex gap-1 items-center ml-1 mb-1'>
-              <Filter size={9} className="sm:w-2.5 sm:h-2.5 text-odara-accent" />
-              <label className="block text-xs sm:text-sm font-semibold text-odara-secondary">Prioridade</label>
-            </div>
-
-            <FiltroDropdown
-              titulo="Todas prioridades"
-              aberto={filtroPrioridadeAberto}
-              setAberto={setFiltroPrioridadeAberto}
-              ref={filtroPrioridadeRef}
-              valorSelecionado={filtros.prioridade}
-              onSelecionar={selecionarPrioridade as (value: string | number | null) => void}
-              tipo="prioridade"
-              opcoes={PRIORIDADE_OPTIONS}
-            />
-          </div>
-        </div>
-
-        {/* Botão Limpar Filtros */}
-        <div className="flex justify-end gap-2 pt-4 sm:pt-5 mt-4 sm:mt-5 border-t border-gray-200">
-          <button
-            onClick={limparFiltros}
-            className="bg-odara-accent hover:bg-odara-secondary text-white font-semibold py-2 px-3 sm:px-4 rounded-lg flex items-center transition text-xs sm:text-sm h-9 sm:h-10"
-          >
-            Limpar Filtros
-          </button>
         </div>
       </div>
     );
@@ -785,34 +568,36 @@ const RegistroPreferencias: React.FC = () => {
   const ModalConfirmacaoExclusao = () => {
     if (!modalExclusaoAberto) return null;
 
-    // Obter o título da preferência para exibir no modal
     const preferencia = preferenciaParaExcluir
       ? preferencias.find(p => p.id === preferenciaParaExcluir)
       : null;
     const tituloPreferencia = preferencia?.titulo || '';
+    const nomeResidente = preferencia?.residente?.nome || '';
 
     return (
       <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-100 p-4 animate-fade-in">
         <div className="bg-white rounded-2xl shadow-xl p-4 sm:p-6 max-w-md w-full animate-scale-in">
           <div className="text-center">
-            {/* Ícone de alerta */}
             <div className="mx-auto flex items-center justify-center h-12 sm:h-14 w-12 sm:w-14 rounded-full bg-odara-alerta/10 mb-3 sm:mb-4">
-              <CircleX className="h-6 w-6 sm:h-7 sm:w-7 text-odara-alerta" />
+              <Trash className="h-6 w-6 sm:h-7 sm:w-7 text-odara-alerta" />
             </div>
 
-            {/* Textos do modal */}
             <h3 className="text-lg sm:text-xl font-bold text-odara-dark mb-2">Confirmar exclusão</h3>
             <p className="text-odara-name text-sm sm:text-base mb-3 sm:mb-4">
               Tem certeza que deseja excluir esta preferência?
             </p>
 
-            {/* Detalhes da preferência */}
             {tituloPreferencia && (
               <div className="bg-odara-offwhite rounded-lg p-3 mb-3 sm:mb-4 border border-gray-200">
                 <p className="text-sm font-medium text-odara-dark">Preferência:</p>
                 <p className="text-sm font-semibold text-odara-name truncate" title={tituloPreferencia}>
                   {tituloPreferencia}
                 </p>
+                {nomeResidente && (
+                  <p className="text-sm text-odara-dark mt-1">
+                    Residente: <span className="font-medium">{nomeResidente}</span>
+                  </p>
+                )}
               </div>
             )}
 
@@ -820,7 +605,6 @@ const RegistroPreferencias: React.FC = () => {
               Esta ação não pode ser desfeita.
             </p>
 
-            {/* Botões de ação */}
             <div className="flex gap-2 sm:gap-3 justify-center">
               <button
                 onClick={fecharModalExclusao}
@@ -847,42 +631,32 @@ const RegistroPreferencias: React.FC = () => {
     return (
       <div className="bg-white border-l-4 border-odara-primary rounded-xl sm:rounded-2xl shadow-lg p-3 sm:p-6">
         <div className="flex flex-col sm:flex-row items-center justify-between gap-2 mb-3 sm:mb-4">
-          <h2 className="text-lg sm:text-xl lg:text-2xl font-bold text-odara-dark">Preferências</h2>
+          <div>
+            <h2 className="text-lg sm:text-xl lg:text-2xl font-bold text-odara-dark">Preferências</h2>
+          </div>
           <span className="bg-gray-200 text-gray-700 px-2 py-1 rounded-full text-xs font-medium">
             Total: {preferenciasFiltradas.length}
           </span>
         </div>
 
         {/* Tags de filtros ativos */}
-        {(filtros.status || filtros.residenteId || filtros.categoria || filtros.prioridade || searchTerm) && (
+        {(filtros.residenteId || filtros.categoria || searchTerm) && (
           <div className="mb-3 flex flex-wrap justify-center sm:justify-start gap-1 text-xs">
             {searchTerm && (
-              <span className="bg-odara-secondary text-white px-2 py-1 rounded-full">
+              <span className="bg-odara-secondary text-white px-2 py-1 rounded-full text-xs">
                 Busca: {searchTerm}
               </span>
             )}
 
             {filtros.residenteId && (
-              <span className="bg-odara-secondary text-white px-2 py-1 rounded-full">
+              <span className="bg-odara-secondary text-white px-2 py-1 rounded-full text-xs">
                 Residente: {residentes.find(r => r.id === filtros.residenteId)?.nome}
               </span>
             )}
 
-            {filtros.status && (
-              <span className="bg-odara-secondary text-white px-2 py-1 rounded-full">
-                Status: {filtros.status}
-              </span>
-            )}
-
             {filtros.categoria && (
-              <span className="bg-odara-secondary text-white px-2 py-1 rounded-full">
+              <span className="bg-odara-secondary text-white px-2 py-1 rounded-full text-xs">
                 Categoria: {CATEGORIAS[filtros.categoria as keyof typeof CATEGORIAS]}
-              </span>
-            )}
-
-            {filtros.prioridade && (
-              <span className="bg-odara-secondary text-white px-2 py-1 rounded-full">
-                Prioridade: {filtros.prioridade}
               </span>
             )}
           </div>
@@ -891,12 +665,14 @@ const RegistroPreferencias: React.FC = () => {
         {/* Lista ou mensagem de vazio */}
         {loading ? (
           <div className="p-6 text-center">
+            <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-odara-accent mb-4"></div>
             <p className="text-odara-dark/60 text-sm sm:text-lg">Carregando preferências...</p>
           </div>
         ) : preferenciasFiltradas.length === 0 ? (
           <div className="p-6 rounded-lg sm:rounded-xl bg-odara-name/10 text-center">
+            <Star className="h-8 w-8 text-odara-accent mx-auto mb-4 opacity-50" />
             <p className="text-odara-dark/60 text-sm sm:text-lg">
-              {preferencias.length === 0 ? 'Nenhuma preferência cadastrada' : 'Nenhuma preferência encontrada'}
+              {preferencias.length === 0 ? 'Nenhuma preferência registrada' : 'Nenhuma preferência encontrada'}
             </p>
 
             {preferencias.length > 0 && (
@@ -904,6 +680,14 @@ const RegistroPreferencias: React.FC = () => {
                 Tente ajustar os termos da busca ou os filtros
               </p>
             )}
+            
+            <button
+              onClick={abrirModalNovo}
+              className="mt-4 bg-odara-accent hover:bg-odara-secondary text-white font-semibold py-2 px-4 rounded-lg transition text-sm"
+            >
+              <Plus className="inline mr-2 h-4 w-4" />
+              Registrar primeira preferência
+            </button>
           </div>
         ) : (
           <div className="flex flex-col lg:grid lg:grid-cols-2 gap-4 sm:gap-6">
@@ -920,12 +704,10 @@ const RegistroPreferencias: React.FC = () => {
   };
 
   const Cabecalho = () => {
-    const [infoVisivel, setInfoVisivel] = useState(false);
-
     return (
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
         <div className="flex items-start sm:items-center gap-3 w-full">
-          <Heart size={24} className='sm:w-7 sm:h-7 lg:w-8 lg:h-8 text-odara-accent shrink-0 mt-1 sm:mt-0' />
+          <Star size={24} className='sm:w-7 sm:h-7 lg:w-8 lg:h-8 text-odara-accent shrink-0 mt-1 sm:mt-0' />
           
           <div className="flex-1 min-w-0 relative">
             <div className="flex items-center gap-0.1 sm:gap-2">
@@ -955,7 +737,6 @@ const RegistroPreferencias: React.FC = () => {
                     Entendi
                   </button>
                 </div>
-                {/* Seta do tooltip para desktop */}
                 <div className="hidden sm:block absolute -top-2 right-4 w-4 h-4 bg-blue-50 border-t border-l border-blue-100 transform rotate-45"></div>
               </div>
             )}
@@ -979,17 +760,14 @@ const RegistroPreferencias: React.FC = () => {
   /* Renderização Principal */
   return (
     <div className="min-h-screen bg-odara-offwhite overflow-x-hidden">
-      {/* Modal de Preferências */}
       <ModalPreferencias
         preferencia={preferenciaSelecionada}
         isOpen={modalAberto}
         onClose={fecharModal}
       />
 
-      {/* Modal de Confirmação de Exclusão */}
       <ModalConfirmacaoExclusao />
 
-      {/* Toaster para notificações */}
       <Toaster
         position="top-center"
         toastOptions={{
@@ -1020,7 +798,6 @@ const RegistroPreferencias: React.FC = () => {
       />
 
       <div className="p-3 sm:p-6 lg:p-8 max-w-full overflow-hidden">
-        {/* Cabeçalho e Botão Novo - Ajustado para mobile */}
         <div className='flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 mb-4 sm:mb-6'>
           <Cabecalho />
           <div className="w-full sm:w-auto">
@@ -1028,9 +805,7 @@ const RegistroPreferencias: React.FC = () => {
           </div>
         </div>
 
-        {/* Barra de Busca e Filtros - Otimizado para mobile */}
         <div className="flex flex-col sm:flex-row gap-3 mb-4 sm:mb-6">
-          {/* Barra de Busca */}
           <div className="flex-1 relative min-w-0">
             <div className="absolute inset-y-0 left-0 pl-2 sm:pl-3 flex items-center pointer-events-none">
               <Search className="text-odara-primary h-3 w-3 sm:h-4 sm:w-4" />
@@ -1044,7 +819,6 @@ const RegistroPreferencias: React.FC = () => {
             />
           </div>
 
-          {/* Botão ativador do modal de filtros */}
           <div className="flex gap-2">
             <button
               onClick={toggleFiltros}
@@ -1058,13 +832,10 @@ const RegistroPreferencias: React.FC = () => {
           </div>
         </div>
 
-        {/* Seção de Filtros */}
         <SecaoFiltros />
 
-        {/* Lista de Preferências */}
         <ListaPreferencias />
 
-        {/* Contador de resultados */}
         <div className="mt-3 text-xs sm:text-sm text-gray-400">
           Total de {preferenciasFiltradas.length} preferência(s) encontrada(s) de {preferencias.length}
           {searchTerm && <span> para "{searchTerm}"</span>}

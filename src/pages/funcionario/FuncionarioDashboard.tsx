@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Pill, Microscope, ClipboardPlus, HeartPulse, AlertTriangle, Siren, UserRoundSearch, Palette, Apple, Star, Calendar, FileText, UsersRound, Activity, Utensils, Stethoscope, Bell, Info, X, type LucideIcon } from 'lucide-react';
+import { Pill, ClipboardPlus, HeartPulse, AlertTriangle, Siren, UserRoundSearch, Palette, Apple, Star, Calendar, FileText, UsersRound, Activity, Utensils, Stethoscope, Bell, Info, X, type LucideIcon } from 'lucide-react';
 import toast, { Toaster } from 'react-hot-toast';
 
 import DataFormatada from '../../components/DataFormatada';
@@ -211,7 +211,7 @@ const FuncionarioDashboard = () => {
         <div className="bg-white rounded-xl sm:rounded-2xl shadow p-4 sm:p-6 cursor-pointer hover:shadow-md transition">
           <div className="flex items-center justify-between">
             <div>
-              <h3 className="text-sm font-medium text-gray-500">Residentes Atribuídos</h3>
+              <h3 className="text-sm font-medium text-gray-500">Residentes</h3>
               <p className="text-2xl sm:text-3xl font-bold text-odara-dark mt-1 sm:mt-2">
                 {carregando ? '...' : residentes}
               </p>
@@ -235,12 +235,14 @@ const FuncionarioDashboard = () => {
         icone: Pill,
         acao: () => navigate("/app/funcionario/checklist/medicamentos")
       },
+      /*
       {
         id: 2,
         nome: "Exames Médicos",
         icone: Microscope,
         acao: () => navigate("/app/funcionario/checklist/exames/medicos")
       },
+      */
       {
         id: 3,
         nome: "Atividades",
@@ -299,7 +301,7 @@ const FuncionarioDashboard = () => {
       <div className="bg-white rounded-xl sm:rounded-2xl shadow p-4 sm:p-5 border-l-4 border-odara-primary">
         {/* Seção de Checklists */}
         <h2 className="text-lg sm:text-xl font-semibold text-odara-dark mb-3 sm:mb-4">Checklists</h2>
-        <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4">
+        <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 gap-3 sm:gap-4">
           {botoesChecklists.map((checklist) => (
             <div
               key={checklist.id}

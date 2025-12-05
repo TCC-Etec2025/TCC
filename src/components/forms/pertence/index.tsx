@@ -80,8 +80,6 @@ export default function CadastroPertence({ pertence }: Props) {
         descricao: dados.descricao,
         estado: dados.estado,
         data_registro: dados.data_registro,
-        status: dados.status,
-        data_baixa: dados.data_baixa,
         observacoes: dados.observacoes,
       };
 
@@ -295,51 +293,6 @@ export default function CadastroPertence({ pertence }: Props) {
             {errors.data_registro && (
               <p className="text-odara-alerta text-sm mt-2 font-medium">
                 {errors.data_registro.message}
-              </p>
-            )}
-          </div>
-
-          {/* Seção: Status e Controle */}
-          <div className="md:col-span-2">
-            <h3 className="text-xl font-semibold text-odara-primary mt-6">
-              Status e Controle
-            </h3>
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-odara-secondary mb-2">
-              Status <span className="text-odara-accent font-bold">*</span>
-            </label>
-            <select
-              {...register("status")}
-              className="w-full px-4 py-3 bg-white rounded-xl border border-gray-200 text-odara-dark placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-odara-secondary focus:border-transparent"
-            >
-              <option value="">Selecione o status...</option>
-              <option value="Ativo">Ativo</option>
-              <option value="Inativo">Inativo</option>
-              <option value="Em Manutenção">Em Manutenção</option>
-              <option value="Descartado">Descartado</option>
-              <option value="Extraviado">Extraviado</option>
-            </select>
-            {errors.status && (
-              <p className="text-odara-alerta text-sm mt-2 font-medium">
-                {errors.status.message}
-              </p>
-            )}
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-odara-secondary mb-2">
-              Data de Baixa
-            </label>
-            <input
-              type="date"
-              {...register("data_baixa")}
-              className="w-full px-4 py-3 bg-white rounded-xl border border-gray-200 text-odara-dark placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-odara-secondary focus:border-transparent"
-            />
-            {errors.data_baixa && (
-              <p className="text-odara-alerta text-sm mt-2 font-medium">
-                {errors.data_baixa.message}
               </p>
             )}
           </div>

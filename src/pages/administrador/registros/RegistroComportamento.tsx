@@ -1,10 +1,8 @@
-// src/pages/RegistroComportamento.tsx
 import React, { useEffect, useState, useRef, useCallback, useMemo } from "react";
 import { 
   Filter, Search, Plus, Edit, Trash, Info, ChevronDown, Check, 
-  Clock, AlertCircle, CheckCircle, User, Calendar, Clock as ClockIcon,
-  Smile, Frown, Meh,
-  type LucideIcon
+  AlertCircle, User, 
+  UserRoundSearch,
 } from "lucide-react";
 import { supabase } from "../../../lib/supabaseClient";
 import ModalComportamento from "./ModalComportamento";
@@ -28,36 +26,26 @@ const CORES_CATEGORIAS: Record<string, {
   text: string;
   border: string;
   bola: string;
-  icon: LucideIcon;
 }> = {
   [CATEGORIAS.POSITIVO]: {
     bg: 'bg-green-50',
     text: 'text-green-800 font-semibold',
     border: 'border-b border-green-200',
-    bola: 'bg-green-500',
-    icon: Smile
+    bola: 'bg-green-500'
   },
   [CATEGORIAS.NEGATIVO]: {
     bg: 'bg-red-50',
     text: 'text-red-800 font-semibold',
     border: 'border-b border-red-200',
-    bola: 'bg-red-500',
-    icon: Frown
+    bola: 'bg-red-500'
   },
   [CATEGORIAS.NEUTRO]: {
     bg: 'bg-yellow-50',
     text: 'text-yellow-800 font-semibold',
     border: 'border-b border-yellow-200',
-    bola: 'bg-yellow-500',
-    icon: Meh
+    bola: 'bg-yellow-500'
   },
 };
-
-const FILTRO_STATUS_OPTIONS = [
-  { value: 'todos', label: 'Todos os status' },
-  { value: 'pendente', label: 'Pendente' },
-  { value: 'resolvido', label: 'Resolvido' }
-];
 
 const FILTRO_CATEGORIA_OPTIONS = [
   { value: 'todos', label: 'Todas categorias' },
@@ -148,7 +136,6 @@ const RegistroComportamento: React.FC = () => {
   });
 
   // estados de UI
-  const [filtroStatusAberto, setFiltroStatusAberto] = useState(false);
   const [filtroResidenteAberto, setFiltroResidenteAberto] = useState(false);
   const [filtroCategoriaAberto, setFiltroCategoriaAberto] = useState(false);
   const [filtrosAberto, setFiltrosAberto] = useState(false);
@@ -156,18 +143,12 @@ const RegistroComportamento: React.FC = () => {
 
   // refs para dropdowns
   const filtroResidenteRef = useRef<HTMLDivElement>(null);
-  const filtroStatusRef = useRef<HTMLDivElement>(null);
   const filtroCategoriaRef = useRef<HTMLDivElement>(null);
 
   /* Utilitários */
   const formatarData = (dataString: string) => {
     const data = new Date(dataString);
     return data.toLocaleDateString('pt-BR');
-  };
-
-  const formatarDataHora = (dataString: string, horario: string) => {
-    const data = new Date(dataString);
-    return `${data.toLocaleDateString('pt-BR')} ${horario ? `- ${horario}` : ''}`;
   };
 
   /* Efeitos */
@@ -177,9 +158,6 @@ const RegistroComportamento: React.FC = () => {
       
       if (filtroResidenteRef.current && !filtroResidenteRef.current.contains(target)) {
         setFiltroResidenteAberto(false);
-      }
-      if (filtroStatusRef.current && !filtroStatusRef.current.contains(target)) {
-        setFiltroStatusAberto(false);
       }
       if (filtroCategoriaRef.current && !filtroCategoriaRef.current.contains(target)) {
         setFiltroCategoriaAberto(false);
@@ -291,35 +269,6 @@ const RegistroComportamento: React.FC = () => {
     }
   };
 
-  const alternarStatus = async (id: number) => {
-    try {
-      const comportamento = comportamentos.find(c => c.id === id);
-      if (!comportamento) return;
-
-      const novoStatus = !comportamento.status;
-
-      // Atualizar localmente primeiro para feedback imediato
-      setComportamentos(prev => prev.map(c =>
-        c.id === id ? { ...c, status: novoStatus } : c
-      ));
-
-      // Atualiza no banco de dados
-      const { error } = await supabase
-        .from('comportamento')
-        .update({ status: novoStatus })
-        .eq('id', id);
-
-      if (error) throw error;
-
-      toast.success(`Comportamento ${novoStatus ? 'marcado como resolvido' : 'reaberto'}!`);
-    } catch (err) {
-      console.error('Erro ao alternar status:', err);
-      toast.error('Falha ao atualizar status.');
-      // Reverter em caso de erro
-      carregarComportamentos();
-    }
-  };
-
   /* Handlers de UI */
   const abrirModalEdicao = (comportamento: Comportamento) => {
     setComportamentoEditando(comportamento);
@@ -346,11 +295,6 @@ const RegistroComportamento: React.FC = () => {
     setFiltroResidenteAberto(false);
   };
 
-  const selecionarStatus = (status: string | null) => {
-    setFiltros(prev => ({ ...prev, status: status === 'todos' ? null : status }));
-    setFiltroStatusAberto(false);
-  };
-
   const selecionarCategoria = (categoria: string | null) => {
     setFiltros(prev => ({ ...prev, categoria: categoria === 'todos' ? null : categoria }));
     setFiltroCategoriaAberto(false);
@@ -365,7 +309,6 @@ const RegistroComportamento: React.FC = () => {
       endDate: null
     });
     setSearchTerm('');
-    setFiltroStatusAberto(false);
     setFiltroResidenteAberto(false);
     setFiltroCategoriaAberto(false);
   };
@@ -390,14 +333,6 @@ const RegistroComportamento: React.FC = () => {
         // Filtro por residente
         if (filtros.residenteId && comportamento.residente?.id !== filtros.residenteId) {
           return false;
-        }
-
-        // Filtro por status
-        if (filtros.status) {
-          const statusComportamento = comportamento.status ? 'resolvido' : 'pendente';
-          if (statusComportamento !== filtros.status) {
-            return false;
-          }
         }
 
         // Filtro por categoria
@@ -455,8 +390,8 @@ const RegistroComportamento: React.FC = () => {
     ref: React.RefObject<HTMLDivElement>;
     valorSelecionado: string | number | null;
     onSelecionar: (value: string | number | null) => void;
-    tipo: 'residente' | 'status' | 'categoria';
-    opcoes: Array<{ value: string; label: string; icon?: LucideIcon }>;
+    tipo: 'residente' | 'categoria';
+    opcoes: Array<{ value: string; label: string; }>;
   }) => {
     return (
       <div className="relative" ref={ref}>
@@ -487,9 +422,7 @@ const RegistroComportamento: React.FC = () => {
                 : 'text-gray-700'
                 }`}
             >
-              <span>{tipo === 'categoria' ? 'Todas categorias' : 
-                    tipo === 'residente' ? 'Todos os residentes' : 
-                    'Todos os status'}</span>
+              <span>{tipo === 'categoria' ? 'Todas categorias' : 'Todos os residentes'}</span>
               {(!valorSelecionado || (tipo === 'categoria' && valorSelecionado === 'todos')) && 
                 <Check className="ml-auto text-odara-primary w-3 h-3 sm:w-3.5 sm:h-3.5" />}
             </button>
@@ -512,7 +445,7 @@ const RegistroComportamento: React.FC = () => {
                 </button>
               ))
             ) : (
-              opcoes.map((opcao) => (
+              opcoes.filter(opt => opt.value !== 'todos').map((opcao) => (
                 <button
                   key={opcao.value}
                   onClick={() => onSelecionar(opcao.value)}
@@ -521,9 +454,6 @@ const RegistroComportamento: React.FC = () => {
                     : 'text-gray-700'
                     }`}
                 >
-                  {opcao.icon && (
-                    <opcao.icon size={12} className="sm:w-3.5 sm:h-3.5 text-odara-accent" />
-                  )}
                   <span>{opcao.label}</span>
                   {valorSelecionado === opcao.value && (
                     <Check className="ml-auto text-odara-primary w-3 h-3 sm:w-3.5 sm:h-3.5" />
@@ -539,125 +469,30 @@ const RegistroComportamento: React.FC = () => {
 
   const CardComportamento = ({ comportamento }: { comportamento: Comportamento }) => {
     const cores = CORES_CATEGORIAS[comportamento.categoria] || CORES_CATEGORIAS.neutro;
-    const CategoriaIcon = cores.icon;
-    const statusLabel = comportamento.status ? 'Resolvido' : 'Pendente';
-    const StatusIcon = comportamento.status ? CheckCircle : Clock;
 
     return (
       <div className="bg-white rounded-lg shadow-md border border-gray-200 hover:shadow-lg transition-shadow duration-200 flex flex-col h-full">
         {/* Header do Card */}
-        <div className={`flex flex-wrap justify-center sm:justify-between gap-2 items-center p-2 sm:p-3 rounded-t-lg ${cores.border} ${cores.bg}`}>
+        <div className={`flex flex-wrap justify-between gap-2 items-center p-2 sm:p-3 rounded-t-lg ${cores.border} ${cores.bg}`}>
           {/* Coluna Esquerda */}
           <div className="flex items-center gap-2">
             <div className={`w-2 h-2 sm:w-3 sm:h-3 rounded-full ${cores.bola}`}></div>
-            <CategoriaIcon size={12} className="sm:w-3.5 sm:h-3.5 text-odara-accent" />
             <p className={`text-xs sm:text-sm md:text-base ${cores.text}`}>
               {ROTULOS_CATEGORIAS[comportamento.categoria]}
             </p>
-          </div>
-
-          {/* Coluna Direita - Data/Horário */}
-          <div className="flex items-center gap-1 text-xs sm:text-sm">
-            <Calendar size={10} className="sm:w-3 sm:h-3 text-odara-accent" />
-            <span className="text-odara-dark">
-              {formatarDataHora(comportamento.data, comportamento.horario)}
-            </span>
           </div>
         </div>
 
         {/* Corpo do Card */}
         <div className="p-3 sm:p-4 flex-1 flex flex-col">
-          {/* Título e Status */}
+          {/* Título e Botões de Ação */}
           <div className="flex items-start justify-between mb-2 sm:mb-3">
             <h3 className="text-sm sm:text-base md:text-lg font-bold text-odara-dark line-clamp-1 flex-1">
               {comportamento.titulo}
             </h3>
-
-            {/* Status */}
-            <button
-              onClick={() => alternarStatus(comportamento.id)}
-              className={`flex items-center gap-1 px-2 py-1 rounded-lg text-xs font-medium transition-colors ${
-                comportamento.status
-                  ? 'bg-green-100 text-green-800 hover:bg-green-200'
-                  : 'bg-yellow-100 text-yellow-800 hover:bg-yellow-200'
-              }`}
-              title={`Marcar como ${comportamento.status ? 'pendente' : 'resolvido'}`}
-            >
-              <StatusIcon size={10} className="sm:w-3 sm:h-3" />
-              <span>{statusLabel}</span>
-            </button>
-          </div>
-
-          {/* Descrição */}
-          <div className="mb-3 sm:mb-4">
-            <p className="text-sm text-odara-dark line-clamp-3">
-              {comportamento.descricao || 'Sem descrição'}
-            </p>
-          </div>
-
-          {/* Detalhes do Comportamento */}
-          <div className="grid grid-cols-1 gap-2 sm:gap-3 sm:grid-cols-2 flex-1">
-            {/* Coluna Esquerda */}
-            <div className="space-y-2 sm:space-y-3">
-              <div className="flex items-center gap-2">
-                <User size={12} className="text-odara-accent shrink-0" />
-                <div>
-                  <strong className="text-odara-dark text-xs sm:text-sm">Residente:</strong>
-                  <span className="text-odara-name mt-0.5 sm:mt-1 text-xs sm:text-sm block">
-                    {comportamento.residente?.nome || 'Não informado'}
-                  </span>
-                </div>
-              </div>
-
-              {comportamento.residente?.quarto && (
-                <div>
-                  <strong className="text-odara-dark text-xs sm:text-sm">Quarto:</strong>
-                  <span className="text-odara-name mt-0.5 sm:mt-1 text-xs sm:text-sm block">
-                    {comportamento.residente.quarto}
-                  </span>
-                </div>
-              )}
-            </div>
-
-            {/* Coluna Direita */}
-            <div className="space-y-2 sm:space-y-3">
-              {comportamento.funcionario && (
-                <div className="flex items-center gap-2">
-                  <User size={12} className="text-odara-accent shrink-0" />
-                  <div>
-                    <strong className="text-odara-dark text-xs sm:text-sm">Registrado por:</strong>
-                    <span className="text-odara-name mt-0.5 sm:mt-1 text-xs sm:text-sm block">
-                      {comportamento.funcionario.nome}
-                    </span>
-                  </div>
-                </div>
-              )}
-
-              {comportamento.criado_em && (
-                <div className="flex items-center gap-2">
-                  <ClockIcon size={12} className="text-odara-accent shrink-0" />
-                  <div>
-                    <strong className="text-odara-dark text-xs sm:text-sm">Criado em:</strong>
-                    <span className="text-odara-name mt-0.5 sm:mt-1 text-xs sm:text-sm block">
-                      {formatarData(comportamento.criado_em)}
-                    </span>
-                  </div>
-                </div>
-              )}
-            </div>
-          </div>
-        </div>
-
-        {/* Footer do Card */}
-        <div className="px-3 sm:px-4 py-2 sm:py-3 bg-gray-50 rounded-b-lg border-t border-gray-200">
-          <div className="flex flex-wrap justify-between items-center gap-2 text-xs">
-            <div className="flex items-center gap-2">
-              <span className="bg-odara-accent text-white px-2 py-1 rounded-full text-xs font-medium">
-                ID: {comportamento.id}
-              </span>
-            </div>
-
-            <div className="flex items-center gap-2">
+            
+            {/* Botões de Ação - Posicionamento igual ao de Medicamentos */}
+            <div className="flex items-center gap-1 ml-2">
               <button
                 onClick={() => abrirModalEdicao(comportamento)}
                 className="text-odara-dropdown-accent hover:text-odara-white transition-colors duration-200 p-1.5 sm:p-2 rounded-full hover:bg-odara-dropdown-accent"
@@ -675,6 +510,61 @@ const RegistroComportamento: React.FC = () => {
               </button>
             </div>
           </div>
+
+          {/* Descrição */}
+          <div className="mb-3 sm:mb-4">
+            <p className="text-sm text-odara-dark line-clamp-3">
+              {comportamento.descricao || 'Sem descrição'}
+            </p>
+          </div>
+            {/* Detalhes do Comportamento */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-3 flex-1">
+              {/* Registrado por */}
+              {comportamento.funcionario && (
+                <div className="flex items-start gap-2">
+                  <div>
+                    <strong className="text-odara-dark text-xs sm:text-sm">Registrado por:</strong>
+                    <span className="text-odara-name mt-0.5 sm:mt-1 text-xs sm:text-sm block">
+                      {comportamento.funcionario.nome}
+                    </span>
+                  </div>
+                </div>
+              )}
+
+              {/* Criado em */}
+              {comportamento.criado_em && (
+                <div className="flex items-start gap-2">
+                  <div>
+                    <strong className="text-odara-dark text-xs sm:text-sm">Criado em:</strong>
+                    <span className="text-odara-name mt-0.5 sm:mt-1 text-xs sm:text-sm block">
+                      {formatarData(comportamento.criado_em)}
+                    </span>
+                  </div>
+                </div>
+              )}
+          </div>
+        </div>
+
+        {/* Footer do Card - Balão com nome do residente e quarto */}
+        <div className="px-3 sm:px-4 py-2 sm:py-3 bg-gray-50 rounded-b-lg border-t border-gray-200">
+          <div className="flex flex-wrap justify-center sm:justify-between gap-1 sm:gap-2 text-xs">
+            <div className="flex items-center flex-wrap gap-1 justify-center sm:justify-start">
+              {comportamento.residente && (
+                <>
+                  <span className="bg-odara-accent text-white px-2 py-1 rounded-full text-xs font-medium flex items-center gap-1">
+                    <User size={10} className="sm:w-3 sm:h-3" />
+                    {comportamento.residente.nome}
+                  </span>
+
+                  {comportamento.residente.quarto && (
+                    <span className="text-xs text-odara-dark">
+                      • Quarto {comportamento.residente.quarto}
+                    </span>
+                  )}
+                </>
+              )}
+            </div>
+          </div>
         </div>
       </div>
     );
@@ -685,67 +575,60 @@ const RegistroComportamento: React.FC = () => {
 
     return (
       <div className="mb-6 bg-white p-4 sm:p-5 rounded-xl shadow border border-gray-200 animate-fade-in">
-        {/* Primeira Linha - Filtros principais */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-5 w-full">
-          {/* Filtro de Residente */}
-          <div className="min-w-0">
-            <div className='flex gap-1 items-center ml-1 mb-1'>
-              <Filter size={9} className="sm:w-2.5 sm:h-2.5 text-odara-accent" />
-              <label className="block text-xs sm:text-sm font-semibold text-odara-secondary">Residente</label>
+        {/* Primeira Linha - Filtros principais em coluna única no mobile */}
+        <div className="flex flex-col md:flex-row gap-4 sm:gap-5 w-full">
+          <div className="flex flex-col md:flex-row flex-1 gap-4 sm:gap-5 w-full">
+            {/* Filtro de Residente */}
+            <div className="flex-1 min-w-0">
+              <div className='flex gap-1 items-center ml-1 mb-1'>
+                <Filter size={9} className="sm:w-2.5 sm:h-2.5 text-odara-accent" />
+                <label className="block text-xs sm:text-sm font-semibold text-odara-secondary">Residente</label>
+              </div>
+
+              <FiltroDropdown
+                titulo="Todos os residentes"
+                aberto={filtroResidenteAberto}
+                setAberto={setFiltroResidenteAberto}
+                ref={filtroResidenteRef}
+                valorSelecionado={filtros.residenteId}
+                onSelecionar={selecionarResidente as (value: string | number | null) => void}
+                tipo="residente"
+                opcoes={[]}
+              />
             </div>
 
-            <FiltroDropdown
-              titulo="Todos os residentes"
-              aberto={filtroResidenteAberto}
-              setAberto={setFiltroResidenteAberto}
-              ref={filtroResidenteRef}
-              valorSelecionado={filtros.residenteId}
-              onSelecionar={selecionarResidente as (value: string | number | null) => void}
-              tipo="residente"
-              opcoes={[]}
-            />
+            {/* Filtro de Categoria */}
+            <div className="flex-1 min-w-0">
+              <div className='flex gap-1 items-center ml-1 mb-1'>
+                <Filter size={9} className="sm:w-2.5 sm:h-2.5 text-odara-accent" />
+                <label className="block text-xs sm:text-sm font-semibold text-odara-secondary">Categoria</label>
+              </div>
+
+              <FiltroDropdown
+                titulo="Todas categorias"
+                aberto={filtroCategoriaAberto}
+                setAberto={setFiltroCategoriaAberto}
+                ref={filtroCategoriaRef}
+                valorSelecionado={filtros.categoria || 'todos'}
+                onSelecionar={selecionarCategoria as (value: string | number | null) => void}
+                tipo="categoria"
+                opcoes={FILTRO_CATEGORIA_OPTIONS}
+              />
+            </div>
           </div>
 
-          {/* Filtro de Status */}
-          <div className="min-w-0">
-            <div className='flex gap-1 items-center ml-1 mb-1'>
-              <Filter size={9} className="sm:w-2.5 sm:h-2.5 text-odara-accent" />
-              <label className="block text-xs sm:text-sm font-semibold text-odara-secondary">Status</label>
-            </div>
-
-            <FiltroDropdown
-              titulo="Todos os status"
-              aberto={filtroStatusAberto}
-              setAberto={setFiltroStatusAberto}
-              ref={filtroStatusRef}
-              valorSelecionado={filtros.status || 'todos'}
-              onSelecionar={selecionarStatus as (value: string | number | null) => void}
-              tipo="status"
-              opcoes={FILTRO_STATUS_OPTIONS}
-            />
-          </div>
-
-          {/* Filtro de Categoria */}
-          <div className="min-w-0">
-            <div className='flex gap-1 items-center ml-1 mb-1'>
-              <Filter size={9} className="sm:w-2.5 sm:h-2.5 text-odara-accent" />
-              <label className="block text-xs sm:text-sm font-semibold text-odara-secondary">Categoria</label>
-            </div>
-
-            <FiltroDropdown
-              titulo="Todas categorias"
-              aberto={filtroCategoriaAberto}
-              setAberto={setFiltroCategoriaAberto}
-              ref={filtroCategoriaRef}
-              valorSelecionado={filtros.categoria || 'todos'}
-              onSelecionar={selecionarCategoria as (value: string | number | null) => void}
-              tipo="categoria"
-              opcoes={FILTRO_CATEGORIA_OPTIONS}
-            />
+          {/* Botão Limpar Filtros - Alinhado à direita no desktop */}
+          <div className="flex md:items-end gap-2 pt-1 md:pt-0 md:shrink-0">
+            <button
+              onClick={limparFiltros}
+              className="bg-odara-accent hover:bg-odara-secondary text-white font-semibold py-2 px-3 sm:px-4 rounded-lg flex items-center transition text-xs sm:text-sm h-9 sm:h-10 w-full md:w-auto justify-center"
+            >
+              Limpar Filtros
+            </button>
           </div>
         </div>
 
-        {/* Segunda Linha (Filtro de Data) */}
+        {/* Segunda Linha (Filtro de Data) - 2 colunas com mesma largura */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-5 mt-4 sm:mt-5 pt-4 sm:pt-5 border-t border-gray-200">
           {/* Data Inicial */}
           <div>
@@ -777,16 +660,6 @@ const RegistroComportamento: React.FC = () => {
             />
           </div>
         </div>
-
-        {/* Botão Limpar Filtros */}
-        <div className="flex justify-end gap-2 pt-4 sm:pt-5 mt-4 sm:mt-5 border-t border-gray-200">
-          <button
-            onClick={limparFiltros}
-            className="bg-odara-accent hover:bg-odara-secondary text-white font-semibold py-2 px-3 sm:px-4 rounded-lg flex items-center transition text-xs sm:text-sm h-9 sm:h-10"
-          >
-            Limpar Filtros
-          </button>
-        </div>
       </div>
     );
   };
@@ -798,6 +671,7 @@ const RegistroComportamento: React.FC = () => {
       ? comportamentos.find(c => c.id === comportamentoParaExcluir)
       : null;
     const tituloComportamento = comportamento?.titulo || '';
+    const nomeResidente = comportamento?.residente?.nome || '';
 
     return (
       <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-100 p-4 animate-fade-in">
@@ -821,6 +695,11 @@ const RegistroComportamento: React.FC = () => {
                 <p className="text-sm font-semibold text-odara-name truncate" title={tituloComportamento}>
                   {tituloComportamento}
                 </p>
+                {nomeResidente && (
+                  <p className="text-sm text-odara-dark mt-1">
+                    Residente: <span className="font-medium">{nomeResidente}</span>
+                  </p>
+                )}
               </div>
             )}
 
@@ -852,65 +731,16 @@ const RegistroComportamento: React.FC = () => {
   };
 
   const ListaComportamentos = () => {
-    const contadorPendentes = comportamentos.filter(c => !c.status).length;
-    const contadorResolvidos = comportamentos.filter(c => c.status).length;
-
     return (
       <div className="bg-white border-l-4 border-odara-primary rounded-xl sm:rounded-2xl shadow-lg p-3 sm:p-6">
         <div className="flex flex-col sm:flex-row items-center justify-between gap-2 mb-3 sm:mb-4">
           <div>
             <h2 className="text-lg sm:text-xl lg:text-2xl font-bold text-odara-dark">Comportamentos</h2>
-            <div className="flex items-center gap-3 mt-1 text-xs sm:text-sm">
-              <span className="flex items-center gap-1">
-                <Clock size={12} className="text-yellow-500" />
-                <span className="text-odara-dark">{contadorPendentes} pendentes</span>
-              </span>
-              <span className="flex items-center gap-1">
-                <CheckCircle size={12} className="text-green-500" />
-                <span className="text-odara-dark">{contadorResolvidos} resolvidos</span>
-              </span>
-            </div>
           </div>
           <span className="bg-gray-200 text-gray-700 px-2 py-1 rounded-full text-xs font-medium">
             Total: {comportamentosFiltrados.length}
           </span>
         </div>
-
-        {/* Tags de filtros ativos */}
-        {(filtros.status || filtros.residenteId || filtros.categoria || filtros.startDate || filtros.endDate || searchTerm) && (
-          <div className="mb-3 flex flex-wrap justify-center sm:justify-start gap-1 text-xs">
-            {searchTerm && (
-              <span className="bg-odara-secondary text-white px-2 py-1 rounded-full">
-                Busca: {searchTerm}
-              </span>
-            )}
-
-            {filtros.residenteId && (
-              <span className="bg-odara-secondary text-white px-2 py-1 rounded-full">
-                Residente: {residentes.find(r => r.id === filtros.residenteId)?.nome}
-              </span>
-            )}
-
-            {filtros.status && (
-              <span className="bg-odara-secondary text-white px-2 py-1 rounded-full">
-                Status: {filtros.status === 'pendente' ? 'Pendente' : 'Resolvido'}
-              </span>
-            )}
-
-            {filtros.categoria && (
-              <span className="bg-odara-secondary text-white px-2 py-1 rounded-full">
-                Categoria: {ROTULOS_CATEGORIAS[filtros.categoria]}
-              </span>
-            )}
-
-            {(filtros.startDate || filtros.endDate) && (
-              <span className="bg-odara-secondary text-white px-2 py-1 rounded-full">
-                Período: {filtros.startDate ? `${filtros.startDate.split('-').reverse().join('/')}` : ''}
-                {filtros.endDate ? ' até' + ` ${filtros.endDate.split('-').reverse().join('/')}` : ''}
-              </span>
-            )}
-          </div>
-        )}
 
         {/* Lista ou mensagem de vazio */}
         {loading ? (
@@ -957,7 +787,7 @@ const RegistroComportamento: React.FC = () => {
     return (
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
         <div className="flex items-start sm:items-center gap-3 w-full">
-          <AlertCircle size={24} className='sm:w-7 sm:h-7 lg:w-8 lg:h-8 text-odara-accent shrink-0 mt-1 sm:mt-0' />
+          <UserRoundSearch size={24} className='sm:w-7 sm:h-7 lg:w-8 lg:h-8 text-odara-accent shrink-0 mt-1 sm:mt-0' />
           
           <div className="flex-1 min-w-0 relative">
             <div className="flex items-center gap-0.1 sm:gap-2">
@@ -1052,7 +882,7 @@ const RegistroComportamento: React.FC = () => {
       />
 
       <div className="p-3 sm:p-6 lg:p-8 max-w-full overflow-hidden">
-        {/* Cabeçalho e Botão Novo - Ajustado para mobile */}
+        {/* Cabeçalho e Botão Novo */}
         <div className='flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 mb-4 sm:mb-6'>
           <Cabecalho />
           <div className="w-full sm:w-auto">
@@ -1060,7 +890,7 @@ const RegistroComportamento: React.FC = () => {
           </div>
         </div>
 
-        {/* Barra de Busca e Filtros - Otimizado para mobile */}
+        {/* Barra de Busca e Filtros */}
         <div className="flex flex-col sm:flex-row gap-3 mb-4 sm:mb-6">
           {/* Barra de Busca */}
           <div className="flex-1 relative min-w-0">

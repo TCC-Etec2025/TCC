@@ -701,33 +701,38 @@ const RegistroOcorrencias: React.FC = () => {
 						</div>
 					</div>
 
-					{/* Categoria */}
-					{ocorrencia.categoria && (
-						<div className="mb-2 sm:mb-3">
-							<strong className="text-odara-dark text-xs sm:text-sm">Categoria:</strong>
-							<span className="text-odara-name mt-0.5 sm:mt-1 text-xs sm:text-sm block">
-								{categoriaLabel}
-							</span>
-						</div>
-					)}
+					{/* GRID 2 COLUNAS + DESCRIÇÃO ABAIXO */}
+					<div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
 
-					{/* Descrição */}
-					<div className="mb-2 sm:mb-3">
+						{/* Categoria */}
+						{ocorrencia.categoria && (
+							<div>
+								<strong className="text-odara-dark text-xs sm:text-sm">Categoria:</strong>
+								<span className="text-odara-name mt-0.5 sm:mt-1 text-xs sm:text-sm block">
+									{categoriaLabel}
+								</span>
+							</div>
+						)}
+
+						{/* Providências */}
+						{ocorrencia.providencias && (
+							<div>
+								<strong className="text-odara-dark text-xs sm:text-sm">Providências:</strong>
+								<span className="text-odara-name mt-0.5 sm:mt-1 text-xs sm:text-sm block">
+									{ocorrencia.providencias}
+								</span>
+							</div>
+						)}
+
+					</div>
+
+					{/* Descrição (linha inteira) */}
+					<div className="mt-3">
 						<strong className="text-odara-dark text-xs sm:text-sm">Descrição:</strong>
 						<span className="text-odara-name mt-0.5 sm:mt-1 text-xs sm:text-sm block">
 							{ocorrencia.descricao}
 						</span>
 					</div>
-
-					{/* Providências */}
-					{ocorrencia.providencias && (
-						<div>
-							<strong className="text-odara-dark text-xs sm:text-sm">Providências:</strong>
-							<span className="text-odara-name mt-0.5 sm:mt-1 text-xs sm:text-sm block">
-								{ocorrencia.providencias}
-							</span>
-						</div>
-					)}
 				</div>
 
 				{/* Footer */}

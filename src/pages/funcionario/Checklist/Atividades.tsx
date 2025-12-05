@@ -6,8 +6,6 @@ import {
   ChevronRight,
   Clock,
   Search,
-  MapPin,
-  RockingChair,
   Check,
   Palette,
   CheckCircle,
@@ -506,7 +504,6 @@ const CardAtividade: React.FC<CardAtividadeProps> = ({
           <div className="space-y-2 sm:space-y-3">
             <div>
               <div className="flex items-start gap-2">
-                <MapPin className="text-odara-accent shrink-0 mt-0.5 hidden sm:block" size={12} />
                 <div className="flex-1 min-w-0">
                   <strong className="text-odara-dark text-xs sm:text-sm">Local:</strong>
                   <div className="mt-0.5">
@@ -534,7 +531,6 @@ const CardAtividade: React.FC<CardAtividadeProps> = ({
           <div className="space-y-2 sm:space-y-3">
             <div>
               <div className="flex items-start gap-2">
-                <RockingChair className="text-odara-accent shrink-0 mt-0.5 hidden sm:block" size={12} />
                 <div className="flex-1 min-w-0">
                   <strong className="text-odara-dark text-xs sm:text-sm">Participantes:</strong>
                   <div className="space-y-1 mt-2">
@@ -1302,7 +1298,6 @@ const Atividades = () => {
       <div className="p-3 sm:p-6 lg:p-8 max-w-full overflow-hidden">
         {/* Cabeçalho */}
         <Cabecalho />
-
         {/* Barra de Busca e Filtros */}
         <div className="flex flex-col sm:flex-row gap-3 mb-4 sm:mb-6">
           {/* Barra de Busca */}

@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useMemo, useRef, useCallback } from 'react';
 import { useForm } from 'react-hook-form';
-import { Info, Filter, ChevronDown, ChevronRight, MessageCircleMore, Clock, Pill, Check, CircleCheck, CircleMinus, Search, Edit, RockingChair, XCircle, Loader, X, type LucideIcon } from 'lucide-react';
+import { Info, Filter, ChevronDown, ChevronRight, MessageCircleMore, Clock, Pill, Check, CircleCheck, CircleMinus, Search, Edit, XCircle, Loader, X, type LucideIcon } from 'lucide-react';
 
 import * as yup from 'yup';
 import { yupResolver } from '@hookform/resolvers/yup';
@@ -87,12 +87,6 @@ const COR_STATUS: Record<string, {
   }
 };
 
-const STATUS_OPTIONS = [
-  { value: 'pendente', label: 'Pendente', icon: Clock },
-  { value: 'administrado', label: 'Administrado', icon: CircleCheck },
-  { value: 'parcial', label: 'Parcial', icon: CircleMinus },
-  { value: 'nao_administrado', label: 'Não Administrado', icon: XCircle }
-];
 
 const FILTRO_STATUS_OPTIONS = [
   { value: 'todos', label: 'Todos os status' },
@@ -128,7 +122,6 @@ const Medicamentos: React.FC = () => {
   const [filtrosAberto, setFiltrosAberto] = useState(false);
   const [filtroResidenteAberto, setFiltroResidenteAberto] = useState(false);
   const [filtroStatusAberto, setFiltroStatusAberto] = useState(false);
-  const [dropdownAberto, setDropdownAberto] = useState<number | null>(null);
   const [loading, setLoading] = useState(false);
   const [filtros, setFiltros] = useState<Filtros>({
     residenteId: null,
@@ -230,92 +223,24 @@ const Medicamentos: React.FC = () => {
 
   FiltroDropdown.displayName = 'FiltroDropdown';
 
-  /* Componente: Dropdown de Status */
-  interface DropdownStatusProps {
-    admin: AdministracaoComDetalhes;
-    onStatusChange: (adminId: number, status: string) => Promise<void>;
-    dropdownAberto: number | null;
-    toggleDropdown: (id: number) => void;
-  }
-
-  const DropdownStatus: React.FC<DropdownStatusProps> = ({
-    admin,
-    onStatusChange,
-    dropdownAberto,
-    toggleDropdown
-  }) => {
-    const cores = COR_STATUS[admin.status] || COR_STATUS.pendente;
-    const IconeStatus = cores.icon;
-
-    return (
-      <div className="relative">
-        <button
-          onClick={() => toggleDropdown(admin.id)}
-          className="flex items-center gap-2 px-2 sm:px-3 py-1 text-xs sm:text-sm border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors w-full sm:w-auto"
-        >
-          <IconeStatus size={12} className="sm:w-3.5 sm:h-3.5 text-odara-accent" />
-          <span className="text-odara-dark capitalize">{admin.status.replace('_', ' ')}</span>
-          <ChevronDown size={10} className="sm:w-3 sm:h-3 text-gray-500" />
-        </button>
-
-        {dropdownAberto === admin.id && (
-          <>
-            <div
-              className="fixed inset-0 z-10 cursor-default"
-              onClick={() => toggleDropdown(admin.id)}
-            />
-            <div className="absolute top-full sm:right-0 mt-2 w-40 sm:w-48 bg-white rounded-lg shadow-lg border border-gray-200 z-20 overflow-hidden">
-              {STATUS_OPTIONS.map((option) => {
-                const OptionIcon = COR_STATUS[option.value].icon;
-                return (
-                  <button
-                    key={option.value}
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      onStatusChange(admin.id, option.value);
-                      toggleDropdown(admin.id);
-                    }}
-                    className={`flex items-center gap-2 sm:gap-3 w-full text-left px-3 sm:px-4 py-2 sm:py-3 text-xs sm:text-sm hover:bg-odara-primary/10 transition ${admin.status === option.value
-                      ? 'bg-odara-primary/20 text-odara-primary font-semibold'
-                      : 'text-gray-700'
-                      }`}
-                  >
-                    <OptionIcon size={12} className="sm:w-3.5 sm:h-3.5 text-odara-accent" />
-                    <span className="capitalize">{option.label}</span>
-                    {admin.status === option.value && (
-                      <Check className="ml-auto text-odara-primary w-3 h-3 sm:w-3.5 sm:h-3.5" />
-                    )}
-                  </button>
-                );
-              })}
-            </div>
-          </>
-        )}
-      </div>
-    );
-  };
-
   /* Componente: Card de Administração */
   interface CardAdministracaoProps {
     admin: AdministracaoComDetalhes;
     onStatusClick: (adminId: number, status: string) => Promise<void>;
     onEditObservation: (admin: AdministracaoComDetalhes) => Promise<void>;
-    dropdownAberto: number | null;
-    toggleDropdown: (id: number) => void;
   }
 
   const CardAdministracao: React.FC<CardAdministracaoProps> = ({
     admin,
     onStatusClick,
-    onEditObservation,
-    dropdownAberto,
-    toggleDropdown
+    onEditObservation
   }) => {
     const cores = COR_STATUS[admin.status] || COR_STATUS.pendente;
+    const IconeStatus = cores.icon;
 
     return (
       <div className="bg-white rounded-lg shadow border overflow-hidden border-gray-200 hover:shadow-md transition-shadow duration-200 flex flex-col h-full">
-        {/* Header */}
+        {/* Header - IGUAL AO DE ALIMENTAÇÃO */}
         <div className={`flex flex-wrap justify-center sm:justify-between gap-2 items-center p-2 sm:p-3 ${cores.border} ${cores.bg}`}>
           {/* Coluna Esquerda - Data e Hora */}
           <div className="flex items-center">
@@ -331,14 +256,10 @@ const Medicamentos: React.FC = () => {
             </div>
           </div>
 
-          {/* Status - Responsivo */}
-          <div className="w-full sm:w-auto">
-            <DropdownStatus
-              admin={admin}
-              onStatusChange={onStatusClick}
-              dropdownAberto={dropdownAberto}
-              toggleDropdown={toggleDropdown}
-            />
+          {/* Status - APENAS PARA EXIBIÇÃO (sem dropdown) */}
+          <div className="flex items-center gap-2 px-2 sm:px-3 py-1 text-xs sm:text-sm">
+            <IconeStatus size={12} className="sm:w-3.5 sm:h-3.5 text-odara-accent" />
+            <span className="text-odara-dark capitalize">{admin.status.replace('_', ' ')}</span>
           </div>
         </div>
 
@@ -373,7 +294,6 @@ const Medicamentos: React.FC = () => {
               {/* Residente - estilo exame (nome em baixo) */}
               <div>
                 <div className="flex items-start gap-2">
-                  <RockingChair className="text-odara-accent shrink-0 mt-0.5 hidden sm:block" size={12} />
                   <div className="flex-1 min-w-0">
                     <strong className="text-odara-dark text-xs sm:text-sm">Residente:</strong>
                     <div className="mt-0.5">
@@ -414,7 +334,7 @@ const Medicamentos: React.FC = () => {
           </div>
         </div>
 
-        {/* Footer do Card */}
+        {/* Footer do Card - MESMO QUE ALIMENTAÇÃO */}
         <div className="px-3 sm:px-4 py-2 sm:py-3 bg-gray-50 rounded-b-lg border-t border-gray-200 mt-auto">
           <div className="flex flex-col gap-2">
             <div className="grid grid-cols-3 gap-2">
@@ -1045,16 +965,11 @@ const Medicamentos: React.FC = () => {
     }
   }, [observacaoModal, updateStatus]);
 
-
   const toggleDate = useCallback((date: string) => {
     setDatesExpanded(prev => {
       const isCurrentlyExpanded = prev[date] !== false;
       return { ...prev, [date]: !isCurrentlyExpanded };
     });
-  }, []);
-
-  const toggleDropdown = useCallback((id: number) => {
-    setDropdownAberto(prev => prev === id ? null : id);
   }, []);
 
   const toggleFiltros = useCallback(() => {
@@ -1174,8 +1089,6 @@ const Medicamentos: React.FC = () => {
                             admin={admin}
                             onStatusClick={handleStatusClick}
                             onEditObservation={handleEditObservation}
-                            dropdownAberto={dropdownAberto}
-                            toggleDropdown={toggleDropdown}
                           />
                         ))}
                       </div>

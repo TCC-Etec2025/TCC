@@ -12,11 +12,17 @@ import { ModalRoot } from "../../components/dashboard/modals/ModalRoot";
 import type { TipoModal } from "../../components/dashboard/modals/types";
 
 type MedicamentoResumo = { id: number; nome: string; dosagem: string; horario_inicio: string; recorrencia: string; };
+
 type AtividadeResumo = { id: number; nome: string; horario_inicio: string; local: string | null; };
+
 type AlimentacaoResumo = { id: number; refeicao: string; alimento: string; horario: string; };
+
 type ConsultaResumo = { id: number; data_consulta: string; horario: string; medico: string; motivo_consulta: string | null; };
-type ExameResumo = { id: number; tipo: string; laboratorio: string | null; data_prevista: string; horario_previsto: string; status: string; };
+
+type ExameResumo = { id: number; tipo: string; laboratorio: string | null; data: string; horario: string; status: string; };
+
 type OcorrenciaResumo = { id: number; titulo: string; descricao: string; horario: string; providencias: string | null; status: boolean; };
+
 type AdministracaoResumo = { id: number; horario_previsto: string; status: string; nome_medicamento: string; };
 
 type ResidenteResumo = {
@@ -28,6 +34,7 @@ type ResidenteResumo = {
   plano_saude?: string;
   numero_carteirinha?: string;
   observacoes?: string;
+  status: boolean;
 };
 
 type DadosResidente = {
@@ -52,10 +59,10 @@ const formatarDataLocal = (date: Date) => {
 const isDataHojeOuFutura = (dataString: string): boolean => {
   const hoje = new Date();
   hoje.setHours(0, 0, 0, 0); // Zera horas para comparar apenas datas
-  
+
   const data = new Date(dataString);
   data.setHours(0, 0, 0, 0);
-  
+
   return data >= hoje;
 };
 
@@ -147,7 +154,7 @@ const DashboardResponsavel = () => {
   if (erro || dados.length === 0) return (
     <div className="flex min-h-screen bg-odara-offwhite items-center justify-center">
       <div className="text-center">
-        <p className="text-gray-500 mb-4">{erro || "Nenhum residente vinculado."}</p>
+        <p className="text-gray-400 mb-4">{erro || "Nenhum residente vinculado."}</p>
         <button
           onClick={fetchResumo}
           className="px-4 py-2 bg-odara-primary text-white rounded-lg hover:bg-odara-primary/90 transition-colors"
@@ -161,7 +168,7 @@ const DashboardResponsavel = () => {
   const familiarAtual = dados[idxSelecionado];
   const dadosParaCartoes = obterDadosParaCartoes();
 
-  {/* Listas agregadas */} 
+  {/* Listas agregadas */ }
   // Const OCORRENCIAS
   const ocorrenciasView = visualizacao === "casa"
     ? dados.flatMap(d => d.ocorrencias_dia.map(o => ({ ...o, nome_residente: d.residente.nome })))
@@ -201,25 +208,25 @@ const DashboardResponsavel = () => {
 
   // Const CONSULTAS - Filtrar apenas hoje e futuras
   const consultasView = visualizacao === "casa"
-    ? dados.flatMap(d => 
-        d.consultas_semana
-          .filter(c => isDataHojeOuFutura(c.data_consulta))
-          .map(c => ({ ...c, nome_residente: d.residente.nome }))
-      )
-    : familiarAtual.consultas_semana
+    ? dados.flatMap(d =>
+      d.consultas_semana
         .filter(c => isDataHojeOuFutura(c.data_consulta))
-        .map(c => ({ ...c, nome_residente: familiarAtual.residente.nome }));
+        .map(c => ({ ...c, nome_residente: d.residente.nome }))
+    )
+    : familiarAtual.consultas_semana
+      .filter(c => isDataHojeOuFutura(c.data_consulta))
+      .map(c => ({ ...c, nome_residente: familiarAtual.residente.nome }));
 
   // Const EXAMES - Filtrar apenas hoje e futuras
   const examesView = visualizacao === "casa"
-    ? dados.flatMap(d => 
-        d.exames_semana
-          .filter(e => isDataHojeOuFutura(e.data_prevista))
-          .map(e => ({ ...e, nome_residente: d.residente.nome }))
-      )
+    ? dados.flatMap(d =>
+      d.exames_semana
+        .filter(e => isDataHojeOuFutura(e.data))
+        .map(e => ({ ...e, nome_residente: d.residente.nome }))
+    )
     : familiarAtual.exames_semana
-        .filter(e => isDataHojeOuFutura(e.data_prevista))
-        .map(e => ({ ...e, nome_residente: familiarAtual.residente.nome }));
+      .filter(e => isDataHojeOuFutura(e.data))
+      .map(e => ({ ...e, nome_residente: familiarAtual.residente.nome }));
 
   // Contador total de alertas (ocorrências + próximo medicamento)
   const totalAlertas = ocorrenciasView.length + (proximoMedicamento ? 1 : 0);
@@ -232,17 +239,17 @@ const DashboardResponsavel = () => {
     const amanha = new Date();
     amanha.setDate(hoje.getDate() + 1);
     amanha.setHours(0, 0, 0, 0);
-    
+
     data.setHours(0, 0, 0, 0);
-    
+
     let dataColor = "text-gray-400";
     let dataBg = "bg-white";
-    
+
     if (data.getTime() === hoje.getTime()) {
       dataColor = "text-odara-alerta";
       dataBg = "bg-white";
     } else if (data.getTime() === amanha.getTime()) {
-      dataColor = "text-gray-200";
+      dataColor = "text-gray-400";
       dataBg = "bg-white";
     }
 
@@ -257,40 +264,50 @@ const DashboardResponsavel = () => {
   const CabecalhoDashboard = () => {
     return (
       <div className="flex flex-col sm:flex-row justify-between mb-6 sm:mb-8 gap-4">
-        <div>
-          <h1 className="text-2xl sm:text-3xl font-bold text-odara-dark">
-            {visualizacao === "casa" ? "Área do Responsável" : `Perfil - ${familiarAtual.residente.nome}`}
-          </h1>
-          <p className="text-odara-dark/60 text-sm">
-            {visualizacao === "casa" ? "Visão geral de todos os residentes" : `Quarto ${familiarAtual.residente.quarto || "não informado"}`}
-          </p>
-        </div>
+        {visualizacao === "familiar" ? (
+          <div className="flex items-center justify-between w-full">
+            <button
+              onClick={() => setVisualizacao("casa")}
+              className="flex items-center gap-2 px-4 py-2 text-odara-primary bg-white border border-odara-primary rounded-lg hover:bg-odara-primary/10 transition font-medium text-sm"
+            >
+              <Home size={18} />
+              <span>Voltar para Visão Geral</span>
+            </button>
+
+            
+          </div>
+        ) : (
+          <div>
+            <h1 className="text-2xl sm:text-3xl font-bold text-odara-dark">
+              Área do Responsável
+            </h1>
+          </div>
+        )}
 
         <div className="flex items-center gap-4">
-          <div className="flex items-center space-x-2 text-sm text-gray-600">
+          <div className="flex items-center space-x-2 text-sm text-gray-600 w-full">
             <WrapperIcone icone={Calendar} tamanho={20} className="text-odara-primary" />
             <span>{new Date().toLocaleDateString('pt-BR', { day: '2-digit', month: 'short', year: 'numeric' })}</span>
           </div>
 
-          {/* Botão de Notificações no Cabeçalho - Só mostra se houver alertas */}
-          {totalAlertas > 0 && (
+          {/* Botão de Notificações no Cabeçalho */}
             <button
               onClick={() => setNotificacoesAbertas(true)}
-              className="relative p-2 rounded-lg hover:bg-gray-100 transition-colors group"
+              className="relative p-2 rounded-lg transition-colors group"
               aria-label="Notificações"
             >
-              <div className="p-2 bg-odara-primary/10 rounded-lg group-hover:bg-odara-primary/20 transition-colors">
+              <div className="p-2 bg-odara-white border border-odara-primary rounded-lg group-hover:bg-odara-primary/20 transition-colors">
                 <WrapperIcone
                   icone={Bell}
                   tamanho={20}
                   className="text-odara-primary"
                 />
               </div>
-              <span className="absolute -top-1 -right-1 bg-odara-primary text-white text-xs font-bold w-5 h-5 flex items-center justify-center rounded-full">
+
+              <span className={`absolute -top-1 -right-1 text-white text-xs font-bold w-5 h-5 flex items-center justify-center rounded-full ${totalAlertas > 0 ? 'bg-odara-alerta' : 'bg-odara-dropdown-accent'}`}>
                 {totalAlertas}
               </span>
             </button>
-          )}
         </div>
       </div>
     );
@@ -322,7 +339,7 @@ const DashboardResponsavel = () => {
                 </div>
                 <div>
                   <h3 className="text-lg font-semibold text-odara-dark">Alertas</h3>
-                  <p className="text-sm text-gray-500">
+                  <p className="text-sm text-gray-400">
                     {totalAlertas} item{totalAlertas !== 1 ? 's' : ''}
                   </p>
                 </div>
@@ -332,7 +349,7 @@ const DashboardResponsavel = () => {
                 className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
                 aria-label="Fechar alertas"
               >
-                <WrapperIcone icone={X} tamanho={20} className="text-gray-500" />
+                <WrapperIcone icone={X} tamanho={20} className="text-gray-400" />
               </button>
             </div>
           </div>
@@ -360,7 +377,7 @@ const DashboardResponsavel = () => {
                         {proximoMedicamento.nome_medicamento}
                       </p>
                       <div className="flex items-center justify-between mt-2">
-                        <span className="text-xs text-gray-500">{proximoMedicamento.nome_residente}</span>
+                        <span className="text-xs text-gray-400">{proximoMedicamento.nome_residente}</span>
                         <span className="text-xs font-bold text-odara-primary">
                           Hoje às {proximoMedicamento.horario_previsto.slice(0, 5)}
                         </span>
@@ -397,8 +414,8 @@ const DashboardResponsavel = () => {
                             {ocorrencia.titulo}
                           </p>
                           <div className="flex items-center justify-between mt-2">
-                            <span className="text-xs text-gray-500">{ocorrencia.nome_residente}</span>
-                            <span className="text-xs text-gray-500">{ocorrencia.horario.slice(0, 5)}</span>
+                            <span className="text-xs text-gray-400">{ocorrencia.nome_residente}</span>
+                            <span className="text-xs text-gray-400">{ocorrencia.horario.slice(0, 5)}</span>
                           </div>
                         </div>
                         <ChevronRightIcon size={14} className="text-odara-primary flex-shrink-0 mt-0.5" />
@@ -415,7 +432,7 @@ const DashboardResponsavel = () => {
                 <div className="p-4 bg-odara-primary/10 rounded-full inline-block mb-3">
                   <WrapperIcone icone={Bell} tamanho={24} className="text-odara-primary" />
                 </div>
-                <p className="text-gray-500 font-medium">Sem alertas no momento</p>
+                <p className="text-gray-400 font-medium">Sem alertas no momento</p>
                 <p className="text-gray-400 text-sm mt-1">Tudo tranquilo por aqui</p>
               </div>
             )}
@@ -440,19 +457,23 @@ const DashboardResponsavel = () => {
                   <RockingChair className="w-full h-full p-2 sm:p-3 text-odara-primary" />
                 }
               </div>
+
               <div className="flex-1 min-w-0">
                 <h3 className="font-bold text-base sm:text-lg text-odara-dark group-hover:text-odara-primary transition-colors truncate">
                   {d.residente.nome}
                 </h3>
-                <div className="flex flex-wrap items-center gap-1 sm:gap-2 mt-1 text-xs sm:text-sm text-gray-500">
+
+                <div className="flex flex-wrap items-center gap-1 sm:gap-2 mt-1 text-xs sm:text-sm text-gray-400">
                   <span className="truncate">Quarto: {d.residente.quarto || "-"}</span>
+
                   <span className="hidden sm:inline">•</span>
                   <span className="px-2 py-0.5 bg-gray-100 text-gray-600 text-xs rounded-full font-medium">
                     {d.residente.dependencia || "Ativo"}
                   </span>
                 </div>
               </div>
-              <ChevronRight className="text-gray-300 group-hover:text-odara-primary transition-colors flex-shrink-0" size={20} />
+
+              <ChevronRight className="text-gray-400 group-hover:text-odara-primary transition-colors flex-shrink-0" size={20} />
             </div>
           </div>
         ))}
@@ -462,66 +483,84 @@ const DashboardResponsavel = () => {
 
   // Componente de Perfil do Familiar
   const PerfilFamiliar = () => {
-    return (
-      <div className="bg-white rounded-xl sm:rounded-2xl shadow p-4 sm:p-6 border-l-4 border-odara-primary">
-        <div className="flex items-center justify-between mb-4">
-          <button
-            onClick={() => setVisualizacao("casa")}
-            className="flex items-center gap-2 px-4 py-2 text-odara-primary bg-white border border-odara-primary rounded-lg hover:bg-odara-primary/10 transition font-medium text-sm"
+  return (
+    <div className="bg-white rounded-xl sm:rounded-2xl shadow p-4 sm:p-6 border-l-4 border-odara-primary">      
+      {/* CONTAINER PRINCIPAL COM SETAS + FOTO + NOME */}
+      <div className="flex items-center justify-between mb-6">        
+        {/* Setas de navegação - ESQUERDA */}
+        {dados.length > 1 && (
+          <button 
+            onClick={anteriorFamiliar} 
+            className="p-2 bg-odara-primary/10 rounded-full hover:bg-odara-primary transition flex-shrink-0 group"
+            aria-label="Familiar anterior"
           >
-            <Home size={18} />
-            <span>Voltar para Visão Geral</span>
+            <ChevronLeft size={20} className="text-odara-primary group-hover:text-odara-white" />
           </button>
-
-          {dados.length > 1 && (
-            <div className="flex items-center gap-2">
-              <button onClick={anteriorFamiliar} className="p-2 bg-gray-50 rounded-full hover:bg-gray-100 transition">
-                <ChevronLeft size={18} />
-              </button>
-              <button onClick={proximoFamiliar} className="p-2 bg-gray-50 rounded-full hover:bg-gray-100 transition">
-                <ChevronRight size={18} />
-              </button>
-            </div>
-          )}
-        </div>
-
-        <div className="flex flex-col sm:flex-row items-center gap-4 sm:gap-6 mb-6">
-          <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-full border-4 border-white shadow-lg overflow-hidden bg-gray-200">
+        )}
+        
+        {/* CONTEÚDO CENTRAL: FOTO + NOME + BADGES */}
+        <div className="flex flex-col items-center flex-1 mx-4 sm:mx-6">
+          <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-full border-4 border-white shadow-lg overflow-hidden bg-gray-200 mb-3">
             {familiarAtual.residente.foto ?
               <img src={familiarAtual.residente.foto} alt={familiarAtual.residente.nome} className="w-full h-full object-cover" /> :
               <User className="w-full h-full p-3 sm:p-5 text-gray-400" />
             }
           </div>
-          <div className="flex-1 text-center sm:text-left">
-            <h2 className="text-xl sm:text-2xl font-bold text-odara-dark">{familiarAtual.residente.nome}</h2>
-            <div className="flex flex-wrap justify-center sm:justify-start gap-2 mt-2">
-              <span className="px-3 py-1 bg-odara-primary/10 text-odara-primary text-xs rounded-full font-medium">
-                Quarto {familiarAtual.residente.quarto || "-"}
-              </span>
-              <span className="px-3 py-1 bg-green-100 text-green-700 text-xs rounded-full font-medium">
-                {familiarAtual.residente.dependencia || "Ativo"}
-              </span>
-            </div>
+          <h2 className="text-xl sm:text-2xl font-bold text-odara-dark text-center mb-2">
+            {familiarAtual.residente.nome}
+          </h2>
+          <div className="flex flex-wrap justify-center gap-2">            
+            <span className={`px-3 py-1 text-xs rounded-full font-medium ${familiarAtual.residente.status ? "bg-green-100 text-green-500 " : "bg-gray-100 text-gray-400 "}`}>
+            {familiarAtual.residente.status ? "Ativo" : "Inativo"}
+            </span>
           </div>
+        </div>
+        
+        {/* Setas de navegação - DIREITA */}
+        {dados.length > 1 && (
+          <button 
+            onClick={proximoFamiliar} 
+            className="p-2 bg-odara-primary/10 rounded-full hover:bg-odara-primary transition flex-shrink-0 group"
+            aria-label="Próximo familiar"
+          >
+            <ChevronRight size={20} className="text-odara-primary group-hover:text-odara-white" />
+          </button>
+        )}
+        
+        {/* Espaço vazio para balancear layout quando não há setas */}
+        {dados.length <= 1 && <div className="w-10"></div>}
+      </div>
+
+      {/* GRID DE INFORMAÇÕES (mantido igual) */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 sm:gap-6 pt-4 sm:pt-6 border-t border-gray-200">
+        <div className="text-center">
+          <p className="text-xs text-gray-400 font-medium uppercase tracking-wider mb-1">Quarto</p>
+          <p className="font-semibold text-odara-dark">{familiarAtual.residente.quarto || "-"}</p>
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 sm:gap-6 pt-4 sm:pt-6 border-t border-gray-200">
-          <div className="text-center">
-            <p className="text-xs text-gray-400 font-medium uppercase tracking-wider mb-1">Plano de Saúde</p>
-            <p className="font-semibold text-odara-dark">{familiarAtual.residente.plano_saude || "Particular"}</p>
-          </div>
-          <div className="text-center">
-            <p className="text-xs text-gray-400 font-medium uppercase tracking-wider mb-1">Carteirinha</p>
-            <p className="font-semibold text-odara-dark">{familiarAtual.residente.numero_carteirinha || "-"}</p>
-          </div>
-          <div className="text-center">
-            <p className="text-xs text-gray-400 font-medium uppercase tracking-wider mb-1">Observações</p>
-            <p className="font-semibold text-odara-dark truncate">{familiarAtual.residente.observacoes || "Nenhuma"}</p>
-          </div>
+        <div className="text-center">
+          <p className="text-xs text-gray-400 font-medium uppercase tracking-wider mb-1">Grau de Dependência</p>
+          <p className="font-semibold text-odara-dark">{familiarAtual.residente.dependencia || "Ativo"}</p>
+        </div>
+
+        <div className="text-center">
+          <p className="text-xs text-gray-400 font-medium uppercase tracking-wider mb-1">Plano de Saúde</p>
+          <p className="font-semibold text-odara-dark">{familiarAtual.residente.plano_saude || "Particular"}</p>
+        </div>
+
+        <div className="text-center">
+          <p className="text-xs text-gray-400 font-medium uppercase tracking-wider mb-1">Carteirinha</p>
+          <p className="font-semibold text-odara-dark">{familiarAtual.residente.numero_carteirinha || "-"}</p>
+        </div>
+
+        <div className="text-center">
+          <p className="text-xs text-gray-400 font-medium uppercase tracking-wider mb-1">Observações</p>
+          <p className="font-semibold text-odara-dark truncate">{familiarAtual.residente.observacoes || "-"}</p>
         </div>
       </div>
-    );
-  };
+    </div>
+  );
+};
 
   // Componente de Cartões de Informações (layout responsivo de 5 colunas)
   const CartoesInformacoes = () => {
@@ -560,7 +599,6 @@ const DashboardResponsavel = () => {
                   >
                     <div className="mb-3">
                       <h4 className="font-medium text-sm text-odara-dark font-semibold flex items-center gap-2">
-                        <RockingChair size={14} className="text-odara-accent" />
                         {residenteData.residente.nome}
                       </h4>
                     </div>
@@ -575,9 +613,9 @@ const DashboardResponsavel = () => {
                           const administracaoHoje = residenteData.administracoes_dia?.find(
                             a => a.nome_medicamento === med.nome
                           );
-                          
-                          const horarioTextColor = administracaoHoje?.status === 'concluído' 
-                            ? 'text-green-500' 
+
+                          const horarioTextColor = administracaoHoje?.status === 'concluído'
+                            ? 'text-green-500'
                             : 'text-gray-400';
                           const horarioBorderColor = administracaoHoje?.status === 'concluído'
                             ? 'border-green-500'
@@ -587,11 +625,11 @@ const DashboardResponsavel = () => {
                             <div key={med.id} className="flex gap-2 items-center text-sm bg-gray-50 p-2 rounded-lg">
                               <div className="min-w-0 flex-1">
                                 <p className="font-medium text-odara-dark truncate">{med.nome}</p>
-                                <p className="text-xs text-gray-500 truncate mt-0.5">
+                                <p className="text-xs text-gray-400 truncate mt-0.5">
                                   {med.dosagem}
                                 </p>
                               </div>
-                              
+
                               <span className={`text-xs flex-shrink-0 bg-white px-2 py-0.5 rounded-full border ${horarioBorderColor} ${horarioTextColor} whitespace-nowrap`}>
                                 {med.horario_inicio.slice(0, 5)}
                                 {administracaoHoje?.status === 'concluído' && (
@@ -649,7 +687,6 @@ const DashboardResponsavel = () => {
                   >
                     <div className="mb-3">
                       <h4 className="font-medium text-sm text-odara-dark font-semibold flex items-center gap-2">
-                        <RockingChair size={14} className="text-odara-accent" />
                         {residenteData.residente.nome}
                       </h4>
                     </div>
@@ -719,7 +756,6 @@ const DashboardResponsavel = () => {
                   >
                     <div className="mb-3">
                       <h4 className="font-medium text-sm text-odara-dark font-semibold flex items-center gap-2">
-                        <RockingChair size={14} className="text-odara-accent" />
                         {residenteData.residente.nome}
                       </h4>
                     </div>
@@ -735,12 +771,12 @@ const DashboardResponsavel = () => {
                             <div className="min-w-0 flex-1">
                               <p className="text-odara-dark truncate">{atividade.nome}</p>
                               {atividade.local && (
-                                <p className="text-xs text-gray-500 truncate mt-0.5">
+                                <p className="text-xs text-gray-400 truncate mt-0.5">
                                   {atividade.local}
                                 </p>
                               )}
                             </div>
-                            
+
                             <span className="text-xs text-gray-400 flex-shrink-0 bg-white px-2 py-0.5 rounded-full border border-gray-200 whitespace-nowrap">
                               {atividade.horario_inicio.slice(0, 5)}
                             </span>
@@ -796,7 +832,6 @@ const DashboardResponsavel = () => {
                   >
                     <div className="mb-3">
                       <h4 className="font-medium text-sm text-odara-dark font-semibold flex items-center gap-2">
-                        <RockingChair size={14} className="text-odara-accent" />
                         {residenteData.residente.nome}
                       </h4>
                     </div>
@@ -817,10 +852,10 @@ const DashboardResponsavel = () => {
                                   {consulta.motivo_consulta || "Consulta"}
                                 </p>
                                 <div className="flex items-center gap-1 mt-0.5">
-                                  <p className="text-xs text-gray-500 truncate">{consulta.medico}</p>
+                                  <p className="text-xs text-gray-400 truncate">{consulta.medico}</p>
                                 </div>
                               </div>
-                              
+
                               <span className={`text-xs flex-shrink-0 ${bg} px-2 py-0.5 rounded-full border ${color} border-gray-200 whitespace-nowrap`}>
                                 {formatted}
                                 <span className="mx-1">•</span>
@@ -870,7 +905,7 @@ const DashboardResponsavel = () => {
               dadosParaCartoes.map((residenteData, index) => {
                 // Filtrar apenas exames hoje e futuros
                 const examesFuturos = (residenteData.exames_semana || [])
-                  .filter(e => isDataHojeOuFutura(e.data_prevista));
+                  .filter(e => isDataHojeOuFutura(e.data));
 
                 return (
                   <div
@@ -879,7 +914,6 @@ const DashboardResponsavel = () => {
                   >
                     <div className="mb-3">
                       <h4 className="font-medium text-sm text-odara-dark font-semibold flex items-center gap-2">
-                        <RockingChair size={14} className="text-odara-accent" />
                         {residenteData.residente.nome}
                       </h4>
                     </div>
@@ -891,21 +925,18 @@ const DashboardResponsavel = () => {
                         </p>
                       ) : (
                         examesFuturos.slice(0, 3).map(exame => {
-                          const { formatted, color, bg } = formatarDataComCor(exame.data_prevista);
-                          
+                          const { formatted, color, bg } = formatarDataComCor(exame.data);
+
                           // Determinar cor baseada no status
-                          let statusColor = "text-gray-600";
+                          let statusColor = "text-gray-400";
                           let statusBg = "bg-gray-100";
-                          
+
                           if (exame.status === 'realizado') {
-                            statusColor = "text-green-600";
-                            statusBg = "bg-green-100";
-                          } else if (exame.status === 'agendado') {
-                            statusColor = "text-purple-600";
-                            statusBg = "bg-purple-100";
-                          } else if (exame.status === 'cancelado') {
-                            statusColor = "text-red-600";
-                            statusBg = "bg-red-100";
+                            statusColor = "text-green-500";
+                            statusBg = "bg-green-50";
+                          } else {
+                            statusColor = "text-gray-400";
+                            statusBg = "bg-gray-100";
                           }
 
                           return (
@@ -915,16 +946,16 @@ const DashboardResponsavel = () => {
                                   {exame.tipo}
                                 </p>
                                 <div className="flex items-center gap-1 mt-0.5">
-                                  <p className="text-xs text-gray-500 truncate">
+                                  <p className="text-xs text-gray-400 truncate">
                                     {exame.laboratorio || "Laboratório"}
                                   </p>
                                 </div>
                               </div>
-                              
+
                               <span className={`text-xs flex-shrink-0 ${bg} px-2 py-0.5 rounded-full border ${color} border-gray-200 whitespace-nowrap`}>
                                 {formatted}
                                 <span className="mx-1">•</span>
-                                {exame.horario_previsto.slice(0, 5)}
+                                {exame.horario.slice(0, 5)}
                               </span>
                             </div>
                           );

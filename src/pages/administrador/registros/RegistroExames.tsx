@@ -136,27 +136,35 @@ const RegistroExames: React.FC = () => {
     return `${formatarData(data)} às ${formatarHora(hora)}`;
   };
 
-  const baixarArquivo = async (caminhoArquivo: string, nomeExame: string) => {
+  const baixarArquivo = async (urlCompleta: string, nomeExame: string) => {
     try {
+      const caminhoArquivo = urlCompleta.split('/').pop(); 
+
+      if (!caminhoArquivo) {
+        throw new Error('Caminho do arquivo inválido');
+      }
+
+      console.log('Baixando:', caminhoArquivo);
+
       const { data, error } = await supabase.storage
         .from('exames')
         .download(caminhoArquivo);
 
       if (error) throw error;
-
-      const url = URL.createObjectURL(data);
+      
+      const urlBlob = URL.createObjectURL(data);
       const a = document.createElement('a');
-      a.href = url;
+      a.href = urlBlob;
       a.download = `resultado-${nomeExame.toLowerCase().replace(/\s+/g, '-')}.pdf`;
       document.body.appendChild(a);
       a.click();
       document.body.removeChild(a);
-      URL.revokeObjectURL(url);
+      URL.revokeObjectURL(urlBlob);
 
-      toast.success('Arquivo baixado com sucesso!');
+      toast.success('Download iniciado!');
     } catch (error) {
-      console.error('Erro ao baixar arquivo:', error);
-      toast.error('Erro ao baixar arquivo');
+      console.error('Erro:', error);
+      toast.error('Erro ao baixar arquivo.');
     }
   };
 
@@ -564,7 +572,7 @@ const RegistroExames: React.FC = () => {
             <div className="flex items-center gap-1 ml-2">
               {exame.arquivo_resultado && (
                 <button
-                  onClick={() => baixarArquivo(exame.arquivo_resultado!, exame.tipo)}
+                  onClick={() => baixarArquivo((exame.arquivo_resultado || ''), exame.tipo)}
                   className="text-odara-primary hover:text-odara-white transition-colors duration-200 p-1.5 sm:p-2 rounded-full hover:bg-odara-primary"
                   title="Baixar resultado"
                 >

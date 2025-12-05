@@ -1,11 +1,6 @@
 // src/components/RegistroExames.tsx
 import { useEffect, useState, useRef, useCallback, useMemo } from 'react';
-<<<<<<< HEAD
-import { Filter, Search, CheckCircle, Clock, CircleX, Plus, Edit, Trash, Info, ChevronDown, Check, Calendar, Beaker, AlertTriangle, Download, Microscope } from 'lucide-react';
-=======
 import { Filter, Search, CheckCircle, Clock, CircleX, Plus, Edit, Trash, Info, ChevronDown, Check, Calendar, Microscope, AlertTriangle, Download, RockingChair } from 'lucide-react';
->>>>>>> c96d00503807a99709f1e811891be2df679a6ac7
-
 import { supabase } from '../../../lib/supabaseClient';
 import toast, { Toaster } from 'react-hot-toast';
 

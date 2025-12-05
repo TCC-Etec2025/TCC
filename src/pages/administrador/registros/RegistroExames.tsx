@@ -1,6 +1,6 @@
 // src/components/RegistroExames.tsx
 import { useEffect, useState, useRef, useCallback, useMemo } from 'react';
-import { Filter, Search, CheckCircle, Clock, CircleX, Plus, Edit, Trash, Info, ChevronDown, Check, Calendar, Beaker, AlertTriangle, Download } from 'lucide-react';
+import { Filter, Search, CheckCircle, Clock, CircleX, Plus, Edit, Trash, Info, ChevronDown, Check, Calendar, Microscope, AlertTriangle, Download, RockingChair } from 'lucide-react';
 
 import { supabase } from '../../../lib/supabaseClient';
 import toast, { Toaster } from 'react-hot-toast';
@@ -201,8 +201,8 @@ const RegistroExames: React.FC = () => {
           residente:residente(id, nome, quarto),
           consulta:consulta(id, data_consulta, horario, medico)
         `)
-        .order('data_prevista', { ascending: false })
-        .order('horario_previsto', { ascending: true });
+        .order('data', { ascending: false })
+        .order('horario', { ascending: true });
 
       if (error) throw error;
       setExames(data || []);
@@ -643,7 +643,7 @@ const RegistroExames: React.FC = () => {
           <div className="flex flex-wrap justify-center sm:justify-between gap-1 sm:gap-2 text-xs">
             <div className="flex items-center flex-wrap gap-1 justify-center sm:justify-start">
               <span className="bg-odara-accent text-white px-2 py-1 rounded-full text-xs font-medium flex items-center gap-1">
-                <Beaker size={10} className="sm:w-3 sm:h-3" />
+                <RockingChair size={10} className="sm:w-3 sm:h-3" />
                 {exame.residente?.nome || 'Residente'}
               </span>
 
@@ -900,7 +900,7 @@ const RegistroExames: React.FC = () => {
     return (
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
         <div className="flex items-start sm:items-center gap-3 w-full">
-          <Beaker size={24} className='sm:w-7 sm:h-7 lg:w-8 lg:h-8 text-odara-accent shrink-0 mt-1 sm:mt-0' />
+          <Microscope size={24} className='sm:w-7 sm:h-7 lg:w-8 lg:h-8 text-odara-accent shrink-0 mt-1 sm:mt-0' />
           
           <div className="flex-1 min-w-0 relative">
             <div className="flex items-center gap-0.1 sm:gap-2">

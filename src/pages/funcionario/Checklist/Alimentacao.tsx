@@ -15,7 +15,6 @@ import {
   Loader,
   X,
   Apple,
-  RockingChair,
   type LucideIcon
 } from 'lucide-react';
 import * as yup from 'yup';
@@ -460,36 +459,19 @@ const CardAlimentacao: React.FC<CardAlimentacaoProps> = ({
             </div>
           </div>
 
-{/* Coluna Direita */}
-<div className="space-y-2 sm:space-y-3">
-  {/* Residente */}
-  <div className="flex items-start gap-2">
-    {/* Mobile: mostra o label "Residente:" e o nome */}
-    <div className="sm:hidden flex-1 min-w-0">
-      <strong className="text-odara-dark text-xs sm:text-sm">Residente:</strong>
-      <div className="mt-0.5">
-        <span className="text-odara-name text-xs sm:text-sm">
-          {registro.residente.nome}
-        </span>
-      </div>
-    </div>
-    
-    {/* Desktop: mostra ícone e conteúdo */}
-    <div className="hidden sm:flex sm:items-start sm:gap-2">
-      <RockingChair className="text-odara-accent shrink-0 mt-0.5" size={12} />
-      <div className="flex flex-col">
-        <strong className="text-odara-dark text-xs sm:text-sm">Residente:</strong>
-        <span className="text-odara-name text-xs sm:text-sm mt-0.5">
-          {registro.residente.nome}
-        </span>
-      </div>
-    </div>
-  </div>
-
-            {/* Observação */}
-            <div className="flex items-start gap-2">
-              {/* Mobile: mostra apenas o conteúdo */}
-              <div className="sm:hidden flex-1 min-w-0">
+          {/* Coluna Direita */}
+          <div className="space-y-2 sm:space-y-3">
+          {/* Residente */}
+          {/* Desktop: mostra ícone e conteúdo */}
+          <div className="hidden sm:flex sm:items-start sm:gap-2">
+            <div className="flex flex-col flex-1">
+              <strong className="text-odara-dark text-xs sm:text-sm">Residente:</strong>
+              <span className="text-odara-name text-xs sm:text-sm mt-0.5">
+                {registro.residente.nome}
+              </span>
+              
+              {/* Observação para desktop */}
+              <div className="mt-2">
                 <strong className="text-odara-dark text-xs sm:text-sm">Observação:</strong>
                 <div className="mt-0.5 flex items-start justify-between gap-2">
                   <span className="text-odara-name text-xs sm:text-sm flex-1 line-clamp-2">
@@ -506,30 +488,37 @@ const CardAlimentacao: React.FC<CardAlimentacaoProps> = ({
                   )}
                 </div>
               </div>
+            </div>
+          </div>
+
+          {/* Mobile: mostra apenas o conteúdo */}
+          <div className="sm:hidden">
+            <div className="flex flex-col">
+              <strong className="text-odara-dark text-xs sm:text-sm">Residente:</strong>
+              <span className="text-odara-name text-xs sm:text-sm mt-0.5">
+                {registro.residente.nome}
+              </span>
               
-              {/* Desktop: mostra com estrutura similar ao residente */}
-              <div className="hidden sm:flex sm:items-start sm:gap-2">
-                {/* Espaço reservado para alinhamento (substitui o ícone da cadeira) */}
-                <div className="w-3 shrink-0" /> {/* 12px = tamanho do ícone + gap */}
-                <div className="flex flex-col flex-1 min-w-0">
-                  <strong className="text-odara-dark text-xs sm:text-sm">Observação:</strong>
-                  <div className="flex items-start justify-between gap-2 mt-0.5">
-                    <span className="text-odara-name text-xs sm:text-sm flex-1 line-clamp-2">
-                      {registro.observacao || 'Nenhuma observação'}
-                    </span>
-                    {registro.observacao && (
-                      <button
-                        onClick={() => onEditObservation(registro)}
-                        className="text-odara-dropdown-accent hover:text-odara-white transition-colors duration-200 p-2 rounded-full hover:bg-odara-dropdown-accent shrink-0"
-                        title="Editar observação"
-                      >
-                        <Edit size={14} className="w-3.5 h-3.5" />
-                      </button>
-                    )}
-                  </div>
+              {/* Observação para mobile */}
+              <div className="mt-2">
+                <strong className="text-odara-dark text-xs sm:text-sm">Observação:</strong>
+                <div className="mt-0.5 flex items-start justify-between gap-2">
+                  <span className="text-odara-name text-xs sm:text-sm flex-1 line-clamp-2">
+                    {registro.observacao || 'Nenhuma observação'}
+                  </span>
+                  {registro.observacao && (
+                    <button
+                      onClick={() => onEditObservation(registro)}
+                      className="text-odara-dropdown-accent hover:text-odara-white transition-colors duration-200 p-1.5 rounded-full hover:bg-odara-dropdown-accent shrink-0"
+                      title="Editar observação"
+                    >
+                      <Edit size={12} />
+                    </button>
+                  )}
                 </div>
               </div>
             </div>
+          </div>
           </div>
         </div>
       </div>

@@ -130,7 +130,7 @@ const Home = () => {
           </div>
         </div>
 
-        {/* Setas de navegação (exemplo de uso de showArrows) */}
+        {/* Setas de navegação (exemplo de uso de showArrows) 
         {showArrows.hero && (
           <button
             onClick={() => scrollToSection("documentacao")}
@@ -139,7 +139,7 @@ const Home = () => {
           >
             ↓
           </button>
-        )}
+        )}*/}
       </section>
 
       {/* Documentação */}
@@ -191,6 +191,7 @@ const Home = () => {
           </div>
         </div>
 
+        {/* Setas de navegação (exemplo de uso de showArrows)
         {showArrows.documentacao && (
           <button
             onClick={() => scrollToSection("sobre")}
@@ -199,7 +200,7 @@ const Home = () => {
           >
             ↓
           </button>
-        )}
+        )}*/}
       </section>
 
       {/* Sobre */}
@@ -321,6 +322,7 @@ const Home = () => {
           </div>
         </div>
 
+        {/* Setas de navegação (exemplo de uso de showArrows)
         {showArrows.sobre && (
           <button
             onClick={() => scrollToSection("contato")}
@@ -329,7 +331,7 @@ const Home = () => {
           >
             ↓
           </button>
-        )}
+        )}*/}
       </section>
 
       {/* Contato */}

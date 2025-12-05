@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
-import { Filter, Search, Pill, ClipboardPlus, Apple, Palette, Microscope, type LucideIcon } from 'lucide-react';
+import { Filter, Search, Pill, ClipboardPlus, Apple, Palette,  type LucideIcon } from 'lucide-react';
 
 const PaginaChecklist = () => {
   const [filtroAberto, setFiltroAberto] = useState(false);
@@ -29,6 +29,7 @@ const PaginaChecklist = () => {
       descricao: "Controle de refeições e dieta dos residentes",
       categoria: "rotina"
     },
+    /*
     {
       id: 2,
       path: "exames/medicos",
@@ -37,6 +38,7 @@ const PaginaChecklist = () => {
       descricao: "Controle de exames e resultados médicos",
       categoria: "saude"
     },
+    */
     {
       id: 3,
       path: "medicamentos",

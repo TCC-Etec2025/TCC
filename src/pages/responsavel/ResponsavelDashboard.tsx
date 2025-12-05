@@ -174,10 +174,10 @@ const DashboardResponsavel = () => {
     ? dados.flatMap(d => d.ocorrencias_dia.map(o => ({ ...o, nome_residente: d.residente.nome })))
     : familiarAtual.ocorrencias_dia.map(o => ({ ...o, nome_residente: familiarAtual.residente.nome }));
 
-  // Const MEDICAMENTOS
-  const medicamentosView = visualizacao === "casa"
-    ? dados.flatMap(d => d.medicamentos_ativos.map(m => ({ ...m, nome_residente: d.residente.nome })))
-    : familiarAtual.medicamentos_ativos.map(m => ({ ...m, nome_residente: familiarAtual.residente.nome }));
+  // // Const MEDICAMENTOS
+  // const medicamentosView = visualizacao === "casa"
+  //   ? dados.flatMap(d => d.medicamentos_ativos.map(m => ({ ...m, nome_residente: d.residente.nome })))
+  //   : familiarAtual.medicamentos_ativos.map(m => ({ ...m, nome_residente: familiarAtual.residente.nome }));
 
   const administracoesView = visualizacao === "casa"
     ? dados.flatMap(d => d.administracoes_dia.map(a => ({ ...a, nome_residente: d.residente.nome })))
@@ -197,36 +197,36 @@ const DashboardResponsavel = () => {
     { key: "ceia", label: "Ceia", icon: <GlassWater size={18} /> },
   ];
 
-  const cardapioView = visualizacao === "casa"
-    ? dados.flatMap(d => d.alimentacao_dia.map(m => ({ ...m, nome_residente: d.residente.nome })))
-    : familiarAtual.alimentacao_dia.map(m => ({ ...m, nome_residente: familiarAtual.residente.nome }));
+  // const cardapioView = visualizacao === "casa"
+  //   ? dados.flatMap(d => d.alimentacao_dia.map(m => ({ ...m, nome_residente: d.residente.nome })))
+  //   : familiarAtual.alimentacao_dia.map(m => ({ ...m, nome_residente: familiarAtual.residente.nome }));
 
-  // Const ATIVIDADES
-  const atividadesView = visualizacao === "casa"
-    ? dados.flatMap(d => d.atividades_dia.map(m => ({ ...m, nome_residente: d.residente.nome })))
-    : familiarAtual.atividades_dia.map(m => ({ ...m, nome_residente: familiarAtual.residente.nome }));
+  // // Const ATIVIDADES
+  // const atividadesView = visualizacao === "casa"
+  //   ? dados.flatMap(d => d.atividades_dia.map(m => ({ ...m, nome_residente: d.residente.nome })))
+  //   : familiarAtual.atividades_dia.map(m => ({ ...m, nome_residente: familiarAtual.residente.nome }));
 
-  // Const CONSULTAS - Filtrar apenas hoje e futuras
-  const consultasView = visualizacao === "casa"
-    ? dados.flatMap(d =>
-      d.consultas_semana
-        .filter(c => isDataHojeOuFutura(c.data_consulta))
-        .map(c => ({ ...c, nome_residente: d.residente.nome }))
-    )
-    : familiarAtual.consultas_semana
-      .filter(c => isDataHojeOuFutura(c.data_consulta))
-      .map(c => ({ ...c, nome_residente: familiarAtual.residente.nome }));
+  // // Const CONSULTAS - Filtrar apenas hoje e futuras
+  // const consultasView = visualizacao === "casa"
+  //   ? dados.flatMap(d =>
+  //     d.consultas_semana
+  //       .filter(c => isDataHojeOuFutura(c.data_consulta))
+  //       .map(c => ({ ...c, nome_residente: d.residente.nome }))
+  //   )
+  //   : familiarAtual.consultas_semana
+  //     .filter(c => isDataHojeOuFutura(c.data_consulta))
+  //     .map(c => ({ ...c, nome_residente: familiarAtual.residente.nome }));
 
-  // Const EXAMES - Filtrar apenas hoje e futuras
-  const examesView = visualizacao === "casa"
-    ? dados.flatMap(d =>
-      d.exames_semana
-        .filter(e => isDataHojeOuFutura(e.data))
-        .map(e => ({ ...e, nome_residente: d.residente.nome }))
-    )
-    : familiarAtual.exames_semana
-      .filter(e => isDataHojeOuFutura(e.data))
-      .map(e => ({ ...e, nome_residente: familiarAtual.residente.nome }));
+  // // Const EXAMES - Filtrar apenas hoje e futuras
+  // const examesView = visualizacao === "casa"
+  //   ? dados.flatMap(d =>
+  //     d.exames_semana
+  //       .filter(e => isDataHojeOuFutura(e.data))
+  //       .map(e => ({ ...e, nome_residente: d.residente.nome }))
+  //   )
+  //   : familiarAtual.exames_semana
+  //     .filter(e => isDataHojeOuFutura(e.data))
+  //     .map(e => ({ ...e, nome_residente: familiarAtual.residente.nome }));
 
   // Contador total de alertas (ocorrências + próximo medicamento)
   const totalAlertas = ocorrenciasView.length + (proximoMedicamento ? 1 : 0);
@@ -314,133 +314,188 @@ const DashboardResponsavel = () => {
   };
 
   // Componente do Painel de Notificações
-  const PainelNotificacoes = () => {
-    if (!notificacoesAbertas) return null;
+  // Componente do Painel de Notificações
+const PainelNotificacoes = () => {
+  if (!notificacoesAbertas) return null;
 
-    return (
-      <>
-        <div
-          className="fixed inset-0 z-40 bg-odara-offwhite/50 backdrop-blur-sm"
-          onClick={() => setNotificacoesAbertas(false)}
-        />
+  // Filtrar administrações pendentes (não suspensas)
+  const administracoesPendentes = administracoesView.filter(a => a.status === 'pendente');
+  
+  // Filtrar administrações suspensas
+  const administracoesSuspensas = administracoesView.filter(a => a.status === 'suspenso');
+  
+  // Encontrar próximo medicamento pendente
+  const proximoMedicamentoPendente = administracoesPendentes
+    .sort((a, b) => a.horario_previsto.localeCompare(b.horario_previsto))[0];
+  
+  // Contador total de alertas (ocorrências + próximo medicamento pendente + medicamentos suspensos)
+  const totalAlertas = ocorrenciasView.length + 
+    (proximoMedicamentoPendente ? 1 : 0) + 
+    administracoesSuspensas.length;
 
-        <div
-          className="fixed z-50 bg-white rounded-lg shadow-xl border border-gray-200
-            inset-x-0 bottom-0 top-16
-            sm:inset-auto sm:right-4 sm:top-20 sm:max-w-sm sm:w-full
-            lg:max-w-md"
-          onClick={(e) => e.stopPropagation()}
-        >
-          <div className="p-4 border-b border-gray-200 sticky top-0 bg-white z-10">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                <div className="p-2 bg-odara-primary rounded-lg">
-                  <WrapperIcone icone={Bell} tamanho={20} className="text-white" />
-                </div>
-                <div>
-                  <h3 className="text-lg font-semibold text-odara-dark">Alertas</h3>
-                  <p className="text-sm text-gray-400">
-                    {totalAlertas} item{totalAlertas !== 1 ? 's' : ''}
-                  </p>
-                </div>
+  return (
+    <>
+      <div
+        className="fixed inset-0 z-40 bg-odara-offwhite/50 backdrop-blur-sm"
+        onClick={() => setNotificacoesAbertas(false)}
+      />
+
+      <div
+        className="fixed z-50 bg-white rounded-2xl shadow-xl border border-gray-200
+          inset-x-4 top-20 bottom-4
+          sm:inset-auto sm:right-4 sm:top-20 sm:max-w-sm sm:w-full sm:bottom-auto
+          lg:max-w-md"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <div className="p-4 sm:p-5 border-b border-gray-200 sticky top-0 bg-white z-10 rounded-t-2xl">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <div className="p-2 bg-odara-primary rounded-lg">
+                <WrapperIcone icone={Bell} tamanho={20} className="text-white" />
               </div>
-              <button
-                onClick={() => setNotificacoesAbertas(false)}
-                className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
-                aria-label="Fechar alertas"
-              >
-                <WrapperIcone icone={X} tamanho={20} className="text-gray-400" />
-              </button>
+              <div>
+                <h3 className="text-lg font-semibold text-odara-dark">Alertas</h3>
+                <p className="text-sm text-gray-400">
+                  {totalAlertas} item{totalAlertas !== 1 ? 's' : ''}
+                </p>
+              </div>
             </div>
-          </div>
-
-          <div className="overflow-y-auto h-[calc(100%-140px)] sm:h-[calc(60vh)]">
-            {/* Próximo Medicamento */}
-            {proximoMedicamento && (
-              <div className="p-4 border-b border-gray-200">
-                <div className="flex items-center justify-between mb-3">
-                  <h4 className="font-medium text-odara-dark flex items-center gap-2">
-                    <WrapperIcone icone={Clock} tamanho={16} className="text-odara-primary" />
-                    Próximo Medicamento
-                  </h4>
-                </div>
-                <div
-                  onClick={() => {
-                    setModalAberto('MEDICAMENTOS');
-                    setNotificacoesAbertas(false);
-                  }}
-                  className="p-3 border border-odara-primary/20 rounded-lg hover:bg-odara-primary/5 active:bg-odara-primary/10 cursor-pointer transition-colors"
-                >
-                  <div className="flex items-start justify-between">
-                    <div className="flex-1 pr-2">
-                      <p className="text-sm font-medium text-odara-dark mb-1 line-clamp-2">
-                        {proximoMedicamento.nome_medicamento}
-                      </p>
-                      <div className="flex items-center justify-between mt-2">
-                        <span className="text-xs text-gray-400">{proximoMedicamento.nome_residente}</span>
-                        <span className="text-xs font-bold text-odara-primary">
-                          Hoje às {proximoMedicamento.horario_previsto.slice(0, 5)}
-                        </span>
-                      </div>
-                    </div>
-                    <ChevronRightIcon size={14} className="text-odara-primary flex-shrink-0 mt-0.5" />
-                  </div>
-                </div>
-              </div>
-            )}
-
-            {/* Ocorrências */}
-            {ocorrenciasView.length > 0 && (
-              <div className="p-4">
-                <div className="flex items-center justify-between mb-3">
-                  <h4 className="font-medium text-odara-dark flex items-center gap-2">
-                    <WrapperIcone icone={CalendarIcon} tamanho={16} className="text-odara-primary" />
-                    Ocorrências ({ocorrenciasView.length})
-                  </h4>
-                </div>
-                <div className="space-y-3">
-                  {ocorrenciasView.map((ocorrencia) => (
-                    <div
-                      key={ocorrencia.id}
-                      onClick={() => {
-                        setModalAberto('OCORRENCIA');
-                        setNotificacoesAbertas(false);
-                      }}
-                      className="p-3 border border-gray-200 rounded-lg hover:bg-gray-50 active:bg-gray-100 cursor-pointer transition-colors"
-                    >
-                      <div className="flex items-start justify-between">
-                        <div className="flex-1 pr-2">
-                          <p className="text-sm font-medium text-odara-dark mb-1 line-clamp-2">
-                            {ocorrencia.titulo}
-                          </p>
-                          <div className="flex items-center justify-between mt-2">
-                            <span className="text-xs text-gray-400">{ocorrencia.nome_residente}</span>
-                            <span className="text-xs text-gray-400">{ocorrencia.horario.slice(0, 5)}</span>
-                          </div>
-                        </div>
-                        <ChevronRightIcon size={14} className="text-odara-primary flex-shrink-0 mt-0.5" />
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
-
-            {/* Mensagem quando não há alertas */}
-            {totalAlertas === 0 && (
-              <div className="p-8 text-center">
-                <div className="p-4 bg-odara-primary/10 rounded-full inline-block mb-3">
-                  <WrapperIcone icone={Bell} tamanho={24} className="text-odara-primary" />
-                </div>
-                <p className="text-gray-400 font-medium">Sem alertas no momento</p>
-                <p className="text-gray-400 text-sm mt-1">Tudo tranquilo por aqui</p>
-              </div>
-            )}
+            <button
+              onClick={() => setNotificacoesAbertas(false)}
+              className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+              aria-label="Fechar alertas"
+            >
+              <WrapperIcone icone={X} tamanho={20} className="text-gray-400" />
+            </button>
           </div>
         </div>
-      </>
-    );
-  };
+
+        <div className="overflow-y-auto h-[calc(100%-100px)] sm:h-[calc(60vh)]">
+          {/* Próximo Medicamento Pendente */}
+          {proximoMedicamentoPendente && (
+            <div className="p-4 sm:p-5 border-b border-gray-200">
+              <div className="flex items-center justify-between mb-3">
+                <h4 className="font-medium text-odara-dark flex items-center gap-2">
+                  <WrapperIcone icone={Clock} tamanho={16} className="text-odara-primary" />
+                  Próximo Medicamento
+                </h4>
+              </div>
+              <div
+                onClick={() => {
+                  setModalAberto('MEDICAMENTOS');
+                  setNotificacoesAbertas(false);
+                }}
+                className="p-3 border border-odara-primary/20 rounded-lg hover:bg-odara-primary/5 active:bg-odara-primary/10 cursor-pointer transition-colors"
+              >
+                <div className="flex items-start justify-between">
+                  <div className="flex-1 pr-2">
+                    <p className="text-sm font-medium text-odara-dark mb-1 line-clamp-2">
+                      {proximoMedicamentoPendente.nome_medicamento}
+                    </p>
+                    <div className="flex items-center justify-between mt-2">
+                      <span className="text-xs text-gray-400">{proximoMedicamentoPendente.nome_residente}</span>
+                      <span className="text-xs font-bold text-odara-primary">
+                        Hoje às {proximoMedicamentoPendente.horario_previsto.slice(0, 5)}
+                      </span>
+                    </div>
+                  </div>
+                  <ChevronRightIcon size={14} className="text-odara-primary flex-shrink-0 mt-0.5" />
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Medicamentos Suspensos */}
+          {administracoesSuspensas.length > 0 && (
+            <div className="p-4 sm:p-5 border-b border-gray-200">
+              <div className="flex items-center justify-between mb-3">
+                <h4 className="font-medium text-odara-dark flex items-center gap-2">
+                  <WrapperIcone icone={Pill} tamanho={16} className="text-odara-alerta" />
+                  Medicamentos Suspensos ({administracoesSuspensas.length})
+                </h4>
+              </div>
+              <div className="space-y-3">
+                {administracoesSuspensas.map((medicamento) => (
+                  <div
+                    key={`suspenso-${medicamento.id}`}
+                    onClick={() => {
+                      setModalAberto('MEDICAMENTOS');
+                      setNotificacoesAbertas(false);
+                    }}
+                    className="p-3 border border-gray-200 rounded-lg hover:bg-gray-50 active:bg-gray-100 cursor-pointer transition-colors"
+                  >
+                    <div className="flex items-start justify-between">
+                      <div className="flex-1 pr-2">
+                        <p className="text-sm font-medium text-odara-dark mb-1 line-clamp-2">
+                          {medicamento.nome_medicamento}
+                        </p>
+                        <div className="flex items-center justify-between mt-2">
+                          <span className="text-xs text-gray-400">{medicamento.nome_residente}</span>
+                          <span className="text-xs text-odara-alerta font-medium">
+                            Suspenso
+                          </span>
+                        </div>
+                      </div>
+                      <ChevronRightIcon size={14} className="text-odara-primary flex-shrink-0 mt-0.5" />
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Ocorrências */}
+          {ocorrenciasView.length > 0 && (
+            <div className="p-4 sm:p-5">
+              <div className="flex items-center justify-between mb-3">
+                <h4 className="font-medium text-odara-dark flex items-center gap-2">
+                  <WrapperIcone icone={CalendarIcon} tamanho={16} className="text-odara-primary" />
+                  Ocorrências ({ocorrenciasView.length})
+                </h4>
+              </div>
+              <div className="space-y-3">
+                {ocorrenciasView.map((ocorrencia) => (
+                  <div
+                    key={ocorrencia.id}
+                    onClick={() => {
+                      setModalAberto('OCORRENCIA');
+                      setNotificacoesAbertas(false);
+                    }}
+                    className="p-3 border border-gray-200 rounded-lg hover:bg-gray-50 active:bg-gray-100 cursor-pointer transition-colors"
+                  >
+                    <div className="flex items-start justify-between">
+                      <div className="flex-1 pr-2">
+                        <p className="text-sm font-medium text-odara-dark mb-1 line-clamp-2">
+                          {ocorrencia.titulo}
+                        </p>
+                        <div className="flex items-center justify-between mt-2">
+                          <span className="text-xs text-gray-400">{ocorrencia.nome_residente}</span>
+                          <span className="text-xs text-gray-400">{ocorrencia.horario.slice(0, 5)}</span>
+                        </div>
+                      </div>
+                      <ChevronRightIcon size={14} className="text-odara-primary flex-shrink-0 mt-0.5" />
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Mensagem quando não há alertas */}
+          {totalAlertas === 0 && (
+            <div className="p-8 text-center">
+              <div className="p-4 bg-odara-primary/10 rounded-full inline-block mb-3">
+                <WrapperIcone icone={Bell} tamanho={24} className="text-odara-primary" />
+              </div>
+              <p className="text-gray-400 font-medium">Sem alertas no momento</p>
+              <p className="text-gray-400 text-sm mt-1">Tudo tranquilo por aqui</p>
+            </div>
+          )}
+        </div>
+      </div>
+    </>
+  );
+};
 
   // Componente de Cartões de Residentes
   const CartoesResidentes = () => {

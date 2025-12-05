@@ -108,7 +108,7 @@ export const MedicamentosContent = ({ idResidente }: BaseContentProps) => {
       {/* Header com título e filtros */}
       <div className="sticky top-0 z-10 bg-white py-4 flex flex-col justify-between items-center mb-6 gap-4 border-b border-gray-200">
         {/* Filtros de status - estilo similar ao Cardapio */}
-        <div className="flex flex-wrap gap-2 bg-gray-50 p-2 rounded-xl border border-gray-200 w-full w-auto">
+        <div className="flex flex-wrap gap-2 bg-gray-50 p-2 rounded-xl border border-gray-200 w-auto">
           {STATUS_CONFIG.map(status => (
             <button
               key={status.key}
@@ -134,7 +134,7 @@ export const MedicamentosContent = ({ idResidente }: BaseContentProps) => {
 
       {/* Grid de medicamentos */}
       <div className="overflow-y-auto max-h-[calc(80vh-200px)] min-h-[calc(60vh-200px)]">
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {listaFiltrada.length === 0 ? (
             <div className="col-span-full flex flex-col items-center justify-center py-12 text-center">
               <div className="rounded-full p-4 bg-gray-100">

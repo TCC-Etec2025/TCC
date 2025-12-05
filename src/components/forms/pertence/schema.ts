@@ -10,8 +10,5 @@ export const pertenceSchema = yup.object().shape({
   data_registro: yup.string()
     .required('A data de registro é obrigatória')
     .typeError('Data inválida'),
-  status: yup.string()
-    .required('O status é obrigatório'),
-  data_baixa: yup.string().nullable(),
-  observacoes: yup.string().nullable(),
+  observacoes: yup.string().optional(),
 }).required();

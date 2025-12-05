@@ -53,7 +53,7 @@ export default function PerfilForm({ usuario }: Props) {
                         ) : (
                             <button
                                 onClick={startEditing}
-                                className="w-full sm:w-auto px-4 py-2 text-sm font-medium text-white bg-blue-600 border border-transparent rounded-md hover:bg-blue-700 transition-colors"
+                                className="w-full sm:w-auto px-4 py-2 text-sm font-medium text-white bg-odara-primary border border-transparent rounded-md transition-colors"
                             >
                                 <User className="h-4 w-4 mr-2 inline-block" />
                                 Editar Perfil

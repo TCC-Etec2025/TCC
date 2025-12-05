@@ -351,7 +351,6 @@ const AdminDashboard = () => {
               <p className="text-2xl sm:text-3xl font-bold text-odara-dark mt-1 sm:mt-2">
                 {carregando ? '...' : numeroIdosos}
               </p>
-              <p className="text-xs text-gray-500 mt-1">Total cadastrados</p>
             </div>
             <div className="p-2 sm:p-3 bg-odara-primary/10 rounded-full">
               <WrapperIcone icone={FileText} tamanho={28} className='text-odara-primary' />
@@ -367,7 +366,6 @@ const AdminDashboard = () => {
               <p className="text-2xl sm:text-3xl font-bold text-odara-dark mt-1 sm:mt-2">
                 {carregando ? '...' : numeroColaboradores}
               </p>
-              <p className="text-xs text-gray-500 mt-1">3 online</p>
             </div>
             <div className="p-2 sm:p-3 bg-odara-primary/10 rounded-full">
               <WrapperIcone icone={UsersRound} tamanho={28} className='text-odara-primary' />
@@ -597,39 +595,6 @@ const AdminDashboard = () => {
                     }
                     return null;
                   })}
-                </div>
-              </div>
-            )}
-
-            {/* Notificações Gerais */}
-            {notificacoesNaoLidas > 0 && (
-              <div className="p-4">
-                <div className="flex items-center justify-between mb-3">
-                  <h4 className="font-medium text-odara-dark flex items-center gap-2">
-                    <WrapperIcone icone={Info} tamanho={16} className="text-odara-primary" />
-                    Informações ({notificacoesNaoLidas})
-                  </h4>
-                </div>
-                <div className="space-y-3">
-                  {notificacoes.filter(n => !n.lido).map((notificacao) => (
-                    <div
-                      key={notificacao.id}
-                      onClick={() => abrirModal(notificacao)}
-                      className="p-3 border border-gray-200 rounded-lg hover:bg-gray-50 active:bg-gray-100 cursor-pointer transition-colors"
-                    >
-                      <div className="flex items-start justify-between">
-                        <div className="flex-1 pr-2">
-                          <p className="text-sm font-medium text-odara-dark mb-1 line-clamp-2">
-                            {notificacao.texto}
-                          </p>
-                          <div className="flex items-center justify-between mt-2">
-                            <span className="text-xs text-gray-500">{notificacao.hora}</span>
-                            <ChevronRight size={14} className="text-odara-primary flex-shrink-0" />
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  ))}
                 </div>
               </div>
             )}

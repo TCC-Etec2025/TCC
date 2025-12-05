@@ -12,7 +12,7 @@ type Residente = {
   id: number;
   nome: string;
   quarto?: string | null;
-  foto_url?: string | null;
+  foto?: string | null;
 };
 
 type Preferencia = {
@@ -21,13 +21,12 @@ type Preferencia = {
   descricao: string;
   tipo_preferencia: string;
   prioridade: string;
-  data_registro: string;
-  data_ultima_atualizacao: string;
+  atualizado_em: string;
   id_residente: number;
   observacoes?: string | null;
-  foto_url?: string | null;
+  foto?: string | null;
   status: string;
-  criado_em?: string;
+  criado_em: string;
   residente?: Residente | null;
 };
 
@@ -187,7 +186,7 @@ const RegistroPreferencias: React.FC = () => {
         .from('preferencia')
         .select(`
           *,
-          residente:residente(id, nome, quarto, foto_url)
+          residente:residente(id, nome, quarto, foto)
         `)
         .order('criado_em', { ascending: false });
 
@@ -196,6 +195,7 @@ const RegistroPreferencias: React.FC = () => {
     } catch (error) {
       console.error('Erro ao buscar preferências:', error);
       toast.error('Erro ao carregar preferências');
+      alert(JSON.stringify(error))
     } finally {
       setLoading(false);
     }
@@ -205,7 +205,7 @@ const RegistroPreferencias: React.FC = () => {
     try {
       const { data, error } = await supabase
         .from('residente')
-        .select('id, nome, quarto, foto_url')
+        .select('id, nome, quarto, foto')
         .order('nome');
 
       if (!error) setResidentes(data || []);
@@ -257,7 +257,7 @@ const RegistroPreferencias: React.FC = () => {
       // Atualizar localmente primeiro para feedback imediato
       setPreferencias(prev => prev.map(preferencia =>
         preferencia.id === id
-          ? { ...preferencia, status: novoStatus, data_ultima_atualizacao: new Date().toISOString() }
+          ? { ...preferencia, status: novoStatus, atualizado_em: new Date().toISOString() }
           : preferencia
       ));
 
@@ -266,7 +266,7 @@ const RegistroPreferencias: React.FC = () => {
         .from('preferencia')
         .update({ 
           status: novoStatus,
-          data_ultima_atualizacao: new Date().toISOString()
+          atualizado_em: new Date().toISOString()
         })
         .eq('id', id);
 
@@ -389,8 +389,8 @@ const RegistroPreferencias: React.FC = () => {
         if (prioridadeDiff !== 0) return prioridadeDiff;
         
         // Se mesma prioridade, ordena por data de registro
-        const dataA = new Date(a.data_registro).getTime();
-        const dataB = new Date(b.data_registro).getTime();
+        const dataA = new Date(a.criado_em).getTime();
+        const dataB = new Date(b.criado_em).getTime();
         
         return dataB - dataA; // Mais recente primeiro
       });
@@ -623,14 +623,14 @@ const RegistroPreferencias: React.FC = () => {
               <div>
                 <strong className="text-odara-dark text-xs sm:text-sm">Data de Registro:</strong>
                 <span className="text-odara-name mt-0.5 sm:mt-1 text-xs sm:text-sm block">
-                  {formatarData(preferencia.data_registro)}
+                  {formatarData(preferencia.criado_em)}
                 </span>
               </div>
 
               <div>
                 <strong className="text-odara-dark text-xs sm:text-sm">Última Atualização:</strong>
                 <span className="text-odara-name mt-0.5 sm:mt-1 text-xs sm:text-sm block">
-                  {formatarData(preferencia.data_ultima_atualizacao)}
+                  {formatarData(preferencia.atualizado_em)}
                 </span>
               </div>
             </div>
@@ -656,9 +656,9 @@ const RegistroPreferencias: React.FC = () => {
               <div className="flex items-center gap-1">
                 {/* Foto do residente */}
                 <div className="w-6 h-6 rounded-full bg-odara-offwhite overflow-hidden border border-odara-primary flex items-center justify-center">
-                  {preferencia.residente?.foto_url ? (
+                  {preferencia.residente?.foto ? (
                     <img
-                      src={preferencia.residente.foto_url}
+                      src={preferencia.residente.foto}
                       alt={preferencia.residente.nome}
                       className="w-full h-full object-cover"
                     />

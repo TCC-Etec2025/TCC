@@ -5,6 +5,7 @@ import { AtividadesContent } from "./contents/AtividadesContent";
 import { CardapioContent } from "./contents/CardapioContent";
 import { ConsultasContent } from "./contents/ConsultasContent";
 import { OcorrenciasContent } from "./contents/OcorrenciasContent";
+import { ExamesContent } from "./contents/ExamesContent";
 
 interface Props {
   isOpen: boolean;
@@ -25,17 +26,19 @@ export const ModalRoot = ({ isOpen, onClose, tipo, idResidente  }: Props) => {
       case 'CARDAPIO': return <CardapioContent idResidente={idResidente} />;
       case 'CONSULTAS': return <ConsultasContent idResidente={idResidente} />;
       case 'OCORRENCIA': return <OcorrenciasContent idResidente={idResidente} />;
+      case 'EXAMES': return <ExamesContent idResidente={idResidente} />;
       default: return null;
     }
   };
 
   const getTitulo = () => {
     switch (tipo) {
-      case 'MEDICAMENTOS': return 'Gestão de Medicamentos';
-      case 'ATIVIDADES': return 'Calendário de Atividades';
+      case 'MEDICAMENTOS': return 'Histórico de Medicamentos';
+      case 'ATIVIDADES': return 'Agenda de Atividades';
       case 'CARDAPIO': return 'Agenda Alimentar';
-      case 'CONSULTAS': return 'Agenda Médica';
+      case 'CONSULTAS': return 'Agenda de Consultas';
       case 'OCORRENCIA': return 'Histórico de Ocorrências';
+      case 'EXAMES': return 'Agenda de Exames';
       default: return 'Detalhes';
     }
   };

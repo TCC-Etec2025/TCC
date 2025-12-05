@@ -118,6 +118,25 @@ const DashboardResponsavel = () => {
     setVisualizacao("familiar");
   };
 
+  // Função para obter os dados a serem exibidos nos cartões
+  const obterDadosParaCartoes = () => {
+    if (visualizacao === "casa") {
+      // Modo casa: mostrar todos os residentes
+      return dados;
+    } else {
+      // Modo familiar: mostrar apenas o residente selecionado
+      return [dados[idxSelecionado]];
+    }
+  };
+
+  // Função para lidar com clique nos cartões (só funciona no modo familiar)
+  const handleClickCartao = (tipoModal: TipoModal) => {
+    if (visualizacao === "familiar") {
+      setModalAberto(tipoModal);
+    }
+    // No modo "casa", o clique permanece desativado
+  };
+
   if (loading) return (
     <div className="flex min-h-screen bg-odara-offwhite items-center justify-center">
       <Loader2 className="h-10 w-10 animate-spin text-odara-primary" />
@@ -139,6 +158,7 @@ const DashboardResponsavel = () => {
   );
 
   const familiarAtual = dados[idxSelecionado];
+  const dadosParaCartoes = obterDadosParaCartoes();
 
   {/* Listas agregadas */} 
   // Const OCORRENCIAS
@@ -505,11 +525,11 @@ const DashboardResponsavel = () => {
   // Componente de Cartões de Informações (layout responsivo de 5 colunas)
   const CartoesInformacoes = () => {
     return (
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4 sm:gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
         {/* Medicamentos */}
         <div
-          // onClick={() => setModalAberto('MEDICAMENTOS')} // COMENTADO PARA DESATIVAR
-          className="bg-white p-4 sm:p-5 rounded-xl shadow border border-gray-200"
+          onClick={() => handleClickCartao('MEDICAMENTOS')}
+          className={`bg-white p-4 sm:p-5 rounded-xl shadow border border-gray-200 ${visualizacao === "familiar" ? "cursor-pointer hover:border-odara-primary/50 hover:shadow-md transition-all" : ""}`}
         >
           <div className="flex justify-between items-center mb-3">
             <h3 className="font-semibold text-odara-dark flex items-center gap-2 text-base">
@@ -518,19 +538,24 @@ const DashboardResponsavel = () => {
               </div>
               <span>Medicamentos Ativos</span>
             </h3>
+            {visualizacao === "familiar" && (
+              <div className="text-xs text-odara-primary font-medium">
+                Ver todos
+              </div>
+            )}
           </div>
 
           <div className="space-y-4 pt-2 max-h-80 overflow-y-auto">
-            {dados.length === 0 ? (
+            {dadosParaCartoes.length === 0 ? (
               <p className="text-sm text-gray-400 text-center py-4">Nenhum residente vinculado.</p>
             ) : (
-              dados.map((residenteData, index) => {
+              dadosParaCartoes.map((residenteData, index) => {
                 const medicamentosResidente = residenteData.medicamentos_ativos;
 
                 return (
                   <div
                     key={residenteData.residente.id}
-                    className={`pb-4 ${index < dados.length - 1 ? 'border-b border-gray-200' : ''}`}
+                    className={`pb-4 ${index < dadosParaCartoes.length - 1 ? 'border-b border-gray-200' : ''}`}
                   >
                     <div className="mb-3">
                       <h4 className="font-medium text-sm text-odara-dark font-semibold flex items-center gap-2">
@@ -592,8 +617,8 @@ const DashboardResponsavel = () => {
 
         {/* Cardápio */}
         <div
-          // onClick={() => setModalAberto('CARDAPIO')} // COMENTADO PARA DESATIVAR
-          className="bg-white p-4 sm:p-5 rounded-xl shadow border border-gray-200"
+          onClick={() => handleClickCartao('CARDAPIO')}
+          className={`bg-white p-4 sm:p-5 rounded-xl shadow border border-gray-200 ${visualizacao === "familiar" ? "cursor-pointer hover:border-odara-primary/50 hover:shadow-md transition-all" : ""}`}
         >
           <div className="flex justify-between items-center mb-3">
             <h3 className="font-semibold text-odara-dark flex items-center gap-2 text-base">
@@ -602,19 +627,24 @@ const DashboardResponsavel = () => {
               </div>
               <span>Cardápio do Dia</span>
             </h3>
+            {visualizacao === "familiar" && (
+              <div className="text-xs text-odara-primary font-medium">
+                Ver todos
+              </div>
+            )}
           </div>
 
           <div className="space-y-4 pt-2 max-h-80 overflow-y-auto">
-            {dados.length === 0 ? (
+            {dadosParaCartoes.length === 0 ? (
               <p className="text-sm text-gray-400 text-center py-4">Nenhum residente vinculado.</p>
             ) : (
-              dados.map((residenteData, index) => {
+              dadosParaCartoes.map((residenteData, index) => {
                 const cardapioResidente = residenteData.alimentacao_dia;
 
                 return (
                   <div
                     key={residenteData.residente.id}
-                    className={`pb-4 ${index < dados.length - 1 ? 'border-b border-gray-200' : ''}`}
+                    className={`pb-4 ${index < dadosParaCartoes.length - 1 ? 'border-b border-gray-200' : ''}`}
                   >
                     <div className="mb-3">
                       <h4 className="font-medium text-sm text-odara-dark font-semibold flex items-center gap-2">
@@ -657,8 +687,8 @@ const DashboardResponsavel = () => {
 
         {/* Atividades */}
         <div
-          // onClick={() => setModalAberto('ATIVIDADES')} // COMENTADO PARA DESATIVAR
-          className="bg-white p-4 sm:p-5 rounded-xl shadow border border-gray-200"
+          onClick={() => handleClickCartao('ATIVIDADES')}
+          className={`bg-white p-4 sm:p-5 rounded-xl shadow border border-gray-200 ${visualizacao === "familiar" ? "cursor-pointer hover:border-odara-primary/50 hover:shadow-md transition-all" : ""}`}
         >
           <div className="flex justify-between items-center mb-3">
             <h3 className="font-semibold text-odara-dark flex items-center gap-2 text-base">
@@ -667,19 +697,24 @@ const DashboardResponsavel = () => {
               </div>
               <span>Atividades do Dia</span>
             </h3>
+            {visualizacao === "familiar" && (
+              <div className="text-xs text-odara-primary font-medium">
+                Ver todos
+              </div>
+            )}
           </div>
 
           <div className="space-y-4 pt-2 max-h-80 overflow-y-auto">
-            {dados.length === 0 ? (
+            {dadosParaCartoes.length === 0 ? (
               <p className="text-sm text-gray-400 text-center py-4">Nenhum residente vinculado.</p>
             ) : (
-              dados.map((residenteData, index) => {
+              dadosParaCartoes.map((residenteData, index) => {
                 const atividadesResidente = residenteData.atividades_dia;
 
                 return (
                   <div
                     key={residenteData.residente.id}
-                    className={`pb-4 ${index < dados.length - 1 ? 'border-b border-gray-200' : ''}`}
+                    className={`pb-4 ${index < dadosParaCartoes.length - 1 ? 'border-b border-gray-200' : ''}`}
                   >
                     <div className="mb-3">
                       <h4 className="font-medium text-sm text-odara-dark font-semibold flex items-center gap-2">
@@ -727,23 +762,28 @@ const DashboardResponsavel = () => {
 
         {/* Consultas */}
         <div
-          // onClick={() => setModalAberto('CONSULTAS')} // COMENTADO PARA DESATIVAR
-          className="bg-white p-4 sm:p-5 rounded-xl shadow border border-gray-200"
+          onClick={() => handleClickCartao('CONSULTAS')}
+          className={`bg-white p-4 sm:p-5 rounded-xl shadow border border-gray-200 ${visualizacao === "familiar" ? "cursor-pointer hover:border-odara-primary/50 hover:shadow-md transition-all" : ""}`}
         >
-          <div className="flex justify-between items-center mb-3">
+          <div className="flex flex-1 justify-between items-center mb-3">
             <h3 className="font-semibold text-odara-dark flex items-center gap-2 text-base">
               <div className="p-2 bg-odara-primary/10 rounded-lg">
                 <WrapperIcone icone={CalendarIcon} tamanho={18} className="text-odara-primary" />
               </div>
               <span>Próximas Consultas</span>
             </h3>
+            {visualizacao === "familiar" && (
+              <div className="text-xs text-odara-primary font-medium">
+                Ver todos
+              </div>
+            )}
           </div>
 
           <div className="space-y-4 pt-2 max-h-80 overflow-y-auto">
-            {dados.length === 0 ? (
+            {dadosParaCartoes.length === 0 ? (
               <p className="text-sm text-gray-400 text-center py-4">Nenhum residente vinculado.</p>
             ) : (
-              dados.map((residenteData, index) => {
+              dadosParaCartoes.map((residenteData, index) => {
                 // Filtrar apenas consultas hoje e futuras
                 const consultasFuturas = (residenteData.consultas_semana || [])
                   .filter(c => isDataHojeOuFutura(c.data_consulta));
@@ -751,7 +791,7 @@ const DashboardResponsavel = () => {
                 return (
                   <div
                     key={residenteData.residente.id}
-                    className={`pb-4 ${index < dados.length - 1 ? 'border-b border-gray-200' : ''}`}
+                    className={`pb-4 ${index < dadosParaCartoes.length - 1 ? 'border-b border-gray-200' : ''}`}
                   >
                     <div className="mb-3">
                       <h4 className="font-medium text-sm text-odara-dark font-semibold flex items-center gap-2">
@@ -805,8 +845,8 @@ const DashboardResponsavel = () => {
 
         {/* Exames */}
         <div
-          // onClick={() => setModalAberto('EXAMES')} // COMENTADO PARA DESATIVAR
-          className="bg-white p-4 sm:p-5 rounded-xl shadow border border-gray-200"
+          onClick={() => handleClickCartao('EXAMES')}
+          className={`bg-white p-4 sm:p-5 rounded-xl shadow border border-gray-200 ${visualizacao === "familiar" ? "cursor-pointer hover:border-odara-primary/50 hover:shadow-md transition-all" : ""}`}
         >
           <div className="flex justify-between items-center mb-3">
             <h3 className="font-semibold text-odara-dark flex items-center gap-2 text-base">
@@ -815,13 +855,18 @@ const DashboardResponsavel = () => {
               </div>
               <span>Próximos Exames</span>
             </h3>
+            {visualizacao === "familiar" && (
+              <div className="text-xs text-odara-primary font-medium">
+                Ver todos
+              </div>
+            )}
           </div>
 
           <div className="space-y-4 pt-2 max-h-80 overflow-y-auto">
-            {dados.length === 0 ? (
+            {dadosParaCartoes.length === 0 ? (
               <p className="text-sm text-gray-400 text-center py-4">Nenhum residente vinculado.</p>
             ) : (
-              dados.map((residenteData, index) => {
+              dadosParaCartoes.map((residenteData, index) => {
                 // Filtrar apenas exames hoje e futuros
                 const examesFuturos = (residenteData.exames_semana || [])
                   .filter(e => isDataHojeOuFutura(e.data_prevista));
@@ -829,7 +874,7 @@ const DashboardResponsavel = () => {
                 return (
                   <div
                     key={residenteData.residente.id}
-                    className={`pb-4 ${index < dados.length - 1 ? 'border-b border-gray-200' : ''}`}
+                    className={`pb-4 ${index < dadosParaCartoes.length - 1 ? 'border-b border-gray-200' : ''}`}
                   >
                     <div className="mb-3">
                       <h4 className="font-medium text-sm text-odara-dark font-semibold flex items-center gap-2">

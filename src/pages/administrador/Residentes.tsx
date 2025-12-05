@@ -244,7 +244,6 @@ const Residentes: React.FC = () => {
                 {residente.foto ? (
                   <img
                     src={residente.foto}
-                    alt={residente.nome}
                     className="h-5 w-5 text-odara-primary rounded-full"
                   />
                 ) : (

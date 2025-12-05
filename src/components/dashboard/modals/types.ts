@@ -1,5 +1,5 @@
 // Removemos 'ALERTAS' pois agora tudo é OCORRENCIA
-export type TipoModal = 'MEDICAMENTOS' | 'ATIVIDADES' | 'CARDAPIO' | 'CONSULTAS' | 'OCORRENCIA' | null;
+export type TipoModal = 'MEDICAMENTOS' | 'ATIVIDADES' | 'CARDAPIO' | 'CONSULTAS' | 'OCORRENCIA' | 'EXAMES' | null;
 
 export interface BaseContentProps {
   idResidente: number;
@@ -18,13 +18,14 @@ export interface Medicamento {
 
 export interface Atividade {
   id: number;
+  nome: string;
+  categoria: string;
+  data: string;
+  horario_inicio: string;
+  horario_fim: string;
+  local: string;
+  observacao: string;
   status: string;
-  atividade: {
-    nome: string;
-    horario_inicio: string;
-    local: string | null;
-    data: string;
-  };
 }
 
 export interface Cardapio {
@@ -53,4 +54,15 @@ export interface Ocorrencia {
   data: string;
   horario: string;
   providencias: string | null;
+}
+
+export interface Exame {
+  id: number;
+  id_consulta: number;
+  tipo: string;
+  data: string;
+  horario: string;
+  laboratorio: string | null;
+  resultado: string;
+  arquivo_resultado: string;
 }
